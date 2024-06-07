@@ -1,0 +1,205 @@
+from unittest import TestCase
+
+from src.avanza_bank.client.models.instrument.warrant import InstrumentWarrant
+
+
+class Test_InstrumentWarrant(TestCase):
+    def test_instrument_warrant(self):
+        instrument_warrant = {
+            "orderbookId": "1757509",
+            "name": "TURBO L OMX AVA 1904",
+            "isin": "GB00BSJJKJ23",
+            "tradable": "BUYABLE_AND_SELLABLE",
+            "listing": {
+                "shortName": "TURBO L OMX AVA 1904",
+                "tickerSymbol": "TURBO L OMX AVA 1904",
+                "countryCode": "SE",
+                "currency": "SEK",
+                "marketPlaceCode": "FNSE",
+                "marketPlaceName": "First North Stockholm",
+                "tickSizeListId": "227",
+                "marketTradesAvailable": True,
+            },
+            "historicalClosingPrices": {
+                "oneDay": 91.13,
+                "oneWeek": 125.01,
+                "oneMonth": 65.1,
+                "start": 58.12,
+                "startDate": "2024-04-23",
+            },
+            "keyIndicators": {
+                "parity": 1.0,
+                "barrierLevel": 2496.297238,
+                "financingLevel": 2496.3,
+                "direction": "Lång",
+                "leverage": 21.56,
+                "numberOfOwners": 5,
+                "subType": "KNOCK_OUT",
+                "isAza": True,
+            },
+            "quote": {
+                "buy": 121.13,
+                "sell": 121.38,
+                "last": 123.1,
+                "highest": 123.1,
+                "lowest": 112.0,
+                "change": 31.97,
+                "changePercent": 35.08,
+                "spread": 0.21,
+                "timeOfLast": 1717583698000,
+                "totalValueTraded": 11544.6,
+                "totalVolumeTraded": 101,
+                "updated": 1717587387365,
+                "volumeWeightedAveragePrice": 114.3,
+            },
+            "type": "WARRANT",
+            "underlying": {
+                "orderbookId": "19002",
+                "name": "OMX Stockholm 30",
+                "instrumentType": "INDEX",
+                "instrumentSubType": "SECTOR",
+                "quote": {
+                    "last": 2611.86,
+                    "highest": 2614.02,
+                    "lowest": 2598.0,
+                    "change": 24.16,
+                    "changePercent": 0.93,
+                    "timeOfLast": 1717587389000,
+                    "totalValueTraded": 3380382927.65,
+                    "totalVolumeTraded": 36548430,
+                    "updated": 1717587389167,
+                },
+                "listing": {
+                    "shortName": "OMXS30",
+                    "tickerSymbol": "OMXS30",
+                    "countryCode": "SE",
+                    "currency": "SEK",
+                    "marketPlaceCode": "XXXX",
+                    "marketPlaceName": "Inofficiella (beQuoted)",
+                    "tickSizeListId": "7700011",
+                    "marketTradesAvailable": True,
+                },
+                "previousClosingPrice": 2587.7,
+            },
+            "issuer": "Morgan Stanley & Co. International plc",
+            "documents": {
+                "kid": "https://api.priiphub.com/hub/kid-portal/kid/identifier/...",
+                "prospectus": "https://etp.morganstanley.com/SE/sv-SE/UnitedDocumentSection/...",
+            },
+            "orderDepth": {
+                "receivedTime": 1717587387365,
+                "levels": [
+                    {
+                        "buySide": {
+                            "price": 121.13,
+                            "priceString": "121.13",
+                            "volume": 10000,
+                        },
+                        "sellSide": {
+                            "price": 121.38,
+                            "priceString": "121.38",
+                            "volume": 10000,
+                        },
+                    },
+                    {
+                        "buySide": {"price": 0.0, "priceString": "0.00", "volume": 0.0},
+                        "sellSide": {
+                            "price": 149.18,
+                            "priceString": "149.18",
+                            "volume": 100,
+                        },
+                    },
+                ],
+                "marketMakerLevelInBid": 0,
+                "marketMakerLevelInAsk": 0,
+            },
+            "orderDepthLevels": [
+                {
+                    "buySide": {
+                        "price": 121.13,
+                        "priceString": "121.13",
+                        "volume": 10000,
+                    },
+                    "sellSide": {
+                        "price": 121.38,
+                        "priceString": "121.38",
+                        "volume": 10000,
+                    },
+                },
+                {
+                    "buySide": {"price": 0.0, "priceString": "0.00", "volume": 0.0},
+                    "sellSide": {
+                        "price": 149.18,
+                        "priceString": "149.18",
+                        "volume": 100,
+                    },
+                },
+            ],
+            "brokerTradeSummaries": [
+                {
+                    "brokerCode": "MSN",
+                    "sellVolume": 10,
+                    "buyVolume": 91,
+                    "netBuyVolume": 81,
+                    "brokerName": "Morgan Stanley Europe SE",
+                },
+                {
+                    "brokerCode": "AVA",
+                    "sellVolume": 91,
+                    "buyVolume": 10,
+                    "netBuyVolume": -81,
+                    "brokerName": "Avanza Bank AB",
+                },
+            ],
+            "fee": {"totalMonetaryFee": 37.45, "totalPercentageFee": 0.37},
+            "trades": [
+                {
+                    "buyer": "MSN",
+                    "buyerName": "Morgan Stanley Europe SE",
+                    "seller": "AVA",
+                    "sellerName": "Avanza Bank AB",
+                    "dealTime": 1717583698000,
+                    "price": 123.1,
+                    "volume": 14,
+                    "matchedOnMarket": True,
+                    "cancelled": False,
+                },
+                {
+                    "buyer": "MSN",
+                    "buyerName": "Morgan Stanley Europe SE",
+                    "seller": "AVA",
+                    "sellerName": "Avanza Bank AB",
+                    "dealTime": 1717573973000,
+                    "price": 118.23,
+                    "volume": 10,
+                    "matchedOnMarket": True,
+                    "cancelled": False,
+                },
+                {
+                    "buyer": "AVA",
+                    "buyerName": "Avanza Bank AB",
+                    "seller": "MSN",
+                    "sellerName": "Morgan Stanley Europe SE",
+                    "dealTime": 1717573046000,
+                    "price": 113.49,
+                    "volume": 10,
+                    "matchedOnMarket": True,
+                    "cancelled": False,
+                },
+                {
+                    "buyer": "MSN",
+                    "buyerName": "Morgan Stanley Europe SE",
+                    "seller": "AVA",
+                    "sellerName": "Avanza Bank AB",
+                    "dealTime": 1717571300000,
+                    "price": 112.0,
+                    "volume": 67,
+                    "matchedOnMarket": True,
+                    "cancelled": False,
+                },
+            ],
+            "tradingUnit": 1,
+            "collateralValue": 0.0,
+        }
+
+        assert isinstance(InstrumentWarrant(**instrument_warrant), InstrumentWarrant)

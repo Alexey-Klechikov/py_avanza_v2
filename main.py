@@ -5,23 +5,32 @@ log = get_logger("main")
 
 # omx_30 = "19002"
 
-###############
-# from src.operators.avanza_bank import Watchlists
+##############
+# from src.avanza_bank.client import get_client
+# from src.avanza_bank.operators import Watchlists
 # wl = Watchlists(get_client())
 # wl.update_watchlists()
-# wl.get_watchlists()
+# wl.refresh_watchlists()
+
+# print(wl.valid_instruments)
+# print(wl.preferred_instrument)
+
 
 ###############
-# from src.operators.avanza_bank import Balance
-# bl = Balance(get_client())
-# bl.get_balance()
+# from src.avanza_bank.client import get_client
+# from src.avanza_bank.operators import Portfolio
+# bl = Portfolio(get_client())
+# bl.refresh_balance()
+# bl.refresh_positions()
+
 # print(bl.total_value)
 # print(bl.buying_power)
+# print(bl.positions)
 
 
 ###############
-# from src.clients.avanza_bank import get_client
-# from src.operators.avanza_bank import Orders
+# from src.avanza_bank.client import get_client
+# from src.avanza_bank.operators import Orders
 # from avanza.constants import OrderType
 
 # account_id = "5554179"
@@ -34,6 +43,19 @@ log = get_logger("main")
 # ord.delete_all()
 # ord.reload_active()
 # ord.place(order_book_id, order_type, price, volume)
-# print(ord.active_order)
+# print(ord.active_order, "\n")
+
 # ord.edit_active(new_price=31)
+# print(ord.active_order, "\n")
+
+# ord.delete_all()
+# ord.reload_active()
 # print(ord.active_order)
+
+###############
+# from src.avanza_bank.client import get_client
+# from src.avanza_bank.operators import Chart
+# from avanza.constants import TimePeriod, Resolution
+
+# ch = Chart(get_client())
+# print(ch.get_chart_data("19002", TimePeriod.TODAY, Resolution.MINUTE))
