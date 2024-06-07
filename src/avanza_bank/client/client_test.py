@@ -3,8 +3,8 @@ from unittest import TestCase
 
 from avanza import InstrumentType, OrderType, Resolution, TimePeriod
 
-from src.avanza_bank.client.client import get_client
-from src.avanza_bank.client.models import (
+from avanza_bank.client.client import get_client
+from avanza_bank.client.models import (
     AccountOverview,
     AccountsPositions,
     InstrumentCertificate,
@@ -14,8 +14,8 @@ from src.avanza_bank.client.models import (
     Orders,
     SearchResult,
 )
-from src.avanza_bank.client.models.chart_data import ChartData
-from src.data.settings import ACCOUNT_ID
+from avanza_bank.client.models.chart_data import ChartData
+from data.settings import ACCOUNT_ID
 
 
 class Test_AvanzaClient(TestCase):

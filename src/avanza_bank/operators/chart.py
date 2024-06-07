@@ -1,8 +1,8 @@
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
-from src.avanza_bank.client import Avanza
-from src.utils.logger import get_logger
+from avanza_bank.client import Avanza
+from utils.logger import get_logger
 
 log = get_logger("avanza_bank.operators.chart")
 

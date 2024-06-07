@@ -1,9 +1,9 @@
 from avanza.models import WatchList
 
-from src.avanza_bank.client import Avanza
-from src.avanza_bank.operators.models import Orderbook, PreferredInstrument, ValidInstruments
-from src.data.settings import CERTIFICATE_MULTIPLIER
-from src.utils.logger import get_logger
+from avanza_bank.client import Avanza
+from avanza_bank.operators.models import Orderbook, PreferredInstrument, ValidInstruments
+from data.settings import CERTIFICATE_MULTIPLIER
+from utils.logger import get_logger
 
 log = get_logger("avanza_bank.operators.watchlists")
 

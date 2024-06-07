@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.avanza_bank.client.models.order.delete import DeleteOrderResponse
+from avanza_bank.client.models.order.delete import DeleteOrderResponse
 
 
 class Test_DeleteOrderResponse(TestCase):

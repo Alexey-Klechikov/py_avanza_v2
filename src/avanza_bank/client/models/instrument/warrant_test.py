@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.avanza_bank.client.models.instrument.warrant import InstrumentWarrant
+from avanza_bank.client.models.instrument.warrant import InstrumentWarrant
 
 
 class Test_InstrumentWarrant(TestCase):

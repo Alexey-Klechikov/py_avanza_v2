@@ -1,4 +1,4 @@
-from src.utils.logger import get_logger, set_handlers
+from utils.logger import get_logger, set_handlers
 
 set_handlers("WIP")
 log = get_logger("main")
@@ -6,8 +6,8 @@ log = get_logger("main")
 # omx_30 = "19002"
 
 ##############
-# from src.avanza_bank.client import get_client
-# from src.avanza_bank.operators import Watchlists
+# from avanza_bank.client import get_client
+# from avanza_bank.operators import Watchlists
 # wl = Watchlists(get_client())
 # wl.update_watchlists()
 # wl.refresh_watchlists()
@@ -17,8 +17,8 @@ log = get_logger("main")
 
 
 ###############
-# from src.avanza_bank.client import get_client
-# from src.avanza_bank.operators import Portfolio
+# from avanza_bank.client import get_client
+# from avanza_bank.operators import Portfolio
 # bl = Portfolio(get_client())
 # bl.refresh_balance()
 # bl.refresh_positions()
@@ -29,8 +29,8 @@ log = get_logger("main")
 
 
 ###############
-# from src.avanza_bank.client import get_client
-# from src.avanza_bank.operators import Orders
+# from avanza_bank.client import get_client
+# from avanza_bank.operators import Orders
 # from avanza.constants import OrderType
 
 # account_id = "5554179"
@@ -52,10 +52,11 @@ log = get_logger("main")
 # ord.reload_active()
 # print(ord.active_order)
 
+
 ###############
-# from src.avanza_bank.client import get_client
-# from src.avanza_bank.operators import Chart
-# from avanza.constants import TimePeriod, Resolution
+# from avanza.constants import Resolution, TimePeriod
+# from avanza_bank.client import get_client
+# from avanza_bank.operators import Chart
 
 # ch = Chart(get_client())
 # print(ch.get_chart_data("19002", TimePeriod.TODAY, Resolution.MINUTE))

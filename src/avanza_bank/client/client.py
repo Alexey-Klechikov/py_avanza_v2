@@ -10,7 +10,7 @@ from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
 from avanza.models import WatchList
 from requests.exceptions import HTTPError
 
-from src.avanza_bank.client.models import (
+from avanza_bank.client.models import (
     AccountOverview,
     AccountsPositions,
     CallRequest,
@@ -25,9 +25,9 @@ from src.avanza_bank.client.models import (
     PlaceOrderResponse,
     SearchResult,
 )
-from src.avanza_bank.client.models.chart_data import ChartData
-from src.data.settings import USERNAME
-from src.utils.logger import get_logger
+from avanza_bank.client.models.chart_data import ChartData
+from data.settings import USERNAME
+from utils.logger import get_logger
 
 log = get_logger("avanza_bank.client.client")
 

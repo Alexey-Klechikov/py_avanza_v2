@@ -1,1 +1,1 @@
-from src.avanza_bank.client.client import Avanza, get_client
+from avanza_bank.client.client import Avanza, get_client

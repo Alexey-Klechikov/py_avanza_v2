@@ -3,8 +3,8 @@ import logging
 import os
 from logging import Logger
 
-from .filters import LevelFilter
-from .formatters import ColoredFormatter, OneLineFormatter
+from utils.logger.filters import LevelFilter
+from utils.logger.formatters import ColoredFormatter, OneLineFormatter
 
 
 def _get_log_file_name(file_prefix: str) -> str:

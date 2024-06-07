@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.avanza_bank.client.models.order.edit import EditOrderResponse
+from avanza_bank.client.models.order.edit import EditOrderResponse
 
 
 class Test_EditOrderResponse(TestCase):

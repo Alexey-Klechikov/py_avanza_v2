@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.avanza_bank.client.models.search_result import SearchResult
+from avanza_bank.client.models.search_result import SearchResult
 
 
 class Test_SearchResult(TestCase):

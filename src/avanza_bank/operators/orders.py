@@ -3,10 +3,10 @@ from typing import Optional
 
 from avanza.constants import OrderType
 
-from src.avanza_bank.client import Avanza
-from src.avanza_bank.client.models import Order, OrderException
-from src.data.settings import ACCOUNT_ID
-from src.utils.logger import get_logger
+from avanza_bank.client import Avanza
+from avanza_bank.client.models import Order, OrderException
+from data.settings import ACCOUNT_ID
+from utils.logger import get_logger
 
 log = get_logger("avanza_bank.operators.orders")
 

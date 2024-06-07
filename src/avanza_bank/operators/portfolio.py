@@ -2,10 +2,10 @@ from typing import List
 
 from avanza.constants import InstrumentType
 
-from src.avanza_bank.client import Avanza
-from src.avanza_bank.operators.models import Position
-from src.data.settings import ACCOUNT_ID
-from src.utils.logger import get_logger
+from avanza_bank.client import Avanza
+from avanza_bank.operators.models import Position
+from data.settings import ACCOUNT_ID
+from utils.logger import get_logger
 
 log = get_logger("avanza_bank.operators.portfolio")
 

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.avanza_bank.client.models.chart_data import ChartData
+from avanza_bank.client.models.chart_data import ChartData
 
 
 class Test_ChartData(TestCase):
