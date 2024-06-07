@@ -1,0 +1,38 @@
+[ERROR]   [2024-06-03 11:38:16] [clients.avanza.client] - Missing credentials
+[ERROR]   [2024-06-03 12:15:58] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 10:39:50] [clients.avanza_bank.client] - Failed to get /_api/market-guide/index/19002
+[ERROR]   [2024-06-04 10:40:40] [clients.avanza_bank.client] - Failed to get /_api/market-guide/index/19002/details
+[ERROR]   [2024-06-04 11:09:45] [clients.avanza_bank.client] - Failed to get /_mobile/account/5554179/overview
+[ERROR]   [2024-06-04 13:21:36] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:21:41] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:21:48] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:21:56] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:23:09] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:23:14] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:23:21] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 13:23:29] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 14:28:15] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 14:28:20] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 14:28:27] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-04 14:30:00] [clients.avanza_bank.client] - Failed to get /_api/search/filtered-search
+[ERROR]   [2024-06-05 11:52:18] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 11:52:22] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 11:52:29] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 12:24:56] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 12:25:25] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 12:25:29] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 14:16:43] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 14:16:48] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 14:16:54] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:29:39] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:29:43] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:29:50] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:29:58] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:56:20] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:56:25] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:57:23] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-05 15:57:28] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-07 14:51:45] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-07 14:51:49] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-07 14:51:56] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp
+[ERROR]   [2024-06-07 15:55:28] [clients.avanza_bank.client] - 401 Client Error: Unauthorized for url: https://www.avanza.se/_api/authentication/sessions/totp

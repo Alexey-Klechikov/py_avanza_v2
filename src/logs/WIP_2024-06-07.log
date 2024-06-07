@@ -1,0 +1,39 @@
+[INFO]    [10:22:51] [operators.avanza_bank.watchlists] - Update watchlists
+[INFO]    [10:22:59] [operators.avanza_bank.watchlists] - Set active instrument for watchlists
+[INFO]    [10:22:59] [operators.avanza_bank.watchlists] - > Active instrument set: MINI L OMX AVA 859 [leverage 26.58]
+[INFO]    [10:22:59] [operators.avanza_bank.watchlists] - > Active instrument set: 🔴 BEAR OMX X20 AVA 48 [leverage 20.0]
+[INFO]    [15:25:38] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:26:44] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:26:44] [operators.avanza_bank.orders] - Active order updated set
+[WARNING] [15:26:44] [operators.avanza_bank.orders] - More than one active order found (2)
+[INFO]    [15:26:44] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:35:48] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:35:49] [operators.avanza_bank.orders] - Active order updated set
+[INFO]    [15:37:43] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:37:43] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:37:43] [operators.avanza_bank.orders] - Active order updated set
+[INFO]    [15:39:57] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:39:57] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:39:57] [operators.avanza_bank.orders] - Active order updated set
+[INFO]    [15:40:23] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:40:23] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:40:23] [operators.avanza_bank.orders] - Active order updated set
+[INFO]    [15:41:06] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:41:06] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:41:06] [operators.avanza_bank.orders] - Active order updated set
+[INFO]    [15:43:33] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:43:33] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:43:33] [operators.avanza_bank.orders] - Active order updated set
+[INFO]    [15:44:41] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:44:41] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:44:41] [operators.avanza_bank.orders] - Active order set
+[INFO]    [15:54:15] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:54:16] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:54:16] [operators.avanza_bank.orders] - Active order set
+[INFO]    [15:55:13] [operators.avanza_bank.orders] - Order deleted
+[INFO]    [15:55:13] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:55:13] [operators.avanza_bank.orders] - Active order set
+[INFO]    [15:55:13] [operators.avanza_bank.orders] - Order edited
+[INFO]    [15:55:33] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:55:33] [operators.avanza_bank.orders] - Active order set
+[INFO]    [15:55:33] [operators.avanza_bank.orders] - Order edited

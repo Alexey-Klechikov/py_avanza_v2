@@ -1,0 +1,4 @@
+[DEBUG]   [15:55:27] [clients.avanza_bank.client] - Connecting to Avanza
+[INFO]    [15:55:33] [operators.avanza_bank.orders] - Order placed
+[INFO]    [15:55:33] [operators.avanza_bank.orders] - Active order set
+[INFO]    [15:55:33] [operators.avanza_bank.orders] - Order edited
