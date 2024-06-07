@@ -926,5 +926,6 @@ class Test_AccountsPositions(TestCase):
         }
 
         assert isinstance(
-            AccountsPositions(**mock_accounts_positions), AccountsPositions
+            AccountsPositions(**mock_accounts_positions),
+            AccountsPositions,
         )

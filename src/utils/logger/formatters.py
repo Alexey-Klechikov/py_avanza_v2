@@ -1,5 +1,5 @@
-import logging
 import copy
+import logging
 
 
 class OneLineFormatter(logging.Formatter):
@@ -35,7 +35,8 @@ class OneLineFormatter(logging.Formatter):
 
             if self.displacements[i]["type"] == "message":
                 self.displacements[i]["size"] = max(
-                    len(block), self.displacements[i]["size"]
+                    len(block),
+                    self.displacements[i]["size"],
                 )
 
         return s

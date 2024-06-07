@@ -12,8 +12,7 @@ class Test_SearchResult(TestCase):
                     "type": "STOCK",
                     "title": "Tesla (TSLA)",
                     "highlightedTitle": '<mark class="bold">Tesla</mark> (TSLA)',
-                    "description": "Tesla är en amerikansk fordonstillverkare. Bolaget är specialiserade inom tillverkning av batteridrivna fordon. Fordonen säljs under eget varumärke samt under olika modeller. Bolaget har även ett globalt supercharger nätverk som möjliggör snabb laddning innan avfärd. Produktionen av bilarna utgår ifrån egna produktionsanläggningar inom den nordamerikanska marknaden. Huvudkontoret är beläget i Texas.",
-                    "highlightedDescription": '<mark class="bold">Tesla</mark> är en amerikansk',
+                    "description": "Tesla är en amerikansk fordonstillverkare. Bolaget är specialiserade ...",
                     "path": None,
                     "flagCode": "US",
                     "orderBookId": "238449",
@@ -1490,7 +1489,7 @@ class Test_SearchResult(TestCase):
                     {"type": "CERTIFICATE", "count": 302},
                     {"type": "WARRANT", "count": 410},
                     {"type": "EQUITY_LINKED_BOND", "count": 1},
-                ]
+                ],
             },
         }
 

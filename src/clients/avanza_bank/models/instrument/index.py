@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field, field_validator
 from datetime import date, datetime
-from typing import List
+from typing import List, Optional
 
-convert_timestamp_to_datetime = lambda v: (
-    datetime.fromtimestamp(v / 1000) if v is not None else None
-)
+from pydantic import BaseModel, Field, field_validator
+
+
+def convert_timestamp_to_datetime(v: Optional[int]):
+    return datetime.fromtimestamp(v / 1000) if v is not None else None
 
 
 class Listing(BaseModel):
@@ -115,7 +116,7 @@ class InstrumentIndex(BaseModel):
     tradable: str
     listing: Listing
     historical_closing_prices: HistoricalClosingPrices = Field(
-        alias="historicalClosingPrices"
+        alias="historicalClosingPrices",
     )
     key_indicators: KeyIndicators = Field(alias="keyIndicators")
     quote: Quote
@@ -124,7 +125,7 @@ class InstrumentIndex(BaseModel):
     company: Company
     company_owners: CompanyOwners = Field(alias="companyOwners")
     broker_trade_summaries: List[BrokerTradeSummary] = Field(
-        alias="brokerTradeSummaries"
+        alias="brokerTradeSummaries",
     )
     dividends: Dividends
     trading_terms: TradingTerms = Field(alias="tradingTerms")

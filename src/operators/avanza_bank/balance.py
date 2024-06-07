@@ -1,8 +1,6 @@
-from typing import Optional
-
 from src.clients.avanza_bank import Avanza
-from src.utils.logger import get_logger
 from src.data.settings import ACCOUNT_ID
+from src.utils.logger import get_logger
 
 log = get_logger("operators.avanza_bank.balance")
 
@@ -10,7 +8,7 @@ log = get_logger("operators.avanza_bank.balance")
 class Balance:
     def __init__(self, client: Avanza):
         self.client = client
-        
+
         self.total_value = 0
         self.buying_power = 0
 

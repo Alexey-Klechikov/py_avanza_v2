@@ -1,7 +1,8 @@
 import datetime
 import logging
-from logging import Logger
 import os
+from logging import Logger
+
 from .filters import LevelFilter
 from .formatters import ColoredFormatter, OneLineFormatter
 
@@ -23,7 +24,11 @@ def _create_console_handler(log: Logger, log_levels: tuple) -> None:
 
 
 def _create_file_handler(
-    log: Logger, file_name: str, log_levels: tuple, write_mode: str, datefmt="%H:%M:%S"
+    log: Logger,
+    file_name: str,
+    log_levels: tuple,
+    write_mode: str,
+    datefmt="%H:%M:%S",
 ) -> None:
     fh = logging.FileHandler(file_name, write_mode)
     fh.addFilter(LevelFilter(log_levels))

@@ -13,7 +13,8 @@ class Test_PlaceOrderResponse(TestCase):
         }
 
         assert isinstance(
-            PlaceOrderResponse(**place_order_response), PlaceOrderResponse
+            PlaceOrderResponse(**place_order_response),
+            PlaceOrderResponse,
         )
 
         place_order_response = {
@@ -24,5 +25,6 @@ class Test_PlaceOrderResponse(TestCase):
         }
 
         assert isinstance(
-            PlaceOrderResponse(**place_order_response), PlaceOrderResponse
+            PlaceOrderResponse(**place_order_response),
+            PlaceOrderResponse,
         )

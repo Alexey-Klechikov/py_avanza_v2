@@ -62,8 +62,8 @@ class Test_AccountOverview(TestCase):
                             "unit": "SEK",
                             "unitType": "MONETARY",
                             "decimalPrecision": 2,
-                        }
-                    }
+                        },
+                    },
                 ],
             },
             "totalDevelopment": {
@@ -234,8 +234,8 @@ class Test_AccountOverview(TestCase):
                             "unit": "SEK",
                             "unitType": "MONETARY",
                             "decimalPrecision": 2,
-                        }
-                    }
+                        },
+                    },
                 ],
             },
             "hasCredit": False,
@@ -305,8 +305,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "buyingPower": {
@@ -377,8 +377,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "isTradable": True,
@@ -448,8 +448,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "buyingPower": {
@@ -520,8 +520,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "isTradable": True,
@@ -591,8 +591,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "buyingPower": {
@@ -663,8 +663,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "isTradable": True,
@@ -734,8 +734,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "buyingPower": {
@@ -806,8 +806,8 @@ class Test_AccountOverview(TestCase):
                                     "unit": "SEK",
                                     "unitType": "MONETARY",
                                     "decimalPrecision": 2,
-                                }
-                            }
+                                },
+                            },
                         ],
                     },
                     "isTradable": True,

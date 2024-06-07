@@ -83,8 +83,8 @@ class Test_InstrumentWarrant(TestCase):
             },
             "issuer": "Morgan Stanley & Co. International plc",
             "documents": {
-                "kid": "https://api.priiphub.com/hub/kid-portal/kid/identifier/GB00BSJJKJ23?documentType=pdf&jurisdiction=SE&language=SV",
-                "prospectus": "https://etp.morganstanley.com/SE/sv-SE/UnitedDocumentSection/GeneralDocument/3f7e9726-bfba-471b-b6fc-b5c9d255aea8/Slutgiltiga-villkor-GB00BSJJKJ23.pdf",
+                "kid": "https://api.priiphub.com/hub/kid-portal/kid/identifier/...",
+                "prospectus": "https://etp.morganstanley.com/SE/sv-SE/UnitedDocumentSection/...",
             },
             "orderDepth": {
                 "receivedTime": 1717587387365,

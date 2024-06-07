@@ -13,7 +13,8 @@ class Test_DeleteOrderResponse(TestCase):
         }
 
         assert isinstance(
-            DeleteOrderResponse(**delete_order_response), DeleteOrderResponse
+            DeleteOrderResponse(**delete_order_response),
+            DeleteOrderResponse,
         )
 
         delete_order_response = {
@@ -24,5 +25,6 @@ class Test_DeleteOrderResponse(TestCase):
         }
 
         assert isinstance(
-            DeleteOrderResponse(**delete_order_response), DeleteOrderResponse
+            DeleteOrderResponse(**delete_order_response),
+            DeleteOrderResponse,
         )

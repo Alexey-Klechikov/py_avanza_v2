@@ -94,7 +94,7 @@ class Test_InstrumentStock(TestCase):
             },
             "company": {
                 "companyId": "25427",
-                "description": "Vertiseit är ett SaaS-bolag inom Digital In-store som erbjuder In-store Experience Management (IXM)-plattformarna Grassfish och Dise. Bolagets plattformar är utformade för att stärka kundupplevelsen i retail genom att sammankoppla det digitala och fysiska kundmötet. För skalbarhet och global räckvidd sker Vertiseits försäljning tillsammans med partners. Bolaget grundades 2008 och har sitt huvudkontor i Varberg, Sverige.",
+                "description": "Vertiseit är ett SaaS-bolag inom Digital ...",
                 "ceo": "Johan Lind",
                 "chairman": "Ann Öberg",
                 "totalNumberOfShares": 22912912,
@@ -110,7 +110,7 @@ class Test_InstrumentStock(TestCase):
                     {"date": "2024-05-02", "type": "GENERAL_MEETING"},
                     {"date": "2023-07-19", "type": "INTERIM_REPORT"},
                     {"date": "2025-02-12", "type": "ANNUAL_REPORT"},
-                ]
+                ],
             },
             "companyOwners": {
                 "owners": [
@@ -174,7 +174,7 @@ class Test_InstrumentStock(TestCase):
                     "buyVolume": 11007,
                     "netBuyVolume": 0,
                     "brokerName": "ANON",
-                }
+                },
             ],
             "dividends": {
                 "events": [],
@@ -225,7 +225,7 @@ class Test_InstrumentStock(TestCase):
                     "instrumentType": "FUND",
                     "countryCode": "SE",
                     "hasPosition": False,
-                }
+                },
             ],
             "trades": [
                 {

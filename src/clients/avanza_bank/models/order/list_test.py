@@ -60,7 +60,7 @@ class Test_Orders(TestCase):
                     "message": "Det är inte tillåtet att blanka det här värdepappret.",
                     "state": "FAILED",
                     "stateText": "Felaktig",
-                    "stateMessage": "Ett fel har uppstått med din order. Vänligen kontakta Avanza Banks mäkleri eller kundsupport om du har några frågor.",
+                    "stateMessage": "Ett fel har uppstått med din order. ...",
                     "orderbook": {
                         "id": "1757509",
                         "name": "TURBO L OMX AVA 1904",
@@ -93,7 +93,7 @@ class Test_Orders(TestCase):
                     "message": "Priset avviker från tillåtet handelsintervall. ",
                     "state": "FAILED",
                     "stateText": "Felaktig",
-                    "stateMessage": "Ett fel har uppstått med din order. Vänligen kontakta Avanza Banks mäkleri eller kundsupport om du har några frågor.",
+                    "stateMessage": "Ett fel har uppstått med din order. ...",
                     "orderbook": {
                         "id": "1757509",
                         "name": "TURBO L OMX AVA 1904",
@@ -124,10 +124,10 @@ class Test_Orders(TestCase):
                     "created": "2024-06-07T10:20:24",
                     "deletable": True,
                     "modifiable": False,
-                    "message": "Vi har tagit emot din fondorder. På din fondorder kan du se när ordern beräknas vara klar och syns på kontot, olika fonder tar olika lång tid. För mer information om hur fonden handlas, se fondens handelsinformation.",
+                    "message": "Vi har tagit emot din fondorder. ...",
                     "state": "ACTIVE",
                     "stateText": "Registrerad",
-                    "stateMessage": "Vi har tagit emot din fondorder. På din fondorder kan du se när ordern beräknas vara klar och syns på kontot, olika fonder tar olika lång tid. För mer information om hur fonden handlas, se fondens handelsinformation.",
+                    "stateMessage": "Vi har tagit emot din fondorder. ...",
                     "orderbook": {
                         "id": "878733",
                         "name": "Avanza Global",
@@ -141,7 +141,7 @@ class Test_Orders(TestCase):
                     "additionalParameters": {},
                     "visibleOnAccountDate": "2024-06-12",
                     "stopTime": "2024-06-10T10:00:00",
-                }
+                },
             ],
         }
 

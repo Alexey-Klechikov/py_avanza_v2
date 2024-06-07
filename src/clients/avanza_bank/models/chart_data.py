@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import List
 from datetime import datetime
+from typing import List
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class OHLC(BaseModel):

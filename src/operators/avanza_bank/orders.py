@@ -1,11 +1,12 @@
-from src.clients.avanza_bank import Avanza
-from src.utils.logger import get_logger
-from avanza.constants import OrderType, InstrumentType
-from src.data.settings import ACCOUNT_ID
 from datetime import date, timedelta
-from src.clients.avanza_bank.models import OrderException, Order
 from typing import Optional
-import re
+
+from avanza.constants import OrderType
+
+from src.clients.avanza_bank import Avanza
+from src.clients.avanza_bank.models import Order, OrderException
+from src.data.settings import ACCOUNT_ID
+from src.utils.logger import get_logger
 
 log = get_logger("operators.avanza_bank.orders")
 
@@ -13,7 +14,7 @@ log = get_logger("operators.avanza_bank.orders")
 class Orders:
     def __init__(self, client: Avanza):
         self.client = client
-        
+
         self.active_order: Optional[Order] = None
 
     def reload_active(self):

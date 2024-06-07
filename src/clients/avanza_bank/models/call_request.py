@@ -1,6 +1,7 @@
-from pydantic import BaseModel, field_validator
+from typing import Optional, Union
+
 from avanza import constants
-from typing import Union, Optional
+from pydantic import BaseModel, field_validator
 
 
 class CallRequest(BaseModel):

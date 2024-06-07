@@ -1,6 +1,6 @@
+from typing import List, Optional
+
 from pydantic import BaseModel, Field, field_validator
-from typing import List
-from typing import Optional
 
 
 class Price(BaseModel):
@@ -10,10 +10,10 @@ class Price(BaseModel):
     today_change_value: Optional[float] = Field(alias="todayChangeValue")
     today_change_direction: Optional[float] = Field(alias="todayChangeDirection")
     three_months_ago_change_percent: Optional[float] = Field(
-        alias="threeMonthsAgoChangePercent"
+        alias="threeMonthsAgoChangePercent",
     )
     three_months_ago_change_direction: Optional[float] = Field(
-        alias="threeMonthsAgoChangeDirection"
+        alias="threeMonthsAgoChangeDirection",
     )
     spread: Optional[float]
 

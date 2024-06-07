@@ -1,39 +1,33 @@
-from functools import cache
-import time
-from typing import Optional, List, Union
-import keyring
 import json
+import time
+from datetime import date
+from functools import cache
+from typing import List, Optional, Union
+
+import keyring
 from avanza import Avanza as AvanzaBase
-from avanza import (
-    InstrumentType,
-    Resolution,
-    TimePeriod,
-    OrderType,
-    constants,
-)
+from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
 from avanza.models import WatchList
 from requests.exceptions import HTTPError
 
-from src.utils.logger import get_logger
-from src.clients.avanza_bank.models.chart_data import ChartData
 from src.clients.avanza_bank.models import (
-    CallRequest,
-    InstrumentCertificate,
-    InstrumentStock,
-    InstrumentIndex,
-    InstrumentWarrant,
     AccountOverview,
-    SearchResult,
     AccountsPositions,
-    Orders,
-    Order,
-    PlaceOrderResponse,
+    CallRequest,
     DeleteOrderResponse,
     EditOrderResponse,
+    InstrumentCertificate,
+    InstrumentIndex,
+    InstrumentStock,
+    InstrumentWarrant,
     OrderException,
+    Orders,
+    PlaceOrderResponse,
+    SearchResult,
 )
+from src.clients.avanza_bank.models.chart_data import ChartData
 from src.data.settings import USERNAME
-from datetime import date
+from src.utils.logger import get_logger
 
 log = get_logger("clients.avanza_bank.client")
 
@@ -46,7 +40,9 @@ class Avanza(AvanzaBase):
         options: Optional[dict] = None,
     ) -> dict:
         request = CallRequest(
-            path=path, method=http_method, options=options
+            path=path,
+            method=http_method,
+            options=options,
         ).model_dump()
 
         response = {}
@@ -94,7 +90,9 @@ class Avanza(AvanzaBase):
         log.error(f"Failed to get chart data for {order_book_id}")
 
     def _get_instrument(
-        self, instrument_type: InstrumentType, instrument_id: str
+        self,
+        instrument_type: InstrumentType,
+        instrument_id: str,
     ) -> dict:
         result = {}
 
@@ -103,7 +101,7 @@ class Avanza(AvanzaBase):
             "/_api/market-guide/{}/{}/details",
         ]:
             response = self._retry_call(
-                path.format(instrument_type.value, instrument_id)
+                path.format(instrument_type.value, instrument_id),
             )
 
             if response:
@@ -142,7 +140,9 @@ class Avanza(AvanzaBase):
         return [WatchList(**i) for i in data]  # type: ignore
 
     def search_instrument(
-        self, search_string: str, types: List[Union[InstrumentType, str]]
+        self,
+        search_string: str,
+        types: List[Union[InstrumentType, str]],
     ) -> SearchResult:
         data = self._retry_call(
             path="/_api/search/filtered-search",
@@ -152,7 +152,7 @@ class Avanza(AvanzaBase):
                 "searchFilter": {
                     "types": [
                         i.name if isinstance(i, InstrumentType) else i for i in types
-                    ]
+                    ],
                 },
                 "pagination": {"from": 0, "size": 200},
             },
@@ -194,7 +194,7 @@ class Avanza(AvanzaBase):
         parsed_response = PlaceOrderResponse(**response)
         if parsed_response.order_request_status != "SUCCESS":
             raise OrderException(
-                f"Failed to place order ({parsed_response.message_code})"
+                f"Failed to place order ({parsed_response.message_code})",
             )
 
         return parsed_response.order_id
@@ -206,7 +206,7 @@ class Avanza(AvanzaBase):
         price: float,
         valid_until: date,
         volume: int,
-    ): 
+    ):
         response = self._retry_call(
             path="/_api/trading-critical/rest/order/modify",
             http_method="POST",
@@ -227,7 +227,7 @@ class Avanza(AvanzaBase):
         parsed_response = EditOrderResponse(**response)
         if parsed_response.order_request_status != "SUCCESS":
             raise OrderException(
-                f"Failed to edit order ({parsed_response.message_code})"
+                f"Failed to edit order ({parsed_response.message_code})",
             )
 
         return parsed_response.order_id
@@ -241,7 +241,7 @@ class Avanza(AvanzaBase):
         parsed_response = DeleteOrderResponse(**response)
         if parsed_response.order_request_status != "SUCCESS":
             raise OrderException(
-                f"Failed to delete order ({parsed_response.message_code})"
+                f"Failed to delete order ({parsed_response.message_code})",
             )
 
         return parsed_response.order_id

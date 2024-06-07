@@ -1,10 +1,11 @@
 from typing import Optional
 
-from src.clients.avanza_bank import Avanza
-from src.utils.logger import get_logger
-from src.operators.avanza_bank.models import Watchlist, Orderbook
-from src.data.settings import CERTIFICATE_MULTIPLIER
 from avanza.models import WatchList
+
+from src.clients.avanza_bank import Avanza
+from src.data.settings import CERTIFICATE_MULTIPLIER
+from src.operators.avanza_bank.models import Orderbook, Watchlist
+from src.utils.logger import get_logger
 
 log = get_logger("operators.avanza_bank.watchlists")
 
@@ -18,7 +19,7 @@ INSTRUMENT_DIRECTIONS = {
 class Watchlists:
     def __init__(self, client: Avanza):
         self.client = client
-        
+
         self.BULL: Optional[Watchlist] = None
         self.BEAR: Optional[Watchlist] = None
 
@@ -34,7 +35,8 @@ class Watchlists:
             )
 
             log.info(
-                f"> Active instrument set: {watchlist.active_instrument.name} [leverage {watchlist.active_instrument.leverage}]"
+                f"> Active instrument set: {watchlist.active_instrument.name}"
+                + f" [leverage {watchlist.active_instrument.leverage}]",
             )
 
     def _refresh_watchlist(self, watchlist: WatchList):
@@ -81,7 +83,7 @@ class Watchlists:
                     spread=instrument_info.quote.spread,
                     leverage=instrument_info.key_indicators.leverage,
                     start_date=instrument_info.historical_closing_prices.start_date,
-                )
+                ),
             )
 
     def refresh_watchlists(self):
@@ -122,7 +124,7 @@ class Watchlists:
 
         if search_result.total_number_of_hits == 0:
             log.error(
-                f"> Failed to find {instrument_type} instruments using '{search_string}'"
+                f"> Failed to find {instrument_type} instruments using '{search_string}'",
             )
             return
 

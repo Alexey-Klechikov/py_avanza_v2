@@ -68,7 +68,7 @@ class Test_ChartData(TestCase):
                         "hour",
                         "day",
                     ],
-                }
+                },
             },
             "from": "2024-06-03",
             "to": "2024-06-03",

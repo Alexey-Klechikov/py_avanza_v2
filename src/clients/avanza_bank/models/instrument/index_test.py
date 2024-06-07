@@ -64,7 +64,7 @@ class Test_InstrumentIndex(TestCase):
                     "buyVolume": 28836612,
                     "netBuyVolume": 0,
                     "brokerName": "ANON",
-                }
+                },
             ],
             "dividends": {"events": [], "pastEvents": []},
             "tradingTerms": {

@@ -1,20 +1,20 @@
-from unittest import TestCase
 from datetime import date
+from unittest import TestCase
 
-from avanza import InstrumentType, Resolution, TimePeriod, OrderType
+from avanza import InstrumentType, OrderType, Resolution, TimePeriod
 
 from src.clients.avanza_bank.client import get_client
-from src.clients.avanza_bank.models.chart_data import ChartData
 from src.clients.avanza_bank.models import (
-    InstrumentCertificate,
-    InstrumentStock,
-    InstrumentIndex,
     AccountOverview,
-    SearchResult,
     AccountsPositions,
+    InstrumentCertificate,
+    InstrumentIndex,
+    InstrumentStock,
     OrderException,
     Orders,
+    SearchResult,
 )
+from src.clients.avanza_bank.models.chart_data import ChartData
 from src.data.settings import ACCOUNT_ID
 
 

@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class Account(BaseModel):
@@ -72,11 +73,11 @@ class WithOrderbookPosition(BaseModel):
     value: Value
     average_acquired_price: Value = Field(alias="averageAcquiredPrice")
     average_acquired_price_instrument_currency: Value = Field(
-        alias="averageAcquiredPriceInstrumentCurrency"
+        alias="averageAcquiredPriceInstrumentCurrency",
     )
     acquired_value: Value = Field(alias="acquiredValue")
     last_trading_day_performance: LastTradingDayPerformance = Field(
-        alias="lastTradingDayPerformance"
+        alias="lastTradingDayPerformance",
     )
     collateral_factor: Value = Field(alias="collateralFactor")
     super_interest_approved: bool = Field(alias="superInterestApproved")

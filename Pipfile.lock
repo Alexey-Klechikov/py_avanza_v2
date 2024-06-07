@@ -668,6 +668,9 @@
             "version": "==2024.1"
         },
         "urllib3": {
+            "extras": [
+                "socks"
+            ],
             "hashes": [
                 "sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d",
                 "sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"

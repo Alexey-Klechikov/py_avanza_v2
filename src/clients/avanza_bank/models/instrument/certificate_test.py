@@ -84,8 +84,8 @@ class Test_InstrumentCertificate(TestCase):
             "direction": "Kort",
             "leverage": 20.0,
             "documents": {
-                "kid": "https://api.priiphub.com/hub/kid-portal/kid/identifier/GB00BQR95N95?documentType=pdf&jurisdiction=SE&language=SV",
-                "prospectus": "https://etp.morganstanley.com/SE/sv-SE/UnitedDocumentSection/GeneralDocument/2701653a-d454-44bd-a47d-8d8e8625eea6/Slutgiltiga-villkor-GB00BQR95N95.pdf",
+                "kid": "https://api.priiphub.com/hub/kid-portal/kid/identifier/...",
+                "prospectus": "https://etp.morganstanley.com/SE/sv-SE/UnitedDocumentSection/...",
             },
             "fee": {"totalMonetaryFee": 15.96, "totalPercentageFee": 0.16},
             "trades": [],
@@ -158,5 +158,6 @@ class Test_InstrumentCertificate(TestCase):
         }
 
         assert isinstance(
-            InstrumentCertificate(**mock_certificate), InstrumentCertificate
+            InstrumentCertificate(**mock_certificate),
+            InstrumentCertificate,
         )
