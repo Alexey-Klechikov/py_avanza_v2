@@ -40,9 +40,7 @@ class Watchlists:
             )
 
     def _refresh_watchlist(self, watchlist: WatchList):
-        watchlist_instrument_direction, watchlist_instrument_type = (
-            watchlist.name.split("_")[1:]
-        )
+        watchlist_instrument_direction, watchlist_instrument_type = watchlist.name.split("_")[1:]
 
         for orderbook_id in watchlist.orderbooks:
             if watchlist_instrument_type == "CERTIFICATE":
@@ -51,14 +49,10 @@ class Watchlists:
 
             elif watchlist_instrument_type == "WARRANT":
                 instrument_info = self.client.get_instrument_warrant(orderbook_id)
-                instrument_direction = INSTRUMENT_DIRECTIONS[
-                    instrument_info.key_indicators.direction
-                ]
+                instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.key_indicators.direction]
                 if (
-                    instrument_info.key_indicators.leverage
-                    < CERTIFICATE_MULTIPLIER * 0.75
-                    or instrument_info.key_indicators.leverage
-                    > CERTIFICATE_MULTIPLIER * 1.35
+                    instrument_info.key_indicators.leverage < CERTIFICATE_MULTIPLIER * 0.75
+                    or instrument_info.key_indicators.leverage > CERTIFICATE_MULTIPLIER * 1.35
                 ):
                     continue
             else:

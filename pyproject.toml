@@ -1,0 +1,21 @@
+[tool.black]
+line-length = 120
+
+[tool.flake8]
+show-source = true
+filename = ["*.py"]
+exclude = [".git", "__pycache__", "*.pyc"]
+statistics = true
+max-line-length = 120
+ignore = ["W503", "E203", "F401"]
+
+[tool.isort]
+atomic = true
+profile = "black"
+line_length = 120
+skip_gitignore = true
+known_first_party = ["black", "blib2to3", "blackd", "_black_version"]
+
+[tool.pytest.ini_options]
+testpaths = ["src"]
+filterwarnings = ["ignore::DeprecationWarning"]

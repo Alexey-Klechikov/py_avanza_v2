@@ -54,11 +54,7 @@ class Avanza(AvanzaBase):
                 time.sleep(5)
 
             if response:
-                return (
-                    response
-                    if isinstance(response, dict)
-                    else json.loads(response, parse_float=float)
-                )
+                return response if isinstance(response, dict) else json.loads(response, parse_float=float)
 
         log.error(f"Failed to get {path}")
         return {}
@@ -150,9 +146,7 @@ class Avanza(AvanzaBase):
             options={
                 "query": search_string,
                 "searchFilter": {
-                    "types": [
-                        i.name if isinstance(i, InstrumentType) else i for i in types
-                    ],
+                    "types": [i.name if isinstance(i, InstrumentType) else i for i in types],
                 },
                 "pagination": {"from": 0, "size": 200},
             },
@@ -163,7 +157,7 @@ class Avanza(AvanzaBase):
     def get_accounts_positions(self) -> AccountsPositions:
         data = super().get_accounts_positions()
 
-        return AccountsPositions(**data)
+        return AccountsPositions(**data)  # type: ignore
 
     def list_orders(self) -> Orders:
         data = self._retry_call("/_api/trading/rest/orders")

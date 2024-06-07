@@ -17,12 +17,7 @@ class OneLineFormatter(logging.Formatter):
 
     def format(self, record) -> str:
         s = super(OneLineFormatter, self).format(record)
-        s = (
-            s.replace("\n", " >>>")
-            .replace("main.", "")
-            .replace(" BULL", " 🟢 BULL")
-            .replace(" BEAR", " 🔴 BEAR")
-        )
+        s = s.replace("\n", " >>>").replace("main.", "").replace(" BULL", " 🟢 BULL").replace(" BEAR", " 🔴 BEAR")
 
         if s.find("Done"):
             s = s.split("--")[0]
@@ -64,17 +59,11 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record) -> str:
         colored_record = copy.copy(record)
         levelname = colored_record.levelname
-        colored_levelname = (
-            f"{self.PREFIX}{self.MAPPING.get(levelname, 38)}m{levelname}{self.SUFFIX}"
-        )
+        colored_levelname = f"{self.PREFIX}{self.MAPPING.get(levelname, 38)}m{levelname}{self.SUFFIX}"
         colored_record.levelname = colored_levelname
 
         s = logging.Formatter.format(self, colored_record)
-        s = (
-            s.replace("main.", "")
-            .replace(" BULL", " 🟢 BULL")
-            .replace(" BEAR", " 🔴 BEAR")
-        )
+        s = s.replace("main.", "").replace(" BULL", " 🟢 BULL").replace(" BEAR", " 🔴 BEAR")
 
         self.messages_counter += 1
 

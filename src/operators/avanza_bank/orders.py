@@ -14,15 +14,17 @@ log = get_logger("operators.avanza_bank.orders")
 class Orders:
     def __init__(self, client: Avanza):
         self.client = client
+        self.account_id = ACCOUNT_ID
 
         self.active_order: Optional[Order] = None
 
     def reload_active(self):
         self.active_order = None
 
-        orders = self.client.list_orders()
+        orders = self.client.list_orders().orders
+        orders = [i for i in orders if i.account.account_id == self.account_id]
 
-        active_orders = [i for i in orders.orders if i.state == "ACTIVE"]
+        active_orders = [i for i in orders if i.state == "ACTIVE"]
         if active_orders:
             self.active_order = max(active_orders, key=lambda x: x.created)
             log.info("Active order set")
@@ -33,7 +35,7 @@ class Orders:
                     if order.order_id != self.active_order.order_id:
                         self._delete(order.order_id)
 
-        inactive_orders = [i for i in orders.orders if i.state == "FAILED"]
+        inactive_orders = [i for i in orders if i.state == "FAILED"]
         if len(inactive_orders) > 0:
             log.warning(f"Inactive order(s) found ({len(inactive_orders)} st)")
             for order in inactive_orders:
@@ -71,7 +73,7 @@ class Orders:
     ) -> Optional[str]:
         try:
             _ = self.client.place_order(
-                account_id=ACCOUNT_ID,
+                account_id=self.account_id,
                 order_book_id=order_book_id,
                 order_type=order_type,
                 price=price,
@@ -88,7 +90,7 @@ class Orders:
 
     def _delete(self, order_id: str) -> Optional[str]:
         try:
-            _ = self.client.delete_order(account_id=ACCOUNT_ID, order_id=order_id)
+            _ = self.client.delete_order(account_id=self.account_id, order_id=order_id)
 
             log.info("Order deleted")
 
@@ -96,7 +98,8 @@ class Orders:
             log.error(f"Exception: {exc}")
 
     def delete_all(self):
-        orders = self.client.list_orders()
+        orders = self.client.list_orders().orders
+        orders = [i for i in orders if i.account.account_id == self.account_id]
 
-        for order in orders.orders:
+        for order in orders:
             self._delete(order.order_id)
