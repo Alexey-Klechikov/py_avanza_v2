@@ -17,5 +17,6 @@ skip_gitignore = true
 known_first_party = ["black", "blib2to3", "blackd", "_black_version"]
 
 [tool.pytest.ini_options]
-testpaths = ["src"]
+minversion = "6.0"
+pythonpath = ["src"]
 filterwarnings = ["ignore::DeprecationWarning"]

@@ -1,4 +1,5 @@
 import datetime
+import inspect
 import logging
 import os
 from logging import Logger
@@ -71,5 +72,8 @@ def set_handlers(
     log.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
 
 
-def get_logger(name: str) -> Logger:
-    return logging.getLogger(f"main.{name}")
+def get_logger() -> Logger:
+    caller_frame = inspect.stack()[1]
+    logger_name = caller_frame.filename.split("src/")[1].replace(".py", "").replace("/", ".")
+
+    return logging.getLogger(f"main.{logger_name}")
