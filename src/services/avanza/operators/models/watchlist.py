@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 class Orderbook(BaseModel):
     id: str
+    type: str
     name: str
     spread: Optional[float]
     buy: Optional[float]

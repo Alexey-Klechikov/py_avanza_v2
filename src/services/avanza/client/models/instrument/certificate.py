@@ -49,9 +49,9 @@ class Quote(BaseModel):
     time_of_last: datetime = Field(alias="timeOfLast")
     total_value_traded: float = Field(alias="totalValueTraded")
     total_volume_traded: int = Field(alias="totalVolumeTraded")
-    updated: int
+    updated: datetime
 
-    @field_validator("time_of_last", mode="before")
+    @field_validator("time_of_last", "updated", mode="before")
     @classmethod
     def parse_timestamp(cls, v):
         return convert_timestamp_to_datetime(v)

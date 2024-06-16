@@ -11,7 +11,10 @@ class Chart:
     def __init__(self):
         pass
 
-    def get_chart_data(self, instrument_id: str, period: TimePeriod, resolution: Resolution) -> pd.DataFrame:
+    @classmethod
+    def get_chart_data(cls, instrument_id: str, period: TimePeriod, resolution: Resolution) -> pd.DataFrame:
+        log.debug(f"Fetching chart data for {instrument_id} with period {period} and resolution {resolution}")
+
         chart_data = get_client().get_chart_data(instrument_id, period, resolution)
 
         if not chart_data:

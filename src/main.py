@@ -11,9 +11,9 @@ log = get_logger()
 
 # omx_30 = "19002"
 def tests_avanza():
-    pass
     ##############
     # from services.avanza.operators import Watchlists
+
     # wl = Watchlists()
     # wl.update_watchlists()
     # wl.refresh_watchlists()
@@ -58,15 +58,56 @@ def tests_avanza():
     # from avanza.constants import Resolution, TimePeriod
     # from services.avanza.operators import Chart
 
-    # ch = Chart()
-    # print(ch.get_chart_data("19002", TimePeriod.TODAY, Resolution.MINUTE))
+    # data = Chart.get_chart_data("19002", TimePeriod.ONE_MONTH, Resolution.HOUR)
+    # print(data)
+    # return data
+
+    ###############
+    # from services.avanza.operators.instrument import Instrument
+    # from avanza.constants import InstrumentType
+
+    # 1628492 - cert
+    # 19002 - index
+    # 1734794 - WARRANT
+    # stock - 5447
+
+    # print(Instrument.get(instrument_id="1628492", instrument_type=InstrumentType.CERTIFICATE))
+
+    return
 
 
 def tests_yahoo():
-    pass
-    ###############
+    ############
     # from services.yahoo.client.models import Interval, Period
     # from services.yahoo.operators import Ticker
+    # from data.settings import OMX30_YAHOO
 
-    # data = Ticker.get_history(ticker_yahoo="OMX", period=Period.ONE_YEAR, interval=Interval.ONE_MINUTE)
+    # data = Ticker(OMX30_YAHOO).get_history(period=Period.ONE_YEAR, interval=Interval.SIXTY_MINUTES)
     # print(data)
+    # return data
+
+    return
+
+
+def tests_storage(data_ava, data_yahoo):
+    ############
+    # from services.storage import Storage
+
+    # from data.settings import OMX30_YAHOO
+
+    # from services.yahoo.client.models import Interval, Period
+
+    # data = Storage(OMX30_YAHOO, period="1y", interval="60m", cache="reuse")
+
+    # Storage(OMX30_YAHOO, resolution="60m").write(data_yahoo)
+    # Storage(OMX30_YAHOO, resolution="60m").append(data_ava)
+
+    # print(Storage(OMX30_YAHOO, resolution="60m").read())
+
+    return
+
+
+if __name__ == "__main__":
+    data_ava = tests_avanza()
+    data_yahoo = tests_yahoo()
+    tests_storage(data_ava, data_yahoo)

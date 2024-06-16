@@ -10,21 +10,26 @@ log = get_logger()
 
 
 class Ticker:
-    def __init__(self):
-        pass
+    def __init__(self, ticker_yahoo: str):
+        self.ticker_yahoo = ticker_yahoo
 
-    @classmethod
     def _get_extended_history(
-        cls,
-        ticker_yahoo: str,
+        self,
         period: Period,
         interval: Interval,
     ) -> pd.DataFrame:
         history = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
 
         # 1m data is available for max 30 days
-        # 2m & 5m data is available for max 60 days
-        available_period_days = 29 if interval.mins == 1 else 59
+        # 2m - 45 days
+        # 5m - 60 days
+        available_period_days = period.days
+        if interval.mins == 1:
+            available_period_days = 29
+        elif interval.mins == 2:
+            available_period_days = 44
+        elif interval.mins == 5:
+            available_period_days = 59
 
         dates = pd.date_range(
             start=date.today() - timedelta(days=min(period.days, available_period_days)),
@@ -38,18 +43,26 @@ class Ticker:
             history = pd.concat(
                 [
                     history,
-                    Yahoo.get_history(ticker_yahoo=ticker_yahoo, interval=interval, start=start_date, end=end_date),
+                    Yahoo.get_history(
+                        ticker_yahoo=self.ticker_yahoo,
+                        interval=interval,
+                        start=start_date,
+                        end=end_date,
+                    ),
                 ],
             )
 
         return history.drop_duplicates().sort_index(axis=0)
 
-    @classmethod
-    def get_history(cls, ticker_yahoo: str, period: Period, interval: Interval) -> pd.DataFrame:
-        log.info(f"Fetching history for {ticker_yahoo} with period {period} and interval {interval}")
+    def get_history(self, period: Period, interval: Interval) -> pd.DataFrame:
+        log.debug(f"Fetching history for {self.ticker_yahoo} with period {period} and interval {interval}")
 
-        return (
-            cls._get_extended_history(ticker_yahoo, period, interval)
+        history = (
+            self._get_extended_history(period, interval)
             if period.days > 7 and interval.mins <= 5
-            else Yahoo.get_history(ticker_yahoo=ticker_yahoo, period=period, interval=interval)
+            else Yahoo.get_history(ticker_yahoo=self.ticker_yahoo, period=period, interval=interval)
         )
+
+        history.index = history.index.tz_convert("Europe/Stockholm").tz_localize(None)  # type: ignore
+
+        return history

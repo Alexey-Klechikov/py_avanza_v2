@@ -93,10 +93,10 @@ class Quote(BaseModel):
     time_of_last: datetime = Field(alias="timeOfLast")
     total_value_traded: float = Field(alias="totalValueTraded")
     total_volume_traded: int = Field(alias="totalVolumeTraded")
-    updated: int
+    updated: datetime
     volume_weighted_average_price: float = Field(alias="volumeWeightedAveragePrice")
 
-    @field_validator("time_of_last", mode="before")
+    @field_validator("time_of_last", "updated", mode="before")
     @classmethod
     def parse_timestamp(cls, v):
         return convert_timestamp_to_datetime(v)
@@ -235,4 +235,3 @@ class InstrumentStock(BaseModel):
     fund_exposures: List[FundExposure] = Field(alias="fundExposures")
     trades: List[Trade]
     order_depth: OrderDepth = Field(alias="orderDepth")
-    order_depth_levels: List[dict] = Field(alias="orderDepthLevels")

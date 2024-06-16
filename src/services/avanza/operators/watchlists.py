@@ -73,6 +73,7 @@ class Watchlists:
                     name=instrument_info.name,
                     buy=instrument_info.quote.buy,
                     sell=instrument_info.quote.sell,
+                    type=instrument_info.type,
                     spread=instrument_info.quote.spread,
                     leverage=instrument_info.key_indicators.leverage,
                     start_date=instrument_info.historical_closing_prices.start_date,
