@@ -41,19 +41,26 @@ jobs:
           "task_backup 2 3 * * 1-5"
         )
 
+        # Fetch existing crontab
+        existing_crontab=$(ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -l")
+
+        # Prepare updated crontab
+        updated_crontab="$existing_crontab"
+
         # Loop through cronjobs to update crontab
         for job in "${cronjobs[@]}"; do
           task_name=$(echo "$job" | awk '{print $1}')
           cron_schedule=$(echo "$job" | awk '{$1=""; print $0}')
 
           # Check if task_name already exists in crontab
-          if ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -l | grep -q '/home/ubuntu/pyAvanza/$task_name'"; then
+          if echo "$existing_crontab" | grep -q "/home/ubuntu/pyAvanza/$task_name"; then
             # Task exists, replace old entry
-            ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
-              "crontab -l | sed -e '/\/home\/ubuntu\/pyAvanza\/$task_name/d' | crontab -"
+            updated_crontab=$(echo "$updated_crontab" | sed -e "/\/home\/ubuntu\/pyAvanza\/$task_name/d")
           fi
 
           # Add the new cron job
-          ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
-            "echo '$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py' | crontab -"
+          updated_crontab="$updated_crontab\n$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
         done
+
+        # Update crontab on remote server
+        echo -e "$updated_crontab" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -"
