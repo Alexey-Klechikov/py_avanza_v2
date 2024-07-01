@@ -35,16 +35,15 @@ jobs:
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
           ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
 
-        # Define cronjobs as an array of tuples (task_name, cron_schedule)
         cronjobs=(
-          ("task_eod" "0 19 * * 1-5")
-          ("task_backup" "2 3 * * 1-5")
+          "task_eod 0 19 * * 1-5"
+          "task_backup 2 3 * * 1-5"
         )
 
         # Update crontab for each cronjob
         for job in "${cronjobs[@]}"; do
-          task_name="${job[0]}"
-          cron_schedule="${job[1]}"
+          task_name=$(echo "$job" | awk '{print $1}')
+          cron_schedule=$(echo "$job" | awk '{$1=""; print $0}')
 
           # Check if task_name already exists in crontab
           if ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -l | grep -q '/home/ubuntu/pyAvanza/$task_name'"; then
