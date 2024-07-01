@@ -36,7 +36,8 @@ jobs:
           ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
 
         # Define cronjobs as a string separated by newlines
-        cronjobs="task_eod 0 19 * * 1-5"
+        cronjobs="task_eod 0 19 * * 1-5
+                  task_backup 2 3 * * 1-5"
 
         # Update crontab for each cronjob
         echo "$cronjobs" | while read -r line; do
