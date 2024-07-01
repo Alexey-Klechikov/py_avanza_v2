@@ -43,7 +43,7 @@ jobs:
       run: |
         # Define cronjobs as a simple array of strings
         cronjobs=(
-          "task_eod 0 19 * * 1-5"
+          "task_eod 0 19,22 * * 1-5"
         )
 
         # Fetch existing crontab

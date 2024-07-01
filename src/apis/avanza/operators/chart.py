@@ -24,7 +24,7 @@ class Chart:
             available_period = TimePeriod.ONE_MONTH
 
         if available_period and period != available_period:
-            log.warning(
+            log.debug(
                 f"Period {period.name} is not available for resolution {resolution.name}. "
                 f"Using {available_period.name} instead.",
             )

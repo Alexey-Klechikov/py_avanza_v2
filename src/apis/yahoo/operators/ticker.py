@@ -22,14 +22,14 @@ class Ticker:
 
         available_period_days = period.days
         if interval.mins == 1:
-            available_period_days = 28
+            available_period_days = 22
         elif interval.mins == 2:
-            available_period_days = 44
+            available_period_days = 42
         elif interval.mins == 5:
             available_period_days = 59
 
         if period.days > available_period_days:
-            log.warning(
+            log.debug(
                 f"Period {period.days} days is not available for interval {interval.mins} minutes. "
                 f"Using {available_period_days} days instead.",
             )
