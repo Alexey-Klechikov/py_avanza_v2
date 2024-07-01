@@ -32,3 +32,6 @@ jobs:
 
         # Use rsync to copy only files under src/ directory to remote server
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
+
+        # Check if cronjob exists and add if not
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -l | grep -q '/home/ubuntu/pyAvanza/task_eod.py' || echo '0 19 * * 1-5 /usr/bin/python3 /home/ubuntu/pyAvanza/task_eod.py' | crontab -"
