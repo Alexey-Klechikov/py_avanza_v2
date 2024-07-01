@@ -18,7 +18,8 @@ jobs:
 
       - name: Deploy to server
         run: |
-          sshpass -p ${{ secrets.PASSWORD }} scp -r . ${{ secrets.USER }}@${{ secrets.HOST }}:/home/ubuntu/pyAvanza
           sshpass -p ${{ secrets.PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} <<'ENDSSH'
-          cd /home/ubuntu/pyAvanza
+          cd /home/ubuntu/
+          echo "ls"
+          sshpass -p ${{ secrets.PASSWORD }} scp -r . ${{ secrets.USER }}@${{ secrets.HOST }}:/home/ubuntu/pyAvanza
           ENDSSH
