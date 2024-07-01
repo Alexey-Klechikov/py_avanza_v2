@@ -48,8 +48,9 @@ jobs:
 
         # Loop through cronjobs to update crontab
         for job in "${cronjobs[@]}"; do
-          task_name=$(echo "$job" | awk '{print $1}')
-          cron_schedule=$(echo "$job" | awk '{$1=" "; print $0}')
+          # Split job into task_name and cron_schedule
+          task_name="${job%% *}"
+          cron_schedule="${job#* }"
 
           # Check if task_name already exists in crontab
           if echo "$existing_crontab" | grep -q "/home/ubuntu/pyAvanza/$task_name"; then
