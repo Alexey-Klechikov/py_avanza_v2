@@ -38,7 +38,6 @@ jobs:
         # Define cronjobs as a simple array of strings
         cronjobs=(
           "task_eod 0 19 * * 1-5"
-          "task_backup 2 3 * * 1-5"
         )
 
         # Fetch existing crontab
@@ -59,7 +58,7 @@ jobs:
           fi
 
           # Add the new cron job
-          updated_crontab="$updated_crontab\n$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
+          updated_crontab="$updated_crontab$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
         done
 
         # Update crontab on remote server
