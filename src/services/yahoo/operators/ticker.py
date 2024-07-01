@@ -30,6 +30,7 @@ class Ticker:
             available_period_days = 44
         elif interval.mins == 5:
             available_period_days = 59
+        # TODO: do the same for AVA
 
         dates = pd.date_range(
             start=date.today() - timedelta(days=min(period.days, available_period_days)),
@@ -63,6 +64,6 @@ class Ticker:
             else Yahoo.get_history(ticker_yahoo=self.ticker_yahoo, period=period, interval=interval)
         )
 
-        history.index = history.index.tz_convert("Europe/Stockholm").tz_localize(None)  # type: ignore
+        history.index = history.index.rename("Datetime").tz_convert("Europe/Stockholm").tz_localize(None)
 
         return history
