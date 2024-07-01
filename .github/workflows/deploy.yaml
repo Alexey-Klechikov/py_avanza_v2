@@ -43,6 +43,7 @@ jobs:
         echo "$cronjobs" | while read -r line; do
           task_name=$(echo "$line" | awk '{print $1}')
           cron_schedule=$(echo "$line" | awk '{$1=""; print $0}')
+          # Check if task_name already exists in crontab
           ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
-            "crontab -l | sed -e '/\/home\/ubuntu\/pyAvanza\/$task_name/d' | { cat; echo '$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py'; } | crontab -"
+            "crontab -l | grep -q '/home/ubuntu/pyAvanza/$task_name' || echo '$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py' | crontab -"
         done
