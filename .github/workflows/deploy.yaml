@@ -58,8 +58,8 @@ jobs:
             updated_crontab=$(echo "$updated_crontab" | sed -e "/\/home\/ubuntu\/pyAvanza\/$task_name/d")
           fi
 
-          # Add the new cron job
-          updated_crontab="$updated_crontab\n$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
+          # Add the new cron job with an empty line before
+          updated_crontab="$updated_crontab\n\n$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
         done
 
         # Update crontab on remote server
