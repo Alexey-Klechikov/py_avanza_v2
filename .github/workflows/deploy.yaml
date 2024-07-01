@@ -1,4 +1,4 @@
-name: Deploy to Remote Server
+name: Deploy to Remote Server and Update Cronjob
 
 on:
   push:
@@ -28,10 +28,13 @@ jobs:
         ssh-keyscan -H $REMOTE_HOST >> ~/.ssh/known_hosts
 
         # Ensure the destination directory exists on the remote server
-        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "mkdir -p /home/ubuntu/pyAvanza/"
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
+          "mkdir -p /home/ubuntu/pyAvanza/"
 
         # Use rsync to copy only files under src/ directory to remote server
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+          ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
 
-        # Check if cronjob exists and add if not
-        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -l | grep -q '/home/ubuntu/pyAvanza/task_eod.py' || echo '0 19 * * 1-5 /usr/bin/python3 /home/ubuntu/pyAvanza/task_eod.py' | crontab -"
+        # Update specific cronjob line
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
+          "crontab -l | sed -e '/\/home\/ubuntu\/pyAvanza\/task_eod.py/d' -e '\$a0 19 * * 1-5 /usr/bin/python3 /home/ubuntu/pyAvanza/task_eod.py' | crontab -"
