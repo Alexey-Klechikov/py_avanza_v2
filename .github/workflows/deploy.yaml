@@ -17,20 +17,19 @@ jobs:
       run: sudo apt-get install -y openssh-client
 
     - name: Add SSH key
+      id: add_ssh_key
       uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_KEY }}
-
-    - name: Install sshpass
-      run: sudo apt-get install -y sshpass
+      env:
+        SSH_PASSPHRASE: ${{ secrets.PASSWORD }}
 
     - name: Copy files via SFTP
       env:
         USERNAME: ${{ secrets.USERNAME }}
-        PASSWORD: ${{ secrets.PASSWORD }}
         HOST: ${{ secrets.HOST }}
       run: |
-        sshpass -p "$PASSWORD" sftp -o StrictHostKeyChecking=no $USERNAME@$HOST <<EOF
+        sftp -o StrictHostKeyChecking=no $USERNAME@$HOST <<EOF
         mkdir -p /home/ubuntu/pyAvanza
         put -r * /home/ubuntu/pyAvanza
         bye
@@ -39,10 +38,9 @@ jobs:
     - name: Run commands on remote server via SSH
       env:
         USERNAME: ${{ secrets.USERNAME }}
-        PASSWORD: ${{ secrets.PASSWORD }}
         HOST: ${{ secrets.HOST }}
       run: |
-        sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no $USERNAME@$HOST <<EOF
+        ssh -o StrictHostKeyChecking=no $USERNAME@$HOST <<EOF
         cd /home/ubuntu/pyAvanza
         # Add any other commands you need to run on the server
         EOF
