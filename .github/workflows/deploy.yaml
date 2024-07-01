@@ -10,40 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install SSH client
-      run: sudo apt-get install -y openssh-client
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
 
-    - name: Start ssh-agent
-      run: |
-        eval "$(ssh-agent -s)"
-        echo "$SSH_KEY" | tr -d '\r' | ssh-add - <<< "$SSH_PASSPHRASE"
+    - name: Transfer files to remote server
       env:
-        SSH_KEY: ${{ secrets.SSH_KEY }}
-        SSH_PASSPHRASE: ${{ secrets.PASSWORD }}
-
-    - name: Add SSH key to the agent
-      run: echo "${{ secrets.SSH_KEY }}" | ssh-add -
-
-    - name: Copy files via SFTP
-      env:
-        USERNAME: ${{ secrets.USERNAME }}
-        HOST: ${{ secrets.HOST }}
+        REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
+        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
       run: |
-        sftp -o StrictHostKeyChecking=no $USERNAME@$HOST <<EOF
-        mkdir -p /home/ubuntu/pyAvanza
-        put -r * /home/ubuntu/pyAvanza
-        bye
-        EOF
-
-    - name: Run commands on remote server via SSH
-      env:
-        USERNAME: ${{ secrets.USERNAME }}
-        HOST: ${{ secrets.HOST }}
-      run: |
-        ssh -o StrictHostKeyChecking=no $USERNAME@$HOST <<EOF
-        cd /home/ubuntu/pyAvanza
-        # Add any other commands you need to run on the server
-        EOF
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
