@@ -13,11 +13,21 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Install expect
+      run: sudo apt-get install -y expect
+
     - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.5.4
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-        ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        expect <<- DONE
+          spawn ssh-add ~/.ssh/id_rsa
+          expect "Enter passphrase"
+          send "${{ secrets.SSH_PASSPHRASE }}\r"
+          expect eof
+        DONE
+        ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
     - name: Transfer files to remote server
       env:
