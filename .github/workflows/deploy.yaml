@@ -35,15 +35,13 @@ jobs:
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
           ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
 
-        # Define cronjobs as an array of tuples (task_name, cron_schedule)
-        cronjobs=(
-          ("task_eod" "0 19 * * 1-5")
-        )
+        # Define cronjobs as a string separated by newlines
+        cronjobs="task_eod 0 19 * * 1-5"
 
         # Update crontab for each cronjob
-        for job in "${cronjobs[@]}"; do
-          task_name="${job[0]}"
-          cron_schedule="${job[1]}"
+        echo "$cronjobs" | while read -r line; do
+          task_name=$(echo "$line" | awk '{print $1}')
+          cron_schedule=$(echo "$line" | awk '{$1=""; print $0}')
           ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
             "crontab -l | sed -e '/\/home\/ubuntu\/pyAvanza\/$task_name/d' | { cat; echo '$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py'; } | crontab -"
         done
