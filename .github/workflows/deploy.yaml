@@ -13,25 +13,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install expect
-      run: sudo apt-get install -y expect
+    - name: Install ssh-keyscan
+      run: sudo apt-get install -y openssh-client
 
-    - name: Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        expect <<- DONE
-          spawn ssh-add ~/.ssh/id_rsa
-          expect "Enter passphrase"
-          send "${{ secrets.SSH_PASSPHRASE }}\r"
-          expect eof
-        DONE
-        ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Transfer files to remote server
+    - name: Setup SSH and deploy
       env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
       run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
