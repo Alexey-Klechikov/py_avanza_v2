@@ -16,7 +16,7 @@ jobs:
     - name: Install ssh-keyscan
       run: sudo apt-get install -y openssh-client
 
-    - name: Setup SSH and deploy
+    - name: Deploy
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
@@ -35,6 +35,12 @@ jobs:
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
           ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
 
+    - name: Update Crontab
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
+        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+      run: |
         # Define cronjobs as a simple array of strings
         cronjobs=(
           "task_eod 0 19 * * 1-5"
@@ -44,22 +50,23 @@ jobs:
         existing_crontab=$(ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -l")
 
         # Prepare updated crontab
-        updated_crontab="$existing_crontab"
+        updated_crontab=""
 
-        # Loop through cronjobs to update crontab
+        # Loop through existing cron jobs to filter out pyAvanza jobs
+        while IFS= read -r existing_job; do
+          if echo "$existing_job" | grep -q "pyAvanza"; then
+            continue  # Skip pyAvanza jobs
+          fi
+          updated_crontab+="$existing_job\n"
+        done <<< "$existing_crontab"
+
+        # Add new cronjobs
+        updated_crontab+="\n# pyAvanza jobs\n"
         for job in "${cronjobs[@]}"; do
-          # Split job into task_name and cron_schedule
           task_name="${job%% *}"
           cron_schedule="${job#* }"
 
-          # Check if task_name already exists in crontab
-          if echo "$existing_crontab" | grep -q "/home/ubuntu/pyAvanza/$task_name"; then
-            # Task exists, replace old entry
-            updated_crontab=$(echo "$updated_crontab" | sed -e "/\/home\/ubuntu\/pyAvanza\/$task_name/d")
-          fi
-
-          # Add the new cron job
-          updated_crontab="$updated_crontab\n$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
+          updated_crontab+="$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py\n"
         done
 
         # Update crontab on remote server
