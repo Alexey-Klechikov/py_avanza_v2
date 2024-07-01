@@ -26,4 +26,9 @@ jobs:
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H $REMOTE_HOST >> ~/.ssh/known_hosts
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
+
+        # Ensure the destination directory exists on the remote server
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "mkdir -p /home/ubuntu/pyAvanza/"
+
+        # Use rsync to copy only files under src/ directory to remote server
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
