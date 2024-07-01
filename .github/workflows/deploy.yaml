@@ -22,6 +22,8 @@ jobs:
         REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
       run: |
+        echo "SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY"
+
         mkdir -p ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
