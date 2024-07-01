@@ -37,4 +37,4 @@ jobs:
 
         # Update specific cronjob line
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
-          "crontab -l | sed -e '/\/home\/ubuntu\/pyAvanza\/task_eod.py/d' -e '\$a0 19 * * 1-5 /usr/bin/python3 /home/ubuntu/pyAvanza/task_eod.py' | crontab -"
+          "crontab -l | sed -e '/\/home\/ubuntu\/pyAvanza\/task_eod.py/d' | { cat; echo '0 19 * * 1-5 /usr/bin/python3 /home/ubuntu/pyAvanza/task_eod.py'; } | crontab -"
