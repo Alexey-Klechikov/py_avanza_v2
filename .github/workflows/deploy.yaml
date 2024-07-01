@@ -22,10 +22,6 @@ jobs:
         REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
       run: |
-        # Print SSH_PRIVATE_KEY (base64 encoded)
-        echo "SSH_PRIVATE_KEY (base64 encoded):"
-        echo "$SSH_PRIVATE_KEY" | base64
-
         mkdir -p ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
