@@ -49,7 +49,7 @@ jobs:
         # Loop through cronjobs to update crontab
         for job in "${cronjobs[@]}"; do
           task_name=$(echo "$job" | awk '{print $1}')
-          cron_schedule=$(echo "$job" | awk '{$1=""; print $0}')
+          cron_schedule=$(echo "$job" | awk '{$1=" "; print $0}')
 
           # Check if task_name already exists in crontab
           if echo "$existing_crontab" | grep -q "/home/ubuntu/pyAvanza/$task_name"; then
@@ -58,7 +58,7 @@ jobs:
           fi
 
           # Add the new cron job
-          updated_crontab="$updated_crontab$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
+          updated_crontab="$updated_crontab\n$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py"
         done
 
         # Update crontab on remote server
