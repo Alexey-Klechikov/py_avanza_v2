@@ -16,13 +16,16 @@ jobs:
     - name: Install SSH client
       run: sudo apt-get install -y openssh-client
 
-    - name: Add SSH key
-      id: add_ssh_key
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_KEY }}
+    - name: Start ssh-agent
+      run: |
+        eval "$(ssh-agent -s)"
+        echo "$SSH_KEY" | tr -d '\r' | ssh-add - <<< "$SSH_PASSPHRASE"
       env:
+        SSH_KEY: ${{ secrets.SSH_KEY }}
         SSH_PASSPHRASE: ${{ secrets.PASSWORD }}
+
+    - name: Add SSH key to the agent
+      run: echo "${{ secrets.SSH_KEY }}" | ssh-add -
 
     - name: Copy files via SFTP
       env:
