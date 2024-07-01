@@ -44,6 +44,7 @@ jobs:
         # Define cronjobs as a simple array of strings
         cronjobs=(
           "task_eod 0 19 * * 1-5"
+          "task_eod2 0 19 * * 1-5"
         )
 
         # Fetch existing crontab
@@ -61,7 +62,7 @@ jobs:
         done <<< "$existing_crontab"
 
         # Add new cronjobs
-        updated_crontab+="\n# pyAvanza jobs\n"
+        updated_crontab+="# pyAvanza\n"
         for job in "${cronjobs[@]}"; do
           task_name="${job%% *}"
           cron_schedule="${job#* }"
