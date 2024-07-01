@@ -74,6 +74,7 @@ def set_handlers(
 
 def get_logger() -> Logger:
     caller_frame = inspect.stack()[1]
-    logger_name = caller_frame.filename.split("src/")[1].replace(".py", "").replace("/", ".")
+    root_dir = "/src/" if "/src/" in caller_frame.filename else "pyAvanza/"
+    logger_name = caller_frame.filename.split(root_dir)[1].replace(".py", "").replace("/", ".")
 
     return logging.getLogger(f"main.{logger_name}")
