@@ -1,5 +1,3 @@
-from typing import Dict
-
 import pandas_ta as ta  # type: ignore
 
 from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -10,7 +8,7 @@ log = get_logger()
 
 
 class Trend(IndicatorsCategoryBase):
-    def _add_trend_intensity_index(self, length_sma: int, length_signal: int) -> None:
+    def add_trend_intensity_index(self, length_sma: int, length_signal: int) -> None:
         # TODO: double-check this indicator
         # TODO: add plots
         """
@@ -32,7 +30,7 @@ class Trend(IndicatorsCategoryBase):
             length=length_signal,
         )
 
-        self._indicators["TII"] = Indicator(
+        self.indicators["TII"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["TII_SIGNAL"]] > x[column_names["TII"]],
                 SELL=lambda x: x[column_names["TII_SIGNAL"]] < x[column_names["TII"]],
@@ -40,7 +38,7 @@ class Trend(IndicatorsCategoryBase):
             columns=list(column_names.values()),
         )
 
-    def _add_trend_based_on_ttm_squeeze(self, length: int) -> None:
+    def add_trend_based_on_ttm_squeeze(self, length: int) -> None:
         # TODO: add plots
         """
         TTM_TREND (Trend based on TTM Squeeze)
@@ -53,7 +51,7 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> TTM_TREND' can not be added.")
             return
 
-        self._indicators["TTM_TREND"] = Indicator(
+        self.indicators["TTM_TREND"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] == 1,
                 SELL=lambda x: x[column_name] == -1,
@@ -61,7 +59,7 @@ class Trend(IndicatorsCategoryBase):
             columns=[column_name],
         )
 
-    def _add_vertical_horizontal_filter(self, length: int, length_ema: int) -> None:
+    def add_vertical_horizontal_filter(self, length: int, length_ema: int) -> None:
         # TODO: add plots
         """
         VHF (Vertical Horizontal Filter)
@@ -77,7 +75,7 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> VHF' can not be added.")
             return
 
-        self._indicators["VHF"] = Indicator(
+        self.indicators["VHF"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] > 0.45,
                 SELL=lambda x: x[column_name] > 0.4,
@@ -85,7 +83,7 @@ class Trend(IndicatorsCategoryBase):
             columns=[column_name],
         )
 
-    def _add_vortex_indicator(self, length: int) -> None:
+    def add_vortex_indicator(self, length: int) -> None:
         # TODO: add plots
         """
         VORTEX (Vortex Indicator)
@@ -101,7 +99,7 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> VORTEX' can not be added.")
             return
 
-        self._indicators["VORTEX"] = Indicator(
+        self.indicators["VORTEX"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["VTXP"]] > x[column_names["VTXM"]],
                 SELL=lambda x: x[column_names["VTXM"]] < x[column_names["VTXP"]],
@@ -109,12 +107,18 @@ class Trend(IndicatorsCategoryBase):
             columns=list(column_names.values()),
         )
 
-    def _add_parabolic_stop_and_reverse(self, acceleration: float, maximum: float) -> None:
+    def add_parabolic_stop_and_reverse(self, acceleration: float, maximum: float) -> None:
         """
         PSAR (Parabolic Stop and Reverse)
         https://www.investopedia.com/terms/p/parabolicindicator.asp
 
         defaults: af0=0.02, af=0.02, max_af=0.2
+
+        For best results, traders should use the parabolic indicator with other technical indicators that
+        indicate whether a market is trending or not, such as the average directional index (ADX), a moving
+        average (MA), or a trendline.
+        For example, traders might confirm a PSAR buy signal with an ADX reading above 30 and a bounce for a
+        long-term rising trendline.
         """
 
         column_names = {
@@ -127,7 +131,7 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> PSAR' can not be added.")
             return
 
-        self._indicators["PSAR"] = Indicator(
+        self.indicators["PSAR"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] > x[column_names["PSARl"]],
                 SELL=lambda x: x["Close"] < x[column_names["PSARs"]],
@@ -139,7 +143,7 @@ class Trend(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_choppiness_index(self, length: int, length_atr: int, scalar: float) -> None:
+    def add_choppiness_index(self, length: int, length_atr: int, scalar: float) -> None:
         """
         CHOP (Choppiness Index)
         """
@@ -151,7 +155,7 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> CHOP' can not be added.")
             return
 
-        self._indicators["CHOP"] = Indicator(
+        self.indicators["CHOP"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] < 61.8,
                 SELL=lambda x: x[column_name] > 61.8,
@@ -164,7 +168,7 @@ class Trend(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_chande_kroll_stop(self, p: int, x: float, q: int) -> None:
+    def add_chande_kroll_stop(self, p: int, x: float, q: int) -> None:
         """
         CKSP (Chande Kroll Stop)
 
@@ -185,7 +189,7 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> CKSP' can not be added.")
             return
 
-        self._indicators["CKSP"] = Indicator(
+        self.indicators["CKSP"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] > x[column_names["CKSPl"]],
                 SELL=lambda x: x["Close"] < x[column_names["CKSPs"]],
@@ -196,14 +200,3 @@ class Trend(IndicatorsCategoryBase):
                 list=[Plot(columns=[column_names["CKSPl"], column_names["CKSPs"]], ylabel="Trend [CKSP]")],
             ),
         )
-
-    def get(self) -> Dict[str, Indicator]:
-        self._add_trend_intensity_index(length_sma=15, length_signal=5)
-        self._add_trend_based_on_ttm_squeeze(length=8)
-        self._add_vertical_horizontal_filter(length=30, length_ema=10)
-        self._add_vortex_indicator(length=14)
-        self._add_parabolic_stop_and_reverse(acceleration=0.02, maximum=0.2)
-        self._add_choppiness_index(length=14, length_atr=1, scalar=100.0)
-        self._add_chande_kroll_stop(p=10, x=3.0, q=20)
-
-        return super().get()

@@ -1,5 +1,3 @@
-from typing import Dict
-
 import pandas_ta as ta  # type: ignore
 
 from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -10,7 +8,7 @@ log = get_logger()
 
 
 class Volatility(IndicatorsCategoryBase):
-    def _add_starc_bands(self, length_sma: int, length_atr: int, multiplier_atr: float) -> None:
+    def add_starc_bands(self, length_sma: int, length_atr: int, multiplier_atr: float) -> None:
         # TODO: add plots
         """
         STARC (Stoller Average Range Channel)
@@ -28,7 +26,7 @@ class Volatility(IndicatorsCategoryBase):
         self.data[column_names["STARC_U"]] = sma + multiplier_atr * atr
         self.data[column_names["STARC_B"]] = sma - multiplier_atr * atr
 
-        self._indicators["STARC"] = Indicator(
+        self.indicators["STARC"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] < x[column_names["STARC_B"]],
                 SELL=lambda x: x["Close"] > x[column_names["STARC_U"]],
@@ -36,7 +34,7 @@ class Volatility(IndicatorsCategoryBase):
             columns=list(column_names.values()),
         )
 
-    def _add_mass_index(self, fast: int, slow: int) -> None:
+    def add_mass_index(self, fast: int, slow: int) -> None:
         """
         MASSI (Mass Index)
         https://chartschool.stockcharts.com/table-of-contents/technical-indicators-and-overlays/technical-indicators/mass-index#introduction
@@ -49,7 +47,7 @@ class Volatility(IndicatorsCategoryBase):
             log.debug("Indicator 'Volatility -> MASSI' can not be added.")
             return
 
-        self._indicators["MASSI"] = Indicator(
+        self.indicators["MASSI"] = Indicator(
             signal=Signal(
                 BUY=lambda x: 26 < x[column_name] < 27,
                 SELL=lambda x: 26 < x[column_name] < 27,
@@ -66,7 +64,7 @@ class Volatility(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_holt_winter_channel(self, na: float, nb: float, nc: float, nd: float, scalar: float) -> None:
+    def add_holt_winter_channel(self, na: float, nb: float, nc: float, nd: float, scalar: float) -> None:
         """
         HWC (Holt-Winter Channel)
         https://www.mql5.com/en/code/20857
@@ -79,7 +77,7 @@ class Volatility(IndicatorsCategoryBase):
             log.debug("Indicator 'Volatility -> HWC' can not be added.")
             return
 
-        self._indicators["HWC"] = Indicator(
+        self.indicators["HWC"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] > x[column_name],
                 SELL=lambda x: x["Close"] < x[column_name],
@@ -91,7 +89,7 @@ class Volatility(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_bollinger_bands(self, length: int, std: float) -> None:
+    def add_bollinger_bands(self, length: int, std: float) -> None:
         """
         BBANDS (Bollinger Bands)
         """
@@ -102,7 +100,7 @@ class Volatility(IndicatorsCategoryBase):
             log.debug("Indicator 'Volatility -> BBANDS' can not be added.")
             return
 
-        self._indicators["BBANDS"] = Indicator(
+        self.indicators["BBANDS"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] > x[column_names["BBL"]],
                 SELL=lambda x: x["Close"] < x[column_names["BBU"]],
@@ -114,7 +112,7 @@ class Volatility(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_acceleration_bands(self, length: int, c: int, mamode: str) -> None:
+    def add_acceleration_bands(self, length: int, c: int, mamode: str) -> None:
         # TODO: double-check this indicator
         # TODO: add plots
         """
@@ -133,22 +131,13 @@ class Volatility(IndicatorsCategoryBase):
             log.debug("Indicator 'Volatility -> ACCBANDS' can not be added.")
             return
 
-        self._indicators["ACCBANDS"] = Indicator(
+        self.indicators["ACCBANDS"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] > x[column_names["ACCBM"]],
                 SELL=lambda x: x["Close"] < x[column_names["ACCBM"]],
             ),
             columns=list(column_names.values()),
         )
-
-    def get(self) -> Dict:
-        self._add_starc_bands(length_sma=6, length_atr=14, multiplier_atr=1.5)
-        self._add_mass_index(fast=9, slow=25)
-        self._add_holt_winter_channel(na=0.2, nb=0.1, nc=0.1, nd=0.1, scalar=1)
-        self._add_bollinger_bands(length=20, std=2.0)
-        self._add_acceleration_bands(length=20, c=4, mamode="sma")
-
-        return super().get()
 
 
 #     # Volatility

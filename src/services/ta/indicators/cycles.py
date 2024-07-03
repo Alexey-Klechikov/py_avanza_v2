@@ -1,5 +1,3 @@
-from typing import Dict
-
 import pandas_ta as ta  # type: ignore
 
 from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -10,7 +8,7 @@ log = get_logger()
 
 
 class Cycles(IndicatorsCategoryBase):
-    def _add_even_better_sinewave(self, length: int, bars: int) -> None:
+    def add_even_better_sinewave(self, length: int, bars: int) -> None:
         """
         EBSW (Even Better Sinewave)
         https://www.prorealcode.com/prorealtime-indicators/even-better-sinewave/
@@ -23,7 +21,7 @@ class Cycles(IndicatorsCategoryBase):
             log.debug("Indicator 'Cycles -> EBSW' can not be added.")
             return
 
-        self._indicators["EBSW"] = Indicator(
+        self.indicators["EBSW"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] > 0.5,
                 SELL=lambda x: x[column_name] < -0.5,
@@ -35,8 +33,3 @@ class Cycles(IndicatorsCategoryBase):
                 horizontal_lines=[HorizontalLine(y=0.5, color="red"), HorizontalLine(y=-0.5, color="blue")],
             ),
         )
-
-    def get(self) -> Dict:
-        self._add_even_better_sinewave(length=40, bars=10)
-
-        return super().get()

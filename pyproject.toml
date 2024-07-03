@@ -1,18 +1,18 @@
 [tool.black]
-line-length = 120
+line-length = 122
 
 [tool.flake8]
 show-source = true
 filename = ["*.py"]
 exclude = [".git", "__pycache__", "*.pyc"]
 statistics = true
-max-line-length = 120
+max-line-length = 122
 ignore = ["W503", "E203", "F401"]
 
 [tool.isort]
 atomic = true
 profile = "black"
-line_length = 120
+line_length = 122
 skip_gitignore = true
 known_first_party = ["black", "blib2to3", "blackd", "_black_version"]
 

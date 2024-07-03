@@ -1,5 +1,3 @@
-from typing import Dict
-
 import pandas_ta as ta  # type: ignore
 
 from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -10,7 +8,7 @@ log = get_logger()
 
 
 class Volume(IndicatorsCategoryBase):
-    def _add_price_volume_trend(self, length_sma: int) -> None:
+    def add_price_volume_trend(self, length_sma: int) -> None:
         # TODO: double-check this indicator
         """
         PVT (Price Volume Trend)
@@ -27,7 +25,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> PVT' can not be added.")
             return
 
-        self._indicators["PVT"] = Indicator(
+        self.indicators["PVT"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["PVT_SMA"]] < x["PVT"],
                 SELL=lambda x: x[column_names["PVT_SMA"]] > x["PVT"],
@@ -39,7 +37,7 @@ class Volume(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_accumulation_distribution_oscillator(self, fast: int, slow: int) -> None:
+    def add_accumulation_distribution_oscillator(self, fast: int, slow: int) -> None:
         # TODO: double-check this indicator
         # TODO: Add plotting
         """
@@ -54,7 +52,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> ADOSC' can not be added.")
             return
 
-        self._indicators["ADOSC"] = Indicator(
+        self.indicators["ADOSC"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] == 1,
                 SELL=lambda x: x[column_name] == 0,
@@ -62,7 +60,7 @@ class Volume(IndicatorsCategoryBase):
             columns=[column_name],
         )
 
-    def _add_chaikin_money_flow(self, length: int) -> None:
+    def add_chaikin_money_flow(self, length: int) -> None:
         """
         CMF (Chaikin Money Flow)
         """
@@ -75,7 +73,7 @@ class Volume(IndicatorsCategoryBase):
             return
 
         cmf = {"max": self.data[column_name].max(), "min": self.data[column_name].min()}
-        self._indicators["CMF"] = Indicator(
+        self.indicators["CMF"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] > cmf["max"] * 0.2,
                 SELL=lambda x: x[column_name] < cmf["min"] * 0.2,
@@ -88,7 +86,7 @@ class Volume(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_elders_force_index(self, length: int, mamode: str) -> None:
+    def add_elders_force_index(self, length: int, mamode: str) -> None:
         # TODO: add plot
         """
         EFI (Elder's Force Index)
@@ -101,7 +99,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> EFI' can not be added.")
             return
 
-        self._indicators["EFI"] = Indicator(
+        self.indicators["EFI"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] > 0,
                 SELL=lambda x: x[column_name] < 0,
@@ -109,7 +107,7 @@ class Volume(IndicatorsCategoryBase):
             columns=[column_name],
         )
 
-    def _add_klinger_volume_oscillator(self, fast: int, slow: int, signal: int) -> None:
+    def add_klinger_volume_oscillator(self, fast: int, slow: int, signal: int) -> None:
         """
         KVO (Klinger Volume Oscillator)
         """
@@ -124,7 +122,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> KVO' can not be added.")
             return
 
-        self._indicators["KVO"] = Indicator(
+        self.indicators["KVO"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["KVO"]] > x[column_names["KVOs"]],
                 SELL=lambda x: x[column_names["KVO"]] < x[column_names["KVOs"]],
@@ -135,15 +133,6 @@ class Volume(IndicatorsCategoryBase):
                 list=[Plot(columns=[column_names["KVO"], column_names["KVOs"]], ylabel="Volume [KVO]")],
             ),
         )
-
-    def get(self) -> Dict:
-        self._add_price_volume_trend(length_sma=9)
-        self._add_accumulation_distribution_oscillator(fast=30, slow=45)
-        self._add_chaikin_money_flow(length=20)
-        self._add_elders_force_index(length=13, mamode="ema")
-        self._add_klinger_volume_oscillator(fast=34, slow=55, signal=13)
-
-        return super().get()
 
 
 #     # Volume

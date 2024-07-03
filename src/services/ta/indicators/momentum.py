@@ -1,5 +1,3 @@
-from typing import Dict
-
 import pandas_ta as ta  # type: ignore
 
 from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -10,7 +8,7 @@ log = get_logger()
 
 
 class Momentum(IndicatorsCategoryBase):
-    def _add_schaff_trend_cycle(self, tclength: int, fast: int, slow: int, factor: float) -> None:
+    def add_schaff_trend_cycle(self, tclength: int, fast: int, slow: int, factor: float) -> None:
         """
         STC (Schaff Trend Cycle)
         https://www.prorealcode.com/prorealtime-indicators/schaff-trend-cycle2/
@@ -23,7 +21,7 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> STC' can not be added.")
             return
 
-        self._indicators["STC"] = Indicator(
+        self.indicators["STC"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] < 75,
                 SELL=lambda x: x[column_name] > 25,
@@ -36,7 +34,7 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_ultimate_oscillator(
+    def add_ultimate_oscillator(
         self,
         fast: int,
         medium: int,
@@ -65,7 +63,7 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> UO' can not be added.")
             return
 
-        self._indicators["UO"] = Indicator(
+        self.indicators["UO"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] < 30,
                 SELL=lambda x: x[column_name] > 65,
@@ -78,7 +76,7 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_commodity_channel_index(self, length: int, c: float) -> None:
+    def add_commodity_channel_index(self, length: int, c: float) -> None:
         """
         CCI (Commodity Channel Index)
         https://www.tradingview.com/support/solutions/43000502001-commodity-channel-index-cci/
@@ -93,7 +91,7 @@ class Momentum(IndicatorsCategoryBase):
 
         self.data["CCI_direction"] = self.data[column_name].rolling(2).apply(lambda x: x.iloc[1] > x.iloc[0])
 
-        self._indicators["CCI"] = Indicator(
+        self.indicators["CCI"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_name] < -100 and x["CCI_direction"] == 1,
                 SELL=lambda x: x[column_name] > 100 and x["CCI_direction"] == 0,
@@ -105,7 +103,7 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_relative_vigor_index(self, length: int, length_swma: int) -> None:
+    def add_relative_vigor_index(self, length: int, length_swma: int) -> None:
         """
         RVGI (Relative Vigor Index)
         https://www.investopedia.com/terms/r/relative_vigor_index.asp
@@ -121,7 +119,7 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> RVGI' can not be added.")
             return
 
-        self._indicators["RVGI"] = Indicator(
+        self.indicators["RVGI"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["RVGI"]] > x[column_names["RVGIs"]],
                 SELL=lambda x: x[column_names["RVGI"]] < x[column_names["RVGIs"]],
@@ -133,7 +131,7 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_macd(self, fast: int, slow: int, signal: int) -> None:
+    def add_macd(self, fast: int, slow: int, signal: int) -> None:
         """
         MACD (Moving Average Convergence Divergence)
         """
@@ -151,7 +149,7 @@ class Momentum(IndicatorsCategoryBase):
 
         self.data["MACD_ma_diff"] = self.data[column_names["MACDh"]].rolling(2).apply(lambda x: x.iloc[1] > x.iloc[0])
 
-        self._indicators["MACD"] = Indicator(
+        self.indicators["MACD"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["MACD_ma_diff"] == 1,
                 SELL=lambda x: x["MACD_ma_diff"] == 0,
@@ -163,7 +161,7 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def _add_stochastic_oscillator(self, k: int, d: int, smooth_k: int, mamode: str) -> None:
+    def add_stochastic_oscillator(self, k: int, d: int, smooth_k: int, mamode: str) -> None:
         """
         STOCH (Stochastic Oscillator)
         """
@@ -178,7 +176,7 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> STOCH' can not be added.")
             return
 
-        self._indicators["STOCH"] = Indicator(
+        self.indicators["STOCH"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["STOCHd"]] < 80 and x[column_names["STOCHk"]] < 80,
                 SELL=lambda x: x[column_names["STOCHd"]] > 20 and x[column_names["STOCHk"]] > 20,
@@ -190,16 +188,6 @@ class Momentum(IndicatorsCategoryBase):
                 horizontal_lines=[HorizontalLine(y=80, color="red"), HorizontalLine(y=20, color="blue")],
             ),
         )
-
-    def get(self) -> Dict:
-        self._add_schaff_trend_cycle(tclength=10, fast=12, slow=26, factor=0.5)
-        self._add_ultimate_oscillator(fast=10, medium=15, slow=30, fast_weight=4.0, medium_weight=2.0, slow_weight=1.0)
-        self._add_commodity_channel_index(length=14, c=0.015)
-        self._add_relative_vigor_index(length=14, length_swma=4)
-        self._add_macd(fast=8, slow=21, signal=5)
-        self._add_stochastic_oscillator(k=14, d=3, smooth_k=3, mamode="sma")
-
-        return super().get()
 
 
 #     # Momentum

@@ -20,18 +20,18 @@ def cache_omx30():
     for period_ava, resolution_ava, period_yahoo, interval_yahoo in [
         (TimePeriod.TODAY, Resolution.MINUTE, Period.ONE_MONTH, Interval.ONE_MINUTE),
         (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.THREE_MONTHS, Interval.TWO_MINUTES),
+        (TimePeriod.TODAY, Resolution.FIVE_MINUTES, Period.THREE_MONTHS, Interval.FIVE_MINUTES),
         (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_YEAR, Interval.SIXTY_MINUTES),
         (TimePeriod.ONE_YEAR, Resolution.DAY, Period.ONE_YEAR, Interval.ONE_DAY),
     ]:
-        data_yahoo = Ticker(OMX30_YAHOO).get_history(period=period_yahoo, interval=interval_yahoo)
-        data_ava = Chart.get_chart_data(OMX30_AVA, period_ava, resolution_ava)
-
         storage = Storage(OMX30_YAHOO, resolution=interval_yahoo.value.raw)
-
         rows_before = storage.read().shape[0]
 
-        storage.write(data_yahoo)
+        data_ava = Chart.get_chart_data(OMX30_AVA, period_ava, resolution_ava)
         storage.write(data_ava)
+
+        data_yahoo = Ticker(OMX30_YAHOO).get_history(period=period_yahoo, interval=interval_yahoo)
+        storage.write(data_yahoo)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
