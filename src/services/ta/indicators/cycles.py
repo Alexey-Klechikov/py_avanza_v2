@@ -2,7 +2,8 @@ from typing import Dict
 
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import HorizontalLine, Indicator, IndicatorsCategoryBase, Panel, Plot, Plots, Signal
+from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from utils.logger import get_logger
 
 log = get_logger()
@@ -30,13 +31,8 @@ class Cycles(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylim=[-1.1, 1.1], ylabel="Cycles [EBSW]"),
-                ],
-                horizontal_lines=[
-                    HorizontalLine(y=0.5, color="red"),
-                    HorizontalLine(y=-0.5, color="blue"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylim=[-1.1, 1.1], ylabel="Cycles [EBSW]")],
+                horizontal_lines=[HorizontalLine(y=0.5, color="red"), HorizontalLine(y=-0.5, color="blue")],
             ),
         )
 

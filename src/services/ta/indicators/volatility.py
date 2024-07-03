@@ -2,7 +2,8 @@ from typing import Dict
 
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import HorizontalLine, Indicator, IndicatorsCategoryBase, Panel, Plot, Plots, Signal
+from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from utils.logger import get_logger
 
 log = get_logger()
@@ -56,9 +57,7 @@ class Volatility(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylabel="Volatility [MASSI]"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylabel="Volatility [MASSI]")],
                 horizontal_lines=[
                     HorizontalLine(y=27, color="red"),
                     HorizontalLine(y=26, color="black"),
@@ -88,9 +87,7 @@ class Volatility(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.MAIN,
-                list=[
-                    Plot(column=column_name, color="brown", ylabel="Volatility [HWC]"),
-                ],
+                list=[Plot(columns=[column_name], color="brown", ylabel="Volatility [HWC]")],
             ),
         )
 
@@ -113,10 +110,7 @@ class Volatility(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.MAIN,
-                list=[
-                    Plot(column=column_names["BBL"], color="brown", ylabel="Volatility [BBANDS]"),
-                    Plot(column=column_names["BBU"], color="brown", secondary_y=False),
-                ],
+                list=[Plot(columns=[column_names["BBL"], column_names["BBU"]], ylabel="Volatility [BBANDS]")],
             ),
         )
 

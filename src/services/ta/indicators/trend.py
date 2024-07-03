@@ -2,7 +2,8 @@ from typing import Dict
 
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import HorizontalLine, Indicator, IndicatorsCategoryBase, Panel, Plot, Plots, Signal
+from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from utils.logger import get_logger
 
 log = get_logger()
@@ -131,16 +132,7 @@ class Trend(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.MAIN,
-                list=[
-                    Plot(
-                        column=column_names["PSARl"],
-                        color="navy",
-                        type="scatter",
-                        markersize=10,
-                        ylabel="Trend [PSAR]",
-                    ),
-                    Plot(column=column_names["PSARs"], color="navy", type="scatter", markersize=10, secondary_y=False),
-                ],
+                list=[Plot(columns=[column_names["PSARl"], column_names["PSARs"]], ylabel="Trend [PSAR]")],
             ),
         )
 
@@ -164,13 +156,8 @@ class Trend(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylim=[0, 100], ylabel="Trend [CHOP]"),
-                ],
-                horizontal_lines=[
-                    HorizontalLine(y=60, color="red"),
-                    HorizontalLine(y=40, color="blue"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylim=[0, 100], ylabel="Trend [CHOP]")],
+                horizontal_lines=[HorizontalLine(y=60, color="red"), HorizontalLine(y=40, color="blue")],
             ),
         )
 
@@ -195,11 +182,6 @@ class Trend(IndicatorsCategoryBase):
             log.debug("Indicator 'Trend -> CKSP' can not be added.")
             return
 
-        plot_lim = [
-            min([self.data[i].min() for i in column_names.values()]),
-            max([self.data[i].max() for i in column_names.values()]),
-        ]
-
         self._indicators["CKSP"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x["Close"] > x[column_names["CKSPl"]],
@@ -208,10 +190,7 @@ class Trend(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_names["CKSPl"], color="orange", ylim=plot_lim, ylabel="Trend [CKSP]"),
-                    Plot(column=column_names["CKSPs"], color="black", ylim=plot_lim, secondary_y=False),
-                ],
+                list=[Plot(columns=[column_names["CKSPl"], column_names["CKSPs"]], ylabel="Trend [CKSP]")],
             ),
         )
 

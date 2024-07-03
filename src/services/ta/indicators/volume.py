@@ -2,7 +2,8 @@ from typing import Dict
 
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import HorizontalLine, Indicator, IndicatorsCategoryBase, Panel, Plot, Plots, Signal
+from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from utils.logger import get_logger
 
 log = get_logger()
@@ -26,11 +27,6 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> PVT' can not be added.")
             return
 
-        plot_limits = [
-            0.9 * min([self.data[i].min() for i in column_names.values()]),
-            1.1 * max([self.data[i].max() for i in column_names.values()]),
-        ]
-
         self._indicators["PVT"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["PVT_SMA"]] < x["PVT"],
@@ -39,10 +35,7 @@ class Volume(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column, color=color, ylim=plot_limits, secondary_y=False, ylabel="Volume [PVT]")
-                    for column, color in ((column_names["PVT"], "green"), (column_names["PVT_SMA"], "red"))
-                ],
+                list=[Plot(columns=[column_names["PVT"], column_names["PVT_SMA"]], ylabel="Volume [PVT]")],
             ),
         )
 
@@ -90,7 +83,7 @@ class Volume(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(column=column_name, color="orange", ylabel="Volume [CMF]")],
+                list=[Plot(columns=[column_name], color="orange", ylabel="Volume [CMF]")],
                 horizontal_lines=[HorizontalLine(y=0, color="black")],
             ),
         )
@@ -131,11 +124,6 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> KVO' can not be added.")
             return
 
-        plot_lim = [
-            0.9 * min([self.data[i].min() for i in column_names.values()]),
-            1.1 * max([self.data[i].max() for i in column_names.values()]),
-        ]
-
         self._indicators["KVO"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["KVO"]] > x[column_names["KVOs"]],
@@ -144,10 +132,7 @@ class Volume(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_names["KVO"], color="orange", ylim=plot_lim, ylabel="Volume [KVO]"),
-                    Plot(column=column_names["KVOs"], color="black", ylim=plot_lim, secondary_y=False),
-                ],
+                list=[Plot(columns=[column_names["KVO"], column_names["KVOs"]], ylabel="Volume [KVO]")],
             ),
         )
 

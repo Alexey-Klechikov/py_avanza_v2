@@ -2,7 +2,8 @@ from typing import Dict
 
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import HorizontalLine, Indicator, IndicatorsCategoryBase, Panel, Plot, Plots, Signal
+from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from utils.logger import get_logger
 
 log = get_logger()
@@ -30,13 +31,8 @@ class Momentum(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylim=[-10, 110], ylabel="Momentum [STC]"),
-                ],
-                horizontal_lines=[
-                    HorizontalLine(y=25, color="red"),
-                    HorizontalLine(y=75, color="blue"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylim=[-10, 110], ylabel="Momentum [STC]")],
+                horizontal_lines=[HorizontalLine(y=25, color="red"), HorizontalLine(y=75, color="blue")],
             ),
         )
 
@@ -77,13 +73,8 @@ class Momentum(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylim=[0, 100], ylabel="Momentum [UO]"),
-                ],
-                horizontal_lines=[
-                    HorizontalLine(y=65, color="red"),
-                    HorizontalLine(y=30, color="blue"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylim=[0, 100], ylabel="Momentum [UO]")],
+                horizontal_lines=[HorizontalLine(y=65, color="red"), HorizontalLine(y=30, color="blue")],
             ),
         )
 
@@ -110,9 +101,7 @@ class Momentum(IndicatorsCategoryBase):
             columns=[column_name, "CCI_direction"],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylabel="Momentum [CCI]"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylabel="Momentum [CCI]")],
             ),
         )
 
@@ -132,11 +121,6 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> RVGI' can not be added.")
             return
 
-        plot_lim = [
-            0.9 * min([self.data[i].min() for i in column_names.values()]),
-            1.1 * max([self.data[i].max() for i in column_names.values()]),
-        ]
-
         self._indicators["RVGI"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["RVGI"]] > x[column_names["RVGIs"]],
@@ -145,10 +129,7 @@ class Momentum(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_names["RVGI"], color="orange", ylim=plot_lim, ylabel="Momentum [RVGI]"),
-                    Plot(column=column_names["RVGIs"], color="black", ylim=plot_lim, secondary_y=False),
-                ],
+                list=[Plot(columns=[column_names["RVGI"], column_names["RVGIs"]], ylabel="Momentum [RVGI]")],
             ),
         )
 
@@ -178,9 +159,7 @@ class Momentum(IndicatorsCategoryBase):
             columns=[column_names["MACD"], "MACD_ma_diff"],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_names["MACD"], color="orange", ylim=[-0.1, 1.1], ylabel="Momentum [MACD]"),
-                ],
+                list=[Plot(columns=[column_names["MACD"]], color="orange", ylim=[-0.1, 1.1], ylabel="Momentum [MACD]")],
             ),
         )
 
@@ -199,11 +178,6 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> STOCH' can not be added.")
             return
 
-        plot_lim = [
-            0.9 * min([self.data[i].min() for i in column_names.values()]),
-            1.1 * max([self.data[i].max() for i in column_names.values()]),
-        ]
-
         self._indicators["STOCH"] = Indicator(
             signal=Signal(
                 BUY=lambda x: x[column_names["STOCHd"]] < 80 and x[column_names["STOCHk"]] < 80,
@@ -212,14 +186,8 @@ class Momentum(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_names["STOCHk"], color="orange", ylim=plot_lim, ylabel="Momentum [STOCH]"),
-                    Plot(column=column_names["STOCHd"], color="black", ylim=plot_lim, secondary_y=False),
-                ],
-                horizontal_lines=[
-                    HorizontalLine(y=80, color="red"),
-                    HorizontalLine(y=20, color="blue"),
-                ],
+                list=[Plot(columns=[column_names["STOCHk"], column_names["STOCHd"]], ylabel="Momentum [STOCH]")],
+                horizontal_lines=[HorizontalLine(y=80, color="red"), HorizontalLine(y=20, color="blue")],
             ),
         )
 

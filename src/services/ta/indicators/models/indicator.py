@@ -5,9 +5,9 @@ from pydantic import BaseModel
 
 
 class Plot(BaseModel):
-    column: str
+    columns: List[str]
 
-    color: str
+    color: Optional[str] = None
     type: Optional[str] = None
     markersize: Optional[int] = None
     ylim: Optional[List[float]] = None

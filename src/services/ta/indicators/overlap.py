@@ -2,7 +2,8 @@ from typing import Dict
 
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import Indicator, IndicatorsCategoryBase, Panel, Plot, Plots, Signal
+from services.ta.indicators.models import Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from utils.logger import get_logger
 
 log = get_logger()
@@ -63,9 +64,7 @@ class Overlap(IndicatorsCategoryBase):
             columns=[column_name],
             plots=Plots(
                 panel=Panel.MAIN,
-                list=[
-                    Plot(column=column_name, color="orange"),
-                ],
+                list=[Plot(columns=[column_name], color="orange")],
             ),
         )
 
@@ -91,9 +90,7 @@ class Overlap(IndicatorsCategoryBase):
             columns=["LRr_direction"],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[
-                    Plot(column=column_name, color="orange", ylabel="Overlap [LINREG]"),
-                ],
+                list=[Plot(columns=[column_name], color="orange", ylabel="Overlap [LINREG]")],
             ),
         )
 
