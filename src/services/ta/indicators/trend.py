@@ -112,6 +112,9 @@ class Trend(IndicatorsCategoryBase):
     def _add_parabolic_stop_and_reverse(self, acceleration: float, maximum: float) -> None:
         """
         PSAR (Parabolic Stop and Reverse)
+        https://www.investopedia.com/terms/p/parabolicindicator.asp
+
+        defaults: af0=0.02, af=0.02, max_af=0.2
         """
 
         column_names = {

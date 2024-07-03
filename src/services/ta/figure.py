@@ -30,7 +30,9 @@ class Figure:
                 self._plots.append(mpf.make_addplot(self.data[p.columns[0]], panel=panel, **p.get_kwargs()))
 
             if len(p.columns) >= 2:
-                self._plots.append(mpf.make_addplot(self.data[p.columns], panel=panel, secondary_y=False))
+                self._plots.append(
+                    mpf.make_addplot(self.data[p.columns], panel=panel, ylabel=p.ylabel, secondary_y=False),
+                )
 
         for hl in plot.horizontal_lines:
             self.data[f"hline_{hl.y}"] = hl.y

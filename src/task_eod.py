@@ -10,6 +10,7 @@ from services.storage import Storage
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.simplefilter(action="ignore", category=UserWarning)
 
 set_handlers("eod")
 log = get_logger()
@@ -18,9 +19,9 @@ log = get_logger()
 def cache_omx30():
     for period_ava, resolution_ava, period_yahoo, interval_yahoo in [
         (TimePeriod.TODAY, Resolution.MINUTE, Period.ONE_MONTH, Interval.ONE_MINUTE),
-        # (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.THREE_MONTHS, Interval.TWO_MINUTES),
-        # (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_YEAR, Interval.SIXTY_MINUTES),
-        # (TimePeriod.ONE_YEAR, Resolution.DAY, Period.ONE_YEAR, Interval.ONE_DAY),
+        (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.THREE_MONTHS, Interval.TWO_MINUTES),
+        (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_YEAR, Interval.SIXTY_MINUTES),
+        (TimePeriod.ONE_YEAR, Resolution.DAY, Period.ONE_YEAR, Interval.ONE_DAY),
     ]:
         data_yahoo = Ticker(OMX30_YAHOO).get_history(period=period_yahoo, interval=interval_yahoo)
         data_ava = Chart.get_chart_data(OMX30_AVA, period_ava, resolution_ava)
