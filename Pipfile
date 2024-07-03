@@ -9,6 +9,8 @@ pandas-ta = "*"
 yfinance = "*"
 keyring = "*"
 pydantic = "*"
+mplfinance = "*"
+numpy = "==1.26.4"
 
 [dev-packages]
 black = "*"

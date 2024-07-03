@@ -24,7 +24,13 @@ class Storage:
         return f"{project_root_dir}/data/{file_name}.pickle"
 
     def _clean_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        return data[DATA_COLUMNS].fillna(0)
+        return data.between_time("09:05", "17:20")[DATA_COLUMNS].fillna(0)
+
+    def _check_volume(self, group):
+        if group.iloc[-1]["Volume"] > 1000 * group["Volume"].mean():
+            return group.iloc[:-1]
+        else:
+            return group
 
     def read(self):
         if not os.path.exists(self.path):
