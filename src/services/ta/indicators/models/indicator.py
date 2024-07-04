@@ -46,8 +46,11 @@ class Plots(BaseModel):
 
 
 class Signal(BaseModel):
-    BUY: Callable
-    SELL: Callable
+    BUY: Optional[Callable] = None
+    SELL: Optional[Callable] = None
+    EXIT: Optional[Callable] = None
+    STOP_LOSS: Optional[Callable] = None
+    TAKE_PROFIT: Optional[Callable] = None
 
 
 class Indicator(BaseModel):

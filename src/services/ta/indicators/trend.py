@@ -89,88 +89,6 @@ class Trend(IndicatorsCategoryBase):
             ),
         )
 
-    def add_vertical_horizontal_filter(self, length: int, length_ema: int) -> None:
-        """
-        >>> not used
-
-        VHF (Vertical Horizontal Filter)
-        https://www.incrediblecharts.com/indicators/vertical_horizontal_filter.php
-        https://trendspider.com/learning-center/introduction-to-vertical-horizontal-filter/
-
-        defaults: length = 28
-
-        Vertical Horizontal Filter (VHF) was created by Adam White to identify trending and
-        ranging markets. VHF measures the level of trend activity, similar to ADX in the
-        Directional Movement System. Trend indicators can then be employed in trending markets
-        and momentum indicators in ranging markets.
-
-        Vary the number of periods in the Vertical Horizontal Filter to suit different time frames.
-        White originally recommended 28 days but now prefers an 18-day window smoothed with
-        a 6-day moving average.
-        """
-
-        column_name = f"VHF_{length}_EMA_{length_ema}"
-
-        self.data[column_name] = self.data.ta.ema(
-            close=self.data.ta.vhf(length=length),
-            length=length_ema,
-        )
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Trend -> VHF' can not be added.")
-            return
-
-        self.indicators["VHF"] = Indicator(
-            signal=Signal(
-                BUY=lambda x: x[column_name] > 0.45,
-                SELL=lambda x: x[column_name] > 0.4,
-            ),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylabel="Trend [VHF]")],
-                horizontal_lines=[HorizontalLine(y=0.45, color="red"), HorizontalLine(y=0.4, color="blue")],
-            ),
-        )
-
-    def add_vortex_indicator(self, length: int, drift: int) -> None:
-        """
-        >>> not used
-
-        VORTEX (Vortex Indicator)
-        https://www.investopedia.com/terms/v/vortex-indicator-vi.asp
-
-        defaults: length=14, drift=1
-
-        The vortex indicator is commonly used in conjunction with
-        other reversal trend patterns to help support a reversal signal.
-        An uptrend or buy signal occurs when VI+ is below VI- and then
-        crosses above VI- to take the top position among the trendlines.
-        A downtrend or sell signal occurs when VI- is below VI+ and
-        crosses above VI+ to take the top position among the trendlines.
-        """
-
-        column_names = {
-            "VTXP": f"VTXP_{length}",
-            "VTXM": f"VTXM_{length}",
-        }
-
-        self.data.ta.vortex(length=length, drift=drift, append=True)
-        if column_names["VTXP"] not in self.data.columns:
-            log.debug("Indicator 'Trend -> VORTEX' can not be added.")
-            return
-
-        self.indicators["VORTEX"] = Indicator(
-            signal=Signal(
-                BUY=lambda x: x[column_names["VTXP"]] > x[column_names["VTXM"]],
-                SELL=lambda x: x[column_names["VTXM"]] < x[column_names["VTXP"]],
-            ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["VTXP"], column_names["VTXM"]], ylabel="Trend [VORTEX]")],
-            ),
-        )
-
     def add_parabolic_stop_and_reverse(self, acceleration: float, maximum: float) -> None:
         """
         PSAR (Parabolic Stop and Reverse)
@@ -265,12 +183,55 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["CKSP"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x["Close"] > x[column_names["CKSPl"]],
-                SELL=lambda x: x["Close"] < x[column_names["CKSPs"]],
+                BUY=lambda x: True,
+                SELL=lambda x: True,
             ),
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.MAIN,
                 list=[Plot(columns=[column_names["CKSPl"], column_names["CKSPs"]], ylabel="Trend [CKSP]")],
+            ),
+        )
+
+    def add_vertical_horizontal_filter(self, length: int, length_ema: int) -> None:
+        """
+        >>> not used
+
+        VHF (Vertical Horizontal Filter)
+        https://www.incrediblecharts.com/indicators/vertical_horizontal_filter.php
+        https://trendspider.com/learning-center/introduction-to-vertical-horizontal-filter/
+
+        defaults: length = 28
+
+        Vertical Horizontal Filter (VHF) was created by Adam White to identify trending and
+        ranging markets. VHF measures the level of trend activity, similar to ADX in the
+        Directional Movement System. Trend indicators can then be employed in trending markets
+        and momentum indicators in ranging markets.
+
+        Vary the number of periods in the Vertical Horizontal Filter to suit different time frames.
+        White originally recommended 28 days but now prefers an 18-day window smoothed with
+        a 6-day moving average.
+        """
+
+        column_name = f"VHF_{length}_EMA_{length_ema}"
+
+        self.data[column_name] = self.data.ta.ema(
+            close=self.data.ta.vhf(length=length),
+            length=length_ema,
+        )
+        if column_name not in self.data.columns:
+            log.debug("Indicator 'Trend -> VHF' can not be added.")
+            return
+
+        self.indicators["VHF"] = Indicator(
+            signal=Signal(
+                BUY=lambda x: x[column_name] > 0.45,
+                SELL=lambda x: x[column_name] > 0.4,
+            ),
+            columns=[column_name],
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=[column_name], color="orange", ylabel="Trend [VHF]")],
+                horizontal_lines=[HorizontalLine(y=0.45, color="red"), HorizontalLine(y=0.4, color="blue")],
             ),
         )

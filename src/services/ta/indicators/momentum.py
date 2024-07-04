@@ -12,6 +12,18 @@ class Momentum(IndicatorsCategoryBase):
         """
         STC (Schaff Trend Cycle)
         https://www.prorealcode.com/prorealtime-indicators/schaff-trend-cycle2/
+        https://www.investopedia.com/articles/forex/10/schaff-trend-cycle-indicator.asp
+
+        default: tclength=10, fast=12, slow=26, factor=0.5
+
+        The STC is designed to identify trends and trend reversals by measuring the strength of the trend and
+        the speed of price changes. The STC is an oscillator, which means that it measures the velocity of price
+        movements.
+
+        One version of the STC calculation is the subtraction of the 23-period exponential moving average (EMA)
+        from a 50-period EMA. The resulting value is then smoothed using a 10-period moving average (MA).
+        The STC oscillates between 0 and 100, with values above 50 indicating a bullish trend and values below
+        50 indicating a bearish trend.
         """
 
         column_name = f"STC_{tclength}_{fast}_{slow}_{factor}"
@@ -23,8 +35,8 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["STC"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] < 75,
-                SELL=lambda x: x[column_name] > 25,
+                BUY=lambda x: x[column_name] > 75,
+                SELL=lambda x: x[column_name] < 25,
             ),
             columns=[column_name],
             plots=Plots(
@@ -34,44 +46,18 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def add_ultimate_oscillator(
-        self,
-        fast: int,
-        medium: int,
-        slow: int,
-        fast_w: float,
-        medium_w: float,
-        slow_w: float,
-    ) -> None:
-        """
-        UO (Ultimate Oscillator)
-        https://www.tradingview.com/support/solutions/43000502328-ultimate-oscillator-uo/
-        """
-
-        column_name = f"UO_{fast}_{medium}_{slow}"
-
-        self.data.ta.uo(fast=fast, medium=medium, slow=slow, fast_w=fast_w, medium_w=medium_w, slow_w=slow_w, append=True)
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Momentum -> UO' can not be added.")
-            return
-
-        self.indicators["UO"] = Indicator(
-            signal=Signal(
-                BUY=lambda x: x[column_name] < 30,
-                SELL=lambda x: x[column_name] > 65,
-            ),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylim=[0, 100], ylabel="Momentum [UO]")],
-                horizontal_lines=[HorizontalLine(y=65, color="red"), HorizontalLine(y=30, color="blue")],
-            ),
-        )
-
     def add_commodity_channel_index(self, length: int, c: float) -> None:
         """
         CCI (Commodity Channel Index)
         https://www.tradingview.com/support/solutions/43000502001-commodity-channel-index-cci/
+        https://www.investopedia.com/terms/c/commoditychannelindex.asp
+
+        default: length=14, c=0.015
+
+        The Commodity Channel Index (CCI) is a versatile indicator that can be used to identify a new trend or
+        warn of extreme conditions. CCI measures the current price level relative to an average price level over
+        a given period of time. Readings above +100 are considered overbought, and readings
+        below -100 are considered oversold.
         """
 
         column_name = f"CCI_{length}_{c}"
@@ -81,17 +67,16 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> CCI' can not be added.")
             return
 
-        self.data["CCI_direction"] = self.data[column_name].rolling(2).apply(lambda x: x.iloc[1] > x.iloc[0])
-
         self.indicators["CCI"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] < -100 and x["CCI_direction"] == 1,
-                SELL=lambda x: x[column_name] > 100 and x["CCI_direction"] == 0,
+                BUY=lambda x: x[column_name] > 100,
+                SELL=lambda x: x[column_name] < -100,
             ),
-            columns=[column_name, "CCI_direction"],
+            columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylabel="Momentum [CCI]")],
+                list=[Plot(columns=[column_name], ylabel="Momentum [CCI]")],
+                horizontal_lines=[HorizontalLine(y=100, color="red"), HorizontalLine(y=-100, color="blue")],
             ),
         )
 
@@ -99,6 +84,13 @@ class Momentum(IndicatorsCategoryBase):
         """
         RVGI (Relative Vigor Index)
         https://www.investopedia.com/terms/r/relative_vigor_index.asp
+
+        default: length=14, length_swma=4
+
+        The Relative Vigor Index attempts to measure the strength of a trend relative to
+        its closing price to its trading range.  It is based on the belief that it tends
+        to close higher than they open in uptrends or close lower than they open in
+        downtrends.
         """
 
         column_names = {
@@ -113,49 +105,77 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["RVGI"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["RVGI"]] > x[column_names["RVGIs"]],
-                SELL=lambda x: x[column_names["RVGI"]] < x[column_names["RVGIs"]],
+                BUY=lambda x: all(
+                    [
+                        x[column_names["RVGI"]] > x[column_names["RVGIs"]],
+                        x[column_names["RVGI"]] > 0,
+                        x[column_names["RVGIs"]] > 0,
+                    ],
+                ),
+                SELL=lambda x: all(
+                    [
+                        x[column_names["RVGI"]] < x[column_names["RVGIs"]],
+                        x[column_names["RVGI"]] < 0,
+                        x[column_names["RVGIs"]] < 0,
+                    ],
+                ),
             ),
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["RVGI"], column_names["RVGIs"]], ylabel="Momentum [RVGI]")],
+                list=[Plot(columns=list(column_names.values()), ylabel="Momentum [RVGI]")],
+                horizontal_lines=[HorizontalLine(y=0, color="red")],
             ),
         )
 
-    def add_macd(self, fast: int, slow: int, signal: int) -> None:
+    def add_macd_dema(self, length_fast: int, length_slow: int) -> None:
         """
-        MACD (Moving Average Convergence Divergence)
+        MACD-like indicator using 2 DEMA
+
+        This looks like MACD but uses 2 DEMA instead of EMA.
         """
 
         column_names = {
-            "MACD": f"MACD_{fast}_{slow}_{signal}",
-            "MACDh": f"MACDh_{fast}_{slow}_{signal}",
-            "MACDs": f"MACDs_{fast}_{slow}_{signal}",
+            "DEMA_fast": f"DEMA_{length_fast}",
+            "DEMA_slow": f"DEMA_{length_slow}",
+            "MACD_DEMA": "MACD_DEMA",
         }
 
-        self.data.ta.macd(fast=fast, slow=slow, signal=signal, append=True)
-        if column_names["MACD"] not in self.data.columns:
-            log.debug("Indicator 'Momentum -> MACD' can not be added.")
+        self.data.ta.dema(length=length_fast, append=True)
+        self.data.ta.dema(length=length_slow, append=True)
+        self.data[column_names["MACD_DEMA"]] = self.data.apply(
+            lambda x: x[column_names["DEMA_fast"]] - x[column_names["DEMA_slow"]],
+            axis=1,
+        )
+
+        if column_names["MACD_DEMA"] not in self.data.columns:
+            log.debug("Indicator 'Momentum -> MACD_DEMA' can not be added.")
             return
 
-        self.data["MACD_ma_diff"] = self.data[column_names["MACDh"]].rolling(2).apply(lambda x: x.iloc[1] > x.iloc[0])
-
-        self.indicators["MACD"] = Indicator(
+        self.indicators["MACD_DEMA"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x["MACD_ma_diff"] == 1,
-                SELL=lambda x: x["MACD_ma_diff"] == 0,
+                BUY=lambda x: x[column_names["MACD_DEMA"]] > 0,
+                SELL=lambda x: x[column_names["MACD_DEMA"]] < 0,
             ),
-            columns=[column_names["MACD"], "MACD_ma_diff"],
+            columns=[column_names["MACD_DEMA"]],
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["MACD"]], color="orange", ylim=[-0.1, 1.1], ylabel="Momentum [MACD]")],
+                list=[Plot(columns=[column_names["MACD_DEMA"]], ylabel="Momentum [MACD_DEMA]")],
+                horizontal_lines=[HorizontalLine(y=0, color="red")],
             ),
         )
 
     def add_stochastic_oscillator(self, k: int, d: int, smooth_k: int, mamode: str) -> None:
         """
         STOCH (Stochastic Oscillator)
+        https://www.investopedia.com/terms/s/stochasticoscillator.asp
+
+        default: k=14, d=3, smooth_k=3, mamode="sma"
+
+        The Stochastic Oscillator is a momentum indicator that shows the location of the close relative to the high-low
+        range over a set number of periods. According to an interview with Lane, the Stochastic Oscillator "doesn't follow
+        price, it doesn't follow volume or anything like that. It follows the speed or the momentum of price. As a rule,
+        the momentum changes direction before price."
         """
 
         column_names = {
@@ -170,14 +190,26 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["STOCH"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["STOCHd"]] < 80 and x[column_names["STOCHk"]] < 80,
-                SELL=lambda x: x[column_names["STOCHd"]] > 20 and x[column_names["STOCHk"]] > 20,
+                BUY=lambda x: all(
+                    [
+                        x[column_names["STOCHk"]] > x[column_names["STOCHd"]],
+                        x[column_names["STOCHk"]] > 60,
+                        x[column_names["STOCHd"]] > 60,
+                    ],
+                ),
+                SELL=lambda x: all(
+                    [
+                        x[column_names["STOCHk"]] < x[column_names["STOCHd"]],
+                        x[column_names["STOCHk"]] < 40,
+                        x[column_names["STOCHd"]] < 40,
+                    ],
+                ),
             ),
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["STOCHk"], column_names["STOCHd"]], ylabel="Momentum [STOCH]")],
-                horizontal_lines=[HorizontalLine(y=80, color="red"), HorizontalLine(y=20, color="blue")],
+                list=[Plot(columns=list(column_names.values()), ylabel="Momentum [STOCH]")],
+                horizontal_lines=[HorizontalLine(y=60, color="red"), HorizontalLine(y=40, color="blue")],
             ),
         )
 

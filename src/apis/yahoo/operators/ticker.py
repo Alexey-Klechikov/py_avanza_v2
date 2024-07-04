@@ -26,7 +26,7 @@ class Ticker:
         elif interval.mins == 2:
             available_period_days = 42
         elif interval.mins == 5:
-            available_period_days = 59
+            available_period_days = 55
 
         if period.days > available_period_days:
             log.debug(

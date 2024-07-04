@@ -69,6 +69,6 @@ class Figure:
                 int_index = self.data.index.get_loc(start)
                 ax[i].axvline(x=int_index, color="green", linestyle="--", linewidth=1)
 
-            ax[i].xaxis.set_major_locator(MultipleLocator(30))
+            ax[i].xaxis.set_major_locator(MultipleLocator(15))
 
         mpf.show()
