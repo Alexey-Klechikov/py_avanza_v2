@@ -24,15 +24,12 @@ class Figure:
         for p in plot.list:
             if p.ylabel:
                 self._title.append(p.ylabel)
-            # self._plots.append(mpf.make_addplot(self.data[p.column], panel=panel, **p.get_kwargs()))
 
-            if len(p.columns) == 1:
-                self._plots.append(mpf.make_addplot(self.data[p.columns[0]], panel=panel, **p.get_kwargs()))
-
+            plot_kwargs = {**p.get_kwargs(), **{"panel": panel, "data": self.data[p.columns]}}
             if len(p.columns) >= 2:
-                self._plots.append(
-                    mpf.make_addplot(self.data[p.columns], panel=panel, ylabel=p.ylabel, secondary_y=False),
-                )
+                plot_kwargs.update(secondary_y=False)
+
+            self._plots.append(mpf.make_addplot(**plot_kwargs))
 
         for hl in plot.horizontal_lines:
             self.data[f"hline_{hl.y}"] = hl.y

@@ -9,11 +9,17 @@ log = get_logger()
 
 class Trend(IndicatorsCategoryBase):
     def add_trend_intensity_index(self, length_sma: int, length_signal: int) -> None:
-        # TODO: double-check this indicator
-        # TODO: add plots
         """
         TII (Trend Intensity Index)
         https://raposa.trade/blog/4-ways-to-trade-the-trend-intensity-indicator/
+
+        Determining the strength of a trend can provide a valuable edge to your trading strategy
+        and help you determine when to go long and let it ride, or not. This is what the Trend
+        Intensity Indicator (TII) was designed to do.
+
+        This indicator is as simple to interpret as more familiar values like the RSI. It's scaled
+        from 0-100 where higher numbers indicate a stronger upward trend, lower values a stronger
+        downward trend, and values around the centerline (50) are neutral.
         """
 
         column_names = {
@@ -32,37 +38,75 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["TII"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["TII_SIGNAL"]] > x[column_names["TII"]],
-                SELL=lambda x: x[column_names["TII_SIGNAL"]] < x[column_names["TII"]],
+                BUY=lambda x: (x[column_names["TII"]] - x[column_names["TII_SIGNAL"]] > 2)
+                and (x[column_names["TII_SIGNAL"]] > 50),
+                SELL=lambda x: (x[column_names["TII_SIGNAL"]] - x[column_names["TII"]] > 2)
+                and (x[column_names["TII_SIGNAL"]] < 50),
             ),
             columns=list(column_names.values()),
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=list(column_names.values()), ylabel="Trend [TII]")],
+                horizontal_lines=[HorizontalLine(y=50, color="red")],
+            ),
         )
 
-    def add_trend_based_on_ttm_squeeze(self, length: int) -> None:
-        # TODO: add plots
+    def add_average_directional_movement(self, length: int, lensig: int, mamode: str) -> None:
         """
-        TTM_TREND (Trend based on TTM Squeeze)
+        ADX (Average Directional Movement)
+        https://www.investopedia.com/terms/w/wilders-dmi-adx.asp
+
+        defaults: length = 14, lensig = length, mamode = "rma"
+
+        Wilder’s DMI (ADX) consists of three indicators that measure a trend’s strength and
+        direction. Three lines compose the Direction Movement Index (DMI): ADX (black line),
+        DI+ (green line), and DI- (red line). The Average Directional Index (ADX) line shows
+        the strength of the trend. The higher the ADX value, the stronger the trend. The color
+        of the lines can be altered, but black, green, and red are the default in most software.
+
+        The Plus Direction Indicator (DI+) and Minus Direction Indicator (DI-) show the current
+        price direction. When the DI+ is above DI-, the current price momentum is up. When the
+        DI- is above DI+, the current price momentum is down.
         """
 
-        column_name = f"TTM_TRND_{length}"
+        column_names = {"ADX": f"ADX_{lensig}", "DMP": f"DMP_{length}", "DMN": f"DMN_{length}"}
 
-        self.data.ta.ttm_trend(length=length, append=True)
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Trend -> TTM_TREND' can not be added.")
+        self.data.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
+        if column_names["ADX"] not in self.data.columns:
+            log.debug("Indicator 'Trend -> ADX' can not be added.")
             return
 
-        self.indicators["TTM_TREND"] = Indicator(
+        self.indicators["ADX"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] == 1,
-                SELL=lambda x: x[column_name] == -1,
+                BUY=lambda x: x[column_names["ADX"]] > 25 and x[column_names["DMP"]] > x[column_names["DMN"]],
+                SELL=lambda x: x[column_names["ADX"]] > 25 and x[column_names["DMP"]] < x[column_names["DMN"]],
             ),
-            columns=[column_name],
+            columns=list(column_names.values()),
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=list(column_names.values()), ylabel="Trend [ADX]")],
+                horizontal_lines=[HorizontalLine(y=25, color="orange")],
+            ),
         )
 
     def add_vertical_horizontal_filter(self, length: int, length_ema: int) -> None:
-        # TODO: add plots
         """
+        >>> not used
+
         VHF (Vertical Horizontal Filter)
+        https://www.incrediblecharts.com/indicators/vertical_horizontal_filter.php
+        https://trendspider.com/learning-center/introduction-to-vertical-horizontal-filter/
+
+        defaults: length = 28
+
+        Vertical Horizontal Filter (VHF) was created by Adam White to identify trending and
+        ranging markets. VHF measures the level of trend activity, similar to ADX in the
+        Directional Movement System. Trend indicators can then be employed in trending markets
+        and momentum indicators in ranging markets.
+
+        Vary the number of periods in the Vertical Horizontal Filter to suit different time frames.
+        White originally recommended 28 days but now prefers an 18-day window smoothed with
+        a 6-day moving average.
         """
 
         column_name = f"VHF_{length}_EMA_{length_ema}"
@@ -81,12 +125,28 @@ class Trend(IndicatorsCategoryBase):
                 SELL=lambda x: x[column_name] > 0.4,
             ),
             columns=[column_name],
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=[column_name], color="orange", ylabel="Trend [VHF]")],
+                horizontal_lines=[HorizontalLine(y=0.45, color="red"), HorizontalLine(y=0.4, color="blue")],
+            ),
         )
 
-    def add_vortex_indicator(self, length: int) -> None:
-        # TODO: add plots
+    def add_vortex_indicator(self, length: int, drift: int) -> None:
         """
+        >>> not used
+
         VORTEX (Vortex Indicator)
+        https://www.investopedia.com/terms/v/vortex-indicator-vi.asp
+
+        defaults: length=14, drift=1
+
+        The vortex indicator is commonly used in conjunction with
+        other reversal trend patterns to help support a reversal signal.
+        An uptrend or buy signal occurs when VI+ is below VI- and then
+        crosses above VI- to take the top position among the trendlines.
+        A downtrend or sell signal occurs when VI- is below VI+ and
+        crosses above VI+ to take the top position among the trendlines.
         """
 
         column_names = {
@@ -94,7 +154,7 @@ class Trend(IndicatorsCategoryBase):
             "VTXM": f"VTXM_{length}",
         }
 
-        self.data.ta.vortex(length=length, append=True)
+        self.data.ta.vortex(length=length, drift=drift, append=True)
         if column_names["VTXP"] not in self.data.columns:
             log.debug("Indicator 'Trend -> VORTEX' can not be added.")
             return
@@ -105,6 +165,10 @@ class Trend(IndicatorsCategoryBase):
                 SELL=lambda x: x[column_names["VTXM"]] < x[column_names["VTXP"]],
             ),
             columns=list(column_names.values()),
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=[column_names["VTXP"], column_names["VTXM"]], ylabel="Trend [VORTEX]")],
+            ),
         )
 
     def add_parabolic_stop_and_reverse(self, acceleration: float, maximum: float) -> None:
@@ -122,8 +186,8 @@ class Trend(IndicatorsCategoryBase):
         """
 
         column_names = {
-            "PSARl": f"PSARl_{acceleration}_{maximum}",
-            "PSARs": f"PSARs_{acceleration}_{maximum}",
+            "PSARl": f"PSARl_{acceleration}_{maximum}",  # lower branch
+            "PSARs": f"PSARs_{acceleration}_{maximum}",  # upper branch
         }
 
         self.data.ta.psar(af=acceleration, max_af=maximum, append=True)
@@ -139,13 +203,19 @@ class Trend(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.MAIN,
-                list=[Plot(columns=[column_names["PSARl"], column_names["PSARs"]], ylabel="Trend [PSAR]")],
+                list=[Plot(columns=list(column_names.values()), ylabel="Trend [PSAR]", type="scatter")],
             ),
         )
 
     def add_choppiness_index(self, length: int, length_atr: int, scalar: float) -> None:
         """
         CHOP (Choppiness Index)
+        https://www.tradingview.com/support/solutions/43000501980-choppiness-index-chop/
+
+        defaults: length=14, scalar=100, length_atr=1
+
+        Values closer to 100 implies the underlying is choppier
+        whereas values closer to 0 implies the underlying is trending.
         """
 
         column_name = f"CHOP_{length}_{length_atr}_{scalar}"
@@ -157,31 +227,35 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["CHOP"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] < 61.8,
-                SELL=lambda x: x[column_name] > 61.8,
+                BUY=lambda x: x[column_name] < 50,
+                SELL=lambda x: x[column_name] < 50,
             ),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=[column_name], color="orange", ylim=[0, 100], ylabel="Trend [CHOP]")],
-                horizontal_lines=[HorizontalLine(y=60, color="red"), HorizontalLine(y=40, color="blue")],
+                horizontal_lines=[HorizontalLine(y=50, color="red")],
             ),
         )
 
     def add_chande_kroll_stop(self, p: int, x: float, q: int) -> None:
         """
         CKSP (Chande Kroll Stop)
+        https://www.tradingview.com/support/solutions/43000589105-chande-kroll-stop/
 
         p (int): ATR and first stop period.
         x (float): ATR scalar.
         q (int): Second stop period.
 
-        # TODO: try p=10, x=1, q=9
+        defaults: TradingView(p=10, x=1, q=9), Book(p=10, x=3, q=20)
+
+        It is a trend-following indicator, identifying your stop by calculating the average
+        true range of the recent market volatility.
         """
 
         column_names = {
-            "CKSPl": f"CKSPl_{p}_{x}_{q}",
-            "CKSPs": f"CKSPs_{p}_{x}_{q}",
+            "CKSPl": f"CKSPl_{p}_{x}_{q}",  # stop for long positions
+            "CKSPs": f"CKSPs_{p}_{x}_{q}",  # stop for short positions
         }
 
         self.data.ta.cksp(p=p, x=x, q=q, append=True)
@@ -196,7 +270,7 @@ class Trend(IndicatorsCategoryBase):
             ),
             columns=list(column_names.values()),
             plots=Plots(
-                panel=Panel.SEPARATE,
+                panel=Panel.MAIN,
                 list=[Plot(columns=[column_names["CKSPl"], column_names["CKSPs"]], ylabel="Trend [CKSP]")],
             ),
         )

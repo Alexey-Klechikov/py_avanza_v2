@@ -39,9 +39,9 @@ class Momentum(IndicatorsCategoryBase):
         fast: int,
         medium: int,
         slow: int,
-        fast_weight: float,
-        medium_weight: float,
-        slow_weight: float,
+        fast_w: float,
+        medium_w: float,
+        slow_w: float,
     ) -> None:
         """
         UO (Ultimate Oscillator)
@@ -50,15 +50,7 @@ class Momentum(IndicatorsCategoryBase):
 
         column_name = f"UO_{fast}_{medium}_{slow}"
 
-        self.data.ta.uo(
-            fast=fast,
-            medium=medium,
-            slow=slow,
-            fast_w=fast_weight,
-            medium_w=medium_weight,
-            slow_w=slow_weight,
-            append=True,
-        )
+        self.data.ta.uo(fast=fast, medium=medium, slow=slow, fast_w=fast_w, medium_w=medium_w, slow_w=slow_w, append=True)
         if column_name not in self.data.columns:
             log.debug("Indicator 'Momentum -> UO' can not be added.")
             return
