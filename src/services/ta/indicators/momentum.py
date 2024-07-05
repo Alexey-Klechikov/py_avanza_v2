@@ -193,15 +193,15 @@ class Momentum(IndicatorsCategoryBase):
                 BUY=lambda x: all(
                     [
                         x[column_names["STOCHk"]] > x[column_names["STOCHd"]],
-                        x[column_names["STOCHk"]] > 60,
-                        x[column_names["STOCHd"]] > 60,
+                        x[column_names["STOCHk"]] > 70,
+                        x[column_names["STOCHd"]] > 70,
                     ],
                 ),
                 SELL=lambda x: all(
                     [
                         x[column_names["STOCHk"]] < x[column_names["STOCHd"]],
-                        x[column_names["STOCHk"]] < 40,
-                        x[column_names["STOCHd"]] < 40,
+                        x[column_names["STOCHk"]] < 30,
+                        x[column_names["STOCHd"]] < 30,
                     ],
                 ),
             ),
@@ -209,7 +209,7 @@ class Momentum(IndicatorsCategoryBase):
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=list(column_names.values()), ylabel="Momentum [STOCH]")],
-                horizontal_lines=[HorizontalLine(y=60, color="red"), HorizontalLine(y=40, color="blue")],
+                horizontal_lines=[HorizontalLine(y=70, color="red"), HorizontalLine(y=30, color="blue")],
             ),
         )
 

@@ -8,10 +8,18 @@ log = get_logger()
 
 
 class Volume(IndicatorsCategoryBase):
-    def add_price_volume_trend(self, length_sma: int) -> None:
-        # TODO: double-check this indicator
+    def add_price_volume_trend(self, drift: int, length_sma: int) -> None:
         """
         PVT (Price Volume Trend)
+        https://www.strike.money/technical-analysis/volume-price-trend
+
+        default: drift=1
+
+        Price Volume Trend (PVT) is a technical analysis indicator that relates price and volume.
+        A sharply rising VPT when the price is breaking out from a price range indicates strong
+        buying pressure. This indicates that market participants are interested in buying as the
+        volume is rising during a period of price rise. Conversely, a sharply declining VPT when
+        the price is breaking down from a price range indicates strong selling pressure.
         """
 
         column_names = {
@@ -19,7 +27,7 @@ class Volume(IndicatorsCategoryBase):
             "PVT_SMA": f"PVT_SMA_{length_sma}",
         }
 
-        self.data.ta.pvt(append=True)
+        self.data.ta.pvt(drift=drift, append=True)
         self.data[column_names["PVT_SMA"]] = self.data.ta.sma(close="PVT", length=length_sma)
         if column_names["PVT"] not in self.data.columns:
             log.debug("Indicator 'Volume -> PVT' can not be added.")
@@ -33,36 +41,54 @@ class Volume(IndicatorsCategoryBase):
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["PVT"], column_names["PVT_SMA"]], ylabel="Volume [PVT]")],
+                list=[Plot(columns=list(column_names.values()), ylabel="Volume [PVT]")],
             ),
         )
 
     def add_accumulation_distribution_oscillator(self, fast: int, slow: int) -> None:
-        # TODO: double-check this indicator
-        # TODO: Add plotting
         """
         ADOSC (Accumulation/Distribution Oscillator)
-        """
-        column_name = "ADOSC_direction"
+        https://www.investopedia.com/articles/active-trading/031914/understanding-chaikin-oscillator.asp
+        https://www.investopedia.com/terms/a/accumulationdistribution.asp
 
-        self.data[column_name] = (
-            self.data.ta.adosc(fast=fast, slow=slow).rolling(2).apply(lambda x: x.iloc[1] > x.iloc[0])
-        )
+        default: fast=12, slow=26
+
+        Accumulation/Distribution Oscillator indicator utilizes Accumulation/Distribution and treats it
+        similarly to MACD or APO.
+        """
+
+        column_name = f"ADOSC_{fast}_{slow}"
+
+        self.data[column_name] = self.data.ta.adosc(fast=fast, slow=slow)
         if column_name not in self.data.columns:
             log.debug("Indicator 'Volume -> ADOSC' can not be added.")
             return
 
+        column_name_lag = f"{column_name}_lag"
+        self.data[column_name_lag] = self.data[column_name].shift(1)
+
         self.indicators["ADOSC"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] == 1,
-                SELL=lambda x: x[column_name] == 0,
+                BUY=lambda x: x[column_name] > x[column_name_lag],
+                SELL=lambda x: x[column_name] < x[column_name_lag],
             ),
-            columns=[column_name],
+            columns=[column_name, column_name_lag],
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=[column_name], ylabel="Volume [ADOSC]")],
+            ),
         )
 
     def add_chaikin_money_flow(self, length: int) -> None:
         """
         CMF (Chaikin Money Flow)
+        https://www.chaikinanalytics.com/chaikin-money-flow/
+
+        default: length=21
+
+        Chaikin Money Flow (CMF) is a technical analysis indicator that measures the buying and
+        selling pressure of a security over a set period of time. It is based on the concept of
+        Money Flow Volume, which is the volume-weighted average of accumulation and distribution
         """
 
         column_name = f"CMF_{length}"
@@ -72,11 +98,11 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> CMF' can not be added.")
             return
 
-        cmf = {"max": self.data[column_name].max(), "min": self.data[column_name].min()}
         self.indicators["CMF"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > cmf["max"] * 0.2,
-                SELL=lambda x: x[column_name] < cmf["min"] * 0.2,
+                BUY=lambda x: x[column_name] > 0.1,
+                SELL=lambda x: x[column_name] < -0.1,
+                EXIT=lambda x: x[column_name] == 0,
             ),
             columns=[column_name],
             plots=Plots(
@@ -86,30 +112,16 @@ class Volume(IndicatorsCategoryBase):
             ),
         )
 
-    def add_elders_force_index(self, length: int, mamode: str) -> None:
-        # TODO: add plot
-        """
-        EFI (Elder's Force Index)
-        """
-
-        column_name = f"EFI_{length}"
-
-        self.data.ta.efi(length=length, mamode=mamode, append=True)
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Volume -> EFI' can not be added.")
-            return
-
-        self.indicators["EFI"] = Indicator(
-            signal=Signal(
-                BUY=lambda x: x[column_name] > 0,
-                SELL=lambda x: x[column_name] < 0,
-            ),
-            columns=[column_name],
-        )
-
-    def add_klinger_volume_oscillator(self, fast: int, slow: int, signal: int) -> None:
+    def add_klinger_volume_oscillator(self, fast: int, slow: int, signal: int, mamode: str) -> None:
         """
         KVO (Klinger Volume Oscillator)
+        https://www.investopedia.com/terms/k/klingeroscillator.asp
+
+        default: fast=34, slow=55, signal=13, mamode="ema"
+
+
+        This indicator was developed by Stephen J. Klinger. It is designed to predict
+        price reversals in a market by comparing volume to price.
         """
 
         column_names = {
@@ -117,20 +129,20 @@ class Volume(IndicatorsCategoryBase):
             "KVOs": f"KVOs_{fast}_{slow}_{signal}",
         }
 
-        self.data.ta.kvo(fast=fast, slow=slow, signal=signal, mamode="ema", append=True)
+        self.data.ta.kvo(fast=fast, slow=slow, signal=signal, mamode=mamode, append=True)
         if column_names["KVO"] not in self.data.columns:
             log.debug("Indicator 'Volume -> KVO' can not be added.")
             return
 
         self.indicators["KVO"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["KVO"]] > x[column_names["KVOs"]],
-                SELL=lambda x: x[column_names["KVO"]] < x[column_names["KVOs"]],
+                BUY=lambda x: (x[column_names["KVO"]] > x[column_names["KVOs"]]) and (x[column_names["KVOs"]] > 0),
+                SELL=lambda x: (x[column_names["KVO"]] < x[column_names["KVOs"]]) and (x[column_names["KVOs"]] < 0),
             ),
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["KVO"], column_names["KVOs"]], ylabel="Volume [KVO]")],
+                list=[Plot(columns=list(column_names.values()), ylabel="Volume [KVO]")],
             ),
         )
 

@@ -24,7 +24,7 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     # trend.add_vertical_horizontal_filter(length=18, length_ema=6)  # VHF (exit)
 
     overlap = Overlap(data)
-    overlap.add_gann_high_low_activator(length_high=13, length_low=21, mamode="sma")  # GHLA (buy / sell)
+    overlap.add_gann_high_low_activator(length_high=13, length_low=21, mamode="dema")  # GHLA (buy / sell)
     overlap.add_linear_regression(length=14)  # LINREG (buy / sell)
 
     momentum = Momentum(data)
@@ -32,25 +32,22 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     momentum.add_schaff_trend_cycle(tclength=10, fast=23, slow=50, factor=0.4)  # STC (buy / sell)
     momentum.add_commodity_channel_index(length=14, c=0.015)  # CCI (buy / sell)
     momentum.add_relative_vigor_index(length=14, length_swma=4)  # RVI (buy / sell)
-    momentum.add_stochastic_oscillator(k=14, d=3, smooth_k=3, mamode="sma")  # STOCH (buy / sell)
+    momentum.add_stochastic_oscillator(k=14, d=3, smooth_k=3, mamode="dema")  # STOCH (buy / sell)
 
     cycles = Cycles(data)
-    # TODO: HERE
-    cycles.add_even_better_sinewave(length=40, bars=10)
+    cycles.add_even_better_sinewave(length=40, bars=10)  # (buy / sell) -> only use for confirmation
 
     volatility = Volatility(data)
-    volatility.add_starc_bands(length_sma=6, length_atr=14, multiplier_atr=1.5)  # STARC
-    volatility.add_mass_index(fast=9, slow=25)  # MASSI
-    volatility.add_holt_winter_channel(na=0.2, nb=0.1, nc=0.1, nd=0.1, scalar=1)  # HWC
-    volatility.add_bollinger_bands(length=20, std=2.0)  # BBANDS
-    volatility.add_acceleration_bands(length=20, c=4, mamode="sma")  # ACCBANDS
+    volatility.add_starc_bands(length_sma=6, length_atr=15, multiplier_atr=1.5)  # STARC (buy / sell)
+    volatility.add_mass_index(fast=9, slow=25)  # MASSI (buy / sell) -> only use as a filter
+    volatility.add_bollinger_bands(length=14, std=1.8)  # BBANDS (buy / sell)
+    volatility.add_acceleration_bands(length=20, c=3, mamode="dema")  # ACCBANDS (buy / sell | exit?)
 
     volume = Volume(data)
-    volume.add_price_volume_trend(length_sma=9)  # PVT
-    volume.add_accumulation_distribution_oscillator(fast=30, slow=45)  # ADOSC
-    volume.add_chaikin_money_flow(length=20)  # CMF
-    volume.add_elders_force_index(length=13, mamode="ema")  # EFI
-    volume.add_klinger_volume_oscillator(fast=34, slow=55, signal=13)  # KVO
+    volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT (buy / sell)
+    volume.add_accumulation_distribution_oscillator(fast=6, slow=20)  # ADOSC (buy / sell)
+    volume.add_chaikin_money_flow(length=21)  # CMF (buy / sell | exit)
+    volume.add_klinger_volume_oscillator(fast=34, slow=55, signal=13, mamode="dema")  # KVO (buy / sell)
 
     columns_keep = set(DATA_COLUMNS)
     for category in [trend, volatility, volume, cycles, overlap, momentum]:
@@ -95,11 +92,17 @@ def plot_indicators(
             data["buy"] = data.apply(lambda x: x["buy"] if indicator.signal.BUY(x) else np.nan, axis=1)  # type: ignore
             data["sell"] = data.apply(lambda x: x["sell"] if indicator.signal.SELL(x) else np.nan, axis=1)  # type: ignore
 
-        data.loc[data.between_time("09:00", "10:00").index, "buy"] = np.nan
-        data.loc[data.between_time("09:00", "10:00").index, "sell"] = np.nan
+        for column in ["buy", "sell"]:
+            for non_trading_time in (["09:00", "10:00"], ["17:15", "17:30"]):
+                data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
+
         plot_signals = Plots(
             panel=Panel.MAIN,
-            list=[Plot(columns=["buy", "sell"], type="scatter", markersize=50)],
+            list=[
+                Plot(columns=[column], type="scatter", color=color, markersize=50)
+                for column, color in [("buy", "green"), ("sell", "red")]
+                if not data[column].isnull().all()
+            ],
         )
 
         figure.add_plot(plot_signals)

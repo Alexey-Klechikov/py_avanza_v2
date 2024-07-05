@@ -12,6 +12,12 @@ class Cycles(IndicatorsCategoryBase):
         """
         EBSW (Even Better Sinewave)
         https://www.prorealcode.com/prorealtime-indicators/even-better-sinewave/
+
+        :param length: The length. Default is 40.
+
+        This indicator measures market cycles and uses a low pass filter to remove noise.
+        Its output is bound signal between -1 and 1 and the maximum length of a detected
+        trend is limited by its length input.
         """
 
         column_name = f"EBSW_{length}_{bars}"
