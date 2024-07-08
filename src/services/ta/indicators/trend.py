@@ -149,8 +149,7 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["CHOP"] = Indicator(
             signal=Signal(
-                LONG=lambda x: x[column_name] < 50,
-                SHORT=lambda x: x[column_name] < 50,
+                EXIT=lambda x: x[column_name] > 50,
             ),
             columns=[column_name],
             plots=Plots(

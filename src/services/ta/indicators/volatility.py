@@ -145,6 +145,8 @@ class Volatility(IndicatorsCategoryBase):
             signal=Signal(
                 LONG=lambda x: x["Close"] > x[column_names["ACCBU"]],
                 SHORT=lambda x: x["Close"] < x[column_names["ACCBL"]],
+                STOP_LOSS_LONG=lambda x: x["Close"] < x[column_names["ACCBL"]],
+                STOP_LOSS_SHORT=lambda x: x["Close"] > x[column_names["ACCBU"]],
             ),
             columns=list(column_names.values()),
             plots=Plots(

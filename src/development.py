@@ -1,4 +1,5 @@
 import warnings
+from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -19,6 +20,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 set_handlers("development")
 log = get_logger()
 
+LOG_INDIVIDUAL_TRADES = False
+
 data = pd.DataFrame()
 
 
@@ -28,22 +31,25 @@ class Order(BaseModel):
     sell_price: Optional[float] = None
     sell_datetime: Optional[Any] = None
 
-    def sell(self, sell_price: float, sell_datetime: Any, instrument_type: str):
+    def sell(self, sell_price: float, sell_datetime: Any, instrument_type: str) -> float:
         self.sell_price = sell_price
         self.sell_datetime = sell_datetime
 
-        profit = self.sell_price - self.buy_price
+        profit = self.sell_price - self.buy_price - 0.1
         profit = profit if instrument_type == "BULL" else -profit
 
         trading_time = (self.sell_datetime - self.buy_datetime).seconds / 60
 
-        log.info(
-            f"{self.buy_datetime.date()} {instrument_type}: "
-            f"{self.buy_price} -> {self.sell_price} "
-            f"at {self.buy_datetime.time()} -> {self.sell_datetime.time()}: "
-            f"{round(profit, 2)} in {trading_time} min"
-            f" ({('+' if profit > 0 else '-') * (1 + int(round(abs(profit)) // 3))})",
-        )
+        if LOG_INDIVIDUAL_TRADES:
+            log.info(
+                f"{self.buy_datetime.date()} {instrument_type}: "
+                f"{round(self.buy_price, 2)} -> {round(self.sell_price, 2)} "
+                f"at {self.buy_datetime.time()} -> {self.sell_datetime.time()}: "
+                f"{round(profit, 2)} in {trading_time} min"
+                f" ({('+' if profit > 0 else '-') * (1 + int(round(abs(profit)) // 3))})",
+            )
+
+        return profit
 
 
 class Wallet(BaseModel):
@@ -51,33 +57,42 @@ class Wallet(BaseModel):
     BEAR: Optional[Order] = None
 
 
-def _get_active_indicators(
-    all_indicators: Dict[str, Dict[str, Indicator]],
-    active_indicators_selector: List[Tuple[str, str]],
-) -> List[Indicator]:
-    active_indicators: List[Indicator] = []
-    for category, name in active_indicators_selector:
-        indicator = all_indicators.get(category, {}).get(name)
-        if not indicator:
-            log.warning(f"Indicator {name} from category {category} does not exist.")
-            continue
-
-        if indicator.plots is None:
-            log.warning(f"Indicator {name}-{category} does not have any plots.")
-            continue
-
-        active_indicators.append(indicator)
-
-    return active_indicators
+class Counter(BaseModel):
+    total_trades: int = 0
+    total_profit: float = 0
 
 
-def _consider_signals(active_indicators: List[Indicator]):
+class Strategy:
+    def __init__(
+        self,
+        all_indicators: Dict[str, Dict[str, Indicator]],
+        selected_indicators: Tuple[Tuple[str, str], Tuple[str, str], Tuple[str, str]],
+        counter: Counter = Counter(),
+    ):
+        self.counter = counter
+        self.selected_indicators = selected_indicators
+
+        self.indicators_logic: List[Indicator] = []
+        for category, name in selected_indicators:
+            indicator = all_indicators.get(category, {}).get(name)
+            if not indicator:
+                log.warning(f"Indicator {name} from category {category} does not exist.")
+                continue
+
+            if indicator.plots is None:
+                log.warning(f"Indicator {name}-{category} does not have any plots.")
+                continue
+
+            self.indicators_logic.append(indicator)
+
+
+def _consider_signals(strategy: Strategy):
     for column in ["LONG", "SHORT", "EXIT", "STOP_LOSS_LONG", "STOP_LOSS_SHORT"]:
         combination_condition = all if column in ["LONG", "SHORT"] else any
 
         signal_methods = [
             indicator.signal.__getattribute__(column)
-            for indicator in active_indicators
+            for indicator in strategy.indicators_logic
             if indicator.signal.__getattribute__(column) is not None
         ]
 
@@ -95,9 +110,11 @@ def _consider_signals(active_indicators: List[Indicator]):
         data.loc[data.between_time("17:15", "17:16").index, "EXIT"] = (data["High"] + data["Low"]) / 2
 
 
-def _consider_trading_logic():
+def _consider_trading_logic(strategy: Strategy):
     wallet = Wallet()
+
     for i, row in data.iterrows():
+        profit = None
         if (
             wallet.BULL is None
             and row["LONG"] > 0
@@ -108,12 +125,12 @@ def _consider_trading_logic():
             wallet.BULL = Order(buy_price=row["LONG"], buy_datetime=i)
 
             if wallet.BEAR is not None:
-                wallet.BEAR.sell(row["LONG"], i, "BEAR")
+                profit = wallet.BEAR.sell(row["LONG"], i, "BEAR")
                 wallet.BEAR = None
 
         elif wallet.BULL is not None and (row["STOP_LOSS_LONG"] > 0 or row["EXIT"] > 0):
             sell_price = row["STOP_LOSS_LONG"] if row["STOP_LOSS_LONG"] > 0 else row["EXIT"]
-            wallet.BULL.sell(sell_price, i, "BULL")
+            profit = wallet.BULL.sell(sell_price, i, "BULL")
             data.at[i, "EXIT"] = sell_price
             wallet.BULL = None
 
@@ -127,83 +144,102 @@ def _consider_trading_logic():
             wallet.BEAR = Order(buy_price=row["SHORT"], buy_datetime=i)
 
             if wallet.BULL is not None:
-                wallet.BULL.sell(row["SHORT"], i, "BULL")
+                profit = wallet.BULL.sell(row["SHORT"], i, "BULL")
                 wallet.BULL = None
 
         elif wallet.BEAR is not None and (row["STOP_LOSS_SHORT"] > 0 or row["EXIT"] > 0):
             sell_price = row["STOP_LOSS_SHORT"] if row["STOP_LOSS_SHORT"] > 0 else row["EXIT"]
-            wallet.BEAR.sell(sell_price, i, "BEAR")
+            profit = wallet.BEAR.sell(sell_price, i, "BEAR")
             data.at[i, "EXIT"] = sell_price
             wallet.BEAR = None
 
+        if profit is not None:
+            strategy.counter.total_trades += 1
+            strategy.counter.total_profit += profit
 
-def plot_indicators(
-    active_indicators: List[Indicator],
-    show_signals: bool = False,
-):
+
+def add_signals(data: pd.DataFrame, strategy: Strategy):
+    data["LONG"] = data["High"]
+    data["SHORT"] = data["Low"]
+    data["EXIT"] = (data["High"] + data["Low"]) / 2
+    data["STOP_LOSS_LONG"] = data["Low"]
+    data["STOP_LOSS_SHORT"] = data["High"]
+
+    _consider_signals(strategy)
+    _consider_trading_logic(strategy)
+
+
+def plot_indicators(strategy: Strategy):
     figure = Figure(data=data)
-    for indicator in active_indicators:
+    for indicator in strategy.indicators_logic:
         figure.add_plot(indicator.plots)
 
-    if show_signals:
-        data["LONG"] = data["High"]
-        data["SHORT"] = data["Low"]
-        data["EXIT"] = (data["High"] + data["Low"]) / 2
-        data["STOP_LOSS_LONG"] = data["High"]
-        data["STOP_LOSS_SHORT"] = data["Low"]
+    plot_signals = Plots(
+        panel=Panel.MAIN,
+        list=[
+            Plot(columns=[column], type="scatter", color=color, markersize=50)
+            for column, color in [("LONG", "green"), ("SHORT", "red"), ("EXIT", "black")]
+            if not data[column].isnull().all()
+        ],
+    )
 
-        _consider_signals(active_indicators)
-        _consider_trading_logic()
-
-        plot_signals = Plots(
-            panel=Panel.MAIN,
-            list=[
-                Plot(columns=[column], type="scatter", color=color, markersize=50)
-                for column, color in [("LONG", "green"), ("SHORT", "red"), ("EXIT", "black")]
-                if not data[column].isnull().all()
-            ],
-        )
-
-        figure.add_plot(plot_signals)
+    figure.add_plot(plot_signals)
 
     figure.show()
 
 
 if __name__ == "__main__":
     data = Storage(OMX30_YAHOO, resolution="5m").read()
-    data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=5)]
+    data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=50)]
 
     indicators = get_indicators(data)
-    active_indicators_selector = [
-        ("Trend", "CKSP"),  # stop loss
-        ("Trend", "ADX"),  # buy / sell
-        ("Trend", "TII"),  # buy / sell
-        # ("Trend", "PSAR"),
-        # ("Trend", "CHOP"),
-        # ("Trend", "CKSP"),
-        # ("Overlap", "LINREG"),
-        # ("Overlap", "GHLA"),
-        # ("Momentum", "MACD_DEMA"),
-        # ("Momentum", "STC"),
-        # ("Momentum", "CCI"),
-        # ("Momentum", "RVGI"),
-        # ("Momentum", "STOCH"),
-        # ("Cycles", "EBSW"),
-        # ("Volatility", "STARC"),
-        # ("Volatility", "MASSI"),
-        # ("Volatility", "BBANDS"),
-        # ("Volatility", "ACCBANDS"),
-        # ("Volume", "PVT"),
-        # ("Volume", "ADOSC"),
-        # ("Volume", "CMF"),
-        # ("Volume", "KVO"),
+    indicators_selector: List[Tuple[str, str]] = [
+        ("Trend", "CKSP"),  # stop loss   --- 98 m  --- 26.12
+        ("Trend", "ADX"),  # buy / sell   --- 1 fixed
+        ("Trend", "TII"),  # buy / sell   --- 1 fixed
+        ("Trend", "PSAR"),  # buy / sell  --- 8 m --- 79.76
+        ("Trend", "CHOP"),  # exit      --- 44 m ---- 44.7
+        ("Overlap", "LINREG"),  # buy / sell  --- 11 m --- 77.71
+        ("Overlap", "GHLA"),  # buy / sell --- 6 fixed
+        ("Momentum", "MACD_DEMA"),  # buy / sell --- 14 fixed -- 73.13
+        ("Momentum", "STC"),  # buy / sell --- 1 fixed
+        ("Momentum", "CCI"),  # buy / sell --- 12 m - 77.16
+        ("Momentum", "RVGI"),  # buy / sell  --- 2 fixed
+        ("Momentum", "STOCH"),  # buy / sell  --- 3 fixed
+        ("Cycles", "EBSW"),  # buy / sell -> only use for confirmation --- 5 fixed
+        ("Volatility", "STARC"),  # buy / sell  --- 26 m --- 61.63
+        ("Volatility", "MASSI"),  # buy / sell -> only use as a filter  --- 23 m --- 62.98
+        ("Volatility", "BBANDS"),  # buy / sell  --- 2 fixed
+        ("Volatility", "ACCBANDS"),  # buy / sell | stop loss  --- 70 m ---- 33.16
+        # ("Volume", "PVT"),  # buy / sell
+        # ("Volume", "ADOSC"),  # buy / sell
+        # ("Volume", "CMF"),  # buy / sell (exit?)
+        # ("Volume", "KVO"),  # buy / sell
     ]
 
-    log.info(
-        f"Indicators: {' | '.join([(category + '-' + indicator) for category, indicator in active_indicators_selector])}",
-    )
+    strategies: List[Strategy] = []
+    for i1, indicator1 in enumerate(indicators_selector):
+        for i2, indicator2 in enumerate(indicators_selector[i1 + 1 :]):
+            for i3, indicator3 in enumerate(indicators_selector[i1 + i2 + 2 :]):
+                strategies.append(
+                    deepcopy(
+                        Strategy(
+                            selected_indicators=(indicator1, indicator2, indicator3),
+                            all_indicators=indicators,
+                        ),
+                    ),
+                )
 
-    plot_indicators(
-        active_indicators=_get_active_indicators(indicators, active_indicators_selector),
-        show_signals=True,
-    )
+    for i, strategy in enumerate(strategies):
+        if i != 0 and i % 10 == 0:
+            log.info(f"Strategy {i}/{len(strategies)}")
+
+        add_signals(data=data, strategy=strategy)
+        # plot_indicators(strategy=strategy)
+
+    for strategy in sorted(strategies, key=lambda x: x.counter.total_profit, reverse=True):
+        log.info(
+            "Indicators: "
+            f'{" | ".join([(category + "-" + indicator) for category, indicator in strategy.selected_indicators])}. '
+            f"Total trades: {strategy.counter.total_trades} | Total profit: {round(strategy.counter.total_profit, 2)}",
+        )
