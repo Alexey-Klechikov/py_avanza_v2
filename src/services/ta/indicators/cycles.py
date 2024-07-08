@@ -29,8 +29,8 @@ class Cycles(IndicatorsCategoryBase):
 
         self.indicators["EBSW"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > 0.5,
-                SELL=lambda x: x[column_name] < -0.5,
+                LONG=lambda x: x[column_name] > 0.5,
+                SHORT=lambda x: x[column_name] < -0.5,
             ),
             columns=[column_name],
             plots=Plots(

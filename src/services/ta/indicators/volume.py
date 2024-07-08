@@ -35,8 +35,8 @@ class Volume(IndicatorsCategoryBase):
 
         self.indicators["PVT"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["PVT_SMA"]] < x["PVT"],
-                SELL=lambda x: x[column_names["PVT_SMA"]] > x["PVT"],
+                LONG=lambda x: x[column_names["PVT_SMA"]] < x["PVT"],
+                SHORT=lambda x: x[column_names["PVT_SMA"]] > x["PVT"],
             ),
             columns=list(column_names.values()),
             plots=Plots(
@@ -69,8 +69,8 @@ class Volume(IndicatorsCategoryBase):
 
         self.indicators["ADOSC"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > x[column_name_lag],
-                SELL=lambda x: x[column_name] < x[column_name_lag],
+                LONG=lambda x: x[column_name] > x[column_name_lag],
+                SHORT=lambda x: x[column_name] < x[column_name_lag],
             ),
             columns=[column_name, column_name_lag],
             plots=Plots(
@@ -100,8 +100,8 @@ class Volume(IndicatorsCategoryBase):
 
         self.indicators["CMF"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > 0.1,
-                SELL=lambda x: x[column_name] < -0.1,
+                LONG=lambda x: x[column_name] > 0.1,
+                SHORT=lambda x: x[column_name] < -0.1,
                 EXIT=lambda x: x[column_name] == 0,
             ),
             columns=[column_name],
@@ -136,8 +136,8 @@ class Volume(IndicatorsCategoryBase):
 
         self.indicators["KVO"] = Indicator(
             signal=Signal(
-                BUY=lambda x: (x[column_names["KVO"]] > x[column_names["KVOs"]]) and (x[column_names["KVOs"]] > 0),
-                SELL=lambda x: (x[column_names["KVO"]] < x[column_names["KVOs"]]) and (x[column_names["KVOs"]] < 0),
+                LONG=lambda x: (x[column_names["KVO"]] > x[column_names["KVOs"]]) and (x[column_names["KVOs"]] > 0),
+                SHORT=lambda x: (x[column_names["KVO"]] < x[column_names["KVOs"]]) and (x[column_names["KVOs"]] < 0),
             ),
             columns=list(column_names.values()),
             plots=Plots(

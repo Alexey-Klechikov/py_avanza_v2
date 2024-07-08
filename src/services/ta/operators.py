@@ -1,12 +1,8 @@
-from typing import Dict, List, Tuple
-
-import numpy as np
-import pandas as pd
+from typing import Dict
 
 from data.settings import DATA_COLUMNS
-from services.ta.figure import Figure
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
-from services.ta.indicators.models import Indicator, Panel, Plot, Plots
+from services.ta.indicators.models import Indicator
 from utils.logger import get_logger
 
 log = get_logger()
@@ -17,7 +13,7 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
 
     trend = Trend(data)
     trend.add_trend_intensity_index(length_sma=20, length_signal=5)  # TII (buy / sell)
-    trend.add_average_directional_movement(length=14, lensig=14, mamode="rma")  # ADX (exit | buy / sell)
+    trend.add_average_directional_movement(length=14, lensig=14, mamode="rma")  # ADX (buy / sell)
     trend.add_chande_kroll_stop(p=10, x=1.0, q=9)  # CKSP (stop Loss)
     trend.add_parabolic_stop_and_reverse(acceleration=0.02, maximum=0.2)  # PSAR (buy / sell)
     trend.add_choppiness_index(length=14, length_atr=1, scalar=100.0)  # CHOP (exit)
@@ -59,52 +55,3 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     data.drop(columns=list(set(data.columns) - columns_keep), inplace=True)
 
     return indicators
-
-
-def plot_indicators(
-    data: pd.DataFrame,
-    indicators: Dict[str, Dict[str, Indicator]],
-    indicators_to_plot_mapping: List[Tuple[str, str]],
-    show_signals: bool = False,
-):
-    indicators_to_plot = []
-    for category, name in indicators_to_plot_mapping:
-        indicator = indicators.get(category, {}).get(name)
-        if not indicator:
-            log.warning(f"Indicator {name} from category {category} does not exist.")
-            continue
-
-        if indicator.plots is None:
-            log.warning(f"Indicator {name}-{category} does not have any plots.")
-            continue
-
-        indicators_to_plot.append(indicator)
-
-    figure = Figure(data=data)
-    for indicator in indicators_to_plot:
-        figure.add_plot(indicator.plots)
-
-    if show_signals:
-        data["buy"] = data["High"]
-        data["sell"] = data["Low"]
-
-        for indicator in indicators_to_plot:
-            data["buy"] = data.apply(lambda x: x["buy"] if indicator.signal.BUY(x) else np.nan, axis=1)  # type: ignore
-            data["sell"] = data.apply(lambda x: x["sell"] if indicator.signal.SELL(x) else np.nan, axis=1)  # type: ignore
-
-        for column in ["buy", "sell"]:
-            for non_trading_time in (["09:00", "10:00"], ["17:15", "17:30"]):
-                data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
-
-        plot_signals = Plots(
-            panel=Panel.MAIN,
-            list=[
-                Plot(columns=[column], type="scatter", color=color, markersize=50)
-                for column, color in [("buy", "green"), ("sell", "red")]
-                if not data[column].isnull().all()
-            ],
-        )
-
-        figure.add_plot(plot_signals)
-
-    figure.show()

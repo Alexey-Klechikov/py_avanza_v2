@@ -46,14 +46,14 @@ class Plots(BaseModel):
 
 
 class Signal(BaseModel):
-    BUY: Optional[Callable] = None
-    SELL: Optional[Callable] = None
+    LONG: Optional[Callable] = None
+    SHORT: Optional[Callable] = None
     EXIT: Optional[Callable] = None
-    STOP_LOSS: Optional[Callable] = None
-    TAKE_PROFIT: Optional[Callable] = None
+    STOP_LOSS_LONG: Optional[Callable] = None
+    STOP_LOSS_SHORT: Optional[Callable] = None
 
 
 class Indicator(BaseModel):
     columns: list[str]
     signal: Signal
-    plots: Optional[Plots] = None
+    plots: Plots

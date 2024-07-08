@@ -33,8 +33,8 @@ class Overlap(IndicatorsCategoryBase):
 
         self.indicators["GHLA"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x["Close"] > x[column_name],
-                SELL=lambda x: x["Close"] < x[column_name],
+                LONG=lambda x: x["Close"] > x[column_name],
+                SHORT=lambda x: x["Close"] < x[column_name],
             ),
             columns=[column_name],
             plots=Plots(
@@ -63,8 +63,8 @@ class Overlap(IndicatorsCategoryBase):
 
         self.indicators["LINREG"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > 0.1,
-                SELL=lambda x: x[column_name] < -0.1,
+                LONG=lambda x: x[column_name] > 0.1,
+                SHORT=lambda x: x[column_name] < -0.1,
             ),
             columns=[column_name],
             plots=Plots(

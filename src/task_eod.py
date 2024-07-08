@@ -10,7 +10,6 @@ from services.storage import Storage
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
-warnings.simplefilter(action="ignore", category=UserWarning)
 
 set_handlers("eod")
 log = get_logger()

@@ -35,8 +35,8 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["STC"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > 75,
-                SELL=lambda x: x[column_name] < 25,
+                LONG=lambda x: x[column_name] > 75,
+                SHORT=lambda x: x[column_name] < 25,
             ),
             columns=[column_name],
             plots=Plots(
@@ -69,8 +69,8 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["CCI"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > 100,
-                SELL=lambda x: x[column_name] < -100,
+                LONG=lambda x: x[column_name] > 100,
+                SHORT=lambda x: x[column_name] < -100,
             ),
             columns=[column_name],
             plots=Plots(
@@ -105,14 +105,14 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["RVGI"] = Indicator(
             signal=Signal(
-                BUY=lambda x: all(
+                LONG=lambda x: all(
                     [
                         x[column_names["RVGI"]] > x[column_names["RVGIs"]],
                         x[column_names["RVGI"]] > 0,
                         x[column_names["RVGIs"]] > 0,
                     ],
                 ),
-                SELL=lambda x: all(
+                SHORT=lambda x: all(
                     [
                         x[column_names["RVGI"]] < x[column_names["RVGIs"]],
                         x[column_names["RVGI"]] < 0,
@@ -154,8 +154,8 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["MACD_DEMA"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["MACD_DEMA"]] > 0,
-                SELL=lambda x: x[column_names["MACD_DEMA"]] < 0,
+                LONG=lambda x: x[column_names["MACD_DEMA"]] > 0,
+                SHORT=lambda x: x[column_names["MACD_DEMA"]] < 0,
             ),
             columns=[column_names["MACD_DEMA"]],
             plots=Plots(
@@ -190,14 +190,14 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["STOCH"] = Indicator(
             signal=Signal(
-                BUY=lambda x: all(
+                LONG=lambda x: all(
                     [
                         x[column_names["STOCHk"]] > x[column_names["STOCHd"]],
                         x[column_names["STOCHk"]] > 70,
                         x[column_names["STOCHd"]] > 70,
                     ],
                 ),
-                SELL=lambda x: all(
+                SHORT=lambda x: all(
                     [
                         x[column_names["STOCHk"]] < x[column_names["STOCHd"]],
                         x[column_names["STOCHk"]] < 30,

@@ -38,9 +38,9 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["TII"] = Indicator(
             signal=Signal(
-                BUY=lambda x: (x[column_names["TII"]] - x[column_names["TII_SIGNAL"]] > 2)
+                LONG=lambda x: (x[column_names["TII"]] - x[column_names["TII_SIGNAL"]] > 2)
                 and (x[column_names["TII_SIGNAL"]] > 50),
-                SELL=lambda x: (x[column_names["TII_SIGNAL"]] - x[column_names["TII"]] > 2)
+                SHORT=lambda x: (x[column_names["TII_SIGNAL"]] - x[column_names["TII"]] > 2)
                 and (x[column_names["TII_SIGNAL"]] < 50),
             ),
             columns=list(column_names.values()),
@@ -58,7 +58,7 @@ class Trend(IndicatorsCategoryBase):
 
         defaults: length = 14, lensig = length, mamode = "rma"
 
-        Wilder’s DMI (ADX) consists of three indicators that measure a trend’s strength and
+        Wilder's DMI (ADX) consists of three indicators that measure a trend's strength and
         direction. Three lines compose the Direction Movement Index (DMI): ADX (black line),
         DI+ (green line), and DI- (red line). The Average Directional Index (ADX) line shows
         the strength of the trend. The higher the ADX value, the stronger the trend. The color
@@ -69,7 +69,11 @@ class Trend(IndicatorsCategoryBase):
         DI- is above DI+, the current price momentum is down.
         """
 
-        column_names = {"ADX": f"ADX_{lensig}", "DMP": f"DMP_{length}", "DMN": f"DMN_{length}"}
+        column_names = {
+            "ADX": f"ADX_{lensig}",
+            "DMN": f"DMN_{length}",
+            "DMP": f"DMP_{length}",
+        }
 
         self.data.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
         if column_names["ADX"] not in self.data.columns:
@@ -78,14 +82,14 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["ADX"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_names["ADX"]] > 25 and x[column_names["DMP"]] > x[column_names["DMN"]],
-                SELL=lambda x: x[column_names["ADX"]] > 25 and x[column_names["DMP"]] < x[column_names["DMN"]],
+                LONG=lambda x: x[column_names["ADX"]] > 22 and x[column_names["DMP"]] > x[column_names["DMN"]],
+                SHORT=lambda x: x[column_names["ADX"]] > 22 and x[column_names["DMP"]] < x[column_names["DMN"]],
             ),
             columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=list(column_names.values()), ylabel="Trend [ADX]")],
-                horizontal_lines=[HorizontalLine(y=25, color="orange")],
+                horizontal_lines=[HorizontalLine(y=22, color="black")],
             ),
         )
 
@@ -115,8 +119,8 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["PSAR"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x["Close"] > x[column_names["PSARl"]],
-                SELL=lambda x: x["Close"] < x[column_names["PSARs"]],
+                LONG=lambda x: x["Close"] > x[column_names["PSARl"]],
+                SHORT=lambda x: x["Close"] < x[column_names["PSARs"]],
             ),
             columns=list(column_names.values()),
             plots=Plots(
@@ -145,8 +149,8 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["CHOP"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] < 50,
-                SELL=lambda x: x[column_name] < 50,
+                LONG=lambda x: x[column_name] < 50,
+                SHORT=lambda x: x[column_name] < 50,
             ),
             columns=[column_name],
             plots=Plots(
@@ -183,8 +187,8 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["CKSP"] = Indicator(
             signal=Signal(
-                BUY=lambda x: True,
-                SELL=lambda x: True,
+                STOP_LOSS_LONG=lambda x: x["Close"] < x[column_names["CKSPs"]],
+                STOP_LOSS_SHORT=lambda x: x["Close"] > x[column_names["CKSPl"]],
             ),
             columns=list(column_names.values()),
             plots=Plots(
@@ -225,8 +229,8 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["VHF"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] > 0.45,
-                SELL=lambda x: x[column_name] > 0.4,
+                LONG=lambda x: x[column_name] > 0.45,
+                SHORT=lambda x: x[column_name] > 0.4,
             ),
             columns=[column_name],
             plots=Plots(

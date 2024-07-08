@@ -33,8 +33,8 @@ class Volatility(IndicatorsCategoryBase):
 
         self.indicators["STARC"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x["High"] > x[column_names["STARC_U"]],
-                SELL=lambda x: x["Low"] < x[column_names["STARC_B"]],
+                LONG=lambda x: x["High"] > x[column_names["STARC_U"]],
+                SHORT=lambda x: x["Low"] < x[column_names["STARC_B"]],
             ),
             columns=list(column_names.values()),
             plots=Plots(
@@ -62,8 +62,8 @@ class Volatility(IndicatorsCategoryBase):
 
         self.indicators["MASSI"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x[column_name] <= 26,
-                SELL=lambda x: x[column_name] <= 26,
+                LONG=lambda x: x[column_name] <= 26,
+                SHORT=lambda x: x[column_name] <= 26,
             ),
             columns=[column_name],
             plots=Plots(
@@ -101,8 +101,9 @@ class Volatility(IndicatorsCategoryBase):
 
         self.indicators["BBANDS"] = Indicator(
             signal=Signal(
-                BUY=lambda x: (x["Close"] > x[column_names["BBU"]]) and (x[column_names["BBM"]] > x[column_name_BBM_lag]),
-                SELL=lambda x: (x["Close"] < x[column_names["BBL"]])
+                LONG=lambda x: (x["Close"] > x[column_names["BBU"]])
+                and (x[column_names["BBM"]] > x[column_name_BBM_lag]),
+                SHORT=lambda x: (x["Close"] < x[column_names["BBL"]])
                 and (x[column_names["BBM"]] < x[column_name_BBM_lag]),
             ),
             columns=list(column_names.values()) + [column_name_BBM_lag],
@@ -142,8 +143,8 @@ class Volatility(IndicatorsCategoryBase):
 
         self.indicators["ACCBANDS"] = Indicator(
             signal=Signal(
-                BUY=lambda x: x["Close"] > x[column_names["ACCBU"]],
-                SELL=lambda x: x["Close"] < x[column_names["ACCBL"]],
+                LONG=lambda x: x["Close"] > x[column_names["ACCBU"]],
+                SHORT=lambda x: x["Close"] < x[column_names["ACCBL"]],
             ),
             columns=list(column_names.values()),
             plots=Plots(
