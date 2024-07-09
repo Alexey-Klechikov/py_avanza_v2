@@ -48,9 +48,7 @@ class Storage:
         else:
             combined_data = pd.concat([old_data, new_data]).reset_index()
             combined_data = (
-                combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()]
-                .set_index("Datetime")
-                .sort_index()
+                combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()].set_index("Datetime").sort_index()
             )
 
         with open(self.path, "wb") as f:

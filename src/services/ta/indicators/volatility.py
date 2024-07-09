@@ -155,20 +155,41 @@ class Volatility(IndicatorsCategoryBase):
             ),
         )
 
+    # # Volatility
+    # @staticmethod
+    # def starc_bands(
+    #     data: pd.DataFrame, length_sma: int, length_atr: int, multiplier_atr: float
+    # ):
+    #     """https://www.investopedia.com/terms/s/starc.asp"""
 
-#     # Volatility
-#     @staticmethod
-#     def starc_bands(
-#         data: pd.DataFrame, length_sma: int, length_atr: int, multiplier_atr: float
-#     ):
-#         """https://www.investopedia.com/terms/s/starc.asp"""
+    #     make_name = lambda x: f"{x}_{length_sma}_{length_atr}_{multiplier_atr}"
 
-#         make_name = lambda x: f"{x}_{length_sma}_{length_atr}_{multiplier_atr}"
+    #     sma = data.ta.sma(length=length_sma)
+    #     atr = data.ta.atr(length=length_atr)
 
-#         sma = data.ta.sma(length=length_sma)
-#         atr = data.ta.atr(length=length_atr)
+    #     data[make_name("STARC_U")] = sma + multiplier_atr * atr
+    #     data[make_name("STARC_B")] = sma - multiplier_atr * atr
 
-#         data[make_name("STARC_U")] = sma + multiplier_atr * atr
-#         data[make_name("STARC_B")] = sma - multiplier_atr * atr
+    #     return data
 
-#         return data
+    # STOP LOSS
+    # def chandelier_exit(df1, atr_length=14, roll_length=22, mult=2, use_close=False):
+    #     df = df1.copy()
+    #     df.columns = df.columns.str.lower()
+    #     my_atr = ta.Strategy(
+    #         name="atr",
+    #         ta=[{"kind": "atr", "length": atr_length, "col_names": ("ATR",)}]
+    #     )
+    #     # Run it
+    #     df.ta.strategy(my_atr, append=True)
+
+    #     if use_close:
+    #         df['chandelier_long'] = df.rolling(roll_length)["close"].max() + df.iloc[-1]["ATR"] * mult
+    #         df['chandelier_short'] = df.rolling(roll_length)["close"].min() - df.iloc[-1]["ATR"] * mult
+    #     else:
+    #         df['chandelier_long'] = df.rolling(roll_length)["high"].max() - df.iloc[-1]["ATR"] * mult
+    #         df['chandelier_short'] = df.rolling(roll_length)["low"].min() + df.iloc[-1]["ATR"] * mult
+    #     df.loc[df['close'] > df['chandelier_long'].shift(1), 'chd_dir'] = 1
+    #     df.loc[df['close'] < df['chandelier_short'].shift(1), 'chd_dir'] = -1
+    #     # chd = df[['chandelier_long', 'chandelier_short', 'chd_dir']]
+    #     return df

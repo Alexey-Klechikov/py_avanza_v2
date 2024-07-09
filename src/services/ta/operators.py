@@ -1,8 +1,12 @@
-from typing import Dict
+from typing import Dict, List, Optional, Tuple
+
+from pydantic import Field
 
 from data.settings import DATA_COLUMNS
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
+from services.ta.strategies import compose_strategies_list, dump_strategies_in_file
+from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
 from utils.logger import get_logger
 
 log = get_logger()
@@ -14,14 +18,15 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     trend = Trend(data)
     trend.add_trend_intensity_index(length_sma=20, length_signal=5)  # TII
     trend.add_average_directional_movement(length=14, lensig=14, mamode="rma")  # ADX
-    trend.add_chande_kroll_stop(p=10, x=1.0, q=9)  # CKSP
-    trend.add_parabolic_stop_and_reverse(acceleration=0.02, maximum=0.2)  # PSAR
-    trend.add_choppiness_index(length=14, length_atr=1, scalar=100.0)  # CHOP
+    trend.add_chande_kroll_stop(p=10, x=2.0, q=15)  # CKSP
+    trend.add_parabolic_stop_and_reverse(acceleration=0.01, maximum=0.2)  # PSAR
+    trend.add_choppiness_index(length=14, length_atr=2, scalar=100.0)  # CHOP
     # trend.add_vertical_horizontal_filter(length=18, length_ema=6)  # VHF (exit)
 
     overlap = Overlap(data)
     overlap.add_gann_high_low_activator(length_high=13, length_low=21, mamode="dema")  # GHLA
     overlap.add_linear_regression(length=14)  # LINREG
+    overlap.add_supertrend(length=7, multiplier=3.0)  # SUPERTREND
 
     momentum = Momentum(data)
     momentum.add_macd_dema(length_fast=10, length_slow=20)  # MACD_DEMA
@@ -37,7 +42,7 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     volatility.add_starc_bands(length_sma=6, length_atr=15, multiplier_atr=1.5)  # STARC
     volatility.add_mass_index(fast=9, slow=25)  # MASSI
     volatility.add_bollinger_bands(length=14, std=1.8)  # BBANDS
-    volatility.add_acceleration_bands(length=20, c=3, mamode="dema")  # ACCBANDS
+    volatility.add_acceleration_bands(length=14, c=2, mamode="dema")  # ACCBANDS
 
     volume = Volume(data)
     volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT
@@ -55,3 +60,21 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     data.drop(columns=list(set(data.columns) - columns_keep), inplace=True)
 
     return indicators
+
+
+def get_strategies(
+    compose_strategies_list_method: ComposeStrategiesListMethod,
+    indicators: Dict[str, Dict[str, Indicator]],
+    indicators_selector: List[Tuple[str, str]] = Field(default_factory=list),
+    old_strategies_filename: Optional[str] = None,
+) -> List[Strategy]:
+    return compose_strategies_list(
+        compose_strategies_list_method,
+        indicators,
+        indicators_selector,
+        old_strategies_filename,
+    )
+
+
+def save_strategies(strategies: List[Strategy], filename: str) -> None:
+    return dump_strategies_in_file(strategies, filename)

@@ -1,4 +1,5 @@
 import warnings
+from datetime import datetime, timedelta
 
 from avanza.constants import Resolution, TimePeriod
 
@@ -6,7 +7,9 @@ from apis.avanza.operators import Chart
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from data.settings import OMX30_AVA, OMX30_YAHOO
+from operators import backtest
 from services.storage import Storage
+from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -21,7 +24,6 @@ def cache_omx30():
         (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.THREE_MONTHS, Interval.TWO_MINUTES),
         (TimePeriod.TODAY, Resolution.FIVE_MINUTES, Period.THREE_MONTHS, Interval.FIVE_MINUTES),
         (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_YEAR, Interval.SIXTY_MINUTES),
-        (TimePeriod.ONE_YEAR, Resolution.DAY, Period.ONE_YEAR, Interval.ONE_DAY),
     ]:
         storage = Storage(OMX30_YAHOO, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
@@ -36,5 +38,22 @@ def cache_omx30():
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
+def backtest_strategies():
+    data = Storage(OMX30_YAHOO, resolution="5m").read()
+    data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)]
+
+    log.info("Backtesting strategies on OMX30 | 5m | 30 days")
+
+    backtest(
+        data,
+        [],
+        ComposeStrategiesListMethod.READ,
+        old_strategies_filename="dev_strategies_5_indicators.json",
+        new_strategies_filename="strategies.json",
+        plot=False,
+    )
+
+
 if __name__ == "__main__":
     cache_omx30()
+    backtest_strategies()

@@ -1,0 +1,1 @@
+from services.ta.strategies.operators import compose_strategies_list, dump_strategies_in_file

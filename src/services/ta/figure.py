@@ -1,6 +1,5 @@
 import mplfinance as mpf
 import pandas as pd
-from matplotlib.ticker import MultipleLocator
 
 from services.ta.indicators.models.indicator import Panel, Plots
 from utils.logger import get_logger
@@ -68,7 +67,5 @@ class Figure:
             for start in start_of_day_indices:
                 int_index = self.data.index.get_loc(start)
                 ax[i].axvline(x=int_index, color="green", linestyle="--", linewidth=1)
-
-            ax[i].xaxis.set_major_locator(MultipleLocator(15))
 
         mpf.show()

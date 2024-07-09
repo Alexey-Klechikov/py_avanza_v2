@@ -73,3 +73,41 @@ class Overlap(IndicatorsCategoryBase):
                 horizontal_lines=[HorizontalLine(y=0, color="red")],
             ),
         )
+
+    def add_supertrend(self, length: int, multiplier: float) -> None:
+        """
+        SUPERTREND (SuperTrend)
+        https://trendspider.com/learning-center/supertrend-indicator-a-comprehensive-guide/
+
+        default: length=7, multiplier=3.0
+
+        It is used to identify market trends and potential entry and exit points in trading.
+        The indicator is based on two dynamic values, period and multiplier, and incorporates
+        the concept of Average True Range (ATR) to measure market volatility. The SuperTrend
+        Indicator generates buy and sell signals by plotting a line on the price chart.
+        """
+
+        column_names = {
+            # "SUPERTREND": f"SUPERT_{length}_{multiplier}",
+            # "SUPERTREND_dir": f"SUPERTd_{length}_{multiplier}",
+            "SUPERTREND_long": f"SUPERTl_{length}_{multiplier}",
+            "SUPERTREND_short": f"SUPERTs_{length}_{multiplier}",
+        }
+
+        self.data.ta.supertrend(length=length, multiplier=multiplier, append=True)
+
+        if column_names["SUPERTREND_long"] not in self.data.columns:
+            log.debug("Indicator 'Overlap -> SUPERTREND' can not be added.")
+            return
+
+        self.indicators["SUPERTREND"] = Indicator(
+            signal=Signal(
+                LONG=lambda x: x["Close"] > x[column_names["SUPERTREND_long"]],
+                SHORT=lambda x: x["Close"] < x[column_names["SUPERTREND_short"]],
+            ),
+            columns=list(column_names.values()),
+            plots=Plots(
+                panel=Panel.MAIN,
+                list=[Plot(columns=list(column_names.values()), ylabel="Overlap [SUPERTREND]")],
+            ),
+        )
