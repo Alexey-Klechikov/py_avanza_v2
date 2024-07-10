@@ -66,10 +66,10 @@ def _generate_strategies(
 def _extend_strategies(
     indicators_selector: List[Tuple[str, str]],
     indicators: Dict[str, Dict[str, Indicator]],
-    old_strategies_filename: str,
+    old_strategies_file_path: str,
 ) -> List[Strategy]:
     extended_strategies: List[Strategy] = []
-    for strategy in json.load(open(f"src/data/{old_strategies_filename}")):
+    for strategy in json.load(open(old_strategies_file_path)):
         if "Original" in strategy["name"]:
             continue
 
@@ -107,9 +107,9 @@ def _extend_strategies(
     return extended_strategies
 
 
-def _read_strategies(indicators: Dict[str, Dict[str, Indicator]], old_strategies_filename: str):
+def _read_strategies(indicators: Dict[str, Dict[str, Indicator]], old_strategies_file_path: str):
     old_strategies: List[Strategy] = []
-    for strategy in json.load(open(f"src/data/{old_strategies_filename}")):
+    for strategy in json.load(open(old_strategies_file_path)):
         if "Original" in strategy["name"]:
             continue
 
@@ -128,16 +128,16 @@ def compose_strategies_list(
     method: ComposeStrategiesListMethod,
     indicators: Dict[str, Dict[str, Indicator]],
     indicators_selector: List[Tuple[str, str]],
-    old_strategies_filename: Optional[str] = None,
+    old_strategies_file_path: Optional[str] = None,
 ) -> List[Strategy]:
     if method == ComposeStrategiesListMethod.GENERATE and len(indicators_selector) > 0:
         strategies = _generate_strategies(indicators_selector, indicators)
 
-    elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_filename:
-        strategies = _extend_strategies(indicators_selector, indicators, old_strategies_filename)
+    elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_path:
+        strategies = _extend_strategies(indicators_selector, indicators, old_strategies_file_path)
 
-    elif method == ComposeStrategiesListMethod.READ and old_strategies_filename:
-        strategies = _read_strategies(indicators, old_strategies_filename)
+    elif method == ComposeStrategiesListMethod.READ and old_strategies_file_path:
+        strategies = _read_strategies(indicators, old_strategies_file_path)
 
     else:
         raise ValueError("Can not compose list of strategies - invalid method or missing arguments.")
@@ -145,13 +145,13 @@ def compose_strategies_list(
     return strategies
 
 
-def dump_strategies_in_file(strategies: List[Strategy], new_strategies_filename: str):
+def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_path: str):
     strategies_for_file = []
     for i, strategy in enumerate(strategies):
         if strategy.counter.total_profit <= 0:
             break
 
-        if i >= 50:
+        if i >= 100:
             break
 
         strategies_for_file.append(
@@ -168,4 +168,4 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_filename:
             },
         )
 
-    json.dump(strategies_for_file, open(f"src/data/{new_strategies_filename}", "w"), indent=4)
+    json.dump(strategies_for_file, open(new_strategies_file_path, "w"), indent=4)

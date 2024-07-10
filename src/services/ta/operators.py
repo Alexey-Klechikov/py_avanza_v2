@@ -18,7 +18,7 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     trend = Trend(data)
     trend.add_trend_intensity_index(length_sma=20, length_signal=5)  # TII
     trend.add_average_directional_movement(length=14, lensig=14, mamode="rma")  # ADX
-    trend.add_chande_kroll_stop(p=10, x=2.0, q=15)  # CKSP
+    trend.add_chande_kroll_stop(p=14, x=1.5, q=20)  # CKSP
     trend.add_parabolic_stop_and_reverse(acceleration=0.01, maximum=0.2)  # PSAR
     trend.add_choppiness_index(length=14, length_atr=2, scalar=100.0)  # CHOP
     # trend.add_vertical_horizontal_filter(length=18, length_ema=6)  # VHF (exit)
@@ -66,15 +66,15 @@ def get_strategies(
     compose_strategies_list_method: ComposeStrategiesListMethod,
     indicators: Dict[str, Dict[str, Indicator]],
     indicators_selector: List[Tuple[str, str]] = Field(default_factory=list),
-    old_strategies_filename: Optional[str] = None,
+    old_strategies_file_path: Optional[str] = None,
 ) -> List[Strategy]:
     return compose_strategies_list(
         compose_strategies_list_method,
         indicators,
         indicators_selector,
-        old_strategies_filename,
+        old_strategies_file_path,
     )
 
 
-def save_strategies(strategies: List[Strategy], filename: str) -> None:
-    return dump_strategies_in_file(strategies, filename)
+def save_strategies(strategies: List[Strategy], new_strategies_file_path: str) -> None:
+    return dump_strategies_in_file(strategies, new_strategies_file_path)

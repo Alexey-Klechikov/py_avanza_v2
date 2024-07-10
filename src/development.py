@@ -51,6 +51,7 @@ if __name__ == "__main__":
         ComposeStrategiesListMethod.GENERATE,
         old_strategies_filename=None,
         new_strategies_filename="dev_strategies_3_indicators.json",
+        indicators_filter=[],
         plot=False,
     )
 
@@ -61,6 +62,7 @@ if __name__ == "__main__":
         ComposeStrategiesListMethod.EXTEND,
         old_strategies_filename="dev_strategies_3_indicators.json",
         new_strategies_filename="dev_strategies_4_indicators.json",
+        indicators_filter=[],
         plot=False,
     )
 
@@ -70,7 +72,8 @@ if __name__ == "__main__":
         indicators_selector,
         ComposeStrategiesListMethod.EXTEND,
         old_strategies_filename="dev_strategies_4_indicators.json",
-        new_strategies_filename="dev_strategies_5_indicators.json",
+        new_strategies_filename="dev_strategies_5_indicators_SL.json",
+        indicators_filter=[],
         plot=False,
     )
 
@@ -81,5 +84,6 @@ if __name__ == "__main__":
         ComposeStrategiesListMethod.READ,
         old_strategies_filename="dev_strategies_5_indicators.json",
         new_strategies_filename="strategies.json",
+        indicators_filter=[],
         plot=False,
     )

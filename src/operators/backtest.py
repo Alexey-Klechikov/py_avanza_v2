@@ -1,3 +1,4 @@
+import os
 import warnings
 from typing import Any, List, Optional, Tuple
 
@@ -166,18 +167,38 @@ def plot_indicators(data: pd.DataFrame, strategy: Strategy):
     figure.show()
 
 
+def get_file_path(filename: Optional[str]) -> Optional[str]:
+    if not filename:
+        return
+
+    current_file_path = os.path.abspath(__file__)
+    root_dir = "/src" if "/src" in current_file_path else "/pyAvanza"
+    return current_file_path.split(root_dir)[0] + f"{root_dir}/data/{filename}"
+
+
 # MAIN
 def backtest(
     data: pd.DataFrame,
     indicators_selector: List[Tuple[str, str]],
     compose_strategies_list_method: ComposeStrategiesListMethod,
+    indicators_filter: Optional[List[str]] = None,
     old_strategies_filename: Optional[str] = None,
     new_strategies_filename: Optional[str] = None,
     plot: bool = False,
 ) -> None:
     indicators = get_indicators(data)
 
-    strategies = get_strategies(compose_strategies_list_method, indicators, indicators_selector, old_strategies_filename)
+    strategies = get_strategies(
+        compose_strategies_list_method,
+        indicators,
+        indicators_selector,
+        old_strategies_file_path=get_file_path(old_strategies_filename),
+    )
+
+    if indicators_filter:
+        strategies = [
+            strategy for strategy in strategies if all(indicator in strategy.name for indicator in indicators_filter)
+        ]
 
     for i, strategy in enumerate(strategies):
         if BACKTEST_LOG_INDIVIDUAL_TRADES:
@@ -192,4 +213,4 @@ def backtest(
     print_strategies_performance(strategies)
 
     if new_strategies_filename:
-        save_strategies(strategies, new_strategies_filename)
+        save_strategies(strategies, new_strategies_file_path=get_file_path(new_strategies_filename))
