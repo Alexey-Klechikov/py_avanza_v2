@@ -12,16 +12,14 @@ from utils.logger import get_logger
 log = get_logger()
 
 
-def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
+def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     indicators = dict()
 
     trend = Trend(data)
     trend.add_trend_intensity_index(length_sma=20, length_signal=5)  # TII
     trend.add_average_directional_movement(length=14, lensig=14, mamode="rma")  # ADX
-    trend.add_chande_kroll_stop(p=14, x=1.5, q=20)  # CKSP
     trend.add_parabolic_stop_and_reverse(acceleration=0.01, maximum=0.2)  # PSAR
     trend.add_choppiness_index(length=14, length_atr=2, scalar=100.0)  # CHOP
-    # trend.add_vertical_horizontal_filter(length=18, length_ema=6)  # VHF (exit)
 
     overlap = Overlap(data)
     overlap.add_gann_high_low_activator(length_high=13, length_low=21, mamode="dema")  # GHLA
@@ -42,7 +40,7 @@ def get_indicators(data) -> Dict[str, Dict[str, Indicator]]:
     volatility.add_starc_bands(length_sma=6, length_atr=15, multiplier_atr=1.5)  # STARC
     volatility.add_mass_index(fast=9, slow=25)  # MASSI
     volatility.add_bollinger_bands(length=14, std=1.8)  # BBANDS
-    volatility.add_acceleration_bands(length=14, c=2, mamode="dema")  # ACCBANDS
+    volatility.add_acceleration_bands(length=14, c=1, mamode="dema")  # ACCBANDS
 
     volume = Volume(data)
     volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT
@@ -76,5 +74,8 @@ def get_strategies(
     )
 
 
-def save_strategies(strategies: List[Strategy], new_strategies_file_path: str) -> None:
+def save_strategies(strategies: List[Strategy], new_strategies_file_path: Optional[str]) -> None:
+    if not new_strategies_file_path:
+        return
+
     return dump_strategies_in_file(strategies, new_strategies_file_path)

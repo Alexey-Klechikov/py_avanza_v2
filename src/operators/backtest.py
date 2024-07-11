@@ -23,6 +23,7 @@ class Order(BaseModel):
     buy_datetime: Any
     sell_price: Optional[float] = None
     sell_datetime: Optional[Any] = None
+    counter_signal_confirmed: int = 0
 
     def sell(self, sell_price: float, sell_datetime: Any, instrument_type: str) -> float:
         self.sell_price = sell_price
@@ -39,8 +40,9 @@ class Order(BaseModel):
                 f"{self.buy_datetime.date()} {instrument_type}: "
                 f"{round(self.buy_price, 2)} -> {round(self.sell_price, 2)} "
                 f"at {self.buy_datetime.time()} -> {self.sell_datetime.time()}: "
-                f"{round(profit, 2)} in {trading_time} min"
-                f" ({('+' if profit > 0 else '-') * (1 + int(round(abs(profit)) // 3))})",
+                f"{round(profit, 2)} in {trading_time} min. "
+                f"Confirmed: {self.counter_signal_confirmed} times. "
+                f"({('+' if profit > 0 else '-') * (1 + int(round(abs(profit)) // 3))})",
             )
 
         return profit
@@ -52,7 +54,7 @@ class Wallet(BaseModel):
 
 
 def _consider_signals(data: pd.DataFrame, strategy: Strategy):
-    for column in ["LONG", "SHORT", "EXIT", "STOP_LOSS_LONG", "STOP_LOSS_SHORT"]:
+    for column in ["LONG", "SHORT", "EXIT"]:
         combination_condition = all if column in ["LONG", "SHORT"] else any
 
         signal_methods = [
@@ -80,43 +82,38 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
 
     for i, row in data.iterrows():
         profit = None
-        if (
-            wallet.LONG is None
-            and row["LONG"] > 0
-            and np.isnan(row["STOP_LOSS_LONG"])
-            and np.isnan(row["EXIT"])
-            and np.isnan(row["SHORT"])
-        ):
+
+        # LONG
+        if wallet.LONG is None and row["LONG"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["SHORT"]):
             wallet.LONG = Order(buy_price=row["LONG"], buy_datetime=i)
 
             if wallet.SHORT is not None:
                 profit = wallet.SHORT.sell(row["LONG"], i, "SHORT")
                 wallet.SHORT = None
 
-        elif wallet.LONG is not None and (row["STOP_LOSS_LONG"] > 0 or row["EXIT"] > 0):
-            sell_price = row["STOP_LOSS_LONG"] if row["STOP_LOSS_LONG"] > 0 else row["EXIT"]
+        if wallet.LONG is not None and row["EXIT"] > 0:
+            sell_price = row["EXIT"]
             profit = wallet.LONG.sell(sell_price, i, "LONG")
-            data.at[i, "EXIT"] = sell_price
             wallet.LONG = None
 
-        if (
-            wallet.SHORT is None
-            and row["SHORT"] > 0
-            and np.isnan(row["STOP_LOSS_SHORT"])
-            and np.isnan(row["EXIT"])
-            and np.isnan(row["LONG"])
-        ):
+        if wallet.LONG is not None and row["LONG"] > 0:
+            wallet.LONG.counter_signal_confirmed += 1
+
+        # SHORT
+        if wallet.SHORT is None and row["SHORT"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["LONG"]):
             wallet.SHORT = Order(buy_price=row["SHORT"], buy_datetime=i)
 
             if wallet.LONG is not None:
                 profit = wallet.LONG.sell(row["SHORT"], i, "LONG")
                 wallet.LONG = None
 
-        elif wallet.SHORT is not None and (row["STOP_LOSS_SHORT"] > 0 or row["EXIT"] > 0):
-            sell_price = row["STOP_LOSS_SHORT"] if row["STOP_LOSS_SHORT"] > 0 else row["EXIT"]
+        if wallet.SHORT is not None and row["EXIT"] > 0:
+            sell_price = row["EXIT"]
             profit = wallet.SHORT.sell(sell_price, i, "SHORT")
-            data.at[i, "EXIT"] = sell_price
             wallet.SHORT = None
+
+        if wallet.SHORT is not None and row["SHORT"] > 0:
+            wallet.SHORT.counter_signal_confirmed += 1
 
         if profit is not None:
             strategy.counter.total_trades += 1
@@ -128,8 +125,6 @@ def add_signals(data: pd.DataFrame, strategy: Strategy):
     data["LONG"] = data["High"]
     data["SHORT"] = data["Low"]
     data["EXIT"] = (data["High"] + data["Low"]) / 2
-    data["STOP_LOSS_LONG"] = data["Low"]
-    data["STOP_LOSS_SHORT"] = data["High"]
 
     _consider_signals(data, strategy)
     _consider_trading_logic(data, strategy)
@@ -185,8 +180,9 @@ def backtest(
     old_strategies_filename: Optional[str] = None,
     new_strategies_filename: Optional[str] = None,
     plot: bool = False,
+    **kwargs,
 ) -> None:
-    indicators = get_indicators(data)
+    indicators = get_indicators(data, **kwargs)
 
     strategies = get_strategies(
         compose_strategies_list_method,
@@ -197,7 +193,9 @@ def backtest(
 
     if indicators_filter:
         strategies = [
-            strategy for strategy in strategies if all(indicator in strategy.name for indicator in indicators_filter)
+            strategy
+            for strategy in strategies
+            if any(indicator in strategy.name for indicator in indicators_filter)  # or "Original" in strategy.name
         ]
 
     for i, strategy in enumerate(strategies):
@@ -210,7 +208,7 @@ def backtest(
             plot_indicators(data, strategy)
 
     strategies.sort(key=lambda x: x.counter.total_profit, reverse=True)
+
     print_strategies_performance(strategies)
 
-    if new_strategies_filename:
-        save_strategies(strategies, new_strategies_file_path=get_file_path(new_strategies_filename))
+    save_strategies(strategies, new_strategies_file_path=get_file_path(new_strategies_filename))

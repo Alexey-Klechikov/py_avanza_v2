@@ -149,92 +149,12 @@ class Trend(IndicatorsCategoryBase):
 
         self.indicators["CHOP"] = Indicator(
             signal=Signal(
-                EXIT=lambda x: x[column_name] > 50,
+                EXIT=lambda x: x[column_name] > 55,
             ),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=[column_name], color="orange", ylim=[0, 100], ylabel="Trend [CHOP]")],
                 horizontal_lines=[HorizontalLine(y=50, color="red")],
-            ),
-        )
-
-    def add_chande_kroll_stop(self, p: int, x: float, q: int) -> None:
-        """
-        CKSP (Chande Kroll Stop)
-        https://www.tradingview.com/support/solutions/43000589105-chande-kroll-stop/
-
-        p (int): ATR and first stop period.
-        x (float): ATR scalar.
-        q (int): Second stop period.
-
-        defaults: TradingView(p=10, x=1, q=9), Book(p=10, x=3, q=20)
-
-        It is a trend-following indicator, identifying your stop by calculating the average
-        true range of the recent market volatility.
-        """
-
-        column_names = {
-            "CKSPl": f"CKSPl_{p}_{x}_{q}",  # stop for long positions
-            "CKSPs": f"CKSPs_{p}_{x}_{q}",  # stop for short positions
-        }
-
-        self.data.ta.cksp(p=p, x=x, q=q, append=True)
-        if column_names["CKSPl"] not in self.data.columns:
-            log.debug("Indicator 'Trend -> CKSP' can not be added.")
-            return
-
-        self.indicators["CKSP"] = Indicator(
-            signal=Signal(
-                STOP_LOSS_LONG=lambda x: x["Close"] < x[column_names["CKSPs"]],
-                STOP_LOSS_SHORT=lambda x: x["Close"] > x[column_names["CKSPl"]],
-            ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.MAIN,
-                list=[Plot(columns=[column_names["CKSPl"], column_names["CKSPs"]], ylabel="Trend [CKSP]")],
-            ),
-        )
-
-    def add_vertical_horizontal_filter(self, length: int, length_ema: int) -> None:
-        """
-        >>> not used
-
-        VHF (Vertical Horizontal Filter)
-        https://www.incrediblecharts.com/indicators/vertical_horizontal_filter.php
-        https://trendspider.com/learning-center/introduction-to-vertical-horizontal-filter/
-
-        defaults: length = 28
-
-        Vertical Horizontal Filter (VHF) was created by Adam White to identify trending and
-        ranging markets. VHF measures the level of trend activity, similar to ADX in the
-        Directional Movement System. Trend indicators can then be employed in trending markets
-        and momentum indicators in ranging markets.
-
-        Vary the number of periods in the Vertical Horizontal Filter to suit different time frames.
-        White originally recommended 28 days but now prefers an 18-day window smoothed with
-        a 6-day moving average.
-        """
-
-        column_name = f"VHF_{length}_EMA_{length_ema}"
-
-        self.data[column_name] = self.data.ta.ema(
-            close=self.data.ta.vhf(length=length),
-            length=length_ema,
-        )
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Trend -> VHF' can not be added.")
-            return
-
-        self.indicators["VHF"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] > 0.45,
-                SHORT=lambda x: x[column_name] > 0.4,
-            ),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylabel="Trend [VHF]")],
-                horizontal_lines=[HorizontalLine(y=0.45, color="red"), HorizontalLine(y=0.4, color="blue")],
             ),
         )

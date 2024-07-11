@@ -49,8 +49,6 @@ class Signal(BaseModel):
     LONG: Optional[Callable] = None
     SHORT: Optional[Callable] = None
     EXIT: Optional[Callable] = None
-    STOP_LOSS_LONG: Optional[Callable] = None
-    STOP_LOSS_SHORT: Optional[Callable] = None
 
 
 class Indicator(BaseModel):

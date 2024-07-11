@@ -27,7 +27,7 @@ class Storage:
         data.loc[data.between_time("09:00", "09:05").index, "Volume"] = 0
         return data.between_time("09:00", "17:20")[DATA_COLUMNS].fillna(0)
 
-    def read(self):
+    def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):
             log.warning(f"File does not exist: {self.path}")
             return pd.DataFrame(columns=DATA_COLUMNS)

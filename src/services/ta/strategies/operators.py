@@ -148,10 +148,7 @@ def compose_strategies_list(
 def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_path: str):
     strategies_for_file = []
     for i, strategy in enumerate(strategies):
-        if strategy.counter.total_profit <= 0:
-            break
-
-        if i >= 100:
+        if i >= 100 or strategy.counter.total_profit <= 0:
             break
 
         strategies_for_file.append(
