@@ -2,6 +2,7 @@ import warnings
 
 import pandas as pd
 
+from apis.telegram.operators import Telegram
 from operators import trade
 from utils.logger import get_logger, set_handlers
 
@@ -14,4 +15,11 @@ log = get_logger()
 
 
 if __name__ == "__main__":
-    trade()
+    try:
+        trade()
+    except Exception as e:
+        log.error(f"Error: {e}")
+
+        telegram = Telegram()
+        telegram.messages = ["Error in task_trade.py"]
+        telegram.send_message()

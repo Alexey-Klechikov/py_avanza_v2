@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.operators import Chart
+from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from data.settings import OMX30_AVA, OMX30_YAHOO
@@ -55,5 +56,12 @@ def backtest_strategies():
 
 
 if __name__ == "__main__":
-    cache_omx30()
-    backtest_strategies()
+    try:
+        cache_omx30()
+        backtest_strategies()
+    except Exception as e:
+        log.exception(e)
+
+        telegram = Telegram()
+        telegram.messages = ["Error in task_eod.py"]
+        telegram.send_message()
