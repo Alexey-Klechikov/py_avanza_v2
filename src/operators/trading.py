@@ -129,7 +129,8 @@ class Telegram(TelegramBase):
     def send_message(self):
         self.messages = [
             f"Finished trading with budget: {BUDGET}",
-            f"Performance: {round(100 * (self.final_balance - self.starting_balance)/BUDGET)} %",
+            f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
+            f"[{round(100 * (self.final_balance - self.starting_balance)/BUDGET)} %]",
             f"Total value: {round(self.total_value)}",
         ] + self.messages
 
@@ -224,9 +225,9 @@ def trade():
                 volume=BUDGET // instrument_preferred.sell,
             )
 
-    log.info(f"Finished trading with {data.strategy.name}")
-
     portfolio.reload_balance()
 
     telegram.log_final_balance(portfolio)
     telegram.send_message()
+
+    log.info(f"Finished trading with {data.strategy.name}")
