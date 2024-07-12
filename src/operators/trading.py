@@ -8,7 +8,7 @@ import pandas as pd
 from avanza.constants import OrderType, Resolution, TimePeriod
 
 from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
-from apis.telegram.operators import Telegram
+from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from data.settings import BUDGET, OMX30_AVA, OMX30_YAHOO
@@ -98,25 +98,42 @@ class Data:
                 return Signal.EXIT
 
 
-def log_starting_balance(telegram: Telegram, orders: Orders, portfolio: Portfolio) -> None:
-    if portfolio.total_value != portfolio.buying_power:
-        telegram.messages.append("> Order is pending at start")
+class Telegram(TelegramBase):
+    def __init__(self):
+        super().__init__()
 
-    telegram.starting_balance = portfolio.buying_power
+        self.starting_balance = 0
+        self.final_balance = 0
+        self.total_value = 0
 
-    past_orders = orders.get_past()
-    for i, past_order in enumerate(past_orders):
-        if i == 0 and past_order.side == "SELL":
-            telegram.messages.append("> Carry on position from yesterday")
+    def log_starting_balance(self, orders: Orders, portfolio: Portfolio) -> None:
+        if portfolio.total_value != portfolio.buying_power:
+            self.messages.append("> Order is pending at start")
 
-        telegram.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
+        self.starting_balance = portfolio.buying_power
 
+        past_orders = orders.get_past()
+        for i, past_order in enumerate(past_orders):
+            if i == 0 and past_order.side == "SELL":
+                self.messages.append("> Carry on position from yesterday")
 
-def log_final_balance(telegram: Telegram, portfolio: Portfolio) -> None:
-    if portfolio.total_value != portfolio.buying_power:
-        telegram.messages.append("> Order is pending in the end")
+            self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
 
-    telegram.final_balance = portfolio.buying_power
+    def log_final_balance(self, portfolio: Portfolio) -> None:
+        if portfolio.total_value != portfolio.buying_power:
+            self.messages.append("> Order is pending in the end")
+
+        self.final_balance = portfolio.buying_power
+        self.total_value = portfolio.total_value
+
+    def send_message(self):
+        self.messages = [
+            f"Finished trading with budget: {BUDGET}",
+            f"Performance: {round(100 * (self.final_balance - self.starting_balance)/BUDGET)} %",
+            f"Total value: {round(self.total_value)}",
+        ] + self.messages
+
+        super().send_message()
 
 
 # MAIN
@@ -132,8 +149,7 @@ def trade():
     portfolio.reload_balance()
 
     telegram = Telegram()
-
-    log_starting_balance(telegram, orders, portfolio)
+    telegram.log_starting_balance(orders, portfolio)
 
     watchlist = Watchlists()
     watchlist.update_watchlists()
@@ -212,10 +228,5 @@ def trade():
 
     portfolio.reload_balance()
 
-    log_final_balance(telegram, portfolio)
-    telegram.messages = [
-        f"Finished trading with budget: {BUDGET}",
-        f"Performance: {round(100 * (telegram.final_balance - telegram.starting_balance)/BUDGET)} %",
-        f"Total value: {portfolio.total_value}",
-    ] + telegram.messages
+    telegram.log_final_balance(portfolio)
     telegram.send_message()

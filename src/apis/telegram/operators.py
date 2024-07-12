@@ -1,3 +1,5 @@
+from typing import List
+
 import telegram_send
 
 from utils.logger import get_logger
@@ -7,10 +9,7 @@ log = get_logger()
 
 class Telegram:
     def __init__(self):
-        self.messages = []
-
-        self.starting_balance = 0.0
-        self.final_balance = 0.0
+        self.messages: List[str] = []
 
     def send_message(self):
         log.info("Sending message")
