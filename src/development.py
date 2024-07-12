@@ -23,8 +23,8 @@ def run_full_strategies_generation(data: pd.DataFrame, indicators_selector: List
         data,
         indicators_selector,
         ComposeStrategiesListMethod.GENERATE,
-        old_strategies_filename=None,
-        new_strategies_filename="dev_strategies_3_indicators.json",
+        old_strategies_file_name=None,
+        new_strategies_file_name="dev_strategies_3_indicators.json",
         indicators_filter=[],
         plot=False,
     )
@@ -34,8 +34,8 @@ def run_full_strategies_generation(data: pd.DataFrame, indicators_selector: List
         data,
         indicators_selector,
         ComposeStrategiesListMethod.EXTEND,
-        old_strategies_filename="dev_strategies_3_indicators.json",
-        new_strategies_filename="dev_strategies_4_indicators.json",
+        old_strategies_file_name="dev_strategies_3_indicators.json",
+        new_strategies_file_name="dev_strategies_4_indicators.json",
         indicators_filter=[],
         plot=False,
     )
@@ -45,8 +45,8 @@ def run_full_strategies_generation(data: pd.DataFrame, indicators_selector: List
         data,
         indicators_selector,
         ComposeStrategiesListMethod.EXTEND,
-        old_strategies_filename="dev_strategies_4_indicators.json",
-        new_strategies_filename="dev_strategies_5_indicators.json",
+        old_strategies_file_name="dev_strategies_4_indicators.json",
+        new_strategies_file_name="dev_strategies_5_indicators.json",
         indicators_filter=[],
         plot=False,
     )
@@ -56,14 +56,24 @@ def run_full_strategies_generation(data: pd.DataFrame, indicators_selector: List
         data,
         indicators_selector,
         ComposeStrategiesListMethod.READ,
-        old_strategies_filename="dev_strategies_5_indicators.json",
-        new_strategies_filename="strategies_sl_10.json",
+        old_strategies_file_name="dev_strategies_5_indicators.json",
+        new_strategies_file_name="strategies.json",
         indicators_filter=[],
         plot=False,
     )
 
 
 def run_test_for_selected_indicators(data: pd.DataFrame, indicators_selector: List[Tuple[str, str]]):
+    backtest(
+        data.copy(),
+        indicators_selector,
+        ComposeStrategiesListMethod.READ,
+        old_strategies_file_name="dev_strategies_5_indicators.json",
+        new_strategies_file_name="ttt.json",
+        indicators_filter=[],
+        plot=True,
+    )
+
     indicator_to_test = "ACCBANDS"
 
     for length, c in [(ilength, 2) for ilength in [10, 12, 14, 16, 18]] + [(14, ic) for ic in [1, 2, 3, 4]]:
@@ -74,8 +84,8 @@ def run_test_for_selected_indicators(data: pd.DataFrame, indicators_selector: Li
             data.copy(),
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            old_strategies_filename="dev_strategies_4_indicators.json",
-            new_strategies_filename=f"dev_strategies_5_indicators_{indicator_to_test}_"
+            old_strategies_file_name="dev_strategies_4_indicators.json",
+            new_strategies_file_name=f"dev_strategies_5_indicators_{indicator_to_test}_"
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
             indicators_filter=[indicator_to_test],
             plot=False,
@@ -85,7 +95,7 @@ def run_test_for_selected_indicators(data: pd.DataFrame, indicators_selector: Li
 
 if __name__ == "__main__":
     data = Storage(OMX30_YAHOO, resolution="5m").read()
-    data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=60)]
+    data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=5)]
 
     indicators_selector: List[Tuple[str, str]] = [
         ("Trend", "ADX"),  # buy / sell
@@ -111,5 +121,5 @@ if __name__ == "__main__":
         # ("Volume", "KVO"),  # buy / sell
     ]
 
-    run_full_strategies_generation(data, indicators_selector)
-    # run_test_for_selected_indicators(data, indicators_selector)
+    # run_full_strategies_generation(data, indicators_selector)
+    run_test_for_selected_indicators(data, indicators_selector)

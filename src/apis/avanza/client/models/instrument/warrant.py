@@ -140,7 +140,6 @@ class InstrumentWarrant(BaseModel):
     key_indicators: KeyIndicators = Field(alias="keyIndicators")
     quote: Quote
     type: str
-    underlying: dict
     issuer: str
     documents: Documents
     order_depth: OrderDepth = Field(alias="orderDepth")

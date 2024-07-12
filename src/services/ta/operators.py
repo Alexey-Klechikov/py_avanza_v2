@@ -5,7 +5,7 @@ from pydantic import Field
 from data.settings import DATA_COLUMNS
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
-from services.ta.strategies import compose_strategies_list, dump_strategies_in_file
+from services.ta.strategies import compose_strategies_list, dump_strategies_in_file, get_top_strategy
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
 from utils.logger import get_logger
 
@@ -64,18 +64,22 @@ def get_strategies(
     compose_strategies_list_method: ComposeStrategiesListMethod,
     indicators: Dict[str, Dict[str, Indicator]],
     indicators_selector: List[Tuple[str, str]] = Field(default_factory=list),
-    old_strategies_file_path: Optional[str] = None,
+    old_strategies_file_name: Optional[str] = None,
 ) -> List[Strategy]:
     return compose_strategies_list(
         compose_strategies_list_method,
         indicators,
         indicators_selector,
-        old_strategies_file_path,
+        old_strategies_file_name,
     )
 
 
-def save_strategies(strategies: List[Strategy], new_strategies_file_path: Optional[str]) -> None:
-    if not new_strategies_file_path:
+def get_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
+    return get_top_strategy(indicators, strategies_file_name)
+
+
+def save_strategies(strategies: List[Strategy], new_strategies_file_name: Optional[str]) -> None:
+    if not new_strategies_file_name:
         return
 
-    return dump_strategies_in_file(strategies, new_strategies_file_path)
+    return dump_strategies_in_file(strategies, new_strategies_file_name)

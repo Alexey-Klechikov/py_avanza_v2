@@ -14,6 +14,7 @@ from apis.avanza.client.models import (
     AccountOverview,
     AccountsPositions,
     CallRequest,
+    Deals,
     DeleteOrderResponse,
     EditOrderResponse,
     InstrumentCertificate,
@@ -163,6 +164,11 @@ class Avanza(AvanzaBase):
         data = self._retry_call("/_api/trading/rest/orders")
 
         return Orders(**data)
+
+    def get_past_orders(self) -> Deals:
+        data = super().get_deals()
+
+        return Deals(**data)  # type: ignore
 
     def place_order(
         self,

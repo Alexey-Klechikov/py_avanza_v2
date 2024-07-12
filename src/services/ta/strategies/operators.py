@@ -1,4 +1,5 @@
 import json
+import os
 import warnings
 from copy import deepcopy
 from typing import Dict, List, Optional, Tuple
@@ -11,6 +12,12 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 log = get_logger()
+
+
+def _get_file_path(filename: Optional[str]) -> str:
+    current_file_path = os.path.abspath(__file__)
+    root_dir = "/src" if "/src" in current_file_path else "/pyAvanza"
+    return current_file_path.split(root_dir)[0] + f"{root_dir}/data/{filename}"
 
 
 def _generate_strategies(
@@ -128,16 +135,16 @@ def compose_strategies_list(
     method: ComposeStrategiesListMethod,
     indicators: Dict[str, Dict[str, Indicator]],
     indicators_selector: List[Tuple[str, str]],
-    old_strategies_file_path: Optional[str] = None,
+    old_strategies_file_name: Optional[str] = None,
 ) -> List[Strategy]:
     if method == ComposeStrategiesListMethod.GENERATE and len(indicators_selector) > 0:
         strategies = _generate_strategies(indicators_selector, indicators)
 
-    elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_path:
-        strategies = _extend_strategies(indicators_selector, indicators, old_strategies_file_path)
+    elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_name:
+        strategies = _extend_strategies(indicators_selector, indicators, _get_file_path(old_strategies_file_name))
 
-    elif method == ComposeStrategiesListMethod.READ and old_strategies_file_path:
-        strategies = _read_strategies(indicators, old_strategies_file_path)
+    elif method == ComposeStrategiesListMethod.READ and old_strategies_file_name:
+        strategies = _read_strategies(indicators, _get_file_path(old_strategies_file_name))
 
     else:
         raise ValueError("Can not compose list of strategies - invalid method or missing arguments.")
@@ -145,7 +152,7 @@ def compose_strategies_list(
     return strategies
 
 
-def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_path: str):
+def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name: str):
     strategies_for_file = []
     for i, strategy in enumerate(strategies):
         if i >= 100 or strategy.counter.total_profit <= 0:
@@ -165,4 +172,16 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_path
             },
         )
 
-    json.dump(strategies_for_file, open(new_strategies_file_path, "w"), indent=4)
+    json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=4)
+
+
+def get_top_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
+    for strategy in json.load(open(_get_file_path(strategies_file_name))):
+        if "Original" in strategy["name"]:
+            continue
+
+        strategy_indicators = list(tuple(indicator.split("-")) for indicator in strategy["name"].split(" | "))
+
+        return Strategy(name=strategy["name"], selected_indicators=strategy_indicators, all_indicators=indicators)
+
+    raise ValueError("No valid strategy found in the file.")

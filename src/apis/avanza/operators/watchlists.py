@@ -33,7 +33,7 @@ class Watchlists:
                 ),
             )
 
-            log.info(
+            log.debug(
                 f"> Top instrument set: {self.preferred_instrument.__getattribute__(instrument_direction).name}"
                 + f" [leverage {self.preferred_instrument.__getattribute__(instrument_direction).leverage}]",
             )
@@ -125,7 +125,8 @@ class Watchlists:
             if (
                 hit.price.today_change_percent != 0
                 and hit.price.spread
-                and hit.price.spread < 3
+                and hit.price.spread > 0.1
+                and hit.price.spread < 1.5
                 and hit.price.last
                 and hit.price.last > 1
                 and hit.price.last < 100

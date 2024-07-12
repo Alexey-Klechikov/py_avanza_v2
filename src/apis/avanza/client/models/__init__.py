@@ -6,6 +6,7 @@ from apis.avanza.client.models.instrument.certificate import InstrumentCertifica
 from apis.avanza.client.models.instrument.index import InstrumentIndex
 from apis.avanza.client.models.instrument.stock import InstrumentStock
 from apis.avanza.client.models.instrument.warrant import InstrumentWarrant
+from apis.avanza.client.models.order.deals import Deal, Deals
 from apis.avanza.client.models.order.delete import DeleteOrderResponse
 from apis.avanza.client.models.order.edit import EditOrderResponse
 from apis.avanza.client.models.order.exceptions import OrderException

@@ -1,10 +1,10 @@
 from datetime import date, timedelta
-from typing import Optional
+from typing import List, Optional
 
 from avanza.constants import OrderType
 
 from apis.avanza.client import get_client
-from apis.avanza.client.models import Order, OrderException
+from apis.avanza.client.models import Deal, Order, OrderException
 from data.settings import ACCOUNT_ID
 from utils.logger import get_logger
 
@@ -24,7 +24,7 @@ class Orders:
         active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
         if active_orders:
             self.active_order = max(active_orders, key=lambda x: x.created)
-            log.info("Active order set")
+            log.debug("Active order set")
 
             if len(active_orders) > 1:
                 log.warning(f"More than one active order found ({len(active_orders)})")
@@ -37,6 +37,12 @@ class Orders:
             log.warning(f"Inactive order(s) found ({len(inactive_orders)} st)")
             for order in inactive_orders:
                 self._delete(order.order_id)
+
+    def get_past(self) -> List[Deal]:
+        return sorted(
+            [i for i in get_client().get_past_orders().deals if i.account.account_id == ACCOUNT_ID],
+            key=lambda x: x.time,
+        )
 
     def edit_active(self, new_price: float):
         try:
@@ -64,10 +70,14 @@ class Orders:
         self,
         order_book_id: str,
         order_type: OrderType,
-        price: float,
+        price: Optional[float],
         volume: int,
         valid_until: date = date.today() + timedelta(days=7),
     ) -> Optional[str]:
+        if not price:
+            log.warning("No price set for order: %s %s", order_book_id, order_type.value)
+            return
+
         try:
             _ = get_client().place_order(
                 account_id=ACCOUNT_ID,
@@ -78,7 +88,7 @@ class Orders:
                 valid_until=valid_until,
             )
 
-            log.info("Order placed")
+            log.info("Order placed: %s %s %s", order_book_id, order_type.value, price)
 
             self.reload_active()
 

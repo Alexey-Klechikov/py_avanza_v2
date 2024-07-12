@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List, Optional
 
 from avanza.constants import InstrumentType
 
@@ -10,14 +10,21 @@ from utils.logger import get_logger
 log = get_logger()
 
 
+class AcquiredInstrument:
+    def __init__(self):
+        self.BULL: Optional[Position] = None
+        self.BEAR: Optional[Position] = None
+
+
 class Portfolio:
     def __init__(self):
+        self.acquired_instrument: AcquiredInstrument = AcquiredInstrument()
         self.total_value = 0
         self.buying_power = 0
         self.positions: List[Position] = []
 
-    def refresh_balance(self) -> None:
-        log.debug("Refresh account balance")
+    def reload_balance(self) -> None:
+        log.debug("Reload account balance")
 
         accounts_overview = get_client().get_accounts_overview()
 
@@ -26,8 +33,8 @@ class Portfolio:
         self.total_value = account_overview.total_value.total_value.value
         self.buying_power = account_overview.buying_power.total.value
 
-    def refresh_positions(self) -> None:
-        log.debug("Refresh account positions")
+    def reload_positions(self) -> None:
+        log.debug("Reload account positions")
 
         positions = get_client().get_accounts_positions().with_orderbook
         positions = [i for i in positions if i.account.id == ACCOUNT_ID]
@@ -41,9 +48,7 @@ class Portfolio:
                         "name": i.instrument.name,
                     },
                     "quote": {
-                        "buy": (
-                            None if not i.instrument.orderbook.quote.buy else i.instrument.orderbook.quote.buy.value
-                        ),
+                        "buy": (None if not i.instrument.orderbook.quote.buy else i.instrument.orderbook.quote.buy.value),
                         "sell": (
                             None if not i.instrument.orderbook.quote.sell else i.instrument.orderbook.quote.sell.value
                         ),
@@ -60,3 +65,31 @@ class Portfolio:
             )
             for i in positions
         ]
+
+    def detect_acquired_instruments(self, instrument_type_to_id_mapping: Dict[str, List[str]]) -> None:
+        self.acquired_instrument = AcquiredInstrument()
+
+        for position in self.positions:
+            position_is_assigned = False
+
+            for instrument_type, instrument_ids in instrument_type_to_id_mapping.items():
+                if position.instrument.id in instrument_ids:
+                    setattr(self.acquired_instrument, instrument_type, position)
+                    position_is_assigned = True
+
+            if position_is_assigned or position.instrument.type not in [
+                InstrumentType.WARRANT,
+                InstrumentType.CERTIFICATE,
+            ]:
+                continue
+
+            if "BULL " in position.instrument.name or " L " in position.instrument.name:
+                self.acquired_instrument.BULL = position
+                position_is_assigned = True
+
+            elif "BEAR " in position.instrument.name or " S " in position.instrument.name:
+                self.acquired_instrument.BEAR = position
+                position_is_assigned = True
+
+            if not position_is_assigned:
+                log.warning(f"Position not assigned: {position.instrument.name}")
