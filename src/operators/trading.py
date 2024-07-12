@@ -109,10 +109,10 @@ def log_starting_balance(telegram: Telegram, orders: Orders, portfolio: Portfoli
         if i == 0 and past_order.side == "SELL":
             telegram.messages.append("> Carry on position from yesterday")
 
-        telegram.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else 0)
+        telegram.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
 
 
-def log_final_balance(telegram: Telegram, portfolio: Portfolio, orders: Orders, data: Data) -> None:
+def log_final_balance(telegram: Telegram, portfolio: Portfolio) -> None:
     if portfolio.total_value != portfolio.buying_power:
         telegram.messages.append("> Order is pending in the end")
 
@@ -212,10 +212,10 @@ def trade():
 
     portfolio.reload_balance()
 
-    log_final_balance(telegram, portfolio, orders, data)
+    log_final_balance(telegram, portfolio)
     telegram.messages = [
-        f"Finished trading with {data.strategy.name}",
-        f"Performance: {round((telegram.final_balance - telegram.starting_balance)/BUDGET, 2)} %",
+        f"Finished trading with budget: {BUDGET}",
+        f"Performance: {round(100 * (telegram.final_balance - telegram.starting_balance)/BUDGET)} %",
         f"Total value: {portfolio.total_value}",
     ] + telegram.messages
     telegram.send_message()

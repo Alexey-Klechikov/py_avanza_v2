@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-avanza-api = "*"
+avanza-api = "==12.0.0"
 pandas-ta = "*"
 yfinance = "*"
 keyring = "*"

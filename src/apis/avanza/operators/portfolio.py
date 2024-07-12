@@ -43,7 +43,7 @@ class Portfolio:
             Position(
                 **{
                     "instrument": {
-                        "id": i.instrument.id,
+                        "id": i.instrument.orderbook.id,
                         "type": InstrumentType[i.instrument.type],
                         "name": i.instrument.name,
                     },
