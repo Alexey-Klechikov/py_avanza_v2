@@ -87,15 +87,22 @@ class Data:
         self.data.loc[self.data.between_time("17:15", "17:30").index, "EXIT"] = True
 
     def get_latest_signal(self) -> Optional[Signal]:
+        signal = None
         for i in range(1, 5):
             if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["EXIT"]:
-                return Signal.LONG
+                signal = Signal.LONG
 
             elif self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["EXIT"]:
-                return Signal.SHORT
+                signal = Signal.SHORT
 
             elif self.data.iloc[-i]["EXIT"]:
-                return Signal.EXIT
+                signal = Signal.EXIT
+
+            if signal:
+                (log.info if i == 1 else log.debug)(f"Trading signal: {signal}")
+                break
+
+        return signal
 
 
 class Telegram(TelegramBase):
@@ -168,8 +175,6 @@ def trade():
         signal = data.get_latest_signal()
         if not signal:
             continue
-
-        log.info(f"Trading signal: {signal}")
 
         portfolio.reload_positions()
         orders.delete_all()
