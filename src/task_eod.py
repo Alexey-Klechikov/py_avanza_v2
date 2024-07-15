@@ -60,8 +60,9 @@ if __name__ == "__main__":
         cache_omx30()
         backtest_strategies()
     except Exception as e:
-        log.exception(e)
 
         telegram = Telegram()
         telegram.messages = ["Error in task_eod.py"]
         telegram.send_message()
+
+        raise e

@@ -18,8 +18,8 @@ if __name__ == "__main__":
     try:
         trade()
     except Exception as e:
-        log.error(f"Error: {e}")
-
         telegram = Telegram()
         telegram.messages = ["Error in task_trade.py"]
         telegram.send_message()
+
+        raise e

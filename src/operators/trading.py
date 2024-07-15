@@ -51,7 +51,7 @@ class Data:
         data_size_after = data.shape[0]
 
         self.data = data.loc[
-            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
+            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
         ]
         self.is_new = data_size_before != data_size_after
 

@@ -119,7 +119,6 @@ class Volume(IndicatorsCategoryBase):
 
         default: fast=34, slow=55, signal=13, mamode="ema"
 
-
         This indicator was developed by Stephen J. Klinger. It is designed to predict
         price reversals in a market by comparing volume to price.
         """
