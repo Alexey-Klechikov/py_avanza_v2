@@ -4,7 +4,7 @@ OMX30_AVA: str = "19002"
 OMX30_YAHOO: str = "^OMX"
 CERTIFICATE_MULTIPLIER: int = 20
 
-BUDGET = 1300
+BUDGET = 1500
 
 DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
 BACKTEST_LOG_INDIVIDUAL_TRADES = False
