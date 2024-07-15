@@ -49,8 +49,8 @@ def backtest_strategies():
         data,
         [],
         ComposeStrategiesListMethod.READ,
-        old_strategies_filename="dev_strategies_5_indicators.json",
-        new_strategies_filename="strategies.json",
+        old_strategies_file_name="dev_strategies_5_indicators.json",
+        new_strategies_file_name="strategies.json",
         plot=False,
     )
 
