@@ -167,9 +167,9 @@ def trade():
         data.get()
         orders.reload_active()
 
-        # if not data.is_new and not orders.active_order:
-        #     sleep(30)
-        #     continue
+        if not data.is_new and not orders.active_order:
+            sleep(30)
+            continue
 
         data.add_signals()
         signal = data.get_latest_signal()
