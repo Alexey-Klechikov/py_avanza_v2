@@ -21,10 +21,10 @@ log = get_logger()
 
 def cache_omx30():
     for period_ava, resolution_ava, period_yahoo, interval_yahoo in [
-        (TimePeriod.TODAY, Resolution.MINUTE, Period.ONE_MONTH, Interval.ONE_MINUTE),
-        (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.THREE_MONTHS, Interval.TWO_MINUTES),
-        (TimePeriod.TODAY, Resolution.FIVE_MINUTES, Period.THREE_MONTHS, Interval.FIVE_MINUTES),
-        (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_YEAR, Interval.SIXTY_MINUTES),
+        (TimePeriod.TODAY, Resolution.MINUTE, Period.FIVE_DAYS, Interval.ONE_MINUTE),
+        (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.ONE_MONTH, Interval.TWO_MINUTES),
+        (TimePeriod.TODAY, Resolution.FIVE_MINUTES, Period.ONE_MONTH, Interval.FIVE_MINUTES),
+        (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_MONTH, Interval.SIXTY_MINUTES),
     ]:
         storage = Storage(OMX30_YAHOO, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
@@ -40,10 +40,15 @@ def cache_omx30():
 
 
 def backtest_strategies():
-    data = Storage(OMX30_YAHOO, resolution="5m").read()
-    data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)]
+    resolution = "5m"
+    period_days = 30
 
-    log.info("Backtesting strategies on OMX30 | 5m | 30 days")
+    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = data.loc[
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+    ]
+
+    log.info(f"Backtesting strategies on OMX30 | {resolution} | {period_days} days")
 
     backtest(
         data,
