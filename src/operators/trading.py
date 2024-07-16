@@ -88,7 +88,7 @@ class Data:
 
     def get_latest_signal(self) -> Optional[Signal]:
         signal = None
-        for i in range(1, 5):
+        for i in range(2, 5):
             if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["EXIT"]:
                 signal = Signal.LONG
 
@@ -99,7 +99,7 @@ class Data:
                 signal = Signal.EXIT
 
             if signal:
-                (log.info if i == 1 else log.debug)(f"Trading signal: {signal}")
+                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}")
                 break
 
         return signal
@@ -167,9 +167,9 @@ def trade():
         data.get()
         orders.reload_active()
 
-        if not data.is_new and not orders.active_order:
-            sleep(30)
-            continue
+        # if not data.is_new and not orders.active_order:
+        #     sleep(30)
+        #     continue
 
         data.add_signals()
         signal = data.get_latest_signal()

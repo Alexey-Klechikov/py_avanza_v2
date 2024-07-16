@@ -99,11 +99,7 @@ class Volume(IndicatorsCategoryBase):
             return
 
         self.indicators["CMF"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] > 0.1,
-                SHORT=lambda x: x[column_name] < -0.1,
-                EXIT=lambda x: x[column_name] == 0,
-            ),
+            signal=Signal(LONG=lambda x: x[column_name] > 0.1, SHORT=lambda x: x[column_name] < -0.1),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
@@ -144,45 +140,3 @@ class Volume(IndicatorsCategoryBase):
                 list=[Plot(columns=list(column_names.values()), ylabel="Volume [KVO]")],
             ),
         )
-
-
-#     # Volume
-#     @staticmethod
-#     def volume_flow(
-#         data: pd.DataFrame,
-#         period: int,
-#         smooth: int,
-#         ma_period: int,
-#         coef: float,
-#         vol_coef: float,
-#     ) -> pd.DataFrame:
-#         """https://precisiontradingsystems.com/volume-flow.htm"""
-
-#         make_name = lambda x: f"{x}_{period}_{smooth}_{ma_period}_{coef}_{vol_coef}"
-
-#         data["_inter"] = np.log(data["Close"]).diff()  # type: ignore
-#         data["_vinter"] = ta.stdev(data["_inter"], length=30)
-#         data["_cutoff"] = coef * data["_vinter"] * data["Close"]
-#         data["_vave"] = ta.sma(data["Volume"], length=period).shift(1)  # type: ignore
-#         data["_vmax"] = data["_vave"] * vol_coef
-#         data["_mf"] = data["Close"] - data["Close"].shift(1)
-#         data["_vcp"] = np.where(
-#             data["_mf"] > data["_cutoff"],
-#             data["Volume"].clip(upper=data["_vmax"]),
-#             np.where(
-#                 data["_mf"] < -data["_cutoff"],
-#                 -data["Volume"].clip(upper=data["_vmax"]),
-#                 0,
-#             ),
-#         )
-#         data[make_name("VFI")] = ta.ema(
-#             ta.sma(data["_vcp"], length=period) / data["_vave"], length=smooth  # type: ignore
-#         )
-#         data[make_name("VFI_MA")] = ta.sma(
-#             ta.ema(
-#                 ta.sma(data["_vcp"], length=period) / data["_vave"], length=smooth  # type: ignore
-#             ),
-#             length=ma_period,
-#         )
-
-#         return data

@@ -33,7 +33,7 @@ class Watchlists:
                 ),
             )
 
-            log.debug(
+            log.info(
                 f"> Top instrument set: {self.preferred_instrument.__getattribute__(instrument_direction).name}"
                 + f" [leverage {self.preferred_instrument.__getattribute__(instrument_direction).leverage}]",
             )

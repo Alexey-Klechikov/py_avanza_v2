@@ -45,8 +45,8 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     volume = Volume(data)
     volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT
     volume.add_accumulation_distribution_oscillator(fast=6, slow=20)  # ADOSC
-    volume.add_chaikin_money_flow(length=21)  # CMF
-    volume.add_klinger_volume_oscillator(fast=34, slow=55, signal=13, mamode="dema")  # KVO
+    volume.add_chaikin_money_flow(length=26)  # CMF (calibrated)
+    volume.add_klinger_volume_oscillator(fast=15, slow=40, signal=18, mamode="dema")  # KVO (calibrated)
 
     columns_keep = set(DATA_COLUMNS)
     for category in [trend, volatility, volume, cycles, overlap, momentum]:
