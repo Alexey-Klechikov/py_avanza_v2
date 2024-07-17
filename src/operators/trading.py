@@ -177,6 +177,14 @@ def trade():
             continue
 
         portfolio.reload_positions()
+
+        if (
+            datetime.now().time() >= datetime.strptime("17:00", "%H:%M").time()
+            and not orders.active_order
+            and not portfolio.positions
+        ):
+            break
+
         orders.delete_all()
 
         if signal == Signal.EXIT:
