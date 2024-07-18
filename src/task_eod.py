@@ -8,7 +8,7 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from data.settings import OMX30_AVA, OMX30_YAHOO
-from operators import backtest
+from operators import backtest, get_stock_events, update_stock_events
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -20,6 +20,8 @@ log = get_logger()
 
 
 def cache_omx30():
+    log.warning("TASK 1: Cache OMX30 data")
+
     for period_ava, resolution_ava, period_yahoo, interval_yahoo in [
         (TimePeriod.TODAY, Resolution.MINUTE, Period.FIVE_DAYS, Interval.ONE_MINUTE),
         (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.ONE_MONTH, Interval.TWO_MINUTES),
@@ -41,14 +43,14 @@ def cache_omx30():
 
 def backtest_strategies():
     resolution = "5m"
-    period_days = 25
+    period_days = 30
+
+    log.warning(f"TASK 2: Backtest strategies on OMX30 | {resolution} | {period_days} days")
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
-
-    log.info(f"Backtesting strategies on OMX30 | {resolution} | {period_days} days")
 
     backtest(
         data,
@@ -60,10 +62,25 @@ def backtest_strategies():
     )
 
 
+def gather_analytics():
+    log.warning("TASK 3: Gather analytics")
+
+    update_stock_events()
+    stock_events = get_stock_events(shift_days=1)
+    if not stock_events:
+        log.info("No upcoming events")
+        return
+
+    for event in stock_events:
+        log.info(event)
+
+
 if __name__ == "__main__":
     try:
         cache_omx30()
         backtest_strategies()
+        gather_analytics()
+
     except Exception as e:
 
         telegram = Telegram()

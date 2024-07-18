@@ -17,6 +17,7 @@ log = get_logger()
 if __name__ == "__main__":
     try:
         trade()
+
     except Exception as e:
         telegram = Telegram()
         telegram.messages = ["Error in task_trade.py"]

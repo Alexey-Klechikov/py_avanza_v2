@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d0af2dc6ac0d44d1f3a8adedd67828ae29495947a8a902da8365c49a4790d378"
+            "sha256": "35b567132c4205338c31b5067eb600d8810ad86cb54c9f25349f1adf376cc770"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -232,6 +232,14 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==1.2.1"
+        },
+        "convertdate": {
+            "hashes": [
+                "sha256:770c6b2195544d3e451e230b3f1c9b121ed02680b877f896306a04cf6f26b48f",
+                "sha256:fcffe3a67522172648cf03b0c3757cfd079726fe5ae04ce29989ad3958039e4e"
+            ],
+            "markers": "python_version >= '3.7' and python_version < '4'",
+            "version": "==2.4.0"
         },
         "cycler": {
             "hashes": [
@@ -494,6 +502,13 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==1.4.5"
+        },
+        "lunardate": {
+            "hashes": [
+                "sha256:8ff8c01721bef7710f0712a302b1cb7d0b8b3ffc72a63a9a056cd01e58e5485a",
+                "sha256:cf1916337e50470a82df12d885ff47a456e89c91a3ad4e5fdf1575e063a7ed55"
+            ],
+            "version": "==0.2.2"
         },
         "lxml": {
             "hashes": [
@@ -998,6 +1013,20 @@
             "markers": "python_version >= '3.8'",
             "version": "==2.20.1"
         },
+        "pyluach": {
+            "hashes": [
+                "sha256:9063a25387cd7624276fd0656508bada08aa8a6f22e8db352844cd858e69012b",
+                "sha256:d1eb49d6292087e9290f4661ae01b60c8c933704ec8c9cef82673b349ff96adf"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==2.2.0"
+        },
+        "pymeeus": {
+            "hashes": [
+                "sha256:548f7186bd8b96cbc069cf649a8e8e377dce49ac74486709849fe63a99cad684"
+            ],
+            "version": "==0.5.12"
+        },
         "pyotp": {
             "hashes": [
                 "sha256:346b6642e0dbdde3b4ff5a930b664ca82abfa116356ed48cc42c7d6590d36f63",
@@ -1048,11 +1077,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:f171bab1dfbc86b132997f26a119f6056a57950d058587841a0082e8830f9dc5",
-                "sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc"
+                "sha256:ca359bea0cd5c8ce267d7463239107e87f312f2e2a11b6ca6357565d82b6c0d7",
+                "sha256:f6640114f96be808024fbd1f721161215543796d3a68da4524349de700604ce8"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==70.3.0"
+            "version": "==71.0.2"
         },
         "six": {
             "hashes": [
@@ -1215,6 +1244,15 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==12.0"
+        },
+        "workalendar": {
+            "hashes": [
+                "sha256:8fe1d6758f9a1af05d59cb81480afb912246ec7fa46e246b909897127cdbb1b0",
+                "sha256:b82d6024aed452505b01baf06dbe8d6309a3135ff1d39dee07c31b21ece853b4"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.7'",
+            "version": "==17.0.0"
         },
         "yfinance": {
             "hashes": [

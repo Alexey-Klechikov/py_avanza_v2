@@ -13,6 +13,7 @@ mplfinance = "*"
 numpy = "==1.26.4"
 telegram-send = "==0.34"
 python-telegram-bot = "==13.13"
+workalendar = "*"
 
 [dev-packages]
 black = "*"

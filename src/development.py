@@ -98,14 +98,10 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = "KVO"
+    indicator_to_test = "CMF"
 
-    for fast, slow, signal in (
-        # [(34, 55, 13)]
-        [(ifast, 55, 18) for ifast in [15, 20, 25, 30, 40, 45]]
-        + [(34, islow, 18) for islow in [40, 45, 50, 60, 65]]
-    ):
-        kwargs = {"fast": fast, "slow": slow, "signal": signal}
+    for length in [22, 24, 26, 28, 30]:
+        kwargs = {"length": length}
 
         log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
         backtest(
@@ -142,8 +138,8 @@ if __name__ == "__main__":
         ("Volatility", "ACCBANDS"),  # buy / sell
         # ("Volume", "PVT"),  # buy / sell
         # ("Volume", "ADOSC"),  # buy / sell
-        # ("Volume", "CMF"),  # buy / sell (exit?)
-        ("Volume", "KVO"),  # buy / sell
+        # ("Volume", "CMF"),  # buy / sell
+        # ("Volume", "KVO"),  # buy / sell
     ]
 
     # run_full_strategies_generation(indicators_selector)

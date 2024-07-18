@@ -145,16 +145,19 @@ class BrokerTradeSummary(BaseModel):
     broker_name: str = Field(alias="brokerName")
 
 
-class DivivendEvent(BaseModel):
+class DividendEvent(BaseModel):
     ex_date: date = Field(alias="exDate")
     amount: float
     currency_code: str = Field(alias="currencyCode")
     dividend_type: str = Field(alias="dividendType")
 
+    class Config:
+        populate_by_name = True
+
 
 class Dividends(BaseModel):
-    events: List[DivivendEvent]
-    past_events: List[DivivendEvent] = Field(alias="pastEvents")
+    events: List[DividendEvent]
+    past_events: List[DividendEvent] = Field(alias="pastEvents")
 
 
 class TradingTerms(BaseModel):
