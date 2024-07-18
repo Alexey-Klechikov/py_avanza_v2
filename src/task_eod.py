@@ -41,7 +41,7 @@ def cache_omx30():
 
 def backtest_strategies():
     resolution = "5m"
-    period_days = 30
+    period_days = 25
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
     data = data.loc[
