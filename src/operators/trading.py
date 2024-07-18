@@ -99,7 +99,8 @@ class Data:
                 signal = Signal.EXIT
 
             if signal:
-                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}")
+                price = self.data.iloc[-i]["High" if signal == Signal.LONG else "Low"]
+                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}. Price: {price}")
                 break
 
         return signal
