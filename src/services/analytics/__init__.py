@@ -1,1 +1,1 @@
-from services.analytics.operators import Analytics
+from services.analytics.operators import Analytics, AnalyticsType

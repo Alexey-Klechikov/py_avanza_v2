@@ -8,7 +8,7 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from data.settings import OMX30_AVA, OMX30_YAHOO
-from operators import backtest, get_stock_events, update_stock_events
+from operators import backtest, get_stock_events, update_exchange_working_hours, update_stock_events
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -65,16 +65,15 @@ def backtest_strategies():
 def gather_analytics():
     log.warning("TASK 3: Gather analytics")
 
+    update_exchange_working_hours(shift_days=1)
+
     update_stock_events()
     stock_events = get_stock_events(shift_days=1)
     if not stock_events:
         log.info("No upcoming events")
-        return
 
     for event in stock_events:
         log.info(event)
-
-    # get_stock_exchange_working_hours(shift_days=0)
 
 
 if __name__ == "__main__":

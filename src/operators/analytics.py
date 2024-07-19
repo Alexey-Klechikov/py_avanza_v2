@@ -4,7 +4,7 @@ import pandas_market_calendars as mcal
 from workalendar.europe import Sweden
 
 from apis.avanza.client import get_client
-from services.analytics import Analytics
+from services.analytics import Analytics, AnalyticsType
 from utils.logger import get_logger
 
 log = get_logger()
@@ -13,7 +13,7 @@ log = get_logger()
 def update_stock_events():
     log.info("Update stock events")
 
-    analytics = Analytics()
+    analytics = Analytics(type=AnalyticsType.STOCK_EVENTS)
     analytics.read_file()
 
     for stock in analytics.data:
@@ -30,7 +30,7 @@ def update_stock_events():
 
 
 def get_stock_events(shift_days: int = 0):
-    analytics = Analytics()
+    analytics = Analytics(type=AnalyticsType.STOCK_EVENTS)
     analytics.read_file()
 
     calendar = Sweden()
@@ -51,39 +51,32 @@ def get_stock_events(shift_days: int = 0):
     return stock_events_by_date.get(target_date, [])
 
 
-def get_stock_exchange_working_hours(shift_days: int = 0):  # WIP
-    exchanges = {
-        "TASE": "Tel-Aviv",
-        "NYSE": "New York",
-        "TSX": "Toronto",
-        "SSE": "Shanghai",
-        "SIX": "Zurich",
-        "OSE": "Oslo",
-        "LSE": "London",
-        "JPX": "Tokyo",
-        "HKEX": "Hong Kong",
-        "BSE": "Mumbai",
-        "BMF": "Sao Paulo",
-        "ASX": "Sydney",
-        # Futures Exchange
-        "CME_Equity": "CME US",
-        "CFE": "CBOE US",
-        # Intercontinental Exchange
-        "ICE": "ICE US",
-        # Investors Exchange
-        "IEX": "IEX US",
-        # Securities Industry and Financial Markets Association
-        "SIFMA_US": "SIFMA US",
-        "SIFMA_UK": "SIFMA UK",
-        "SIFMA_JP": "SIFMA Japan",
-    }
+def update_exchange_working_hours(shift_days: int = 0):
+    analytics = Analytics(type=AnalyticsType.EXCHANGE_WORKING_HOURS)
+    analytics.read_file()
 
-    for excange_code, excange_name in exchanges.items():
-        log.info(f"Exchange: {excange_name}")
+    calendar = Sweden()
+    target_date = calendar.add_working_days(date.today(), shift_days)
 
-        exchange = mcal.get_calendar(excange_code)
+    log.info("Update exchange working hours for " + ("today" if shift_days == 0 else str(target_date)))
 
-        schedule = exchange.schedule(start_date=date.today(), end_date=date.today(), tz="Europe/Stockholm")
+    for exchange in analytics.data:
+        log.debug(f"Exchange: {exchange.name}")
 
-        for _, row in schedule.iterrows():
-            log.info(f"Open: {row['market_open']} - {row['market_close']}")
+        exchange_calendar = mcal.get_calendar(exchange.code)
+
+        schedule = exchange_calendar.schedule(
+            start_date=target_date,
+            end_date=target_date,
+            tz="Europe/Stockholm",
+        )
+
+        if schedule.empty:
+            exchange.open = None
+            exchange.close = None
+            continue
+
+        exchange.open = schedule.iloc[0].market_open
+        exchange.close = schedule.iloc[0].market_close
+
+    analytics.write_file()
