@@ -56,7 +56,7 @@ def backtest_strategies():
         data,
         [],
         ComposeStrategiesListMethod.READ,
-        old_strategies_file_name="dev_strategies_5_indicators.json",
+        old_strategies_file_name="strategies_dev_5_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
@@ -74,6 +74,8 @@ def gather_analytics():
     for event in stock_events:
         log.info(event)
 
+    # get_stock_exchange_working_hours(shift_days=0)
+
 
 if __name__ == "__main__":
     try:
@@ -82,7 +84,6 @@ if __name__ == "__main__":
         gather_analytics()
 
     except Exception as e:
-
         telegram = Telegram()
         telegram.messages = ["Error in task_eod.py"]
         telegram.send_message()

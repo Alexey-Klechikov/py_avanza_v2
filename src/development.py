@@ -30,7 +30,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         indicators_selector,
         ComposeStrategiesListMethod.GENERATE,
         old_strategies_file_name=None,
-        new_strategies_file_name="dev_strategies_3_indicators.json",
+        new_strategies_file_name="strategies_dev_3_indicators.json",
         indicators_filter=[],
         plot=False,
     )
@@ -40,8 +40,8 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         data,
         indicators_selector,
         ComposeStrategiesListMethod.EXTEND,
-        old_strategies_file_name="dev_strategies_3_indicators.json",
-        new_strategies_file_name="dev_strategies_4_indicators.json",
+        old_strategies_file_name="strategies_dev_3_indicators.json",
+        new_strategies_file_name="strategies_dev_4_indicators.json",
         indicators_filter=[],
         plot=False,
     )
@@ -51,8 +51,8 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         data,
         indicators_selector,
         ComposeStrategiesListMethod.EXTEND,
-        old_strategies_file_name="dev_strategies_4_indicators.json",
-        new_strategies_file_name="dev_strategies_5_indicators.json",
+        old_strategies_file_name="strategies_dev_4_indicators.json",
+        new_strategies_file_name="strategies_dev_5_indicators.json",
         indicators_filter=[],
         plot=False,
     )
@@ -62,7 +62,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         data,
         indicators_selector,
         ComposeStrategiesListMethod.READ,
-        old_strategies_file_name="dev_strategies_5_indicators.json",
+        old_strategies_file_name="strategies_dev_5_indicators.json",
         new_strategies_file_name="strategies.json",
         indicators_filter=[],
         plot=False,
@@ -108,8 +108,8 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
             data.copy(),
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            old_strategies_file_name="dev_strategies_4_indicators.json",
-            new_strategies_file_name=f"dev_strategies_5_indicators_{indicator_to_test}_"
+            old_strategies_file_name="strategies_dev_4_indicators.json",
+            new_strategies_file_name=f"strategies_dev_5_indicators_{indicator_to_test}_"
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
             indicators_filter=[indicator_to_test],
             plot=False,

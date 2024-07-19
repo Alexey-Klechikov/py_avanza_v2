@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "35b567132c4205338c31b5067eb600d8810ad86cb54c9f25349f1adf376cc770"
+            "sha256": "8be1c2c3c163bd000d5cc5a9124833a2cf4beaaedb8a98ffb823baaf79afada0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -248,6 +248,14 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==0.12.1"
+        },
+        "exchange-calendars": {
+            "hashes": [
+                "sha256:4477f55dae696a7e7a20e48786db71e839567eb05fb710f3b87f667363950d1e",
+                "sha256:80ab4420b7ffd74453202b6d581a97ed67621269964c26a3482934dabc2b3fd4"
+            ],
+            "markers": "python_version ~= '3.9'",
+            "version": "==4.5.5"
         },
         "fonttools": {
             "hashes": [
@@ -502,6 +510,13 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==1.4.5"
+        },
+        "korean-lunar-calendar": {
+            "hashes": [
+                "sha256:392757135c492c4f42a604e6038042953c35c6f449dda5f27e3f86a7f9c943e5",
+                "sha256:eb2c485124a061016926bdea6d89efdf9b9fdbf16db55895b6cf1e5bec17b857"
+            ],
+            "version": "==0.3.1"
         },
         "lunardate": {
             "hashes": [
@@ -802,6 +817,15 @@
             "markers": "python_version >= '3.9'",
             "version": "==2.2.2"
         },
+        "pandas-market-calendars": {
+            "hashes": [
+                "sha256:43e933eb8c323345d6d6457bd1fed7ae5fa9df2dda774a9ba3c1a496bad88994",
+                "sha256:4ea4dd850ed01942f1274d64e29f5f09bc29f5dae771567b94f70bd0924cd2a2"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==4.4.1"
+        },
         "pandas-ta": {
             "hashes": [
                 "sha256:0fa35aec831d2815ea30b871688a8d20a76b288a7be2d26cc00c35cd8c09a993"
@@ -1077,11 +1101,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:ca359bea0cd5c8ce267d7463239107e87f312f2e2a11b6ca6357565d82b6c0d7",
-                "sha256:f6640114f96be808024fbd1f721161215543796d3a68da4524349de700604ce8"
+                "sha256:3d8531791a27056f4a38cd3e54084d8b1c4228ff9cf3f2d7dd075ec99f9fd70d",
+                "sha256:f501b6e6db709818dc76882582d9c516bf3b67b948864c5fa1d1624c09a49207"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==71.0.2"
+            "version": "==71.0.3"
         },
         "six": {
             "hashes": [
@@ -1107,6 +1131,14 @@
             "index": "pypi",
             "markers": "python_version >= '3.6'",
             "version": "==0.34"
+        },
+        "toolz": {
+            "hashes": [
+                "sha256:d22731364c07d72eea0a0ad45bafb2c2937ab6fd38a3507bf55eae8744aa7d85",
+                "sha256:ecca342664893f177a13dac0e6b41cbd8ac25a358e5f215316d43e2100224f4d"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==0.12.1"
         },
         "tornado": {
             "hashes": [

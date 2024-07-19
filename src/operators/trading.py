@@ -32,6 +32,7 @@ class Data:
     def __init__(self):
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
+        self.latest_candle_timedelta_min = 0
         self.past_orders = []
 
     def get(self):
@@ -54,6 +55,7 @@ class Data:
             data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
         ]
         self.is_new = data_size_before != data_size_after
+        self.latest_candle_timedelta_min = (datetime.now() - self.data.index[-1]).seconds // 60
 
     def add_signals(self):
         indicators = get_indicators(self.data)
@@ -150,6 +152,7 @@ def trade():
     log.info("Started trading strategies on OMX30 | 5m")
 
     data = Data()
+    data.get()
 
     orders = Orders()
     orders.delete_all()
@@ -165,15 +168,26 @@ def trade():
     watchlist.refresh_watchlists()
 
     while datetime.now().time() < datetime.strptime("17:30", "%H:%M").time():
-        data.get()
         orders.reload_active()
 
-        if not data.is_new and not orders.active_order:
-            sleep(30)
+        if orders.active_order or data.is_new:
+            data.is_new = False
+        elif datetime.now().minute % 5 == 4:
+            sleep(62 - datetime.now().second)
+            data.get()
+            data.is_new = True
+            continue
+        else:
+            sleep(62 - datetime.now().second)
             continue
 
-        data.add_signals()
-        signal = data.get_latest_signal()
+        if data.latest_candle_timedelta_min > 15:
+            log.warning(f"No new data for {data.latest_candle_timedelta_min} mins. Stop trading")
+            signal = Signal.EXIT
+        else:
+            data.add_signals()
+            signal = data.get_latest_signal()
+
         if not signal:
             continue
 

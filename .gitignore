@@ -5,4 +5,4 @@ ___*
 *.pickle
 .vscode/*
 strategies.json
-analytics.json
+analytics*.json
