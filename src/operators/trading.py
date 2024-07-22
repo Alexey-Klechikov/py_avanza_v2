@@ -245,6 +245,7 @@ def trade():
                 price=instrument_preferred.sell,
                 volume=BUDGET // instrument_preferred.sell,
             )
+            sleep(5)
 
     portfolio.reload_balance()
 
