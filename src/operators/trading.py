@@ -199,6 +199,7 @@ def trade():
             for position in portfolio.positions:
                 orders.place(
                     order_book_id=position.instrument.id,
+                    instrument_name=position.instrument.name,
                     order_type=OrderType.SELL,
                     price=position.quote.buy,
                     volume=int(position.volume),
@@ -217,6 +218,7 @@ def trade():
 
             orders.place(
                 order_book_id=instrument_to_sell.instrument.id,
+                instrument_name=instrument_to_sell.instrument.name,
                 order_type=OrderType.SELL,
                 price=instrument_to_sell.quote.buy,
                 volume=int(instrument_to_sell.volume),
@@ -236,6 +238,7 @@ def trade():
 
             orders.place(
                 order_book_id=instrument_preferred.id,
+                instrument_name=instrument_preferred.name,
                 order_type=OrderType.BUY,
                 price=instrument_preferred.sell,
                 volume=BUDGET // instrument_preferred.sell,

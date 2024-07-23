@@ -69,6 +69,7 @@ class Orders:
     def place(
         self,
         order_book_id: str,
+        instrument_name: str,
         order_type: OrderType,
         price: Optional[float],
         volume: int,
@@ -88,7 +89,7 @@ class Orders:
                 valid_until=valid_until,
             )
 
-            log.info("Order placed: %s %s %s", order_book_id, order_type.value, price)
+            log.info("Order placed: %s %s %s", instrument_name, order_type.value, price)
 
             self.reload_active()
 
