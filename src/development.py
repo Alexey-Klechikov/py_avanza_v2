@@ -57,6 +57,14 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         plot=False,
     )
 
+    resolution = "5m"
+    period_days = 40
+
+    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = data.loc[
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+    ]
+
     log.warning("Saving strategies")
     backtest(
         data,

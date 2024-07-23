@@ -49,7 +49,7 @@ def cache_omx30():
 
 def backtest_strategies():
     resolution = "5m"
-    period_days = 30
+    period_days = 40
 
     log.warning(f"TASK 2: Backtest strategies on OMX30 | {resolution} | {period_days} days")
 
