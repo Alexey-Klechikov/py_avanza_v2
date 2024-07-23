@@ -103,7 +103,7 @@ class Data:
                 signal = Signal.EXIT
 
             if signal:
-                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}." + f"Price: {price}")
+                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}. Price: {price}")
                 break
 
         return signal
