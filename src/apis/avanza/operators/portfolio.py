@@ -70,21 +70,26 @@ class Portfolio:
         self.acquired_instrument = AcquiredInstrument()
 
         for position in self.positions:
-            position_is_assigned = False
-
-            if position_is_assigned or position.instrument.type not in [
+            if position.instrument.type not in [
                 InstrumentType.WARRANT,
                 InstrumentType.CERTIFICATE,
             ]:
                 continue
 
+            instrument_direction = None
+
             if "BULL " in position.instrument.name or " L " in position.instrument.name:
-                self.acquired_instrument.BULL = position
-                position_is_assigned = True
-
+                instrument_direction = "BULL"
             elif "BEAR " in position.instrument.name or " S " in position.instrument.name:
-                self.acquired_instrument.BEAR = position
-                position_is_assigned = True
+                instrument_direction = "BEAR"
+            elif position.quote.sell is not None:
+                instrument_direction = (
+                    "BULL"
+                    if (position.quote.sell > position.acquired_price and position.performance.percent > 0)
+                    else "BEAR"
+                )
 
-            if not position_is_assigned:
-                log.warning(f"Position not assigned: {position.instrument.name}")
+            if not instrument_direction:
+                raise ValueError(f"Unknown instrument direction for {position.instrument.name}")
+
+            self.acquired_instrument.__setattr__(instrument_direction, position)
