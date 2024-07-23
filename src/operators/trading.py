@@ -165,7 +165,6 @@ def trade():
 
     watchlist = Watchlists()
     watchlist.update_watchlists()
-    watchlist.refresh_watchlists()
 
     while datetime.now().time() < datetime.strptime("17:30", "%H:%M").time():
         orders.reload_active()
@@ -205,12 +204,7 @@ def trade():
                 )
             continue
 
-        portfolio.detect_acquired_instruments(
-            instrument_type_to_id_mapping={
-                instrument_direction: [i["id"] for i in instruments]
-                for instrument_direction, instruments in watchlist.valid_instruments.model_dump().items()
-            },
-        )
+        portfolio.detect_acquired_instruments()
 
         for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
             if signal != tested_signal:

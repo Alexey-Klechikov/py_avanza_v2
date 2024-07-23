@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from avanza.constants import InstrumentType
 
@@ -66,16 +66,11 @@ class Portfolio:
             for i in positions
         ]
 
-    def detect_acquired_instruments(self, instrument_type_to_id_mapping: Dict[str, List[str]]) -> None:
+    def detect_acquired_instruments(self) -> None:
         self.acquired_instrument = AcquiredInstrument()
 
         for position in self.positions:
             position_is_assigned = False
-
-            for instrument_type, instrument_ids in instrument_type_to_id_mapping.items():
-                if position.instrument.id in instrument_ids:
-                    setattr(self.acquired_instrument, instrument_type, position)
-                    position_is_assigned = True
 
             if position_is_assigned or position.instrument.type not in [
                 InstrumentType.WARRANT,
