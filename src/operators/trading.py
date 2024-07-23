@@ -90,6 +90,8 @@ class Data:
 
     def get_latest_signal(self) -> Optional[Signal]:
         signal = None
+        price = (self.data.iloc[-1]["High"] + self.data.iloc[-1]["Low"]) / 2
+
         for i in range(2, 5):
             if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["EXIT"]:
                 signal = Signal.LONG
@@ -101,8 +103,7 @@ class Data:
                 signal = Signal.EXIT
 
             if signal:
-                price = self.data.iloc[-i]["High" if signal == Signal.LONG else "Low"]
-                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}. Price: {price}")
+                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}." + f"Price: {price}")
                 break
 
         return signal
