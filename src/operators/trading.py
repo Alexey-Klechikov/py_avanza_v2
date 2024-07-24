@@ -171,6 +171,15 @@ def trade():
     while datetime.now().time() < datetime.strptime("17:30", "%H:%M").time():
         orders.reload_active()
 
+        if all(
+            [
+                not orders.active_order,
+                not portfolio.positions,
+                data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
+            ],
+        ):
+            break
+
         if orders.active_order or data.is_new:
             data.is_new = False
         elif datetime.now().minute % 5 == 4:
@@ -193,15 +202,6 @@ def trade():
             continue
 
         portfolio.reload_positions()
-
-        if all(
-            [
-                not orders.active_order,
-                not portfolio.positions,
-                data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
-            ],
-        ):
-            break
 
         orders.delete_all()
 
