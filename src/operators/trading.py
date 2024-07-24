@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from enum import Enum
 from time import sleep
 from typing import Optional
@@ -192,6 +192,9 @@ def trade():
             continue
 
         portfolio.reload_positions()
+
+        if not orders.active_order and not portfolio.positions and data.data.iloc[-1].name.time() >= time(17, 0):
+            break
 
         orders.delete_all()
 
