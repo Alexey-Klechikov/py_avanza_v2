@@ -86,11 +86,10 @@ class Data:
             for non_trading_time in (["09:00", "10:00"], ["17:15", "17:30"]):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
 
-        self.data.loc[self.data.between_time("17:15", "17:30").index, "EXIT"] = True
+        self.data.loc[self.data.between_time("17:14", "17:16").index, "EXIT"] = True
 
     def get_latest_signal(self) -> Optional[Signal]:
         signal = None
-        price = (self.data.iloc[-1]["High"] + self.data.iloc[-1]["Low"]) / 2
 
         for i in range(2, 5):
             if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["EXIT"]:
@@ -103,7 +102,9 @@ class Data:
                 signal = Signal.EXIT
 
             if signal:
-                (log.info if i == 2 else log.debug)(f"Trading signal: {signal}. Price: {price}")
+                (log.info if i == 2 else log.debug)(
+                    f"Trading signal: {signal}. Latest price: {self.data.iloc[-1]['Close']}",
+                )
                 break
 
         return signal

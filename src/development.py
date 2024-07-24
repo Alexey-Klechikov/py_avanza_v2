@@ -79,7 +79,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
 
 def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]]):
     resolution = "5m"
-    period_days = 10
+    period_days = 3
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
     data = data.loc[
