@@ -193,7 +193,13 @@ def trade():
 
         portfolio.reload_positions()
 
-        if not orders.active_order and not portfolio.positions and data.data.iloc[-1].name.time() >= time(17, 0):
+        if all(
+            [
+                not orders.active_order,
+                not portfolio.positions,
+                data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
+            ],
+        ):
             break
 
         orders.delete_all()
