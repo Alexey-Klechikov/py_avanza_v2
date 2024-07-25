@@ -89,13 +89,16 @@ def get_exchange_working_hours(shift_days: int = 0):
     calendar = Sweden()
     target_date = calendar.add_working_days(date.today(), shift_days)
 
-    if not analytics.data or analytics.data[0].open.date() != target_date:
+    if not analytics.data or [i.open for i in analytics.data if i.open][0].date() != target_date:
         update_exchange_working_hours(shift_days)
 
     log.info("Get exchange working hours for " + ("today" if shift_days == 0 else str(target_date)))
 
     exchange_working_hours = {}
     for exchange in analytics.data:
+        if not exchange.open or not exchange.close:
+            continue
+
         exchange_working_hours.setdefault(str(exchange.open.time()), []).append(f"open - {exchange.name}")
         exchange_working_hours.setdefault(str(exchange.close.time()), []).append(f"close - {exchange.name}")
 
