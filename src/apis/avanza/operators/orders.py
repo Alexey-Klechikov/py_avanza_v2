@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from time import sleep
 from typing import List, Optional
 
 from avanza.constants import OrderType
@@ -90,6 +91,8 @@ class Orders:
             )
 
             log.info("Order placed: %s %s %s", instrument_name, order_type.value, price)
+
+            sleep(3)
 
             self.reload_active()
 

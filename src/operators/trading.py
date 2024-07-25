@@ -178,9 +178,15 @@ def trade():
                 data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
             ],
         ):
+            # STOP
             break
-
-        if orders.active_order or data.is_new:
+        elif any(
+            [
+                orders.active_order,
+                data.is_new,
+            ],
+        ):
+            # TRADE
             data.is_new = False
         elif datetime.now().minute % 5 == 4:
             sleep(62 - datetime.now().second)
@@ -233,7 +239,6 @@ def trade():
                 price=instrument_to_sell.quote.buy,
                 volume=int(instrument_to_sell.volume),
             )
-            sleep(5)
 
         for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
             if signal != tested_signal:
@@ -253,7 +258,6 @@ def trade():
                 price=instrument_preferred.sell,
                 volume=BUDGET // instrument_preferred.sell,
             )
-            sleep(5)
 
     portfolio.reload_balance()
 

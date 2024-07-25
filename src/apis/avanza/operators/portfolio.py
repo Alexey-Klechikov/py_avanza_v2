@@ -34,8 +34,6 @@ class Portfolio:
         self.buying_power = account_overview.buying_power.total.value
 
     def reload_positions(self) -> None:
-        log.debug("Reload account positions")
-
         positions = get_client().get_accounts_positions().with_orderbook
         positions = [i for i in positions if i.account.id == ACCOUNT_ID]
 
@@ -65,6 +63,9 @@ class Portfolio:
             )
             for i in positions
         ]
+
+        if self.positions:
+            log.debug("Active positions found")
 
     def detect_acquired_instruments(self) -> None:
         self.acquired_instrument = AcquiredInstrument()
