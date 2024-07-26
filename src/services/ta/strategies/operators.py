@@ -176,12 +176,9 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
 
 
 def get_top_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
-    for strategy in json.load(open(_get_file_path(strategies_file_name))):
-        if "Original" in strategy["name"]:
-            continue
+    strategies = json.load(open(_get_file_path(strategies_file_name)))
+    top_strategy = sorted(strategies[:10], key=lambda x: x["profitable_trades_share"], reverse=True)[0]
 
-        strategy_indicators = list(tuple(indicator.split("-")) for indicator in strategy["name"].split(" | "))
+    strategy_indicators = list(tuple(indicator.split("-")) for indicator in top_strategy["name"].split(" | "))
 
-        return Strategy(name=strategy["name"], selected_indicators=strategy_indicators, all_indicators=indicators)
-
-    raise ValueError("No valid strategy found in the file.")
+    return Strategy(name=top_strategy["name"], selected_indicators=strategy_indicators, all_indicators=indicators)
