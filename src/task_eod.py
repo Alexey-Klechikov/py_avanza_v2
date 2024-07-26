@@ -1,3 +1,4 @@
+import platform
 import warnings
 from datetime import datetime, timedelta
 
@@ -42,7 +43,7 @@ def cache_omx30():
         data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, resolution_ava)
         storage.write(data_ava)
 
-        if resolution_investing:
+        if storage.read().shape[0] == rows_before and resolution_investing and platform.system() == "Darwin":
             data_investing = InvestingTicker(OMX30_INVESTING).get_history(resolution=resolution_investing, period_days=60)
             storage.write(data_investing)
 

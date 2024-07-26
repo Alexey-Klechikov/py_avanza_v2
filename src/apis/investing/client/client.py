@@ -14,7 +14,10 @@ log = get_logger()
 
 class Investing:
     def __init__(self):
-        self.base = "https://tvc4.investing.com/84771021f8c0058579b0fe4d334348f3/1721979869/1/1/8/history?"
+        self.base = (
+            "https://tvc4.investing.com/84771021f8c0058579b0fe4d334348f3"
+            + f"/{int(datetime.now().timestamp())}/1/1/8/history?"
+        )
         self.headers = {
             "Host": "tvc4.investing.com",
             "Accept": "*/*",
