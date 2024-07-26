@@ -259,6 +259,8 @@ def trade():
                 volume=BUDGET // instrument_preferred.sell,
             )
 
+        portfolio.reload_positions()
+
     portfolio.reload_balance()
 
     telegram.log_final_balance(portfolio)
