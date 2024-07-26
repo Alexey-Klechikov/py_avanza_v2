@@ -23,10 +23,6 @@ class Storage:
 
         return f"{project_root_dir}/data/{file_name}.pickle"
 
-    def _clean_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        data.loc[data.between_time("09:00", "09:05").index, "Volume"] = 0
-        return data.between_time("09:00", "17:20")[DATA_COLUMNS].fillna(0)
-
     def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):
             log.warning(f"File does not exist: {self.path}")
@@ -36,20 +32,19 @@ class Storage:
             return pickle.load(f)
 
     def write(self, data: pd.DataFrame) -> None:
-        new_data = self._clean_data(data)
-        if new_data.empty:
+        if data.empty:
             log.warning("Data is empty. Nothing to write.")
             return
 
         old_data = self.read()
 
         if old_data.empty:
-            combined_data = new_data
+            combined_data = data
         else:
-            combined_data = pd.concat([old_data, new_data]).reset_index()
+            combined_data = pd.concat([old_data, data]).reset_index()
             combined_data = (
                 combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()].set_index("Datetime").sort_index()
             )
 
         with open(self.path, "wb") as f:
-            pickle.dump(self._clean_data(combined_data), f)
+            pickle.dump(combined_data, f)

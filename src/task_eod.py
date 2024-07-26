@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.operators import Chart
+from apis.investing.client.models import Resolution as InvestingResolution
+from apis.investing.operators.ticker import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
-from apis.yahoo.operators import Ticker
-from data.settings import OMX30_AVA, OMX30_YAHOO
+from apis.yahoo.operators import Ticker as YahooTicker
+from data.settings import OMX30_AVA, OMX30_INVESTING, OMX30_YAHOO
 from operators import (
     backtest,
     get_exchange_working_hours,
@@ -28,20 +30,25 @@ log = get_logger()
 def cache_omx30():
     log.warning("TASK 1: Cache OMX30 data")
 
-    for period_ava, resolution_ava, period_yahoo, interval_yahoo in [
-        (TimePeriod.TODAY, Resolution.MINUTE, Period.FIVE_DAYS, Interval.ONE_MINUTE),
-        (TimePeriod.TODAY, Resolution.TWO_MINUTES, Period.ONE_MONTH, Interval.TWO_MINUTES),
-        (TimePeriod.TODAY, Resolution.FIVE_MINUTES, Period.ONE_MONTH, Interval.FIVE_MINUTES),
-        (TimePeriod.ONE_WEEK, Resolution.HOUR, Period.ONE_MONTH, Interval.SIXTY_MINUTES),
+    for resolution_ava, resolution_investing, interval_yahoo in [
+        (Resolution.MINUTE, InvestingResolution.ONE_MINUTE, Interval.ONE_MINUTE),
+        (Resolution.TWO_MINUTES, None, Interval.TWO_MINUTES),
+        (Resolution.FIVE_MINUTES, InvestingResolution.FIVE_MINUTES, Interval.FIVE_MINUTES),
+        (Resolution.HOUR, InvestingResolution.SIXTY_MINUTES, Interval.SIXTY_MINUTES),
     ]:
         storage = Storage(OMX30_YAHOO, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
-        data_ava = Chart.get_chart_data(OMX30_AVA, period_ava, resolution_ava)
+        data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, resolution_ava)
         storage.write(data_ava)
 
-        data_yahoo = Ticker(OMX30_YAHOO).get_history(period=period_yahoo, interval=interval_yahoo)
-        storage.write(data_yahoo)
+        if resolution_investing:
+            data_investing = InvestingTicker(OMX30_INVESTING).get_history(resolution=resolution_investing, period_days=60)
+            storage.write(data_investing)
+
+        if storage.read().shape[0] == rows_before:
+            data_yahoo = YahooTicker(OMX30_YAHOO).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+            storage.write(data_yahoo)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
@@ -49,7 +56,7 @@ def cache_omx30():
 
 def backtest_strategies():
     resolution = "5m"
-    period_days = 40
+    period_days = 30
 
     log.warning(f"TASK 2: Backtest strategies on OMX30 | {resolution} | {period_days} days")
 
@@ -62,7 +69,7 @@ def backtest_strategies():
         data,
         [],
         ComposeStrategiesListMethod.READ,
-        old_strategies_file_name="strategies_dev_5_indicators.json",
+        old_strategies_file_name="strategies_dev_6_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
