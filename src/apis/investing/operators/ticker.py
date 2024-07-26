@@ -25,6 +25,6 @@ class Ticker:
             from_datetime=datetime.now() - timedelta(days=period_days),
             to_datetime=datetime.now(),
         )
-        history.index = history.index.rename("Datetime") + timedelta(hours=2)
+        history.index = pd.to_datetime(history.index) + timedelta(hours=2)
 
         return history
