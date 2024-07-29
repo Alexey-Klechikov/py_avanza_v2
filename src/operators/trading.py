@@ -161,6 +161,7 @@ def trade():
 
     portfolio = Portfolio()
     portfolio.reload_balance()
+    portfolio.reload_positions()
 
     telegram = Telegram()
     telegram.log_starting_balance(orders, portfolio)
