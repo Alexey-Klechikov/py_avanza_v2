@@ -52,7 +52,7 @@ class Data:
         data_size_after = data.shape[0]
 
         self.data = data.loc[
-            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=2)
+            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=5)
         ]
         self.is_new = data_size_before != data_size_after
         self.latest_candle_timedelta_min = (datetime.now() - self.data.index[-1]).seconds // 60

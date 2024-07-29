@@ -176,8 +176,9 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
 
 
 def get_top_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
-    strategies = json.load(open(_get_file_path(strategies_file_name)))
-    top_strategy = sorted(strategies[:10], key=lambda x: x["profitable_trades_share"], reverse=True)[0]
+    top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:10]
+    top_profitability = max([i["profitable_trades_share"] for i in top_strategies])
+    top_strategy = [i for i in top_strategies if i["profitable_trades_share"] == top_profitability][0]
 
     strategy_indicators = list(tuple(indicator.split("-")) for indicator in top_strategy["name"].split(" | "))
 
