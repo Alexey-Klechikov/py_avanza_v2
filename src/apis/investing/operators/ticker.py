@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from apis.investing.client import Investing
+from apis.investing.client import get_investing
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
 
@@ -19,8 +19,7 @@ class Ticker:
             + f"with period {period_days} days and resolution {resolution.value} min",
         )
 
-        history = Investing().get_history(
-            ticker_investing=self.ticker_investing,
+        history = get_investing(self.ticker_investing).get_history(
             resolution=resolution,
             from_datetime=datetime.now() - timedelta(days=period_days),
             to_datetime=datetime.now(),

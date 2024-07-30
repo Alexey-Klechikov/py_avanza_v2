@@ -1,8 +1,28 @@
+"""
+This module is responsible for fetching data from Investing.com. It runs using Selenium.
+To execute it, you need to have the GeckoDriver installed (on Ubuntu).
+
+# Download geckodriver
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.29.1/geckodriver-v0.29.1-linux64.tar.gz
+
+# Extract the file
+    tar -xvzf geckodriver-v0.29.1-linux64.tar.gz
+
+# Make it executable
+    chmod +x geckodriver
+
+# Move the geckodriver to /usr/local/bin/
+    sudo mv geckodriver /usr/local/bin/
+"""
+
 from datetime import datetime
+from functools import cache
 from io import StringIO
 
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
 
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
@@ -13,51 +33,57 @@ log = get_logger()
 
 
 class Investing:
-    def __init__(self):
-        self.base = (
-            "https://tvc4.investing.com/84771021f8c0058579b0fe4d334348f3"
-            + f"/{int(datetime.now().timestamp())}/1/1/8/history?"
-        )
-        self.headers = {
-            "Host": "tvc4.investing.com",
-            "Accept": "*/*",
-            "Accept-Language": "en-GB,en;q=0.9,en-US;q=0.8,sv;q=0.7",
-            "Content-Type": "text/plain",
-            "Origin": "https://tvc-invdn-cf-com.investing.com",
-            "Referer": "https://tvc-invdn-cf-com.investing.com/",
-            "Sec-Ch-Ua": '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": "Windows",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-site",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            + "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0",
-        }
+    def __init__(self, ticker_investing: str):
+        self.ticker_investing = ticker_investing
+        self.iframe_carrier = self._get_iframe_carrier_from_session()
+
+    def _get_iframe_carrier_from_session(self):
+        with requests.Session() as session:
+            url = "https://www.investing.com/indices/omx-stockholm-30-chart"
+            response = session.get(url)
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
+            if iframe is None:
+                log.warning("No iframe found")
+                return
+
+            iframe_url = iframe.get("src")  # type: ignore
+            if iframe_url is None:
+                log.warning("No iframe URL found")
+                return
+
+            return iframe_url.split("carrier=")[1].split("&")[0]  # type: ignore
 
     def get_history(
         self,
-        ticker_investing: str,
         resolution: Resolution,
         from_datetime: datetime,
         to_datetime: datetime,
     ) -> pd.DataFrame:
         arguments = {
-            "symbol": ticker_investing,
+            "symbol": self.ticker_investing,
             "resolution": resolution.value,
             "from": int(from_datetime.timestamp()),
             "to": int(to_datetime.timestamp()),
         }
 
-        url = self.base + "&".join([f"{key}={value}" for key, value in arguments.items()])
-
-        response = requests.get(url, headers=self.headers)
+        url = (
+            f"https://tvc4.investing.com/{self.iframe_carrier}"
+            + f"/{int(to_datetime.timestamp())}/1/1/2/history?"
+            + "&".join([f"{key}={value}" for key, value in arguments.items()])
+        )
 
         try:
-            df = pd.read_json(StringIO(response.text))
+            with webdriver.Firefox() as driver:
+                driver.get(url)
+                html = driver.page_source
+                soup = BeautifulSoup(html, "html.parser")
+                data = soup.find("body").text  # type: ignore
+                df = pd.read_json(StringIO(data))
 
         except ValueError:
-            log.error(f"Failed to read JSON from response: {response.text}")
+            log.exception("Failed to read JSON from response", exc_info=True)
             return pd.DataFrame()
 
         df["Datetime"] = pd.to_datetime(df["t"], unit="s")
@@ -70,3 +96,8 @@ class Investing:
         df.drop(columns=list(set(df.columns) - set(columns_mapping.values())), inplace=True, axis=1)
 
         return df
+
+
+@cache
+def get_investing(ticker_investing):
+    return Investing(ticker_investing)

@@ -1,1 +1,1 @@
-from apis.investing.client.client import Investing
+from apis.investing.client.client import get_investing
