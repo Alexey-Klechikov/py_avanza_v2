@@ -27,7 +27,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from data.settings import USERNAME
+from data.settings import ACCOUNT_URL_PARAMETER, USERNAME
 from utils.logger import get_logger
 
 log = get_logger()
@@ -127,7 +127,11 @@ class Avanza(AvanzaBase):
         return InstrumentIndex(**data)
 
     def get_accounts_overview(self) -> AccountOverview:
-        data = self._retry_call("/_api/account-performance/overview/total-values")
+        data = self._retry_call(
+            "/_api/account-performance/overview/total-values",
+            http_method="POST",
+            options=[ACCOUNT_URL_PARAMETER],
+        )
 
         return AccountOverview(**data)
 

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 
 from avanza import constants
 from pydantic import BaseModel, field_validator
@@ -7,7 +7,7 @@ from pydantic import BaseModel, field_validator
 class CallRequest(BaseModel):
     path: str
     method: Union[constants.HttpMethod, str]
-    options: Optional[dict] = None
+    options: Optional[Union[List, Dict]] = None
 
     @field_validator("method", mode="before")
     @classmethod

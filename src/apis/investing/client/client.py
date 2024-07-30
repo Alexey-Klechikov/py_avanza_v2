@@ -1,18 +1,14 @@
 """
 This module is responsible for fetching data from Investing.com. It runs using Selenium.
-To execute it, you need to have the GeckoDriver installed (on Ubuntu).
+To execute it, you need to have the GeckoDriver and firefoxinstalled (on Ubuntu).
 
-# Download geckodriver
-    wget https://github.com/mozilla/geckodriver/releases/download/v0.29.1/geckodriver-v0.29.1-linux64.tar.gz
+wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
+tar -xvzf geckodriver-v0.34.0-linux64.tar.gz
+chmod +x geckodriver
+sudo mv geckodriver /usr/local/bin/
+rm geckodriver-v0.34.0-linux64.tar.gz
 
-# Extract the file
-    tar -xvzf geckodriver-v0.29.1-linux64.tar.gz
-
-# Make it executable
-    chmod +x geckodriver
-
-# Move the geckodriver to /usr/local/bin/
-    sudo mv geckodriver /usr/local/bin/
+apt  install firefox
 """
 
 from datetime import datetime
