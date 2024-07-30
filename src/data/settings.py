@@ -1,6 +1,5 @@
 USERNAME: str = "ava_elbe"
 ACCOUNT_ID: str = "5554179"
-ACCOUNT_URL_PARAMETER: str = "pW2w96aJi5hPJVm1o6eYZw"
 OMX30_AVA: str = "19002"
 OMX30_YAHOO: str = "^OMX"
 OMX30_INVESTING: str = "25685"

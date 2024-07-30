@@ -22,20 +22,25 @@ class Portfolio:
         self.total_value = 0
         self.buying_power = 0
         self.positions: List[Position] = []
+        self._account_url_parameter: Optional[str] = None
 
     def reload_balance(self) -> None:
         log.debug("Reload account balance")
 
-        accounts_overview = get_client().get_accounts_overview()
+        if not self._account_url_parameter:
+            self.reload_positions()
 
-        account_overview = [i for i in accounts_overview.accounts if i.info.id == ACCOUNT_ID][0]
+        account_overview = get_client().get_accounts_overview(self._account_url_parameter)
 
         self.total_value = account_overview.total_value.total_value.value
         self.buying_power = account_overview.buying_power.total.value
 
     def reload_positions(self) -> None:
-        positions = get_client().get_accounts_positions().with_orderbook
-        positions = [i for i in positions if i.account.id == ACCOUNT_ID]
+        positions = get_client().get_accounts_positions()
+
+        self._account_url_parameter = [
+            i.account.url_parameter_id for i in positions.cash_positions if i.account.id == ACCOUNT_ID
+        ][0]
 
         self.positions = [
             Position(
@@ -61,7 +66,8 @@ class Portfolio:
                     },
                 },
             )
-            for i in positions
+            for i in positions.with_orderbook
+            if i.account.id == ACCOUNT_ID
         ]
 
         if self.positions:
