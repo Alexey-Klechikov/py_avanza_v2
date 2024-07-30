@@ -1,3 +1,4 @@
+import platform
 import warnings
 
 import pandas as pd
@@ -16,7 +17,7 @@ log = get_logger()
 
 if __name__ == "__main__":
     try:
-        trade()
+        trade(dry_run=(True if platform.system() == "Darwin" else False))
 
     except Exception as e:
         telegram = Telegram()

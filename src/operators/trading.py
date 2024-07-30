@@ -150,7 +150,7 @@ class Telegram(TelegramBase):
 
 
 # MAIN
-def trade():
+def trade(dry_run: bool) -> None:
     log.info("Started trading strategies on OMX30 | 5m")
 
     data = Data()
@@ -224,6 +224,10 @@ def trade():
             continue
 
         portfolio.detect_acquired_instruments()
+
+        if dry_run:
+            log.warning("Dry run - no trading")
+            continue
 
         for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
             if signal != tested_signal:
