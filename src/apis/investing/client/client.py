@@ -20,7 +20,6 @@ from functools import cache
 from io import StringIO
 
 import pandas as pd
-import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
@@ -38,10 +37,10 @@ class Investing:
         self.iframe_carrier = self._get_iframe_carrier_from_session()
 
     def _get_iframe_carrier_from_session(self):
-        with requests.Session() as session:
-            url = "https://www.investing.com/indices/omx-stockholm-30-chart"
-            response = session.get(url)
-            soup = BeautifulSoup(response.text, "html.parser")
+        with webdriver.Firefox() as driver:
+            driver.get("https://www.investing.com/indices/omx-stockholm-30-chart")
+            html = driver.page_source
+            soup = BeautifulSoup(html, "html.parser")
 
             iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
             if iframe is None:
