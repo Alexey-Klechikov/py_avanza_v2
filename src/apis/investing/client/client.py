@@ -5,6 +5,7 @@ from io import StringIO
 import cloudscraper
 import pandas as pd
 from bs4 import BeautifulSoup
+from requests_html import HTMLSession
 
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
@@ -52,11 +53,11 @@ class Investing:
         }
 
         try:
-            with cloudscraper.create_scraper() as scraper:
-                response = scraper.get(
+            with HTMLSession() as session:
+                response = cloudscraper.create_scraper(sess=session).get(
                     "https://www.investing.com/indices/omx-stockholm-30-chart",
-                    # headers=self.headers,
-                    # proxies=self.proxies,
+                    headers=self.headers,
+                    proxies=self.proxies,
                 )
                 soup = BeautifulSoup(response.text, "html.parser")
 
@@ -82,7 +83,7 @@ class Investing:
                     + "&".join([f"{key}={value}" for key, value in arguments.items()])
                 )
 
-                response = scraper.get(url)  # , headers=self.headers, proxies=self.proxies)
+                response = session.get(url, headers=self.headers, proxies=self.proxies)
 
                 soup = BeautifulSoup(response.text, "html.parser")
                 print(soup.prettify())
