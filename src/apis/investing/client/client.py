@@ -36,17 +36,19 @@ class Investing:
         self.iframe_carrier = self._get_iframe_carrier_from_session()
 
     def _get_webdriver(self):
-        if platform.system() == "Linux":
-            options = Options()
-            options.binary_location = "/usr/bin/firefox"
-            return webdriver.Firefox(service=Service("/usr/local/bin/geckodriver"), options=options)
+        options = Options()
+        options.add_argument("-headless")
 
-        return webdriver.Firefox()
+        if platform.system() == "Linux":
+            options.binary_location = "/usr/bin/firefox"
+            driver = webdriver.Firefox(service=Service("/usr/local/bin/geckodriver"), options=options)
+        else:
+            driver = webdriver.Firefox(options=options)
+
+        driver.set_page_load_timeout(30)
+        return driver
 
     def _get_iframe_carrier_from_session(self):
-        options = webdriver.FirefoxOptions()
-        options.binary_location = "/usr/bin/firefox"
-
         with self._get_webdriver() as driver:
             driver.get("https://www.investing.com/indices/omx-stockholm-30-chart")
             html = driver.page_source
