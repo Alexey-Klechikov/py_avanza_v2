@@ -1,3 +1,4 @@
+import platform
 import warnings
 from datetime import datetime, timedelta
 
@@ -42,7 +43,7 @@ def cache_omx30():
         data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, resolution_ava)
         storage.write(data_ava)
 
-        if resolution_investing:  # and platform.system() == "Darwin":  # TODO: fix investing API for Ubuntu
+        if resolution_investing and platform.system() == "Darwin":
             data_investing = InvestingTicker(OMX30_INVESTING).get_history(resolution=resolution_investing, period_days=60)
             storage.write(data_investing)
 
@@ -105,18 +106,13 @@ def gather_analytics():
 
 if __name__ == "__main__":
     try:
-        data_investing = InvestingTicker(OMX30_INVESTING).get_history(
-            resolution=InvestingResolution.FIVE_MINUTES,
-            period_days=60,
-        )
-        print(data_investing)
-        # cache_omx30()
-        # backtest_strategies()
-        # gather_analytics()
+        cache_omx30()
+        backtest_strategies()
+        gather_analytics()
 
     except Exception as e:
         telegram = Telegram()
         telegram.messages = ["Error in task_eod.py"]
-        # telegram.send_message()
+        telegram.send_message()
 
         raise e

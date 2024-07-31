@@ -57,11 +57,9 @@ class Investing:
                 response = cloudscraper.create_scraper(sess=session).get(
                     "https://www.investing.com/indices/omx-stockholm-30-chart",
                     headers=self.headers,
-                    proxies=self.proxies,
+                    # proxies=self.proxies,
                 )
                 soup = BeautifulSoup(response.text, "html.parser")
-
-                print(soup.prettify())
 
                 iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
                 if iframe is None:
@@ -75,18 +73,19 @@ class Investing:
 
                 iframe_carrier = iframe_url.split("carrier=")[1].split("&")[0]  # type: ignore
 
-                print(iframe_url)
-
                 url = (
                     f"https://tvc4.investing.com/{iframe_carrier}"
                     + f"/{int(to_datetime.timestamp())}/1/1/2/history?"
                     + "&".join([f"{key}={value}" for key, value in arguments.items()])
                 )
 
-                response = session.get(url, headers=self.headers, proxies=self.proxies)
+                response = session.get(
+                    url,
+                    headers=self.headers,
+                    # proxies=self.proxies,
+                )
 
                 soup = BeautifulSoup(response.text, "html.parser")
-                print(soup.prettify())
 
                 df = pd.read_json(StringIO(response.text))
 
