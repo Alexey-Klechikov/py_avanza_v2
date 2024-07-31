@@ -105,9 +105,14 @@ def gather_analytics():
 
 if __name__ == "__main__":
     try:
-        cache_omx30()
-        backtest_strategies()
-        gather_analytics()
+        data_investing = InvestingTicker(OMX30_INVESTING).get_history(
+            resolution=InvestingResolution.FIVE_MINUTES,
+            period_days=60,
+        )
+        print(data_investing)
+        # cache_omx30()
+        # backtest_strategies()
+        # gather_analytics()
 
     except Exception as e:
         telegram = Telegram()

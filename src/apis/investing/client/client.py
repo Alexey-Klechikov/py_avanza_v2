@@ -1,26 +1,10 @@
-"""
-This module is responsible for fetching data from Investing.com. It runs using Selenium.
-To execute it, you need to have the GeckoDriver and firefoxinstalled (on Ubuntu).
-
-wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
-tar -xvzf geckodriver-v0.34.0-linux64.tar.gz
-chmod +x geckodriver
-sudo mv geckodriver /usr/local/bin/
-rm geckodriver-v0.34.0-linux64.tar.gz
-
-apt  install firefox
-"""
-
-import platform
 from datetime import datetime
 from functools import cache
 from io import StringIO
 
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
 
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
@@ -33,38 +17,11 @@ log = get_logger()
 class Investing:
     def __init__(self, ticker_investing: str):
         self.ticker_investing = ticker_investing
-        self.iframe_carrier = self._get_iframe_carrier_from_session()
-
-    def _get_webdriver(self):
-        options = Options()
-        options.add_argument("-headless")
-
-        if platform.system() == "Linux":
-            options.binary_location = "/usr/bin/firefox"
-            driver = webdriver.Firefox(service=Service("/usr/local/bin/geckodriver"), options=options)
-        else:
-            driver = webdriver.Firefox(options=options)
-
-        driver.set_page_load_timeout(30)
-        return driver
-
-    def _get_iframe_carrier_from_session(self):
-        with self._get_webdriver() as driver:
-            driver.get("https://www.investing.com/indices/omx-stockholm-30-chart")
-            html = driver.page_source
-            soup = BeautifulSoup(html, "html.parser")
-
-            iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
-            if iframe is None:
-                log.warning("No iframe found")
-                return
-
-            iframe_url = iframe.get("src")  # type: ignore
-            if iframe_url is None:
-                log.warning("No iframe URL found")
-                return
-
-            return iframe_url.split("carrier=")[1].split("&")[0]  # type: ignore
+        self.headers = {
+            "Sec-Ch-Ua-Platform": "macOS",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+            + "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0",
+        }
 
     def get_history(
         self,
@@ -79,19 +36,37 @@ class Investing:
             "to": int(to_datetime.timestamp()),
         }
 
-        url = (
-            f"https://tvc4.investing.com/{self.iframe_carrier}"
-            + f"/{int(to_datetime.timestamp())}/1/1/2/history?"
-            + "&".join([f"{key}={value}" for key, value in arguments.items()])
-        )
-
         try:
-            with self._get_webdriver() as driver:
-                driver.get(url)
-                html = driver.page_source
-                soup = BeautifulSoup(html, "html.parser")
-                data = soup.find("body").text  # type: ignore
-                df = pd.read_json(StringIO(data))
+            with requests.Session() as session:
+                response = session.get("https://www.investing.com/indices/omx-stockholm-30-chart")
+                soup = BeautifulSoup(response.text, "html.parser")
+
+                print(soup.prettify())
+
+                iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
+                if iframe is None:
+                    log.warning("No iframe found")
+                    return pd.DataFrame()
+
+                iframe_url = iframe.get("src")  # type: ignore
+                if iframe_url is None:
+                    log.warning("No iframe URL found")
+                    return pd.DataFrame()
+
+                iframe_carrier = iframe_url.split("carrier=")[1].split("&")[0]  # type: ignore
+
+                print(iframe_url)
+
+                url = (
+                    f"https://tvc4.investing.com/{iframe_carrier}"
+                    + f"/{int(to_datetime.timestamp())}/1/1/2/history?"
+                    + "&".join([f"{key}={value}" for key, value in arguments.items()])
+                )
+                print(url)
+
+                response = session.get(url, headers=self.headers)
+
+                df = pd.read_json(StringIO(response.text))
 
         except ValueError:
             log.exception("Failed to read JSON from response", exc_info=True)

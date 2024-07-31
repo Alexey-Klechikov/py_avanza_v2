@@ -15,7 +15,6 @@ telegram-send = "==0.34"
 python-telegram-bot = "==13.13"
 workalendar = "*"
 pandas-market-calendars = "*"
-selenium = "*"
 beautifulsoup4 = "*"
 
 [dev-packages]
