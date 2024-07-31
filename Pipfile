@@ -18,6 +18,7 @@ pandas-market-calendars = "*"
 beautifulsoup4 = "*"
 requests-html = "*"
 lxml-html-clean = "*"
+cloudscraper = "*"
 
 [dev-packages]
 black = "*"

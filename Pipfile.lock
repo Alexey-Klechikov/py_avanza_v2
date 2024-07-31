@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3730d15dba1ee5477829414be89ced46a4d6db0ab23901ed746fecbacbe0c366"
+            "sha256": "83c9ee6fd0e9dd295a88344ed655cdcbac637f206d27308956a66fbd8b348b1a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -182,6 +182,14 @@
             ],
             "markers": "python_full_version >= '3.7.0'",
             "version": "==3.3.2"
+        },
+        "cloudscraper": {
+            "hashes": [
+                "sha256:429c6e8aa6916d5bad5c8a5eac50f3ea53c9ac22616f6cb21b18dcc71517d0d3",
+                "sha256:76f50ca529ed2279e220837befdec892626f9511708e200d48d5bb76ded679b0"
+            ],
+            "index": "pypi",
+            "version": "==1.2.71"
         },
         "colorama": {
             "hashes": [
@@ -1168,6 +1176,14 @@
             "index": "pypi",
             "markers": "python_full_version >= '3.6.0'",
             "version": "==0.10.0"
+        },
+        "requests-toolbelt": {
+            "hashes": [
+                "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6",
+                "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==1.0.0"
         },
         "setuptools": {
             "hashes": [

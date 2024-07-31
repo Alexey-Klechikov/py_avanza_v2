@@ -2,9 +2,9 @@ from datetime import datetime
 from functools import cache
 from io import StringIO
 
+import cloudscraper
 import pandas as pd
 from bs4 import BeautifulSoup
-from requests_html import HTMLSession
 
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
@@ -52,13 +52,15 @@ class Investing:
         }
 
         try:
-            with HTMLSession() as session:
-                response = session.get(
+            with cloudscraper.create_scraper() as scraper:
+                response = scraper.get(
                     "https://www.investing.com/indices/omx-stockholm-30-chart",
-                    headers=self.headers,
-                    proxies=self.proxies,
+                    # headers=self.headers,
+                    # proxies=self.proxies,
                 )
                 soup = BeautifulSoup(response.text, "html.parser")
+
+                print(soup.prettify())
 
                 iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
                 if iframe is None:
@@ -80,7 +82,7 @@ class Investing:
                     + "&".join([f"{key}={value}" for key, value in arguments.items()])
                 )
 
-                response = session.get(url, headers=self.headers, proxies=self.proxies)
+                response = scraper.get(url)  # , headers=self.headers, proxies=self.proxies)
 
                 soup = BeautifulSoup(response.text, "html.parser")
                 print(soup.prettify())
