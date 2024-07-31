@@ -54,7 +54,7 @@ class Investing:
 
         try:
             with HTMLSession() as session:
-                response = cloudscraper.create_scraper(sess=session).get(
+                response = cloudscraper.create_scraper(session).get(
                     "https://www.investing.com/indices/omx-stockholm-30-chart",
                     headers=self.headers,
                     # proxies=self.proxies,
