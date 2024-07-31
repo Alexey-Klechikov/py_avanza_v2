@@ -117,6 +117,6 @@ if __name__ == "__main__":
     except Exception as e:
         telegram = Telegram()
         telegram.messages = ["Error in task_eod.py"]
-        telegram.send_message()
+        # telegram.send_message()
 
         raise e

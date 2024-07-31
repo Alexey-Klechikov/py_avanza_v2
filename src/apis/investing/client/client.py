@@ -18,10 +18,25 @@ class Investing:
     def __init__(self, ticker_investing: str):
         self.ticker_investing = ticker_investing
         self.headers = {
+            "Accept": "*/*",
+            "Accept-Language": "en-GB,en;q=0.9,en-US;q=0.8,sv;q=0.7",
+            "Cache-Control": "no-cache",
+            "Content-Type": "text/plain",
+            "Origin": "https://tvc-invdn-cf-com.investing.com",
+            "Pragma": "no-cache",
+            "Priority": "u=1, i",
+            "Referer": "https://tvc-invdn-cf-com.investing.com/",
+            "Sec-Ch-Ua": '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+            "Sec-Ch-Ua-Mobile": "?0",
             "Sec-Ch-Ua-Platform": "macOS",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
             + "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0",
         }
+
+        self.proxies = {protocol: "http://13.83.94.137:3128" for protocol in ["http", "https"]}
 
     def get_history(
         self,
@@ -38,10 +53,13 @@ class Investing:
 
         try:
             with requests.Session() as session:
-                response = session.get("https://www.investing.com/indices/omx-stockholm-30-chart")
+                response = session.get(
+                    "https://www.investing.com/indices/omx-stockholm-30-chart",
+                    headers=self.headers,
+                    proxies=self.proxies,
+                    # verify=False,
+                )
                 soup = BeautifulSoup(response.text, "html.parser")
-
-                print(soup.prettify())
 
                 iframe = soup.find("iframe", {"data-test": "tvc-chart-iframe"})
                 if iframe is None:
@@ -62,9 +80,11 @@ class Investing:
                     + f"/{int(to_datetime.timestamp())}/1/1/2/history?"
                     + "&".join([f"{key}={value}" for key, value in arguments.items()])
                 )
-                print(url)
 
-                response = session.get(url, headers=self.headers)
+                response = session.get(url, headers=self.headers, proxies=self.proxies)
+
+                soup = BeautifulSoup(response.text, "html.parser")
+                print(soup.prettify())
 
                 df = pd.read_json(StringIO(response.text))
 
