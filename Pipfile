@@ -16,6 +16,8 @@ python-telegram-bot = "==13.13"
 workalendar = "*"
 pandas-market-calendars = "*"
 beautifulsoup4 = "*"
+requests-html = "*"
+lxml-html-clean = "*"
 
 [dev-packages]
 black = "*"

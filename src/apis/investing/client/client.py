@@ -3,8 +3,8 @@ from functools import cache
 from io import StringIO
 
 import pandas as pd
-import requests
 from bs4 import BeautifulSoup
+from requests_html import HTMLSession
 
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
@@ -52,12 +52,11 @@ class Investing:
         }
 
         try:
-            with requests.Session() as session:
+            with HTMLSession() as session:
                 response = session.get(
                     "https://www.investing.com/indices/omx-stockholm-30-chart",
                     headers=self.headers,
                     proxies=self.proxies,
-                    # verify=False,
                 )
                 soup = BeautifulSoup(response.text, "html.parser")
 
