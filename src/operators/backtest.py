@@ -183,21 +183,24 @@ def backtest(
 
     if indicators_filter:
         strategies = [
-            strategy
-            for strategy in strategies
-            if any(indicator in strategy.name for indicator in indicators_filter)  # or "Original" in strategy.name
+            strategy for strategy in strategies if any(indicator in strategy.name for indicator in indicators_filter)
         ]
 
     for i, strategy in enumerate(strategies):
-        if BACKTEST_LOG_INDIVIDUAL_TRADES:
-            log.info(f"Strategy {i + 1}/{len(strategies)}: {strategy.name}")
-
         add_signals(data, strategy)
 
-        if plot:
-            plot_indicators(data, strategy)
+        log.debug(f"Strategy {i + 1}/{len(strategies)}: {strategy.name} ({round(strategy.counter.total_profit)})")
 
-    strategies.sort(key=lambda x: x.counter.total_profit, reverse=True)
+        if not plot:
+            continue
+
+        plot_indicators(data, strategy)
+
+    strategies = [strategy for strategy in strategies if strategy.counter.total_profit > 0]
+    strategies.sort(
+        key=lambda x: x.counter.total_profit * x.counter.profitable_trades / x.counter.total_trades,
+        reverse=True,
+    )
 
     print_strategies_performance(strategies)
 

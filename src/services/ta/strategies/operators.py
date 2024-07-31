@@ -153,14 +153,18 @@ def compose_strategies_list(
 
 
 def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name: str):
+    rank = 1
     strategies_for_file = []
-    for i, strategy in enumerate(strategies):
-        if i >= 100 or strategy.counter.total_profit <= 0:
+    for strategy in strategies:
+        if rank > 100 or strategy.counter.total_profit <= 0:
             break
+
+        if "Original" in strategy.name:
+            continue
 
         strategies_for_file.append(
             {
-                "rank": i + 1,
+                "rank": rank,
                 "name": strategy.name,
                 "total_trades": strategy.counter.total_trades,
                 "total_profit": round(strategy.counter.total_profit, 2),
@@ -172,14 +176,13 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
             },
         )
 
+        rank += 1
+
     json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=4)
 
 
 def get_top_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
-    top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:10]
-    top_profitability = max([i["profitable_trades_share"] for i in top_strategies])
-    top_strategy = [i for i in top_strategies if i["profitable_trades_share"] == top_profitability][0]
-
+    top_strategy = json.load(open(_get_file_path(strategies_file_name)))[0]
     strategy_indicators = list(tuple(indicator.split("-")) for indicator in top_strategy["name"].split(" | "))
 
     return Strategy(name=top_strategy["name"], selected_indicators=strategy_indicators, all_indicators=indicators)

@@ -16,7 +16,7 @@ log = get_logger()
 
 
 def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
-    resolution = "5m"
+    resolution = "2m"
     period_days = 60
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
@@ -68,7 +68,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         plot=False,
     )
 
-    resolution = "5m"
+    resolution = "2m"
     period_days = 30
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
@@ -89,8 +89,8 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
 
 
 def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]]):
-    resolution = "5m"
-    period_days = 3
+    resolution = "2m"
+    period_days = 5
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
     data = data.loc[
@@ -109,7 +109,7 @@ def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]
 
 
 def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]]):
-    resolution = "5m"
+    resolution = "2m"
     period_days = 60
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         ("Momentum", "CCI"),  # buy / sell
         ("Momentum", "RVGI"),  # buy / sell
         ("Momentum", "STOCH"),  # buy / sell
-        ("Cycles", "EBSW"),  # buy / sell
+        # ("Cycles", "EBSW"),  # buy / sell   # TODO: fix with 2 min data
         ("Volatility", "STARC"),  # buy / sell
         ("Volatility", "MASSI"),  # buy / sell
         ("Volatility", "BBANDS"),  # buy / sell
@@ -161,6 +161,6 @@ if __name__ == "__main__":
         ("Volume", "KVO"),  # buy / sell
     ]
 
-    # run_full_strategies_generation(indicators_selector)
+    run_full_strategies_generation(indicators_selector)
     # run_test_for_selected_indicators(indicators_selector)
     run_plotting_for_active_strategies(indicators_selector)

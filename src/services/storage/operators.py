@@ -46,7 +46,7 @@ class Storage:
                 combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()].set_index("Datetime").sort_index()
             )
 
-        combined_data = combined_data[DATA_COLUMNS]
+        combined_data = combined_data[DATA_COLUMNS].dropna(how="any")
 
         with open(self.path, "wb") as f:
             pickle.dump(combined_data, f)
