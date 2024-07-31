@@ -151,7 +151,7 @@ class Telegram(TelegramBase):
 
 # MAIN
 def trade(dry_run: bool) -> None:
-    log.info("Started trading strategies on OMX30 | 5m")
+    log.info("Started trading strategies on OMX30 | 5m" + (" | DRY RUN" if dry_run else ""))
 
     data = Data()
     data.get()

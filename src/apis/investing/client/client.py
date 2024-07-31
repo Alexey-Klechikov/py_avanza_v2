@@ -11,6 +11,7 @@ rm geckodriver-v0.34.0-linux64.tar.gz
 apt  install firefox
 """
 
+import platform
 from datetime import datetime
 from functools import cache
 from io import StringIO
@@ -18,6 +19,8 @@ from io import StringIO
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 
 from apis.investing.client.models import Resolution
 from utils.logger import get_logger
@@ -32,8 +35,19 @@ class Investing:
         self.ticker_investing = ticker_investing
         self.iframe_carrier = self._get_iframe_carrier_from_session()
 
+    def _get_webdriver(self):
+        if platform.system() == "Linux":
+            options = Options()
+            options.binary_location = "/usr/bin/firefox"
+            return webdriver.Firefox(service=Service("/usr/local/bin/geckodriver"), options=options)
+
+        return webdriver.Firefox()
+
     def _get_iframe_carrier_from_session(self):
-        with webdriver.Firefox() as driver:
+        options = webdriver.FirefoxOptions()
+        options.binary_location = "/usr/bin/firefox"
+
+        with self._get_webdriver() as driver:
             driver.get("https://www.investing.com/indices/omx-stockholm-30-chart")
             html = driver.page_source
             soup = BeautifulSoup(html, "html.parser")
@@ -70,7 +84,7 @@ class Investing:
         )
 
         try:
-            with webdriver.Firefox() as driver:
+            with self._get_webdriver() as driver:
                 driver.get(url)
                 html = driver.page_source
                 soup = BeautifulSoup(html, "html.parser")
