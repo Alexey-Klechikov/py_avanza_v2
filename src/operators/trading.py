@@ -11,7 +11,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from data.settings import BUDGET, OMX30_AVA, OMX30_YAHOO
+from data.settings import BUDGET, OMX30_AVA, OMX30_YAHOO, TRADING_RESOLUTION
 from services.storage import Storage
 from services.ta import get_indicators, get_strategy
 from utils.logger import get_logger
@@ -36,23 +36,23 @@ class Data:
         self.past_orders = []
 
     def get(self):
-        storage = Storage(OMX30_YAHOO, resolution=Interval.FIVE_MINUTES.value.raw)
+        storage = Storage(OMX30_YAHOO, resolution=TRADING_RESOLUTION)
 
         data = storage.read()
         data_size_before = data.shape[0]
 
-        data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, Resolution.FIVE_MINUTES)
+        data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, Resolution.TWO_MINUTES)
         storage.write(data_ava)
 
         if data_ava.empty:
-            data_yahoo = Ticker(OMX30_YAHOO).get_history(period=Period.ONE_DAY, interval=Interval.FIVE_MINUTES)
+            data_yahoo = Ticker(OMX30_YAHOO).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
             storage.write(data_yahoo)
 
         data = storage.read()
         data_size_after = data.shape[0]
 
         self.data = data.loc[
-            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=5)
+            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=3)
         ]
         self.is_new = data_size_before != data_size_after
         self.latest_candle_timedelta_min = (datetime.now() - self.data.index[-1]).seconds // 60
@@ -151,7 +151,7 @@ class Telegram(TelegramBase):
 
 # MAIN
 def trade(dry_run: bool) -> None:
-    log.info("Started trading strategies on OMX30 | 5m" + (" | DRY RUN" if dry_run else ""))
+    log.info(f"Started trading strategies on OMX30 | {TRADING_RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
 
     data = Data()
     data.get()
@@ -189,7 +189,7 @@ def trade(dry_run: bool) -> None:
         ):
             # TRADE
             data.is_new = False
-        elif datetime.now().minute % 5 == 4:
+        elif datetime.now().minute % 2 == 1:
             sleep(62 - datetime.now().second)
             data.get()
             data.is_new = True

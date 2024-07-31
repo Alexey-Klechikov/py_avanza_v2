@@ -10,7 +10,7 @@ from apis.investing.operators.ticker import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
-from data.settings import OMX30_AVA, OMX30_INVESTING, OMX30_YAHOO
+from data.settings import OMX30_AVA, OMX30_INVESTING, OMX30_YAHOO, TRADING_RESOLUTION
 from operators import (
     backtest,
     get_exchange_working_hours,
@@ -56,12 +56,11 @@ def cache_omx30():
 
 
 def backtest_strategies():
-    resolution = "2m"
     period_days = 30
 
-    log.warning(f"TASK 2: Backtest strategies on OMX30 | {resolution} | {period_days} days")
+    log.warning(f"TASK 2: Backtest strategies on OMX30 | {TRADING_RESOLUTION} | {period_days} days")
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX30_YAHOO, resolution=TRADING_RESOLUTION).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]

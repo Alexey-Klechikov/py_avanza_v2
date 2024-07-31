@@ -5,6 +5,8 @@ OMX30_YAHOO: str = "^OMX"
 OMX30_INVESTING: str = "25685"
 CERTIFICATE_MULTIPLIER: int = 20
 
+TRADING_RESOLUTION = "2m"
+
 BUDGET = 2000
 
 DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
