@@ -149,6 +149,56 @@ class Telegram(TelegramBase):
         super().send_message()
 
 
+def _sell_instrument(signal: Signal, orders: Orders, portfolio: Portfolio) -> None:
+    for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
+        if signal != tested_signal:
+            continue
+
+        instrument_to_sell = getattr(portfolio.acquired_instrument, instrument_direction_to_sell)
+        if not instrument_to_sell:
+            continue
+
+        orders.place(
+            order_book_id=instrument_to_sell.instrument.id,
+            instrument_name=instrument_to_sell.instrument.name,
+            order_type=OrderType.SELL,
+            price=instrument_to_sell.quote.buy,
+            volume=int(instrument_to_sell.volume),
+        )
+
+
+def _buy_instrument(signal: Signal, orders: Orders, watchlist: Watchlists, portfolio: Portfolio) -> None:
+    for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
+        if signal != tested_signal:
+            continue
+
+        instrument_acquired = getattr(portfolio.acquired_instrument, instrument_direction_to_buy)
+        if instrument_acquired:
+            continue
+
+        watchlist.refresh_watchlists()
+        instrument_preferred = getattr(watchlist.preferred_instrument, instrument_direction_to_buy)
+
+        orders.place(
+            order_book_id=instrument_preferred.id,
+            instrument_name=instrument_preferred.name,
+            order_type=OrderType.BUY,
+            price=instrument_preferred.sell,
+            volume=BUDGET // instrument_preferred.sell,
+        )
+
+
+def _exit_positions(orders: Orders, portfolio: Portfolio) -> None:
+    for position in portfolio.positions:
+        orders.place(
+            order_book_id=position.instrument.id,
+            instrument_name=position.instrument.name,
+            order_type=OrderType.SELL,
+            price=position.quote.buy,
+            volume=int(position.volume),
+        )
+
+
 # MAIN
 def trade(dry_run: bool) -> None:
     log.info(f"Started trading strategies on OMX30 | {TRADING_RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
@@ -213,56 +263,22 @@ def trade(dry_run: bool) -> None:
         orders.delete_all()
 
         if signal == Signal.EXIT:
-            for position in portfolio.positions:
-                orders.place(
-                    order_book_id=position.instrument.id,
-                    instrument_name=position.instrument.name,
-                    order_type=OrderType.SELL,
-                    price=position.quote.buy,
-                    volume=int(position.volume),
-                )
+            _exit_positions(orders, portfolio)
             continue
 
         portfolio.detect_acquired_instruments()
 
-        if dry_run:
-            log.warning("Dry run - no trading")
+        if any(
+            [
+                signal == Signal.LONG and portfolio.acquired_instrument.BULL,
+                signal == Signal.SHORT and portfolio.acquired_instrument.BEAR,
+                dry_run,
+            ],
+        ):
             continue
 
-        for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
-            if signal != tested_signal:
-                continue
-
-            instrument_to_sell = getattr(portfolio.acquired_instrument, instrument_direction_to_sell)
-            if not instrument_to_sell:
-                continue
-
-            orders.place(
-                order_book_id=instrument_to_sell.instrument.id,
-                instrument_name=instrument_to_sell.instrument.name,
-                order_type=OrderType.SELL,
-                price=instrument_to_sell.quote.buy,
-                volume=int(instrument_to_sell.volume),
-            )
-
-        for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
-            if signal != tested_signal:
-                continue
-
-            instrument_acquired = getattr(portfolio.acquired_instrument, instrument_direction_to_buy)
-            if instrument_acquired:
-                continue
-
-            watchlist.refresh_watchlists()
-            instrument_preferred = getattr(watchlist.preferred_instrument, instrument_direction_to_buy)
-
-            orders.place(
-                order_book_id=instrument_preferred.id,
-                instrument_name=instrument_preferred.name,
-                order_type=OrderType.BUY,
-                price=instrument_preferred.sell,
-                volume=BUDGET // instrument_preferred.sell,
-            )
+        _sell_instrument(signal, orders, portfolio)
+        _buy_instrument(signal, orders, watchlist, portfolio)
 
         portfolio.reload_positions()
 
