@@ -19,7 +19,7 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     trend.add_trend_intensity_index(length_sma=20, length_signal=5)  # TII
     trend.add_average_directional_movement(length=14, lensig=14, mamode="rma")  # ADX
     trend.add_parabolic_stop_and_reverse(acceleration=0.01, maximum=0.2)  # PSAR
-    trend.add_choppiness_index(length=14, length_atr=2, scalar=100.0)  # CHOP
+    trend.add_choppiness_index(length=14, length_atr=2, scalar=80.0)  # CHOP
 
     overlap = Overlap(data)
     overlap.add_gann_high_low_activator(length_high=13, length_low=21, mamode="dema")  # GHLA
@@ -34,7 +34,7 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     momentum.add_stochastic_oscillator(k=14, d=3, smooth_k=3, mamode="dema")  # STOCH
 
     cycles = Cycles(data)
-    cycles.add_even_better_sinewave(length=40, bars=10)  # EBSW
+    cycles.add_even_better_sinewave(length=40, bars=14)  # EBSW
 
     volatility = Volatility(data)
     volatility.add_starc_bands(length_sma=10, length_atr=15, multiplier_atr=2.0)  # STARC
@@ -46,7 +46,7 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT (needs work)
     volume.add_accumulation_distribution_oscillator(fast=6, slow=14)  # ADOSC
     volume.add_chaikin_money_flow(length=26)  # CMF
-    volume.add_klinger_volume_oscillator(fast=15, slow=40, signal=18, mamode="dema")  # KVO
+    volume.add_klinger_volume_oscillator(fast=11, slow=40, signal=18, mamode="dema")  # KVO
 
     columns_keep = set(DATA_COLUMNS)
     for category in [trend, volatility, volume, cycles, overlap, momentum]:

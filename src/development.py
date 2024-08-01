@@ -117,18 +117,19 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = "ADOSC"
+    indicator_to_test = "EBSW"
 
-    for fast, slow in [(6, i) for i in range(10, 20, 2)] + [(i, 20) for i in range(4, 14, 2)]:
-        kwargs = {"fast": fast, "slow": slow}
+    # length=40, bars=10
+    for length, bars in [(40, 14), (40, 6)] + [(i, 14) for i in range(20, 50, 5)] + [(i, 6) for i in range(20, 50, 5)]:
+        kwargs = {"length": length, "bars": bars}
 
         log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
         backtest(
             data.copy(),
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            old_strategies_file_name="strategies_dev_4_indicators.json",
-            new_strategies_file_name=f"strategies_dev_5_indicators_{indicator_to_test}_"
+            old_strategies_file_name="strategies_dev_5_indicators.json",
+            new_strategies_file_name=f"strategies_dev_6_indicators_{indicator_to_test}_"
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
             indicators_filter=[indicator_to_test],
             plot=False,
@@ -150,7 +151,7 @@ if __name__ == "__main__":
         ("Momentum", "CCI"),  # buy / sell
         ("Momentum", "RVGI"),  # buy / sell
         ("Momentum", "STOCH"),  # buy / sell
-        # ("Cycles", "EBSW"),  # buy / sell   # TODO: fix with 2 min data
+        ("Cycles", "EBSW"),  # buy / sell
         ("Volatility", "STARC"),  # buy / sell
         ("Volatility", "MASSI"),  # buy / sell
         ("Volatility", "BBANDS"),  # buy / sell
@@ -161,6 +162,6 @@ if __name__ == "__main__":
         ("Volume", "KVO"),  # buy / sell
     ]
 
-    run_full_strategies_generation(indicators_selector)
+    # run_full_strategies_generation(indicators_selector)
     # run_test_for_selected_indicators(indicators_selector)
     run_plotting_for_active_strategies(indicators_selector)

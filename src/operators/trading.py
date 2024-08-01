@@ -92,14 +92,14 @@ class Data:
         signal = None
 
         for i in range(2, 5):
-            if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["EXIT"]:
+            if self.data.iloc[-i]["EXIT"]:
+                signal = Signal.EXIT
+
+            if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"]:
                 signal = Signal.LONG
 
-            elif self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["EXIT"]:
+            elif self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["LONG"]:
                 signal = Signal.SHORT
-
-            elif self.data.iloc[-i]["EXIT"]:
-                signal = Signal.EXIT
 
             if signal:
                 (log.info if i == 2 else log.debug)(
