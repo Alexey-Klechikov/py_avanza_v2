@@ -178,7 +178,7 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
 
         rank += 1
 
-    json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=2)
+    json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=2, sort_keys=True)
 
 
 def get_top_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
