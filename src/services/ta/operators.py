@@ -13,7 +13,7 @@ log = get_logger()
 
 
 def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
-    indicators = dict()
+    indicators_mapping = dict()
 
     trend = Trend(data)
     trend.add_trend_intensity_index(length_sma=20, length_signal=5)  # TII
@@ -46,36 +46,36 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT (needs work)
     volume.add_accumulation_distribution_oscillator(fast=6, slow=14)  # ADOSC
     volume.add_chaikin_money_flow(length=26)  # CMF
-    volume.add_klinger_volume_oscillator(fast=11, slow=40, signal=18, mamode="dema")  # KVO
+    volume.add_klinger_volume_oscillator(fast=11, slow=35, signal=18, mamode="ema")  # KVO
 
     columns_keep = set(DATA_COLUMNS)
     for category in [trend, volatility, volume, cycles, overlap, momentum]:
         for indicator in category.indicators.values():
             columns_keep |= set(indicator.columns)
 
-        indicators[category.__class__.__name__] = category.indicators
+        indicators_mapping[category.__class__.__name__] = category.indicators
 
     data.drop(columns=list(set(data.columns) - columns_keep), inplace=True)
 
-    return indicators
+    return indicators_mapping
 
 
 def get_strategies(
     compose_strategies_list_method: ComposeStrategiesListMethod,
-    indicators: Dict[str, Dict[str, Indicator]],
+    indicators_mapping: Dict[str, Dict[str, Indicator]],
     indicators_selector: List[Tuple[str, str]] = Field(default_factory=list),
     old_strategies_file_name: Optional[str] = None,
 ) -> List[Strategy]:
     return compose_strategies_list(
         compose_strategies_list_method,
-        indicators,
+        indicators_mapping,
         indicators_selector,
         old_strategies_file_name,
     )
 
 
-def get_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
-    return get_top_strategy(indicators, strategies_file_name)
+def get_strategy(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
+    return get_top_strategy(indicators_mapping, strategies_file_name)
 
 
 def save_strategies(strategies: List[Strategy], new_strategies_file_name: Optional[str]) -> None:

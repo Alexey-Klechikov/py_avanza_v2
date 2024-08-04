@@ -22,7 +22,7 @@ def _get_file_path(filename: Optional[str]) -> str:
 
 def _generate_strategies(
     indicators_selector: List[Tuple[str, str]],
-    indicators: Dict[str, Dict[str, Indicator]],
+    indicators_mapping: Dict[str, Dict[str, Indicator]],
 ) -> List[Strategy]:
     strategies: List[Strategy] = []
     for i1, indicator1 in enumerate(indicators_selector):
@@ -30,9 +30,8 @@ def _generate_strategies(
             strategies.append(
                 deepcopy(
                     Strategy(
-                        name=" | ".join([f"{category}-{indicator}" for category, indicator in (indicator1,)]),
                         selected_indicators=[indicator1],
-                        all_indicators=indicators,
+                        indicators_mapping=indicators_mapping,
                     ),
                 ),
             )
@@ -42,11 +41,8 @@ def _generate_strategies(
                 strategies.append(
                     deepcopy(
                         Strategy(
-                            name=" | ".join(
-                                [f"{category}-{indicator}" for category, indicator in (indicator1, indicator2)],
-                            ),
                             selected_indicators=[indicator1, indicator2],
-                            all_indicators=indicators,
+                            indicators_mapping=indicators_mapping,
                         ),
                     ),
                 )
@@ -55,14 +51,8 @@ def _generate_strategies(
                 strategies.append(
                     deepcopy(
                         Strategy(
-                            name=" | ".join(
-                                [
-                                    f"{category}-{indicator}"
-                                    for category, indicator in (indicator1, indicator2, indicator3)
-                                ],
-                            ),
                             selected_indicators=[indicator1, indicator2, indicator3],
-                            all_indicators=indicators,
+                            indicators_mapping=indicators_mapping,
                         ),
                     ),
                 )
@@ -72,7 +62,7 @@ def _generate_strategies(
 
 def _extend_strategies(
     indicators_selector: List[Tuple[str, str]],
-    indicators: Dict[str, Dict[str, Indicator]],
+    indicators_mapping: Dict[str, Dict[str, Indicator]],
     old_strategies_file_path: str,
 ) -> List[Strategy]:
     extended_strategies: List[Strategy] = []
@@ -85,9 +75,9 @@ def _extend_strategies(
         extended_strategies.append(
             deepcopy(
                 Strategy(
-                    name=f'{strategy["name"]} | Original',
+                    original=True,
                     selected_indicators=list(strategy_indicators),
-                    all_indicators=indicators,
+                    indicators_mapping=indicators_mapping,
                 ),
             ),
         )
@@ -104,9 +94,8 @@ def _extend_strategies(
             extended_strategies.append(
                 deepcopy(
                     Strategy(
-                        name=f"{strategy['name']} | {category}-{indicator}",
                         selected_indicators=list(strategy_indicators) + [(category, indicator)],
-                        all_indicators=indicators,
+                        indicators_mapping=indicators_mapping,
                     ),
                 ),
             )
@@ -114,7 +103,7 @@ def _extend_strategies(
     return extended_strategies
 
 
-def _read_strategies(indicators: Dict[str, Dict[str, Indicator]], old_strategies_file_path: str):
+def _read_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], old_strategies_file_path: str):
     old_strategies: List[Strategy] = []
     for strategy in json.load(open(old_strategies_file_path)):
         if "Original" in strategy["name"]:
@@ -124,7 +113,7 @@ def _read_strategies(indicators: Dict[str, Dict[str, Indicator]], old_strategies
 
         old_strategies.append(
             deepcopy(
-                Strategy(name=strategy["name"], selected_indicators=strategy_indicators, all_indicators=indicators),
+                Strategy(selected_indicators=strategy_indicators, indicators_mapping=indicators_mapping),
             ),
         )
 
@@ -133,18 +122,18 @@ def _read_strategies(indicators: Dict[str, Dict[str, Indicator]], old_strategies
 
 def compose_strategies_list(
     method: ComposeStrategiesListMethod,
-    indicators: Dict[str, Dict[str, Indicator]],
+    indicators_mapping: Dict[str, Dict[str, Indicator]],
     indicators_selector: List[Tuple[str, str]],
     old_strategies_file_name: Optional[str] = None,
 ) -> List[Strategy]:
     if method == ComposeStrategiesListMethod.GENERATE and len(indicators_selector) > 0:
-        strategies = _generate_strategies(indicators_selector, indicators)
+        strategies = _generate_strategies(indicators_selector, indicators_mapping)
 
     elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_name:
-        strategies = _extend_strategies(indicators_selector, indicators, _get_file_path(old_strategies_file_name))
+        strategies = _extend_strategies(indicators_selector, indicators_mapping, _get_file_path(old_strategies_file_name))
 
     elif method == ComposeStrategiesListMethod.READ and old_strategies_file_name:
-        strategies = _read_strategies(indicators, _get_file_path(old_strategies_file_name))
+        strategies = _read_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))
 
     else:
         raise ValueError("Can not compose list of strategies - invalid method or missing arguments.")
@@ -181,8 +170,8 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
     json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=2, sort_keys=True)
 
 
-def get_top_strategy(indicators: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
+def get_top_strategy(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
     top_strategy = json.load(open(_get_file_path(strategies_file_name)))[0]
     strategy_indicators = list(tuple(indicator.split("-")) for indicator in top_strategy["name"].split(" | "))
 
-    return Strategy(name=top_strategy["name"], selected_indicators=strategy_indicators, all_indicators=indicators)
+    return Strategy(selected_indicators=strategy_indicators, indicators_mapping=indicators_mapping)

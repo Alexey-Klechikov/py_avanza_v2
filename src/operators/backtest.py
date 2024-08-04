@@ -172,11 +172,11 @@ def backtest(
     plot: bool = False,
     **kwargs,
 ) -> None:
-    indicators = get_indicators(data, **kwargs)
+    indicators_mapping = get_indicators(data, **kwargs)
 
     strategies = get_strategies(
         compose_strategies_list_method,
-        indicators,
+        indicators_mapping,
         indicators_selector,
         old_strategies_file_name,
     )

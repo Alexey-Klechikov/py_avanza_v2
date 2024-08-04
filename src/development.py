@@ -117,11 +117,18 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = "EBSW"
+    indicator_to_test = "KVO"
 
-    # length=40, bars=10
-    for length, bars in [(40, 14), (40, 6)] + [(i, 14) for i in range(20, 50, 5)] + [(i, 6) for i in range(20, 50, 5)]:
-        kwargs = {"length": length, "bars": bars}
+    # fast: int, slow: int, signal: int
+    for fast, slow, signal in (
+        [
+            # (11, 40, 18),
+        ]
+        + [(i, 40, 18) for i in range(7, 15, 2)]
+        + [(11, i, 18) for i in range(20, 50, 5)]
+        + [(11, 40, i) for i in range(20, 50, 5)]
+    ):
+        kwargs = {"fast": fast, "slow": slow, "signal": signal}
 
         log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
         backtest(
@@ -162,6 +169,6 @@ if __name__ == "__main__":
         ("Volume", "KVO"),  # buy / sell
     ]
 
-    # run_full_strategies_generation(indicators_selector)
+    run_full_strategies_generation(indicators_selector)
     # run_test_for_selected_indicators(indicators_selector)
-    run_plotting_for_active_strategies(indicators_selector)
+    # run_plotting_for_active_strategies(indicators_selector)

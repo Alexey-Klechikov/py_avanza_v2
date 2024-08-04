@@ -58,8 +58,8 @@ class Data:
         self.latest_candle_timedelta_min = (datetime.now() - self.data.index[-1]).seconds // 60
 
     def add_signals(self):
-        indicators = get_indicators(self.data)
-        self.strategy = get_strategy(indicators, "strategies.json")
+        indicators_mapping = get_indicators(self.data)
+        self.strategy = get_strategy(indicators_mapping, "strategies.json")
 
         self.data["LONG"] = False
         self.data["SHORT"] = False

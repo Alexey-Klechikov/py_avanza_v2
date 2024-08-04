@@ -24,17 +24,17 @@ class Counter(BaseModel):
 class Strategy:
     def __init__(
         self,
-        name: str,
-        all_indicators: Dict[str, Dict[str, Indicator]],
+        indicators_mapping: Dict[str, Dict[str, Indicator]],
         selected_indicators: List[Tuple[str, str]],
+        original: bool = False,
     ):
-        self.name = name
         self.counter = Counter()
         self.selected_indicators = selected_indicators
-
         self.indicators_logic: List[Indicator] = []
+
+        components = []
         for category, name in selected_indicators:
-            indicator = all_indicators.get(category, {}).get(name)
+            indicator = indicators_mapping.get(category, {}).get(name)
             if not indicator:
                 log.warning(f"Indicator {name} from category {category} does not exist.")
                 continue
@@ -43,4 +43,7 @@ class Strategy:
                 log.warning(f"Indicator {name}-{category} does not have any plots.")
                 continue
 
+            components.append(f"{category}-{name}")
             self.indicators_logic.append(indicator)
+
+        self.name = " | ".join(sorted(components)) + (" | Original" if original else "")
