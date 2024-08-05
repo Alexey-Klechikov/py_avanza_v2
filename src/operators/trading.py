@@ -138,15 +138,14 @@ class Telegram(TelegramBase):
         if portfolio.total_value != portfolio.buying_power:
             self.messages.append("> Order is pending in the end")
 
-        self.final_balance = portfolio.buying_power
-        self.total_value = portfolio.total_value
+        self.final_balance = portfolio.total_value
 
     def send_message(self):
         self.messages = [
             f"Finished trading with budget: {BUDGET}",
             f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
             f"[{round(100 * (self.final_balance - self.starting_balance)/BUDGET)} %]",
-            f"Total value: {round(self.total_value)}",
+            f"Total value: {round(self.final_balance)}",
         ] + self.messages
 
         super().send_message()
