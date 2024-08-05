@@ -129,9 +129,9 @@ class Watchlists:
                 and hit.price.spread < 1.5
                 and hit.price.last
                 and hit.price.last > 1
-                and hit.price.last < 100
+                and hit.price.last < 200
             ):
-                log.debug(f"> Add orderbook {hit.title} [Spread {hit.price.spread}%]")
+                log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
 
                 get_client().add_to_watchlist(hit.order_book_id, watchlist.id)
 
