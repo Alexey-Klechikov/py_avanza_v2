@@ -33,7 +33,7 @@ class Data:
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.latest_candle_timedelta_min = 0
-        self.past_orders = []
+        self.strategy = None
 
     def get(self):
         storage = Storage(OMX30_YAHOO, resolution=TRADING_RESOLUTION)
@@ -59,7 +59,10 @@ class Data:
 
     def add_signals(self):
         indicators_mapping = get_indicators(self.data)
-        self.strategy = get_strategy(indicators_mapping, "strategies.json")
+        strategy = get_strategy(indicators_mapping, "strategies.json")
+        if not self.strategy or self.strategy.name != strategy.name:
+            self.strategy = strategy
+            log.info(f"Strategy: {self.strategy.name}")
 
         self.data["LONG"] = False
         self.data["SHORT"] = False
@@ -101,11 +104,11 @@ class Data:
             elif self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["LONG"]:
                 signal = Signal.SHORT
 
-            if signal:
-                (log.info if i == 2 else log.debug)(
-                    f"Trading signal: {signal}. Latest price: {self.data.iloc[-1]['Close']}",
-                )
-                break
+            if not signal:
+                continue
+
+            (log.info if i == 2 else log.debug)(f"Trading signal: {signal}. Latest price: {self.data.iloc[-1]['Close']}")
+            break
 
         return signal
 
@@ -149,54 +152,56 @@ class Telegram(TelegramBase):
         super().send_message()
 
 
-def _sell_instrument(signal: Signal, orders: Orders, portfolio: Portfolio) -> None:
-    for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
-        if signal != tested_signal:
-            continue
+class Trade:
+    @classmethod
+    def sell(cls, signal: Signal, orders: Orders, portfolio: Portfolio) -> None:
+        for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
+            if signal != tested_signal:
+                continue
 
-        instrument_to_sell = getattr(portfolio.acquired_instrument, instrument_direction_to_sell)
-        if not instrument_to_sell:
-            continue
+            instrument_to_sell = getattr(portfolio.acquired_instrument, instrument_direction_to_sell)
+            if not instrument_to_sell:
+                continue
 
-        orders.place(
-            order_book_id=instrument_to_sell.instrument.id,
-            instrument_name=instrument_to_sell.instrument.name,
-            order_type=OrderType.SELL,
-            price=instrument_to_sell.quote.buy,
-            volume=int(instrument_to_sell.volume),
-        )
+            orders.place(
+                order_book_id=instrument_to_sell.instrument.id,
+                instrument_name=instrument_to_sell.instrument.name,
+                order_type=OrderType.SELL,
+                price=instrument_to_sell.quote.buy,
+                volume=int(instrument_to_sell.volume),
+            )
 
+    @classmethod
+    def buy(cls, signal: Signal, orders: Orders, watchlist: Watchlists, portfolio: Portfolio) -> None:
+        for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
+            if signal != tested_signal:
+                continue
 
-def _buy_instrument(signal: Signal, orders: Orders, watchlist: Watchlists, portfolio: Portfolio) -> None:
-    for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
-        if signal != tested_signal:
-            continue
+            instrument_acquired = getattr(portfolio.acquired_instrument, instrument_direction_to_buy)
+            if instrument_acquired:
+                continue
 
-        instrument_acquired = getattr(portfolio.acquired_instrument, instrument_direction_to_buy)
-        if instrument_acquired:
-            continue
+            watchlist.refresh_watchlists()
+            instrument_preferred = getattr(watchlist.preferred_instrument, instrument_direction_to_buy)
 
-        watchlist.refresh_watchlists()
-        instrument_preferred = getattr(watchlist.preferred_instrument, instrument_direction_to_buy)
+            orders.place(
+                order_book_id=instrument_preferred.id,
+                instrument_name=instrument_preferred.name,
+                order_type=OrderType.BUY,
+                price=instrument_preferred.sell,
+                volume=BUDGET // instrument_preferred.sell,
+            )
 
-        orders.place(
-            order_book_id=instrument_preferred.id,
-            instrument_name=instrument_preferred.name,
-            order_type=OrderType.BUY,
-            price=instrument_preferred.sell,
-            volume=BUDGET // instrument_preferred.sell,
-        )
-
-
-def _exit_positions(orders: Orders, portfolio: Portfolio) -> None:
-    for position in portfolio.positions:
-        orders.place(
-            order_book_id=position.instrument.id,
-            instrument_name=position.instrument.name,
-            order_type=OrderType.SELL,
-            price=position.quote.buy,
-            volume=int(position.volume),
-        )
+    @classmethod
+    def exit(cls, orders: Orders, portfolio: Portfolio) -> None:
+        for position in portfolio.positions:
+            orders.place(
+                order_book_id=position.instrument.id,
+                instrument_name=position.instrument.name,
+                order_type=OrderType.SELL,
+                price=position.quote.buy,
+                volume=int(position.volume),
+            )
 
 
 # MAIN
@@ -263,7 +268,7 @@ def trade(dry_run: bool) -> None:
         orders.delete_all()
 
         if signal == Signal.EXIT:
-            _exit_positions(orders, portfolio)
+            Trade.exit(orders, portfolio)
             continue
 
         portfolio.detect_acquired_instruments()
@@ -277,8 +282,8 @@ def trade(dry_run: bool) -> None:
         ):
             continue
 
-        _sell_instrument(signal, orders, portfolio)
-        _buy_instrument(signal, orders, watchlist, portfolio)
+        Trade.sell(signal, orders, portfolio)
+        Trade.buy(signal, orders, watchlist, portfolio)
 
         portfolio.reload_positions()
 
@@ -286,5 +291,3 @@ def trade(dry_run: bool) -> None:
 
     telegram.log_final_balance(portfolio)
     telegram.send_message()
-
-    log.info(f"Finished trading with {data.strategy.name}")
