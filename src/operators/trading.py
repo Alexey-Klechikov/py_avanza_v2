@@ -11,7 +11,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from data.settings import BUDGET, OMX30_AVA, OMX30_YAHOO, TRADING_RESOLUTION
+from data.settings import MINIMUM_BUDGET, OMX30_AVA, OMX30_YAHOO, TRADING_RESOLUTION
 from services.storage import Storage
 from services.ta import get_indicators, get_strategy
 from utils.logger import get_logger
@@ -113,6 +113,21 @@ class Data:
         return signal
 
 
+class Budget:
+    def __init__(self):
+        self.value = MINIMUM_BUDGET
+        self.starting_balance = 0
+
+    def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
+        self.starting_balance = portfolio.buying_power
+
+        past_orders = orders.get_past()
+        for past_order in past_orders:
+            self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
+
+        self.value = max([(self.starting_balance // 500 - 4) * 500, MINIMUM_BUDGET])
+
+
 class Telegram(TelegramBase):
     def __init__(self):
         super().__init__()
@@ -121,18 +136,11 @@ class Telegram(TelegramBase):
         self.final_balance = 0
         self.total_value = 0
 
-    def log_starting_balance(self, orders: Orders, portfolio: Portfolio) -> None:
+    def log_starting_balance(self, budget: Budget, portfolio: Portfolio) -> None:
         if portfolio.total_value != portfolio.buying_power:
             self.messages.append("> Order is pending at start")
 
-        self.starting_balance = portfolio.buying_power
-
-        past_orders = orders.get_past()
-        for i, past_order in enumerate(past_orders):
-            if i == 0 and past_order.side == "SELL":
-                self.messages.append("> Carry on position from yesterday")
-
-            self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
+        self.starting_balance = budget.starting_balance
 
     def log_final_balance(self, portfolio: Portfolio) -> None:
         if portfolio.total_value != portfolio.buying_power:
@@ -140,11 +148,11 @@ class Telegram(TelegramBase):
 
         self.final_balance = portfolio.total_value
 
-    def send_message(self):
+    def send_message(self, budget: Budget) -> None:
         self.messages = [
-            f"Finished trading with budget: {BUDGET}",
+            f"Finished trading with budget: {budget.value}",
             f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
-            f"[{round(100 * (self.final_balance - self.starting_balance)/BUDGET)} %]",
+            f"[{round(100 * (self.final_balance - self.starting_balance)/budget.value)} %]",
             f"Total value: {round(self.final_balance)}",
         ] + self.messages
 
@@ -171,7 +179,7 @@ class Trade:
             )
 
     @classmethod
-    def buy(cls, signal: Signal, orders: Orders, watchlist: Watchlists, portfolio: Portfolio) -> None:
+    def buy(cls, signal: Signal, orders: Orders, watchlist: Watchlists, portfolio: Portfolio, budget: Budget) -> None:
         for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
             if signal != tested_signal:
                 continue
@@ -188,7 +196,7 @@ class Trade:
                 instrument_name=instrument_preferred.name,
                 order_type=OrderType.BUY,
                 price=instrument_preferred.sell,
-                volume=BUDGET // instrument_preferred.sell,
+                volume=budget.value // instrument_preferred.sell,
             )
 
     @classmethod
@@ -217,8 +225,11 @@ def trade(dry_run: bool) -> None:
     portfolio.reload_positions()
     portfolio.reload_balance()
 
+    budget = Budget()
+    budget.adjust(orders, portfolio)
+
     telegram = Telegram()
-    telegram.log_starting_balance(orders, portfolio)
+    telegram.log_starting_balance(budget, portfolio)
 
     watchlist = Watchlists()
     watchlist.update_watchlists()
@@ -282,11 +293,11 @@ def trade(dry_run: bool) -> None:
             continue
 
         Trade.sell(signal, orders, portfolio)
-        Trade.buy(signal, orders, watchlist, portfolio)
+        Trade.buy(signal, orders, watchlist, portfolio, budget)
 
         portfolio.reload_positions()
 
     portfolio.reload_balance()
 
     telegram.log_final_balance(portfolio)
-    telegram.send_message()
+    telegram.send_message(budget)
