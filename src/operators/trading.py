@@ -126,6 +126,8 @@ class Budget:
             self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
 
         self.value = max([(self.starting_balance // 500 - 4) * 500, MINIMUM_BUDGET])
+        if self.value != MINIMUM_BUDGET:
+            log.warning(f"Budget adjusted: {MINIMUM_BUDGET} -> {self.value}")
 
 
 class Telegram(TelegramBase):

@@ -1,3 +1,5 @@
+import json
+import os
 import warnings
 from datetime import datetime, timedelta
 from typing import List, Tuple
@@ -117,18 +119,19 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = "KVO"
+    indicator_to_test = "PVT"
+    new_strategies_file_name_prefix = f"strategies_dev_6_indicators_{indicator_to_test}_"
 
-    # fast: int, slow: int, signal: int
-    for fast, slow, signal in (
+    # drift=2, length_ema=14
+    for drift, length_ema in (
         [
-            # (11, 40, 18),
+            # (2, 14),
         ]
-        + [(i, 40, 18) for i in range(7, 15, 2)]
-        + [(11, i, 18) for i in range(20, 50, 5)]
-        + [(11, 40, i) for i in range(20, 50, 5)]
+        + [(i, 25) for i in range(4, 20, 2)]
+        + [(i, 30) for i in range(4, 20, 2)]
+        + [(i, 35) for i in range(4, 20, 2)]
     ):
-        kwargs = {"fast": fast, "slow": slow, "signal": signal}
+        kwargs = {"drift": drift, "length_ema": length_ema}
 
         log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
         backtest(
@@ -136,12 +139,31 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
             old_strategies_file_name="strategies_dev_5_indicators.json",
-            new_strategies_file_name=f"strategies_dev_6_indicators_{indicator_to_test}_"
+            new_strategies_file_name=new_strategies_file_name_prefix
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
             indicators_filter=[indicator_to_test],
             plot=False,
             **kwargs,
         )
+
+    stats = []
+    for file in os.listdir("src/data"):
+        if file.startswith(new_strategies_file_name_prefix):
+            strategies = json.load(open(f"src/data/{file}"))
+            s = strategies[0]
+            stats.append(
+                (
+                    file.replace(new_strategies_file_name_prefix, "").replace(".json", ""),
+                    round(s["profitable_trades_share"] * s["total_profit"], 2),
+                    s["profitable_trades_share"],
+                    s["total_profit"],
+                    s["name"],
+                ),
+            )
+
+    log.warning(f"Stats for {indicator_to_test}")
+    for s in sorted(stats, key=lambda x: x[1], reverse=True):
+        log.info(">" + " | ".join(s))
 
 
 if __name__ == "__main__":
@@ -163,7 +185,7 @@ if __name__ == "__main__":
         ("Volatility", "MASSI"),  # buy / sell
         ("Volatility", "BBANDS"),  # buy / sell
         ("Volatility", "ACCBANDS"),  # buy / sell
-        # ("Volume", "PVT"),  # buy / sell
+        ("Volume", "PVT"),  # buy / sell
         ("Volume", "ADOSC"),  # buy / sell
         ("Volume", "CMF"),  # buy / sell
         ("Volume", "KVO"),  # buy / sell

@@ -43,7 +43,7 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     volatility.add_acceleration_bands(length=14, c=1, mamode="dema")  # ACCBANDS
 
     volume = Volume(data)
-    volume.add_price_volume_trend(drift=2, length_sma=14)  # PVT (needs work)
+    volume.add_price_volume_trend(drift=12, length_sma=30)  # PVT
     volume.add_accumulation_distribution_oscillator(fast=6, slow=14)  # ADOSC
     volume.add_chaikin_money_flow(length=26)  # CMF
     volume.add_klinger_volume_oscillator(fast=11, slow=35, signal=18, mamode="ema")  # KVO
