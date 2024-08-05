@@ -269,12 +269,11 @@ def trade(dry_run: bool) -> None:
         ):
             # TRADE
             data.add_signals()
-            signal = data.get_latest_signal()
             data.is_new = False
+            signal = data.get_latest_signal()
         elif datetime.now().minute % 2 == 1:
             sleep(62 - datetime.now().second)
             data.get()
-            data.is_new = True
             continue
         else:
             sleep(62 - datetime.now().second)
