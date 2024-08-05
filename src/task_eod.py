@@ -69,7 +69,7 @@ def backtest_strategies():
         data,
         [],
         ComposeStrategiesListMethod.READ,
-        old_strategies_file_name="strategies_dev_6_indicators.json",
+        old_strategies_file_name="strategies_dev_7_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
