@@ -86,10 +86,8 @@ class Data:
                 )
 
         for column in ["LONG", "SHORT", "EXIT"]:
-            for non_trading_time in (["09:00", "10:00"], ["17:15", "17:30"]):
+            for non_trading_time in (["09:00", "9:45"], ["17:15", "17:30"]):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
-
-        self.data.loc[self.data.between_time("17:14", "17:16").index, "EXIT"] = True
 
     def get_latest_signal(self) -> Optional[Signal]:
         signal = None
@@ -181,7 +179,14 @@ class Trade:
             )
 
     @classmethod
-    def buy(cls, signal: Signal, orders: Orders, watchlist: Watchlists, portfolio: Portfolio, budget: Budget) -> None:
+    def buy(
+        cls,
+        signal: Optional[Signal],
+        orders: Orders,
+        watchlist: Watchlists,
+        portfolio: Portfolio,
+        budget: Budget,
+    ) -> None:
         for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
             if signal != tested_signal:
                 continue
@@ -236,7 +241,7 @@ def trade(dry_run: bool) -> None:
     watchlist = Watchlists()
     watchlist.update_watchlists()
 
-    while datetime.now().time() < datetime.strptime("17:30", "%H:%M").time():
+    while datetime.now().time() < time(17, 30):
         orders.reload_active()
 
         if all(
@@ -246,8 +251,16 @@ def trade(dry_run: bool) -> None:
                 data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
             ],
         ):
-            # STOP
+            # EXIT trading
             break
+        elif any(
+            [
+                data.latest_candle_timedelta_min > 15,
+                datetime.now().time() > time(17, 15),
+            ],
+        ):
+            # EXIT position
+            signal = Signal.EXIT
         elif any(
             [
                 orders.active_order,
@@ -255,6 +268,8 @@ def trade(dry_run: bool) -> None:
             ],
         ):
             # TRADE
+            data.add_signals()
+            signal = data.get_latest_signal()
             data.is_new = False
         elif datetime.now().minute % 2 == 1:
             sleep(62 - datetime.now().second)
@@ -264,13 +279,6 @@ def trade(dry_run: bool) -> None:
         else:
             sleep(62 - datetime.now().second)
             continue
-
-        if data.latest_candle_timedelta_min > 15:
-            log.warning(f"No new data for {data.latest_candle_timedelta_min} mins. Stop trading")
-            signal = Signal.EXIT
-        else:
-            data.add_signals()
-            signal = data.get_latest_signal()
 
         if not signal:
             continue

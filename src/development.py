@@ -191,6 +191,6 @@ if __name__ == "__main__":
         ("Volume", "KVO"),  # buy / sell
     ]
 
-    run_full_strategies_generation(indicators_selector)
+    # run_full_strategies_generation(indicators_selector)
     # run_test_for_selected_indicators(indicators_selector)
-    # run_plotting_for_active_strategies(indicators_selector)
+    run_plotting_for_active_strategies(indicators_selector)
