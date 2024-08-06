@@ -26,60 +26,60 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    # log.warning("Generating strategies")
-    # backtest(
-    #     data,
-    #     indicators_selector,
-    #     ComposeStrategiesListMethod.GENERATE,
-    #     old_strategies_file_name=None,
-    #     new_strategies_file_name="strategies_dev_3_indicators.json",
-    #     indicators_filter=[],
-    #     plot=False,
-    # )
+    log.warning("Generating strategies")
+    backtest(
+        data,
+        indicators_selector,
+        ComposeStrategiesListMethod.GENERATE,
+        old_strategies_file_name=None,
+        new_strategies_file_name="strategies_dev_3_indicators.json",
+        indicators_filter=[],
+        plot=False,
+    )
 
-    # log.warning("Extending strategies (3 -> 4)")
-    # backtest(
-    #     data,
-    #     indicators_selector,
-    #     ComposeStrategiesListMethod.EXTEND,
-    #     old_strategies_file_name="strategies_dev_3_indicators.json",
-    #     new_strategies_file_name="strategies_dev_4_indicators.json",
-    #     indicators_filter=[],
-    #     plot=False,
-    # )
+    log.warning("Extending strategies (3 -> 4)")
+    backtest(
+        data,
+        indicators_selector,
+        ComposeStrategiesListMethod.EXTEND,
+        old_strategies_file_name="strategies_dev_3_indicators.json",
+        new_strategies_file_name="strategies_dev_4_indicators.json",
+        indicators_filter=[],
+        plot=False,
+    )
 
-    # log.warning("Extending strategies (4 -> 5)")
-    # backtest(
-    #     data,
-    #     indicators_selector,
-    #     ComposeStrategiesListMethod.EXTEND,
-    #     old_strategies_file_name="strategies_dev_4_indicators.json",
-    #     new_strategies_file_name="strategies_dev_5_indicators.json",
-    #     indicators_filter=[],
-    #     plot=False,
-    # )
+    log.warning("Extending strategies (4 -> 5)")
+    backtest(
+        data,
+        indicators_selector,
+        ComposeStrategiesListMethod.EXTEND,
+        old_strategies_file_name="strategies_dev_4_indicators.json",
+        new_strategies_file_name="strategies_dev_5_indicators.json",
+        indicators_filter=[],
+        plot=False,
+    )
 
-    # log.warning("Extending strategies (5 -> 6)")
-    # backtest(
-    #     data,
-    #     indicators_selector,
-    #     ComposeStrategiesListMethod.EXTEND,
-    #     old_strategies_file_name="strategies_dev_5_indicators.json",
-    #     new_strategies_file_name="strategies_dev_6_indicators.json",
-    #     indicators_filter=[],
-    #     plot=False,
-    # )
+    log.warning("Extending strategies (5 -> 6)")
+    backtest(
+        data,
+        indicators_selector,
+        ComposeStrategiesListMethod.EXTEND,
+        old_strategies_file_name="strategies_dev_5_indicators.json",
+        new_strategies_file_name="strategies_dev_6_indicators.json",
+        indicators_filter=[],
+        plot=False,
+    )
 
-    # log.warning("Extending strategies (6 -> 7)")
-    # backtest(
-    #     data,
-    #     indicators_selector,
-    #     ComposeStrategiesListMethod.EXTEND,
-    #     old_strategies_file_name="strategies_dev_6_indicators.json",
-    #     new_strategies_file_name="strategies_dev_7_indicators.json",
-    #     indicators_filter=[],
-    #     plot=False,
-    # )
+    log.warning("Extending strategies (6 -> 7)")
+    backtest(
+        data,
+        indicators_selector,
+        ComposeStrategiesListMethod.EXTEND,
+        old_strategies_file_name="strategies_dev_6_indicators.json",
+        new_strategies_file_name="strategies_dev_7_indicators.json",
+        indicators_filter=[],
+        plot=False,
+    )
 
     resolution = "2m"
     period_days = 30
@@ -202,6 +202,6 @@ if __name__ == "__main__":
         ("Volume", "KVO"),  # buy / sell
     ]
 
-    run_full_strategies_generation(indicators_selector)
+    # run_full_strategies_generation(indicators_selector)
     # run_test_for_selected_indicators(indicators_selector)
     run_plotting_for_active_strategies(indicators_selector)

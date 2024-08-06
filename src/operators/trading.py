@@ -123,7 +123,7 @@ class Budget:
         for past_order in past_orders:
             self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
 
-        self.value = max([(self.starting_balance // 500 - 4) * 500, MINIMUM_BUDGET])
+        self.value = int(max([(self.starting_balance // 500 - 4) * 500, MINIMUM_BUDGET]))
         if self.value != MINIMUM_BUDGET:
             log.warning(f"Budget adjusted: {MINIMUM_BUDGET} -> {self.value}")
 
@@ -218,6 +218,57 @@ class Trade:
             )
 
 
+class FlowAction(Enum):
+    TRADE = "TRADE"
+    DO_NOTHING = "DO_NOTHING"
+    EXIT_TRADING = "EXIT_TRADING"
+    EXIT_POSITION = "EXIT_POSITION"
+
+
+class Flow:
+    def __init__(self):
+        self.action: FlowAction = FlowAction.TRADE
+
+    def decide(self, data: Data, orders: Orders, portfolio: Portfolio) -> None:
+        if all(
+            [
+                not orders.active_order,
+                not portfolio.positions,
+                data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
+            ],
+        ):
+            self.action = FlowAction.EXIT_TRADING
+            return
+
+        if any(
+            [
+                data.latest_candle_timedelta_min > 15,
+                datetime.now().time() > time(17, 15),
+            ],
+        ):
+            self.action = FlowAction.EXIT_POSITION
+            return
+
+        if any(
+            [
+                orders.active_order,
+                data.is_new,
+            ],
+        ):
+            self.action = FlowAction.TRADE
+            data.add_signals()
+            data.is_new = False
+            return
+
+        if datetime.now().minute % 2 == 1:
+            sleep(62 - datetime.now().second)
+            data.get()
+        else:
+            sleep(62 - datetime.now().second)
+
+        self.action = FlowAction.DO_NOTHING
+
+
 # MAIN
 def trade(dry_run: bool) -> None:
     log.info(f"Started trading strategies on OMX30 | {TRADING_RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
@@ -241,43 +292,20 @@ def trade(dry_run: bool) -> None:
     watchlist = Watchlists()
     watchlist.update_watchlists()
 
+    flow = Flow()
+
     while datetime.now().time() < time(17, 30):
         orders.reload_active()
 
-        if all(
-            [
-                not orders.active_order,
-                not portfolio.positions,
-                data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
-            ],
-        ):
-            # EXIT trading
+        flow.decide(data, orders, portfolio)
+        if flow.action == FlowAction.DO_NOTHING:
+            continue
+        elif flow.action == FlowAction.EXIT_TRADING:
             break
-        elif any(
-            [
-                data.latest_candle_timedelta_min > 15,
-                datetime.now().time() > time(17, 15),
-            ],
-        ):
-            # EXIT position
+        elif flow.action == FlowAction.EXIT_POSITION:
             signal = Signal.EXIT
-        elif any(
-            [
-                orders.active_order,
-                data.is_new,
-            ],
-        ):
-            # TRADE
-            data.add_signals()
-            data.is_new = False
+        elif flow.action == FlowAction.TRADE:
             signal = data.get_latest_signal()
-        elif datetime.now().minute % 2 == 1:
-            sleep(62 - datetime.now().second)
-            data.get()
-            continue
-        else:
-            sleep(62 - datetime.now().second)
-            continue
 
         if not signal:
             continue
