@@ -32,7 +32,7 @@ class Data:
     def __init__(self):
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
-        self.latest_candle_timedelta_min = 0
+        self.too_old = False
         self.strategy = None
 
     def get(self):
@@ -54,8 +54,10 @@ class Data:
         self.data = data.loc[
             data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=3)
         ]
+
+        self.too_old = ((datetime.now() - self.data.index[-1]).seconds // 60) > 15
+
         self.is_new = data_size_before != data_size_after
-        self.latest_candle_timedelta_min = (datetime.now() - self.data.index[-1]).seconds // 60
 
     def add_signals(self):
         indicators_mapping = get_indicators(self.data)
@@ -88,6 +90,8 @@ class Data:
         for column in ["LONG", "SHORT", "EXIT"]:
             for non_trading_time in (["09:00", "9:45"], ["17:15", "17:30"]):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
+
+        self.is_new = False
 
     def get_latest_signal(self) -> Optional[Signal]:
         signal = None
@@ -242,7 +246,7 @@ class Flow:
 
         if any(
             [
-                data.latest_candle_timedelta_min > 15,
+                data.too_old,
                 datetime.now().time() > time(17, 15),
             ],
         ):
@@ -257,7 +261,6 @@ class Flow:
         ):
             self.action = FlowAction.TRADE
             data.add_signals()
-            data.is_new = False
             return
 
         if datetime.now().minute % 2 == 1:
