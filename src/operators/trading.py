@@ -34,8 +34,7 @@ class Data:
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.too_old = False
-        self.strategy_main = None
-        self.strategies_secondary = []
+        self.strategies = []
 
     def get(self):
         storage = Storage(OMX30_YAHOO, resolution=TRADING_RESOLUTION)
@@ -64,15 +63,13 @@ class Data:
     def get_strategies(self):
         indicators_mapping = get_indicators(self.data)
         strategies = read_top_strategies(indicators_mapping, "strategies.json")
-        if not self.strategy_main or self.strategy_main.name != strategies[0].name:
-            log.info(f"Strategy: {strategies[0].name}")
+        if not self.strategies or self.strategies[0].name != strategies[0].name:
+            for i, strategy in enumerate(strategies):
+                log.info(f"Strategy {i+1}: {strategy.name}")
 
-        self.strategy_main = strategies[0]
-        self.strategies_secondary = strategies[1:]
+        self.strategies = strategies
 
-    def add_signals(self, strategy_override: Optional[Strategy] = None):
-        strategy = strategy_override if strategy_override else self.strategy_main
-
+    def add_signals(self, strategy: Strategy) -> None:
         self.data["LONG"] = False
         self.data["SHORT"] = False
         self.data["EXIT"] = False
@@ -98,42 +95,29 @@ class Data:
             for non_trading_time in (["09:00", "9:45"], ["17:15", "17:30"]):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
 
-        self.is_new = False
-
-    def get_latest_signal(self) -> Optional[Signal]:
+    def get_signal(self) -> Optional[Signal]:
         signal = None
 
-        for i in range(2, 10):
-            if self.data.iloc[-i]["EXIT"]:
+        for i, strategy in enumerate(self.strategies):
+            self.add_signals(strategy)
+
+            last_complete_candle = self.data.iloc[-2]
+            if last_complete_candle["EXIT"]:
                 signal = Signal.EXIT
 
-            if self.data.iloc[-i]["LONG"] and not self.data.iloc[-i]["SHORT"]:
+            if last_complete_candle["LONG"] and not last_complete_candle["SHORT"]:
                 signal = Signal.LONG
 
-            elif self.data.iloc[-i]["SHORT"] and not self.data.iloc[-i]["LONG"]:
+            elif last_complete_candle["SHORT"] and not last_complete_candle["LONG"]:
                 signal = Signal.SHORT
 
             if not signal:
                 continue
 
-            message = f"Trading signal: {signal.value}. Latest price: {self.data.iloc[-1]['Close']}"
-            if i == 2:
-                log.info(message)
-            elif i == 3:
-                log.debug(message)
-
-            break
-
-        return signal
-
-    def print_secondary_signals(self) -> None:
-        for strategy_secondary in self.strategies_secondary:
-            self.add_signals(strategy_secondary)
-            for column in ["LONG", "SHORT", "EXIT"]:
-                if not self.data.iloc[-2][column]:
-                    continue
-
-                log.debug(f"Secondary signal: {column}. Strategy: {strategy_secondary.name}")
+            log.info(
+                f"Signal: {signal}. Latest price: {self.data.iloc[-1]['Close']}. " + f"Strategy {i+1}: {strategy.name}",
+            )
+            return signal
 
 
 class Budget:
@@ -282,7 +266,7 @@ class Flow:
         ):
             self.action = FlowAction.TRADE
             data.get_strategies()
-            data.add_signals()
+            data.is_new = False
             return
 
         if datetime.now().minute % 2 == 1:
@@ -330,8 +314,7 @@ def trade(dry_run: bool) -> None:
         elif flow.action == FlowAction.EXIT_POSITION:
             signal = Signal.EXIT
         elif flow.action == FlowAction.TRADE:
-            signal = data.get_latest_signal()
-            data.print_secondary_signals()
+            signal = data.get_signal()
 
         if not signal:
             continue
