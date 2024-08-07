@@ -62,12 +62,14 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy):
             if indicator.signal.__getattribute__(column) is not None
         ]
 
-        for i, row in data.iterrows():
-            data.at[i, column] = (
+        data[column] = data.apply(
+            lambda row: (
                 np.nan
                 if not signal_methods or not combination_condition(signal_method(row) for signal_method in signal_methods)
                 else row[column]
-            )
+            ),
+            axis=1,
+        )
 
     for column in ["LONG", "SHORT", "EXIT"]:
         for non_trading_time in (["09:00", "9:45"], ["17:15", "17:30"]):
@@ -79,7 +81,9 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy):
 def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
     wallet = Wallet()
 
-    for i, row in data.iterrows():
+    for i, row in data[data["LONG"].notna() | data["SHORT"].notna() | data["EXIT"].notna()][
+        ["LONG", "SHORT", "EXIT"]
+    ].iterrows():
         profit = None
 
         # LONG

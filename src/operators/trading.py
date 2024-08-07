@@ -52,7 +52,7 @@ class Data:
         data_size_after = data.shape[0]
 
         self.data = data.loc[
-            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=3)
+            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
         ]
 
         self.too_old = ((datetime.now() - self.data.index[-1]).seconds // 60) > 15
@@ -96,7 +96,7 @@ class Data:
     def get_latest_signal(self) -> Optional[Signal]:
         signal = None
 
-        for i in range(2, 5):
+        for i in range(2, 10):
             if self.data.iloc[-i]["EXIT"]:
                 signal = Signal.EXIT
 
