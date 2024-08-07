@@ -1,4 +1,3 @@
-import platform
 import warnings
 from datetime import datetime, timedelta
 
@@ -6,11 +5,10 @@ from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.operators import Chart
 from apis.investing.client.models import Resolution as InvestingResolution
-from apis.investing.operators.ticker import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
-from data.settings import OMX30_AVA, OMX30_INVESTING, OMX30_YAHOO, TRADING_RESOLUTION
+from data.settings import OMX30_AVA, OMX30_YAHOO, TRADING_RESOLUTION
 from operators import (
     backtest,
     get_exchange_working_hours,
@@ -43,9 +41,12 @@ def cache_omx30():
         data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, resolution_ava)
         storage.write(data_ava)
 
-        if resolution_investing and platform.system() == "Darwin":
-            data_investing = InvestingTicker(OMX30_INVESTING).get_history(resolution=resolution_investing, period_days=60)
-            storage.write(data_investing)
+        # if resolution_investing and platform.system() == "Darwin":
+        #     data_investing = InvestingTicker(OMX30_INVESTING).get_history(
+        #         resolution=resolution_investing,
+        #         period_days=60,
+        #     )
+        #     storage.write(data_investing)
 
         if storage.read().shape[0] == rows_before:
             data_yahoo = YahooTicker(OMX30_YAHOO).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)

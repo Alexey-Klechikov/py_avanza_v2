@@ -170,8 +170,13 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
     json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=2, sort_keys=True)
 
 
-def get_top_strategy(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> Strategy:
-    top_strategy = json.load(open(_get_file_path(strategies_file_name)))[0]
-    strategy_indicators = list(tuple(indicator.split("-")) for indicator in top_strategy["name"].split(" | "))
+def get_top_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> List[Strategy]:
+    top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:3]
 
-    return Strategy(selected_indicators=strategy_indicators, indicators_mapping=indicators_mapping)
+    return [
+        Strategy(
+            selected_indicators=list(tuple(indicator.split("-")) for indicator in i["name"].split(" | ")),
+            indicators_mapping=indicators_mapping,
+        )
+        for i in top_strategies
+    ]

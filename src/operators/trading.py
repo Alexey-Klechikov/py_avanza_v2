@@ -13,7 +13,8 @@ from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from data.settings import MINIMUM_BUDGET, OMX30_AVA, OMX30_YAHOO, TRADING_RESOLUTION
 from services.storage import Storage
-from services.ta import get_indicators, get_strategy
+from services.ta import get_indicators, read_top_strategies
+from services.ta.strategies.models import Strategy
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -33,7 +34,8 @@ class Data:
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.too_old = False
-        self.strategy = None
+        self.strategy_main = None
+        self.strategies_secondary = []
 
     def get(self):
         storage = Storage(OMX30_YAHOO, resolution=TRADING_RESOLUTION)
@@ -59,12 +61,17 @@ class Data:
 
         self.is_new = data_size_before != data_size_after
 
-    def add_signals(self):
+    def get_strategies(self):
         indicators_mapping = get_indicators(self.data)
-        strategy = get_strategy(indicators_mapping, "strategies.json")
-        if not self.strategy or self.strategy.name != strategy.name:
-            self.strategy = strategy
-            log.info(f"Strategy: {self.strategy.name}")
+        strategies = read_top_strategies(indicators_mapping, "strategies.json")
+        if not self.strategy_main or self.strategy_main.name != strategies[0].name:
+            log.info(f"Strategy: {strategies[0].name}")
+
+        self.strategy_main = strategies[0]
+        self.strategies_secondary = strategies[1:]
+
+    def add_signals(self, strategy_override: Optional[Strategy] = None):
+        strategy = strategy_override if strategy_override else self.strategy_main
 
         self.data["LONG"] = False
         self.data["SHORT"] = False
@@ -75,7 +82,7 @@ class Data:
 
             signal_methods = [
                 indicator.signal.__getattribute__(column)
-                for indicator in self.strategy.indicators_logic
+                for indicator in strategy.indicators_logic  # type: ignore
                 if indicator.signal.__getattribute__(column) is not None
             ]
 
@@ -109,10 +116,24 @@ class Data:
             if not signal:
                 continue
 
-            (log.info if i == 2 else log.debug)(f"Trading signal: {signal}. Latest price: {self.data.iloc[-1]['Close']}")
+            message = f"Trading signal: {signal.value}. Latest price: {self.data.iloc[-1]['Close']}"
+            if i == 2:
+                log.info(message)
+            elif i == 3:
+                log.debug(message)
+
             break
 
         return signal
+
+    def print_secondary_signals(self) -> None:
+        for strategy_secondary in self.strategies_secondary:
+            self.add_signals(strategy_secondary)
+            for column in ["LONG", "SHORT", "EXIT"]:
+                if not self.data.iloc[-2][column]:
+                    continue
+
+                log.debug(f"Secondary signal: {column}. Strategy: {strategy_secondary.name}")
 
 
 class Budget:
@@ -260,6 +281,7 @@ class Flow:
             ],
         ):
             self.action = FlowAction.TRADE
+            data.get_strategies()
             data.add_signals()
             return
 
@@ -309,6 +331,7 @@ def trade(dry_run: bool) -> None:
             signal = Signal.EXIT
         elif flow.action == FlowAction.TRADE:
             signal = data.get_latest_signal()
+            data.print_secondary_signals()
 
         if not signal:
             continue

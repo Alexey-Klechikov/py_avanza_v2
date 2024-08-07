@@ -1,1 +1,1 @@
-from services.ta.strategies.operators import compose_strategies_list, dump_strategies_in_file, get_top_strategy
+from services.ta.strategies.operators import compose_strategies_list, dump_strategies_in_file, get_top_strategies
