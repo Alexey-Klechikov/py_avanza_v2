@@ -144,6 +144,7 @@ class Telegram(TelegramBase):
         self.starting_balance = 0
         self.final_balance = 0
         self.total_value = 0
+        self.deals = []
 
     def log_starting_balance(self, budget: Budget, portfolio: Portfolio) -> None:
         if portfolio.total_value != portfolio.buying_power:
@@ -157,12 +158,28 @@ class Telegram(TelegramBase):
 
         self.final_balance = portfolio.total_value
 
+    def log_deals(self, orders: Orders) -> None:
+        deals = orders.get_past()
+
+        if not deals:
+            return
+
+        deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
+        for _, group in deals_df.groupby("orderbook_id")[["volume", "price", "amount", "time", "side"]]:
+            if len(group) == 1:
+                continue
+            group.sort_values("time", inplace=True)
+            group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
+
+            self.deals.append(round(group["amount"].sum()))
+
     def send_message(self, budget: Budget) -> None:
         self.messages = [
             f"Finished trading with budget: {budget.value}",
             f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
             f"[{round(100 * (self.final_balance - self.starting_balance)/budget.value)} %]",
             f"Total value: {round(self.final_balance)}",
+            f"Deals: {len(self.deals)} st. " + (f"{self.deals}" if self.deals else ""),
         ] + self.messages
 
         super().send_message()
@@ -239,6 +256,8 @@ class Flow:
         self.action: FlowAction = FlowAction.TRADE
 
     def decide(self, data: Data, orders: Orders, portfolio: Portfolio) -> None:
+        orders.reload_active()
+
         if all(
             [
                 not orders.active_order,
@@ -247,35 +266,32 @@ class Flow:
             ],
         ):
             self.action = FlowAction.EXIT_TRADING
-            return
-
-        if any(
+        elif any(
             [
                 data.too_old,
                 datetime.now().time() > time(17, 15),
             ],
         ):
             self.action = FlowAction.EXIT_POSITION
-            return
-
-        if any(
+        elif any(
             [
                 orders.active_order,
                 data.is_new,
             ],
         ):
-            self.action = FlowAction.TRADE
             data.get_strategies()
             data.is_new = False
-            return
-
-        if datetime.now().minute % 2 == 1:
+            self.action = FlowAction.TRADE
+        elif datetime.now().minute % 2 == 1:
             sleep(62 - datetime.now().second)
             data.get()
+            self.action = FlowAction.DO_NOTHING
         else:
             sleep(62 - datetime.now().second)
+            self.action = FlowAction.DO_NOTHING
 
-        self.action = FlowAction.DO_NOTHING
+        if orders.active_order:
+            orders.delete_all()
 
 
 # MAIN
@@ -304,8 +320,6 @@ def trade(dry_run: bool) -> None:
     flow = Flow()
 
     while datetime.now().time() < time(17, 30):
-        orders.reload_active()
-
         flow.decide(data, orders, portfolio)
         if flow.action == FlowAction.DO_NOTHING:
             continue
@@ -319,16 +333,11 @@ def trade(dry_run: bool) -> None:
         if not signal:
             continue
 
-        portfolio.reload_positions()
-
-        orders.delete_all()
-
         if signal == Signal.EXIT:
             Trade.exit(orders, portfolio)
             continue
 
         portfolio.detect_acquired_instruments()
-
         if any(
             [
                 signal == Signal.LONG and portfolio.acquired_instrument.BULL,
@@ -339,6 +348,11 @@ def trade(dry_run: bool) -> None:
             continue
 
         Trade.sell(signal, orders, portfolio)
+
+        orders.reload_active()
+        if orders.active_order:
+            continue
+
         Trade.buy(signal, orders, watchlist, portfolio, budget)
 
         portfolio.reload_positions()
@@ -346,4 +360,5 @@ def trade(dry_run: bool) -> None:
     portfolio.reload_balance()
 
     telegram.log_final_balance(portfolio)
+    telegram.log_deals(orders)
     telegram.send_message(budget)
