@@ -25,7 +25,7 @@ class Orders:
         active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
         if active_orders:
             self.active_order = max(active_orders, key=lambda x: x.created)
-            log.debug("Active order set")
+            log.debug("Active order found")
 
             if len(active_orders) > 1:
                 log.warning(f"More than one active order found ({len(active_orders)})")
