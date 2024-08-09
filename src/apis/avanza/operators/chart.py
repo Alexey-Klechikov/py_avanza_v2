@@ -13,7 +13,7 @@ class Chart:
 
     @classmethod
     def get_chart_data(cls, instrument_id: str, period: TimePeriod, resolution: Resolution) -> pd.DataFrame:
-        log.debug(f"Fetching chart data for {instrument_id} with period {period.name} and resolution {resolution.name}")
+        log.debug(f"Fetch chart data [{period.name} - {resolution.name}]")
 
         available_period = period
         if resolution in [Resolution.MINUTE, Resolution.TWO_MINUTES, Resolution.FIVE_MINUTES]:
