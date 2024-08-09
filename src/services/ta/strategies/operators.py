@@ -143,27 +143,39 @@ def compose_strategies_list(
 
 def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name: str):
     rank = 1
+    last_strategy_stats = ""
     strategies_for_file = []
     for strategy in strategies:
-        if rank > 100 or strategy.counter.total_profit <= 0:
+        strategy_candidate = {
+            "rank": rank,
+            "name": strategy.name,
+            "total_trades": strategy.counter.total_trades,
+            "total_profit": round(strategy.counter.total_profit, 2),
+            "profitable_trades_share": (
+                round(strategy.counter.profitable_trades / strategy.counter.total_trades, 2)
+                if strategy.counter.profitable_trades > 0
+                else 0
+            ),
+        }
+
+        current_strategy_stats = " | ".join(
+            [
+                str(v)
+                for k, v in strategy_candidate.items()
+                if k in ["total_trades", "total_profit", "profitable_trades_share"]
+            ],
+        )
+        if current_strategy_stats == last_strategy_stats:
+            continue
+        last_strategy_stats = current_strategy_stats
+
+        if rank > 200 or strategy_candidate["total_profit"] <= 0:
             break
 
-        if "Original" in strategy.name:
+        if "Original" in strategy_candidate["name"]:
             continue
 
-        strategies_for_file.append(
-            {
-                "rank": rank,
-                "name": strategy.name,
-                "total_trades": strategy.counter.total_trades,
-                "total_profit": round(strategy.counter.total_profit, 2),
-                "profitable_trades_share": (
-                    round(strategy.counter.profitable_trades / strategy.counter.total_trades, 2)
-                    if strategy.counter.profitable_trades > 0
-                    else 0
-                ),
-            },
-        )
+        strategies_for_file.append(strategy_candidate)
 
         rank += 1
 
