@@ -255,6 +255,7 @@ class Flow:
 
     def decide(self, data: Data, orders: Orders, portfolio: Portfolio) -> None:
         orders.reload_active()
+        portfolio.reload_positions()
 
         if all(
             [
@@ -352,8 +353,6 @@ def trade(dry_run: bool) -> None:
             continue
 
         Trade.buy(signal, orders, watchlist, portfolio, budget)
-
-        portfolio.reload_positions()
 
     portfolio.reload_balance()
 

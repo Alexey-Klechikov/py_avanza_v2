@@ -23,15 +23,16 @@ class Orders:
         orders = [i for i in orders if i.account.account_id == ACCOUNT_ID]
 
         active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
-        if active_orders:
-            self.active_order = max(active_orders, key=lambda x: x.created)
-            log.debug("Active order found")
+        if not active_orders:
+            return
 
-            if len(active_orders) > 1:
-                log.warning(f"More than one active order found ({len(active_orders)})")
-                for order in active_orders:
-                    if order.order_id != self.active_order.order_id:
-                        self._delete(order.order_id)
+        self.active_order = max(active_orders, key=lambda x: x.created)
+        log.debug(f"Active orders found [{len(active_orders)} st.]")
+
+        for order in active_orders:
+            if order.order_id == self.active_order.order_id:
+                continue
+            self._delete(order.order_id)
 
         inactive_orders = [i for i in orders if i.state == "FAILED"]
         if len(inactive_orders) > 0:
