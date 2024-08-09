@@ -114,9 +114,7 @@ class Data:
             if not signal:
                 continue
 
-            log.info(
-                f"Signal: {signal}. Latest price: {self.data.iloc[-1]['Close']}. " + f"Strategy {i+1}",
-            )
+            log.info(f"Signal: {signal}. Strategy {i+1}. Latest price: {self.data.iloc[-1]['Close']}")
             return signal
 
 
