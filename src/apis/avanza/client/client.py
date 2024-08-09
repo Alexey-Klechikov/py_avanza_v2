@@ -255,7 +255,7 @@ class Avanza(AvanzaBase):
 def get_client(user: str = USERNAME) -> Avanza:
     """time is a dummy argument to make the function bypass the cache once every hour"""
 
-    log.debug("Connecting to Avanza")
+    log.debug("Connect to Avanza")
 
     credentials = {
         "username": keyring.get_password(user, "un"),

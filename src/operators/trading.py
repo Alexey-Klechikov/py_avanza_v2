@@ -294,7 +294,7 @@ class Flow:
 
 # MAIN
 def trade(dry_run: bool) -> None:
-    log.info(f"Started trading strategies on OMX30 | {TRADING_RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
+    log.info(f"Start trading strategies on OMX30 | {TRADING_RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
 
     data = Data()
     data.get()
