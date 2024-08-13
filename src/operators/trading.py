@@ -169,7 +169,9 @@ class Telegram(TelegramBase):
             group.sort_values("time", inplace=True)
             group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
 
-            self.deals.append(round(group["amount"].sum()))
+            self.deals.append((round(group["amount"].sum()), group["time"].iloc[0].strftime("%Y-%m-%d %H:%M:%S")))
+
+        self.deals.sort(key=lambda x: x[1])
 
     def send_message(self, budget: Budget) -> None:
         self.messages = [
@@ -177,7 +179,7 @@ class Telegram(TelegramBase):
             f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
             f"[{round(100 * (self.final_balance - self.starting_balance)/budget.value)} %]",
             f"Total value: {round(self.final_balance)}",
-            f"Deals: {len(self.deals)} st. " + (f"{self.deals}" if self.deals else ""),
+            f"Deals: {len(self.deals)} st. " + (f"{[i[0] for i in self.deals]}" if self.deals else ""),
         ] + self.messages
 
         super().send_message()
