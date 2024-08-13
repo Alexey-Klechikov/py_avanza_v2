@@ -174,6 +174,18 @@ class Avanza(AvanzaBase):
 
         return Deals(**data)  # type: ignore
 
+    def remove_from_watchlist(self, instrument_id: str, watchlist_id: str):
+        self._retry_call(
+            path=f"/_api/watchlist/watchlist/remove/{watchlist_id}/{instrument_id}",
+            http_method="POST",
+        )
+
+    def add_to_watchlist(self, instrument_id: str, watchlist_id: str) -> None:
+        self._retry_call(
+            path=f"/_cqbe/marketing/orderbook-tools/{instrument_id}/watchlist/{watchlist_id}",
+            http_method="PUT",
+        )
+
     def place_order(
         self,
         account_id: str,

@@ -98,8 +98,8 @@ class Watchlists:
     def _clear_watchlist(self, watchlist: WatchList):
         log.debug(f"Clear watchlist {watchlist.name}")
 
-        for orderbook_id in watchlist.orderbooks:
-            get_client().remove_from_watchlist(orderbook_id, watchlist.id)
+        for instrument_id in watchlist.orderbooks:
+            get_client().remove_from_watchlist(instrument_id, watchlist.id)
 
     def _update_watchlist(self, watchlist: WatchList):
         log.debug(f"Update watchlist {watchlist.name}")
