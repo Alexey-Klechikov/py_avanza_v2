@@ -12,6 +12,6 @@ class Telegram:
         self.messages: List[str] = []
 
     def send_message(self):
-        log.info("Sending message")
+        log.info(f"Sending message: {' | '.join(self.messages)}")
 
         telegram_send.send(messages=["\n".join(self.messages)])
