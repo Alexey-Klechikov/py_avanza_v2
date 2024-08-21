@@ -283,12 +283,9 @@ class Flow:
             data.get_strategies()
             data.is_new = False
             self.action = FlowAction.TRADE
-        elif datetime.now().minute % 2 == 1:
-            sleep(62 - datetime.now().second)
-            data.get()
-            self.action = FlowAction.DO_NOTHING
         else:
-            sleep(62 - datetime.now().second)
+            sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 2)
+            data.get()
             self.action = FlowAction.DO_NOTHING
 
         if orders.active_order:
