@@ -152,20 +152,3 @@ class Volatility(IndicatorsCategoryBase):
                 list=[Plot(columns=list(column_names.values()), ylabel="Volatility [ACCBANDS]")],
             ),
         )
-
-    # # Volatility
-    # @staticmethod
-    # def starc_bands(
-    #     data: pd.DataFrame, length_sma: int, length_atr: int, multiplier_atr: float
-    # ):
-    #     """https://www.investopedia.com/terms/s/starc.asp"""
-
-    #     make_name = lambda x: f"{x}_{length_sma}_{length_atr}_{multiplier_atr}"
-
-    #     sma = data.ta.sma(length=length_sma)
-    #     atr = data.ta.atr(length=length_atr)
-
-    #     data[make_name("STARC_U")] = sma + multiplier_atr * atr
-    #     data[make_name("STARC_B")] = sma - multiplier_atr * atr
-
-    #     return data

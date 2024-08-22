@@ -1,1402 +1,1402 @@
 [
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.65,
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.66,
     "rank": 1,
-    "total_profit": 298.43,
-    "total_trades": 63
+    "total_profit": 292.0,
+    "total_trades": 67
   },
   {
     "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.68,
+    "profitable_trades_share": 0.67,
     "rank": 2,
-    "total_profit": 283.25,
-    "total_trades": 60
+    "total_profit": 284.09,
+    "total_trades": 66
   },
   {
     "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
     "profitable_trades_share": 0.65,
     "rank": 3,
-    "total_profit": 296.18,
-    "total_trades": 60
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 4,
-    "total_profit": 301.83,
-    "total_trades": 66
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.64,
-    "rank": 5,
-    "total_profit": 291.62,
-    "total_trades": 78
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.65,
-    "rank": 6,
-    "total_profit": 286.93,
-    "total_trades": 63
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.66,
-    "rank": 7,
-    "total_profit": 280.12,
+    "total_profit": 292.3,
     "total_trades": 65
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 8,
-    "total_profit": 296.78,
-    "total_trades": 76
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.63,
-    "rank": 9,
-    "total_profit": 285.14,
-    "total_trades": 68
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
-    "profitable_trades_share": 0.62,
-    "rank": 10,
-    "total_profit": 288.55,
-    "total_trades": 68
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.67,
-    "rank": 11,
-    "total_profit": 267.16,
-    "total_trades": 60
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.63,
-    "rank": 12,
-    "total_profit": 281.13,
-    "total_trades": 79
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.6,
-    "rank": 13,
-    "total_profit": 296.38,
-    "total_trades": 70
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.65,
-    "rank": 14,
-    "total_profit": 274.72,
-    "total_trades": 62
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 15,
-    "total_profit": 298.16,
-    "total_trades": 69
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 16,
-    "total_profit": 302.06,
-    "total_trades": 74
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 17,
-    "total_profit": 284.12,
-    "total_trades": 70
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 18,
-    "total_profit": 293.32,
-    "total_trades": 69
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.62,
-    "rank": 19,
-    "total_profit": 278.51,
-    "total_trades": 64
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 20,
-    "total_profit": 285.9,
-    "total_trades": 69
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.63,
-    "rank": 21,
-    "total_profit": 273.87,
-    "total_trades": 63
-  },
-  {
-    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.62,
-    "rank": 22,
-    "total_profit": 281.17,
-    "total_trades": 76
   },
   {
     "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.62,
-    "rank": 23,
-    "total_profit": 278.24,
+    "profitable_trades_share": 0.63,
+    "rank": 4,
+    "total_profit": 293.47,
+    "total_trades": 73
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.65,
+    "rank": 5,
+    "total_profit": 281.71,
     "total_trades": 69
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 24,
-    "total_profit": 282.7,
-    "total_trades": 62
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.62,
-    "rank": 25,
-    "total_profit": 278.22,
-    "total_trades": 66
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.65,
-    "rank": 26,
-    "total_profit": 267.34,
-    "total_trades": 65
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.67,
-    "rank": 27,
-    "total_profit": 256.33,
-    "total_trades": 64
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.64,
+    "rank": 6,
+    "total_profit": 286.07,
+    "total_trades": 69
   },
   {
     "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
     "profitable_trades_share": 0.66,
-    "rank": 28,
-    "total_profit": 261.89,
-    "total_trades": 64
+    "rank": 7,
+    "total_profit": 273.58,
+    "total_trades": 68
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 29,
-    "total_profit": 281.37,
-    "total_trades": 64
-  },
-  {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
     "profitable_trades_share": 0.62,
-    "rank": 30,
-    "total_profit": 273.47,
-    "total_trades": 69
+    "rank": 8,
+    "total_profit": 290.26,
+    "total_trades": 79
   },
   {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 31,
-    "total_profit": 289.09,
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 9,
+    "total_profit": 292.93,
     "total_trades": 85
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 32,
-    "total_profit": 276.96,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 33,
-    "total_profit": 285.38,
-    "total_trades": 76
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 34,
-    "total_profit": 275.65,
-    "total_trades": 87
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.65,
-    "rank": 35,
-    "total_profit": 257.32,
-    "total_trades": 63
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.62,
-    "rank": 36,
-    "total_profit": 270.16,
-    "total_trades": 71
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 37,
-    "total_profit": 282.64,
-    "total_trades": 76
-  },
-  {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 38,
-    "total_profit": 269.43,
-    "total_trades": 63
-  },
-  {
-    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 39,
-    "total_profit": 273.1,
-    "total_trades": 77
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 40,
-    "total_profit": 283.1,
-    "total_trades": 87
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 41,
-    "total_profit": 268.34,
-    "total_trades": 70
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.56,
-    "rank": 42,
-    "total_profit": 291.55,
-    "total_trades": 85
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.57,
-    "rank": 43,
-    "total_profit": 286.77,
-    "total_trades": 82
   },
   {
     "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
     "profitable_trades_share": 0.62,
-    "rank": 44,
-    "total_profit": 266.42,
-    "total_trades": 86
+    "rank": 10,
+    "total_profit": 288.68,
+    "total_trades": 87
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 45,
-    "total_profit": 270.04,
-    "total_trades": 79
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
     "profitable_trades_share": 0.64,
-    "rank": 46,
-    "total_profit": 256.63,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 47,
-    "total_profit": 271.63,
-    "total_trades": 70
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 48,
-    "total_profit": 273.24,
-    "total_trades": 84
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.63,
-    "rank": 49,
-    "total_profit": 257.93,
-    "total_trades": 81
+    "rank": 11,
+    "total_profit": 277.56,
+    "total_trades": 67
   },
   {
     "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.62,
-    "rank": 50,
-    "total_profit": 259.68,
-    "total_trades": 69
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.58,
-    "rank": 51,
-    "total_profit": 277.79,
-    "total_trades": 79
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-STC | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.71,
-    "rank": 52,
-    "total_profit": 226.4,
-    "total_trades": 42
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 53,
-    "total_profit": 271.41,
-    "total_trades": 79
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.62,
-    "rank": 54,
-    "total_profit": 259.68,
-    "total_trades": 66
-  },
-  {
-    "name": "Momentum-CCI | Overlap-GHLA | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
     "profitable_trades_share": 0.64,
-    "rank": 55,
-    "total_profit": 250.41,
-    "total_trades": 59
-  },
-  {
-    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 56,
-    "total_profit": 261.23,
-    "total_trades": 73
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 57,
-    "total_profit": 276.23,
-    "total_trades": 86
-  },
-  {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.63,
-    "rank": 58,
-    "total_profit": 253.37,
-    "total_trades": 71
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.67,
-    "rank": 59,
-    "total_profit": 240.62,
-    "total_trades": 60
-  },
-  {
-    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 60,
-    "total_profit": 259.56,
-    "total_trades": 73
-  },
-  {
-    "name": "Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 61,
-    "total_profit": 273.29,
-    "total_trades": 82
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 62,
-    "total_profit": 271.59,
-    "total_trades": 85
-  },
-  {
-    "name": "Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 63,
-    "total_profit": 271.67,
-    "total_trades": 82
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 64,
-    "total_profit": 272.34,
+    "rank": 12,
+    "total_profit": 276.38,
     "total_trades": 72
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.57,
-    "rank": 65,
-    "total_profit": 280.03,
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 13,
+    "total_profit": 290.54,
+    "total_trades": 81
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 14,
+    "total_profit": 285.4,
     "total_trades": 83
   },
   {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
-    "profitable_trades_share": 0.6,
-    "rank": 66,
-    "total_profit": 263.66,
-    "total_trades": 65
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.65,
+    "rank": 15,
+    "total_profit": 268.01,
+    "total_trades": 66
   },
   {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 67,
-    "total_profit": 268.84,
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 16,
+    "total_profit": 283.96,
     "total_trades": 70
   },
   {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 17,
+    "total_profit": 285.75,
+    "total_trades": 86
+  },
+  {
+    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
     "profitable_trades_share": 0.61,
-    "rank": 68,
-    "total_profit": 256.62,
+    "rank": 18,
+    "total_profit": 281.52,
     "total_trades": 80
   },
   {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.62,
-    "rank": 69,
-    "total_profit": 251.39,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.57,
-    "rank": 70,
-    "total_profit": 276.36,
+    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 19,
+    "total_profit": 291.71,
     "total_trades": 88
   },
   {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 71,
-    "total_profit": 266.73,
-    "total_trades": 85
+    "name": "Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.64,
+    "rank": 20,
+    "total_profit": 268.61,
+    "total_trades": 75
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 72,
-    "total_profit": 255.4,
-    "total_trades": 62
+    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.64,
+    "rank": 21,
+    "total_profit": 269.23,
+    "total_trades": 69
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 73,
-    "total_profit": 263.16,
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.64,
+    "rank": 22,
+    "total_profit": 268.92,
     "total_trades": 69
   },
   {
     "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
     "profitable_trades_share": 0.6,
-    "rank": 74,
-    "total_profit": 261.3,
-    "total_trades": 89
+    "rank": 23,
+    "total_profit": 283.7,
+    "total_trades": 91
   },
   {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.58,
-    "rank": 75,
-    "total_profit": 267.66,
-    "total_trades": 81
+    "name": "Cycles-EBSW | Momentum-STC | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.7,
+    "rank": 24,
+    "total_profit": 242.25,
+    "total_trades": 47
   },
   {
-    "name": "Momentum-RVGI | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.58,
-    "rank": 76,
-    "total_profit": 267.9,
-    "total_trades": 88
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 77,
-    "total_profit": 251.12,
-    "total_trades": 65
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 78,
-    "total_profit": 261.21,
-    "total_trades": 66
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
     "profitable_trades_share": 0.6,
-    "rank": 79,
-    "total_profit": 256.97,
+    "rank": 25,
+    "total_profit": 283.4,
     "total_trades": 90
   },
   {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 80,
-    "total_profit": 252.21,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 81,
-    "total_profit": 251.96,
-    "total_trades": 72
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 82,
-    "total_profit": 251.11,
-    "total_trades": 85
-  },
-  {
-    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 83,
-    "total_profit": 255.52,
-    "total_trades": 80
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.6,
-    "rank": 84,
-    "total_profit": 256.53,
-    "total_trades": 89
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.57,
-    "rank": 85,
-    "total_profit": 269.95,
-    "total_trades": 76
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.58,
-    "rank": 86,
-    "total_profit": 261.56,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.63,
-    "rank": 87,
-    "total_profit": 241.03,
-    "total_trades": 57
-  },
-  {
-    "name": "Trend-ADX | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
     "profitable_trades_share": 0.62,
-    "rank": 88,
-    "total_profit": 243.47,
-    "total_trades": 72
-  },
-  {
-    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.64,
-    "rank": 89,
-    "total_profit": 239.0,
-    "total_trades": 66
-  },
-  {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.63,
-    "rank": 90,
-    "total_profit": 240.79,
-    "total_trades": 65
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 91,
-    "total_profit": 248.08,
-    "total_trades": 85
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 92,
-    "total_profit": 246.4,
-    "total_trades": 83
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Overlap-GHLA | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.57,
-    "rank": 93,
-    "total_profit": 267.16,
-    "total_trades": 76
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 94,
-    "total_profit": 254.15,
-    "total_trades": 74
-  },
-  {
-    "name": "Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.57,
-    "rank": 95,
-    "total_profit": 266.55,
-    "total_trades": 83
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 96,
-    "total_profit": 249.88,
-    "total_trades": 83
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 97,
-    "total_profit": 267.54,
-    "total_trades": 80
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.62,
-    "rank": 98,
-    "total_profit": 243.13,
-    "total_trades": 81
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 99,
-    "total_profit": 250.06,
-    "total_trades": 70
-  },
-  {
-    "name": "Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 100,
-    "total_profit": 242.91,
-    "total_trades": 60
-  },
-  {
-    "name": "Momentum-CCI | Overlap-GHLA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.6,
-    "rank": 101,
-    "total_profit": 250.76,
-    "total_trades": 72
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 102,
-    "total_profit": 245.24,
-    "total_trades": 82
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 103,
-    "total_profit": 265.79,
-    "total_trades": 80
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 104,
-    "total_profit": 249.04,
-    "total_trades": 70
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 105,
-    "total_profit": 245.92,
-    "total_trades": 79
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.56,
-    "rank": 106,
-    "total_profit": 265.12,
-    "total_trades": 87
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.6,
-    "rank": 107,
-    "total_profit": 247.82,
-    "total_trades": 83
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 108,
-    "total_profit": 251.84,
-    "total_trades": 81
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 109,
-    "total_profit": 254.28,
-    "total_trades": 75
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 110,
-    "total_profit": 244.36,
-    "total_trades": 74
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 111,
-    "total_profit": 247.1,
-    "total_trades": 70
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Overlap-LINREG | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 112,
-    "total_profit": 264.55,
-    "total_trades": 77
-  },
-  {
-    "name": "Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.58,
-    "rank": 113,
-    "total_profit": 253.98,
-    "total_trades": 86
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.57,
-    "rank": 114,
-    "total_profit": 257.6,
-    "total_trades": 82
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.65,
-    "rank": 115,
-    "total_profit": 227.51,
-    "total_trades": 54
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 116,
-    "total_profit": 244.53,
-    "total_trades": 88
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.64,
-    "rank": 117,
-    "total_profit": 230.44,
-    "total_trades": 58
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 118,
-    "total_profit": 247.1,
-    "total_trades": 74
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 119,
-    "total_profit": 247.59,
-    "total_trades": 59
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 120,
-    "total_profit": 260.95,
-    "total_trades": 80
-  },
-  {
-    "name": "Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.58,
-    "rank": 121,
-    "total_profit": 253.79,
-    "total_trades": 83
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.56,
-    "rank": 122,
-    "total_profit": 261.16,
-    "total_trades": 89
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 123,
-    "total_profit": 236.94,
-    "total_trades": 76
-  },
-  {
-    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 124,
-    "total_profit": 246.57,
-    "total_trades": 64
-  },
-  {
-    "name": "Cycles-EBSW | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 125,
-    "total_profit": 240.66,
-    "total_trades": 74
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 126,
-    "total_profit": 245.05,
-    "total_trades": 62
-  },
-  {
-    "name": "Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.62,
-    "rank": 127,
-    "total_profit": 236.87,
-    "total_trades": 65
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 128,
-    "total_profit": 260.67,
-    "total_trades": 77
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 129,
-    "total_profit": 241.47,
-    "total_trades": 73
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Overlap-LINREG | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.55,
-    "rank": 130,
-    "total_profit": 265.76,
-    "total_trades": 84
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.57,
-    "rank": 131,
-    "total_profit": 253.85,
-    "total_trades": 82
-  },
-  {
-    "name": "Momentum-CCI | Momentum-RVGI | Overlap-GHLA | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.57,
-    "rank": 132,
-    "total_profit": 255.5,
-    "total_trades": 88
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.57,
-    "rank": 133,
-    "total_profit": 255.95,
-    "total_trades": 83
-  },
-  {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 134,
-    "total_profit": 240.12,
-    "total_trades": 63
-  },
-  {
-    "name": "Momentum-CCI | Momentum-MACD_DEMA | Overlap-GHLA | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 135,
-    "total_profit": 257.59,
-    "total_trades": 89
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.58,
-    "rank": 136,
-    "total_profit": 247.53,
-    "total_trades": 65
-  },
-  {
-    "name": "Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.61,
-    "rank": 137,
-    "total_profit": 237.32,
-    "total_trades": 82
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 138,
-    "total_profit": 237.21,
-    "total_trades": 64
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Momentum-RVGI | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 139,
-    "total_profit": 247.71,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 140,
-    "total_profit": 246.34,
-    "total_trades": 87
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.57,
-    "rank": 141,
-    "total_profit": 251.49,
-    "total_trades": 82
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Overlap-GHLA | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.57,
-    "rank": 142,
-    "total_profit": 253.77,
-    "total_trades": 74
-  },
-  {
-    "name": "Overlap-LINREG | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 143,
-    "total_profit": 241.85,
-    "total_trades": 74
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-KVO",
-    "profitable_trades_share": 0.55,
-    "rank": 144,
-    "total_profit": 259.96,
-    "total_trades": 76
-  },
-  {
-    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.64,
-    "rank": 145,
-    "total_profit": 225.08,
-    "total_trades": 58
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 146,
-    "total_profit": 240.48,
-    "total_trades": 89
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 147,
-    "total_profit": 248.84,
-    "total_trades": 73
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.61,
-    "rank": 148,
-    "total_profit": 233.47,
-    "total_trades": 62
-  },
-  {
-    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 149,
-    "total_profit": 241.39,
-    "total_trades": 81
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 150,
-    "total_profit": 244.05,
-    "total_trades": 82
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 151,
-    "total_profit": 235.49,
-    "total_trades": 71
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 152,
-    "total_profit": 240.51,
-    "total_trades": 81
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.62,
-    "rank": 153,
-    "total_profit": 230.74,
-    "total_trades": 73
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 154,
-    "total_profit": 243.83,
-    "total_trades": 72
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Trend-ADX | Trend-CHOP | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.57,
-    "rank": 155,
-    "total_profit": 248.82,
-    "total_trades": 77
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-BBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.6,
-    "rank": 156,
-    "total_profit": 236.94,
-    "total_trades": 65
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.53,
-    "rank": 157,
-    "total_profit": 267.56,
-    "total_trades": 96
-  },
-  {
-    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 158,
-    "total_profit": 238.14,
-    "total_trades": 79
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 159,
-    "total_profit": 253.82,
-    "total_trades": 86
-  },
-  {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.63,
-    "rank": 160,
-    "total_profit": 225.82,
-    "total_trades": 59
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-GHLA | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.58,
-    "rank": 161,
-    "total_profit": 246.05,
-    "total_trades": 73
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.58,
-    "rank": 162,
-    "total_profit": 246.03,
-    "total_trades": 73
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Overlap-LINREG | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 163,
-    "total_profit": 253.56,
-    "total_trades": 86
-  },
-  {
-    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 164,
-    "total_profit": 231.81,
-    "total_trades": 77
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.55,
-    "rank": 165,
-    "total_profit": 255.62,
-    "total_trades": 85
-  },
-  {
-    "name": "Cycles-EBSW | Overlap-GHLA | Overlap-LINREG | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.55,
-    "rank": 166,
-    "total_profit": 256.36,
-    "total_trades": 78
-  },
-  {
-    "name": "Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 167,
-    "total_profit": 235.39,
-    "total_trades": 75
-  },
-  {
-    "name": "Momentum-RVGI | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.58,
-    "rank": 168,
-    "total_profit": 243.62,
+    "rank": 26,
+    "total_profit": 272.81,
     "total_trades": 69
   },
   {
-    "name": "Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.66,
-    "rank": 169,
-    "total_profit": 213.63,
-    "total_trades": 59
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.58,
-    "rank": 170,
-    "total_profit": 245.28,
-    "total_trades": 73
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-MASSI | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 171,
-    "total_profit": 239.81,
-    "total_trades": 68
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 172,
-    "total_profit": 237.68,
-    "total_trades": 81
-  },
-  {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 173,
-    "total_profit": 236.32,
-    "total_trades": 74
-  },
-  {
-    "name": "Momentum-CCI | Overlap-GHLA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 174,
-    "total_profit": 239.39,
-    "total_trades": 92
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 175,
-    "total_profit": 249.06,
-    "total_trades": 78
-  },
-  {
-    "name": "Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.59,
-    "rank": 176,
-    "total_profit": 237.31,
-    "total_trades": 71
-  },
-  {
-    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.61,
-    "rank": 177,
-    "total_profit": 229.89,
-    "total_trades": 77
-  },
-  {
-    "name": "Cycles-EBSW | Momentum-CCI | Overlap-GHLA | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.59,
-    "rank": 178,
-    "total_profit": 239.66,
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.62,
+    "rank": 27,
+    "total_profit": 272.94,
     "total_trades": 82
   },
   {
-    "name": "Momentum-CCI | Overlap-GHLA | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
-    "profitable_trades_share": 0.56,
-    "rank": 179,
-    "total_profit": 249.67,
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 28,
+    "total_profit": 277.75,
+    "total_trades": 82
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.66,
+    "rank": 29,
+    "total_profit": 257.18,
+    "total_trades": 70
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 30,
+    "total_profit": 278.06,
+    "total_trades": 84
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.63,
+    "rank": 31,
+    "total_profit": 266.39,
+    "total_trades": 83
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 32,
+    "total_profit": 268.21,
+    "total_trades": 84
+  },
+  {
+    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.62,
+    "rank": 33,
+    "total_profit": 268.7,
+    "total_trades": 68
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 34,
+    "total_profit": 272.9,
+    "total_trades": 71
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.63,
+    "rank": 35,
+    "total_profit": 261.54,
+    "total_trades": 76
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.64,
+    "rank": 36,
+    "total_profit": 258.17,
+    "total_trades": 69
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 37,
+    "total_profit": 269.2,
+    "total_trades": 72
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 38,
+    "total_profit": 266.76,
+    "total_trades": 73
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.63,
+    "rank": 39,
+    "total_profit": 260.33,
+    "total_trades": 76
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.63,
+    "rank": 40,
+    "total_profit": 261.5,
+    "total_trades": 70
+  },
+  {
+    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 41,
+    "total_profit": 269.47,
+    "total_trades": 82
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 42,
+    "total_profit": 266.74,
+    "total_trades": 72
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 43,
+    "total_profit": 270.34,
+    "total_trades": 68
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 44,
+    "total_profit": 274.16,
+    "total_trades": 76
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 45,
+    "total_profit": 266.84,
+    "total_trades": 74
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.63,
+    "rank": 46,
+    "total_profit": 257.7,
+    "total_trades": 62
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 47,
+    "total_profit": 275.94,
+    "total_trades": 75
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 48,
+    "total_profit": 266.12,
     "total_trades": 89
   },
   {
-    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-ADOSC | Volume-CMF",
-    "profitable_trades_share": 0.6,
-    "rank": 180,
-    "total_profit": 232.48,
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.65,
+    "rank": 49,
+    "total_profit": 247.91,
     "total_trades": 63
   },
   {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.57,
-    "rank": 181,
-    "total_profit": 247.32,
-    "total_trades": 90
+    "name": "Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.66,
+    "rank": 50,
+    "total_profit": 243.11,
+    "total_trades": 56
   },
   {
-    "name": "Cycles-EBSW | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
-    "profitable_trades_share": 0.55,
-    "rank": 182,
-    "total_profit": 253.45,
-    "total_trades": 85
-  },
-  {
-    "name": "Momentum-STC | Trend-ADX | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.67,
-    "rank": 183,
-    "total_profit": 207.92,
-    "total_trades": 46
+    "name": "Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.59,
+    "rank": 51,
+    "total_profit": 272.57,
+    "total_trades": 87
   },
   {
     "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
     "profitable_trades_share": 0.61,
-    "rank": 184,
-    "total_profit": 231.17,
-    "total_trades": 66
+    "rank": 52,
+    "total_profit": 259.61,
+    "total_trades": 70
   },
   {
-    "name": "Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "name": "Momentum-RVGI | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.58,
+    "rank": 53,
+    "total_profit": 275.33,
+    "total_trades": 90
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
     "profitable_trades_share": 0.59,
-    "rank": 185,
-    "total_profit": 239.28,
-    "total_trades": 82
+    "rank": 54,
+    "total_profit": 271.1,
+    "total_trades": 75
   },
   {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.54,
-    "rank": 186,
-    "total_profit": 258.98,
-    "total_trades": 98
+    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 55,
+    "total_profit": 263.89,
+    "total_trades": 78
   },
   {
-    "name": "Momentum-MACD_DEMA | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.56,
-    "rank": 187,
-    "total_profit": 248.43,
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.57,
+    "rank": 56,
+    "total_profit": 278.01,
+    "total_trades": 91
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.59,
+    "rank": 57,
+    "total_profit": 270.95,
     "total_trades": 87
   },
   {
-    "name": "Momentum-RVGI | Overlap-LINREG | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
     "profitable_trades_share": 0.56,
-    "rank": 188,
-    "total_profit": 251.77,
+    "rank": 58,
+    "total_profit": 281.27,
+    "total_trades": 94
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 59,
+    "total_profit": 265.26,
+    "total_trades": 77
+  },
+  {
+    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 60,
+    "total_profit": 262.81,
+    "total_trades": 78
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 61,
+    "total_profit": 257.94,
+    "total_trades": 75
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.58,
+    "rank": 62,
+    "total_profit": 274.04,
+    "total_trades": 78
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.57,
+    "rank": 63,
+    "total_profit": 276.14,
+    "total_trades": 84
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 64,
+    "total_profit": 262.07,
+    "total_trades": 90
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 65,
+    "total_profit": 259.69,
+    "total_trades": 76
+  },
+  {
+    "name": "Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.62,
+    "rank": 66,
+    "total_profit": 255.38,
+    "total_trades": 65
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.59,
+    "rank": 67,
+    "total_profit": 265.25,
+    "total_trades": 76
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 68,
+    "total_profit": 253.55,
     "total_trades": 81
   },
   {
-    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Overlap-SUPERTREND | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.53,
-    "rank": 189,
-    "total_profit": 262.72,
-    "total_trades": 96
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 69,
+    "total_profit": 260.82,
+    "total_trades": 75
   },
   {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 70,
+    "total_profit": 262.6,
+    "total_trades": 74
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.58,
+    "rank": 71,
+    "total_profit": 267.88,
+    "total_trades": 79
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
     "profitable_trades_share": 0.6,
-    "rank": 190,
-    "total_profit": 231.46,
+    "rank": 72,
+    "total_profit": 258.37,
+    "total_trades": 73
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 73,
+    "total_profit": 264.73,
+    "total_trades": 85
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 74,
+    "total_profit": 257.31,
+    "total_trades": 86
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.56,
+    "rank": 75,
+    "total_profit": 278.73,
+    "total_trades": 95
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 76,
+    "total_profit": 256.86,
+    "total_trades": 76
+  },
+  {
+    "name": "Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 77,
+    "total_profit": 248.62,
+    "total_trades": 69
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.57,
+    "rank": 78,
+    "total_profit": 271.12,
+    "total_trades": 91
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.56,
+    "rank": 79,
+    "total_profit": 278.18,
+    "total_trades": 88
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 80,
+    "total_profit": 256.01,
+    "total_trades": 86
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.62,
+    "rank": 81,
+    "total_profit": 250.51,
     "total_trades": 68
   },
   {
-    "name": "Overlap-LINREG | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.56,
-    "rank": 191,
-    "total_profit": 249.52,
-    "total_trades": 93
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.58,
+    "rank": 82,
+    "total_profit": 265.62,
+    "total_trades": 91
   },
   {
-    "name": "Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
-    "profitable_trades_share": 0.59,
-    "rank": 192,
-    "total_profit": 235.62,
-    "total_trades": 71
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.65,
+    "rank": 83,
+    "total_profit": 239.47,
+    "total_trades": 62
   },
   {
-    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.64,
+    "rank": 84,
+    "total_profit": 242.62,
+    "total_trades": 66
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.58,
+    "rank": 85,
+    "total_profit": 265.14,
+    "total_trades": 79
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 86,
+    "total_profit": 254.13,
+    "total_trades": 84
+  },
+  {
+    "name": "Cycles-EBSW | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 87,
+    "total_profit": 252.06,
+    "total_trades": 77
+  },
+  {
+    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 88,
+    "total_profit": 247.36,
+    "total_trades": 74
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.54,
+    "rank": 89,
+    "total_profit": 286.25,
+    "total_trades": 97
+  },
+  {
+    "name": "Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
     "profitable_trades_share": 0.6,
-    "rank": 193,
-    "total_profit": 231.15,
+    "rank": 90,
+    "total_profit": 254.67,
     "total_trades": 83
   },
   {
-    "name": "Cycles-EBSW | Overlap-GHLA | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF",
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 91,
+    "total_profit": 254.46,
+    "total_trades": 83
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 92,
+    "total_profit": 256.42,
+    "total_trades": 87
+  },
+  {
+    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.64,
+    "rank": 93,
+    "total_profit": 239.58,
+    "total_trades": 61
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
     "profitable_trades_share": 0.55,
-    "rank": 194,
-    "total_profit": 252.48,
+    "rank": 94,
+    "total_profit": 280.24,
+    "total_trades": 99
+  },
+  {
+    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.62,
+    "rank": 95,
+    "total_profit": 247.73,
+    "total_trades": 60
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.59,
+    "rank": 96,
+    "total_profit": 258.24,
+    "total_trades": 71
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 97,
+    "total_profit": 248.66,
+    "total_trades": 75
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 98,
+    "total_profit": 250.26,
+    "total_trades": 64
+  },
+  {
+    "name": "Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 99,
+    "total_profit": 246.89,
+    "total_trades": 68
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 100,
+    "total_profit": 251.92,
+    "total_trades": 76
+  },
+  {
+    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 101,
+    "total_profit": 252.6,
+    "total_trades": 68
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 102,
+    "total_profit": 255.49,
+    "total_trades": 94
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 103,
+    "total_profit": 250.38,
+    "total_trades": 84
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 104,
+    "total_profit": 247.24,
+    "total_trades": 70
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.59,
+    "rank": 105,
+    "total_profit": 259.43,
+    "total_trades": 82
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.55,
+    "rank": 106,
+    "total_profit": 276.19,
+    "total_trades": 91
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 107,
+    "total_profit": 257.87,
+    "total_trades": 85
+  },
+  {
+    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.65,
+    "rank": 108,
+    "total_profit": 234.63,
+    "total_trades": 65
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 109,
+    "total_profit": 251.63,
+    "total_trades": 83
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 110,
+    "total_profit": 247.68,
+    "total_trades": 85
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.55,
+    "rank": 111,
+    "total_profit": 277.5,
+    "total_trades": 99
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 112,
+    "total_profit": 265.43,
+    "total_trades": 86
+  },
+  {
+    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.63,
+    "rank": 113,
+    "total_profit": 240.59,
+    "total_trades": 70
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.56,
+    "rank": 114,
+    "total_profit": 270.32,
+    "total_trades": 93
+  },
+  {
+    "name": "Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.57,
+    "rank": 115,
+    "total_profit": 265.83,
+    "total_trades": 88
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Overlap-SUPERTREND | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.54,
+    "rank": 116,
+    "total_profit": 281.41,
+    "total_trades": 97
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 117,
+    "total_profit": 255.74,
     "total_trades": 78
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.63,
+    "rank": 118,
+    "total_profit": 238.77,
+    "total_trades": 65
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 119,
+    "total_profit": 246.09,
+    "total_trades": 67
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 120,
+    "total_profit": 252.92,
+    "total_trades": 84
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.59,
+    "rank": 121,
+    "total_profit": 257.13,
+    "total_trades": 94
+  },
+  {
+    "name": "Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 122,
+    "total_profit": 246.78,
+    "total_trades": 69
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 123,
+    "total_profit": 249.2,
+    "total_trades": 73
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.58,
+    "rank": 124,
+    "total_profit": 259.99,
+    "total_trades": 78
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 125,
+    "total_profit": 248.55,
+    "total_trades": 68
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.55,
+    "rank": 126,
+    "total_profit": 270.95,
+    "total_trades": 105
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.55,
+    "rank": 127,
+    "total_profit": 271.44,
+    "total_trades": 89
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.55,
+    "rank": 128,
+    "total_profit": 272.64,
+    "total_trades": 106
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.63,
+    "rank": 129,
+    "total_profit": 237.09,
+    "total_trades": 62
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 130,
+    "total_profit": 247.6,
+    "total_trades": 88
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 131,
+    "total_profit": 249.52,
+    "total_trades": 77
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.58,
+    "rank": 132,
+    "total_profit": 258.46,
+    "total_trades": 92
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.56,
+    "rank": 133,
+    "total_profit": 265.56,
+    "total_trades": 91
   },
   {
     "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-ADOSC",
     "profitable_trades_share": 0.6,
-    "rank": 195,
-    "total_profit": 232.37,
-    "total_trades": 77
-  },
-  {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.57,
-    "rank": 196,
-    "total_profit": 241.25,
+    "rank": 134,
+    "total_profit": 247.98,
     "total_trades": 80
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.54,
-    "rank": 197,
-    "total_profit": 256.24,
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.55,
+    "rank": 135,
+    "total_profit": 272.66,
+    "total_trades": 99
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.62,
+    "rank": 136,
+    "total_profit": 238.54,
+    "total_trades": 69
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 137,
+    "total_profit": 249.41,
+    "total_trades": 94
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.53,
+    "rank": 138,
+    "total_profit": 279.51,
     "total_trades": 98
   },
   {
-    "name": "Momentum-MACD_DEMA | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "name": "Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 139,
+    "total_profit": 246.12,
+    "total_trades": 78
+  },
+  {
+    "name": "Momentum-STC | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.65,
+    "rank": 140,
+    "total_profit": 228.38,
+    "total_trades": 54
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.55,
+    "rank": 141,
+    "total_profit": 270.7,
+    "total_trades": 97
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.53,
+    "rank": 142,
+    "total_profit": 281.29,
+    "total_trades": 97
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.57,
+    "rank": 143,
+    "total_profit": 258.87,
+    "total_trades": 86
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.66,
+    "rank": 144,
+    "total_profit": 224.66,
+    "total_trades": 61
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-KVO",
     "profitable_trades_share": 0.56,
-    "rank": 198,
-    "total_profit": 248.62,
+    "rank": 145,
+    "total_profit": 264.77,
+    "total_trades": 81
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.59,
+    "rank": 146,
+    "total_profit": 247.02,
     "total_trades": 79
   },
   {
-    "name": "Momentum-MACD_DEMA | Momentum-STC | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
-    "profitable_trades_share": 0.67,
-    "rank": 199,
-    "total_profit": 207.65,
-    "total_trades": 45
+    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 147,
+    "total_profit": 244.83,
+    "total_trades": 70
   },
   {
-    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volume-ADOSC | Volume-CMF | Volume-PVT",
-    "profitable_trades_share": 0.6,
-    "rank": 200,
-    "total_profit": 231.42,
+    "name": "Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.62,
+    "rank": 148,
+    "total_profit": 234.74,
     "total_trades": 72
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 149,
+    "total_profit": 256.75,
+    "total_trades": 91
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 150,
+    "total_profit": 245.47,
+    "total_trades": 77
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.6,
+    "rank": 151,
+    "total_profit": 242.18,
+    "total_trades": 81
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-LINREG | Overlap-SUPERTREND | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.53,
+    "rank": 152,
+    "total_profit": 278.62,
+    "total_trades": 97
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF",
+    "profitable_trades_share": 0.59,
+    "rank": 153,
+    "total_profit": 246.1,
+    "total_trades": 69
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 154,
+    "total_profit": 255.85,
+    "total_trades": 98
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.58,
+    "rank": 155,
+    "total_profit": 253.68,
+    "total_trades": 92
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 156,
+    "total_profit": 254.7,
+    "total_trades": 89
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.58,
+    "rank": 157,
+    "total_profit": 249.72,
+    "total_trades": 77
+  },
+  {
+    "name": "Trend-ADX | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.7,
+    "rank": 158,
+    "total_profit": 209.54,
+    "total_trades": 46
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.57,
+    "rank": 159,
+    "total_profit": 255.65,
+    "total_trades": 86
+  },
+  {
+    "name": "Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 160,
+    "total_profit": 238.21,
+    "total_trades": 72
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.58,
+    "rank": 161,
+    "total_profit": 249.42,
+    "total_trades": 84
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.53,
+    "rank": 162,
+    "total_profit": 276.45,
+    "total_trades": 97
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 163,
+    "total_profit": 243.85,
+    "total_trades": 89
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.55,
+    "rank": 164,
+    "total_profit": 264.88,
+    "total_trades": 104
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-LINREG | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.56,
+    "rank": 165,
+    "total_profit": 257.07,
+    "total_trades": 85
+  },
+  {
+    "name": "Momentum-RVGI | Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.55,
+    "rank": 166,
+    "total_profit": 262.31,
+    "total_trades": 94
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-STC | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.66,
+    "rank": 167,
+    "total_profit": 219.85,
+    "total_trades": 50
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.63,
+    "rank": 168,
+    "total_profit": 231.3,
+    "total_trades": 59
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-LINREG | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.55,
+    "rank": 169,
+    "total_profit": 263.45,
+    "total_trades": 89
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.56,
+    "rank": 170,
+    "total_profit": 257.04,
+    "total_trades": 87
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.54,
+    "rank": 171,
+    "total_profit": 269.05,
+    "total_trades": 106
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 172,
+    "total_profit": 238.69,
+    "total_trades": 66
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-STOCH | Overlap-LINREG | Trend-ADX | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC",
+    "profitable_trades_share": 0.58,
+    "rank": 173,
+    "total_profit": 251.21,
+    "total_trades": 99
+  },
+  {
+    "name": "Momentum-RVGI | Momentum-STC | Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 174,
+    "total_profit": 235.77,
+    "total_trades": 62
+  },
+  {
+    "name": "Overlap-SUPERTREND | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.59,
+    "rank": 175,
+    "total_profit": 244.89,
+    "total_trades": 90
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.63,
+    "rank": 176,
+    "total_profit": 229.87,
+    "total_trades": 67
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.62,
+    "rank": 177,
+    "total_profit": 232.08,
+    "total_trades": 58
+  },
+  {
+    "name": "Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-ADOSC | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.59,
+    "rank": 178,
+    "total_profit": 244.2,
+    "total_trades": 78
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Momentum-RVGI | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.55,
+    "rank": 179,
+    "total_profit": 260.28,
+    "total_trades": 94
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-STOCH | Trend-ADX | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 180,
+    "total_profit": 238.65,
+    "total_trades": 63
+  },
+  {
+    "name": "Cycles-EBSW | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO | Volume-PVT",
+    "profitable_trades_share": 0.55,
+    "rank": 181,
+    "total_profit": 261.28,
+    "total_trades": 89
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-MACD_DEMA | Overlap-SUPERTREND | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.53,
+    "rank": 182,
+    "total_profit": 269.44,
+    "total_trades": 105
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.53,
+    "rank": 183,
+    "total_profit": 270.76,
+    "total_trades": 100
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 184,
+    "total_profit": 250.37,
+    "total_trades": 96
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-STC | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.64,
+    "rank": 185,
+    "total_profit": 225.21,
+    "total_trades": 55
+  },
+  {
+    "name": "Overlap-LINREG | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.6,
+    "rank": 186,
+    "total_profit": 240.51,
+    "total_trades": 94
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.54,
+    "rank": 187,
+    "total_profit": 263.58,
+    "total_trades": 94
+  },
+  {
+    "name": "Cycles-EBSW | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.61,
+    "rank": 188,
+    "total_profit": 234.21,
+    "total_trades": 77
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 189,
+    "total_profit": 249.42,
+    "total_trades": 82
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-ADOSC | Volume-CMF",
+    "profitable_trades_share": 0.58,
+    "rank": 190,
+    "total_profit": 245.69,
+    "total_trades": 86
+  },
+  {
+    "name": "Cycles-EBSW | Trend-ADX | Trend-CHOP | Trend-TII | Volatility-MASSI | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.61,
+    "rank": 191,
+    "total_profit": 234.55,
+    "total_trades": 69
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.58,
+    "rank": 192,
+    "total_profit": 246.21,
+    "total_trades": 88
+  },
+  {
+    "name": "Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-MASSI | Volatility-STARC | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.63,
+    "rank": 193,
+    "total_profit": 225.08,
+    "total_trades": 60
+  },
+  {
+    "name": "Cycles-EBSW | Trend-CHOP | Trend-TII | Volatility-BBANDS | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.61,
+    "rank": 194,
+    "total_profit": 232.52,
+    "total_trades": 62
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Overlap-SUPERTREND | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.56,
+    "rank": 195,
+    "total_profit": 252.23,
+    "total_trades": 85
+  },
+  {
+    "name": "Momentum-MACD_DEMA | Momentum-RVGI | Trend-ADX | Trend-TII | Volatility-ACCBANDS | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.57,
+    "rank": 196,
+    "total_profit": 247.68,
+    "total_trades": 80
+  },
+  {
+    "name": "Cycles-EBSW | Momentum-STC | Trend-CHOP | Trend-TII | Volatility-STARC | Volume-CMF | Volume-KVO",
+    "profitable_trades_share": 0.64,
+    "rank": 197,
+    "total_profit": 221.46,
+    "total_trades": 56
+  },
+  {
+    "name": "Cycles-EBSW | Overlap-SUPERTREND | Trend-ADX | Trend-PSAR | Trend-TII | Volatility-STARC | Volume-CMF",
+    "profitable_trades_share": 0.57,
+    "rank": 198,
+    "total_profit": 249.9,
+    "total_trades": 79
+  },
+  {
+    "name": "Momentum-RVGI | Momentum-STC | Trend-CHOP | Trend-PSAR | Trend-TII | Volatility-ACCBANDS | Volume-CMF",
+    "profitable_trades_share": 0.6,
+    "rank": 199,
+    "total_profit": 238.44,
+    "total_trades": 62
+  },
+  {
+    "name": "Momentum-RVGI | Trend-CHOP | Trend-TII | Volatility-ACCBANDS | Volatility-MASSI | Volume-CMF | Volume-PVT",
+    "profitable_trades_share": 0.59,
+    "rank": 200,
+    "total_profit": 239.57,
+    "total_trades": 91
   }
 ]
