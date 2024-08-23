@@ -22,7 +22,6 @@ class Order(BaseModel):
     buy_datetime: Any
     sell_price: Optional[float] = None
     sell_datetime: Optional[Any] = None
-    counter_signal_confirmed: int = 0
 
     def sell(self, sell_price: float, sell_datetime: Any, instrument_type: str) -> float:
         self.sell_price = sell_price
@@ -40,7 +39,6 @@ class Order(BaseModel):
                 f"{round(self.buy_price, 2)} -> {round(self.sell_price, 2)} "
                 f"at {self.buy_datetime.time()} -> {self.sell_datetime.time()}: "
                 f"{round(profit, 2)} in {trading_time} min. "
-                f"Confirmed: {self.counter_signal_confirmed} times. "
                 f"({('+' if profit > 0 else '-') * (1 + int(round(abs(profit)) // 3))})",
             )
 
@@ -99,9 +97,6 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
             profit = wallet.LONG.sell(sell_price, i, "LONG")
             wallet.LONG = None
 
-        if wallet.LONG is not None and row["LONG"] > 0:
-            wallet.LONG.counter_signal_confirmed += 1
-
         # SHORT
         if wallet.SHORT is None and row["SHORT"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["LONG"]):
             wallet.SHORT = Order(buy_price=row["SHORT"], buy_datetime=i)
@@ -114,9 +109,6 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
             sell_price = row["EXIT"]
             profit = wallet.SHORT.sell(sell_price, i, "SHORT")
             wallet.SHORT = None
-
-        if wallet.SHORT is not None and row["SHORT"] > 0:
-            wallet.SHORT.counter_signal_confirmed += 1
 
         if profit is not None:
             strategy.counter.total_trades += 1
