@@ -3,13 +3,14 @@ from datetime import datetime, timedelta
 from typing import List, Tuple
 
 from apis.telegram.operators import Telegram
+from backtest import backtest
 from data.settings import OMX30_YAHOO
-from operators import backtest
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.simplefilter(action="ignore", category=UserWarning)
 
 set_handlers("eow")
 log = get_logger()
@@ -35,59 +36,27 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]]):
         plot=False,
     )
 
-    log.warning("Extending strategies (3 -> 4)")
-    backtest(
-        data,
-        indicators_selector,
-        ComposeStrategiesListMethod.EXTEND,
-        old_strategies_file_name="strategies_dev_3_indicators.json",
-        new_strategies_file_name="strategies_dev_4_indicators.json",
-        indicators_filter=[],
-        plot=False,
-    )
-
-    log.warning("Extending strategies (4 -> 5)")
-    backtest(
-        data,
-        indicators_selector,
-        ComposeStrategiesListMethod.EXTEND,
-        old_strategies_file_name="strategies_dev_4_indicators.json",
-        new_strategies_file_name="strategies_dev_5_indicators.json",
-        indicators_filter=[],
-        plot=False,
-    )
-
-    log.warning("Extending strategies (5 -> 6)")
-    backtest(
-        data,
-        indicators_selector,
-        ComposeStrategiesListMethod.EXTEND,
-        old_strategies_file_name="strategies_dev_5_indicators.json",
-        new_strategies_file_name="strategies_dev_6_indicators.json",
-        indicators_filter=[],
-        plot=False,
-    )
-
-    log.warning("Extending strategies (6 -> 7)")
-    backtest(
-        data,
-        indicators_selector,
-        ComposeStrategiesListMethod.EXTEND,
-        old_strategies_file_name="strategies_dev_6_indicators.json",
-        new_strategies_file_name="strategies_dev_7_indicators.json",
-        indicators_filter=[],
-        plot=False,
-    )
+    for i in range(3, 7):
+        log.warning(f"Extending strategies ({i} -> {i + 1})")
+        backtest(
+            data,
+            indicators_selector,
+            ComposeStrategiesListMethod.EXTEND,
+            old_strategies_file_name=f"strategies_dev_{i}_indicators.json",
+            new_strategies_file_name=f"strategies_dev_{i + 1}_indicators.json",
+            indicators_filter=[],
+            plot=False,
+        )
 
     resolution = "2m"
-    period_days = 30
+    period_days = 20
 
     data = Storage(OMX30_YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    log.warning("Saving strategies")
+    log.warning("Backtesting strategies")
     backtest(
         data,
         indicators_selector,
