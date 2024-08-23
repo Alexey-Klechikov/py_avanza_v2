@@ -75,7 +75,6 @@ if __name__ == "__main__":
         ("Trend", "PSAR"),  # buy / sell
         ("Trend", "CHOP"),  # exit
         ("Overlap", "LINREG"),  # buy / sell
-        ("Overlap", "GHLA"),  # buy / sell
         ("Overlap", "SUPERTREND"),  # buy / sell
         ("Momentum", "MACD_DEMA"),  # buy / sell
         ("Momentum", "STC"),  # buy / sell

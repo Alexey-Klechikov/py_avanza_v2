@@ -22,16 +22,15 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     trend.add_choppiness_index(length=14, length_atr=2, scalar=80.0)  # CHOP
 
     overlap = Overlap(data)
-    overlap.add_gann_high_low_activator(length_high=13, length_low=21, mamode="dema")  # GHLA
-    overlap.add_linear_regression(length=14)  # LINREG
+    overlap.add_linear_regression(length=8, limit=0.3)  # LINREG
     overlap.add_supertrend(length=7, multiplier=3.0)  # SUPERTREND
 
     momentum = Momentum(data)
     momentum.add_macd_dema(length_fast=10, length_slow=20)  # MACD_DEMA
     momentum.add_schaff_trend_cycle(tclength=10, fast=23, slow=50, factor=0.4)  # STC
-    momentum.add_commodity_channel_index(length=14, c=0.01)  # CCI
+    momentum.add_commodity_channel_index(length=16, c=0.02)  # CCI
     momentum.add_relative_vigor_index(length=14, length_swma=4)  # RVI
-    momentum.add_stochastic_oscillator(k=14, d=3, smooth_k=3, mamode="dema")  # STOCH
+    momentum.add_stochastic_oscillator(k=10, d=3, smooth_k=2, mamode="dema")  # STOCH
 
     cycles = Cycles(data)
     cycles.add_even_better_sinewave(length=40, bars=14)  # EBSW

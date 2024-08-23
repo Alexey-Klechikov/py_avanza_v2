@@ -98,21 +98,19 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = "PVT"
-    new_strategies_file_name_prefix = f"strategies_dev_6_indicators_{indicator_to_test}_"
+    indicator_to_test = "LINREG"
+    new_strategies_file_name_prefix = f"strategies_dev_7_indicators_{indicator_to_test}_"
 
-    # drift=2, length_ema=14
-    for drift, length_ema in (
-        [(i, 25) for i in range(4, 20, 2)] + [(i, 30) for i in range(4, 20, 2)] + [(i, 35) for i in range(4, 20, 2)]
-    ):
-        kwargs = {"drift": drift, "length_ema": length_ema}
+    # # length=14, limit=0.1
+    for length, limit in [(16, i / 100) for i in range(15, 45, 10)]:
+        kwargs = {"length": length, "limit": limit}
 
         log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
         backtest(
             data.copy(),
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            old_strategies_file_name="strategies_dev_5_indicators.json",
+            old_strategies_file_name="strategies_dev_6_indicators.json",
             new_strategies_file_name=new_strategies_file_name_prefix
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
             indicators_filter=[indicator_to_test],
@@ -132,32 +130,32 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
                     s["profitable_trades_share"],
                     s["total_profit"],
                     s["name"],
+                    sum([i["profitable_trades_share"] for i in strategies]),
                 ),
             )
 
     log.warning(f"Stats for {indicator_to_test}")
     for s in sorted(stats, key=lambda x: x[1], reverse=True):
-        log.info(">" + " | ".join(s))
+        log.info("> " + " | ".join([str(i) for i in s]))
 
 
 if __name__ == "__main__":
     indicators_selector = [
         ("Trend", "ADX"),  # buy / sell
         ("Trend", "TII"),  # buy / sell
-        ("Trend", "PSAR"),  # buy / sell
+        ("Trend", "PSAR"),  # buy / sell - 284.22 - 27
         ("Trend", "CHOP"),  # exit
         ("Overlap", "LINREG"),  # buy / sell
-        ("Overlap", "GHLA"),  # buy / sell
-        ("Overlap", "SUPERTREND"),  # buy / sell
+        ("Overlap", "SUPERTREND"),  # buy / sell - 284.22 - 27
         ("Momentum", "MACD_DEMA"),  # buy / sell
-        ("Momentum", "STC"),  # buy / sell
+        ("Momentum", "STC"),  # buy / sell - 236.59 - 35
         ("Momentum", "CCI"),  # buy / sell
         ("Momentum", "RVGI"),  # buy / sell
-        ("Momentum", "STOCH"),  # buy / sell
+        ("Momentum", "STOCH"),  # buy / sell -- 104
         ("Cycles", "EBSW"),  # buy / sell
         ("Volatility", "STARC"),  # buy / sell
         ("Volatility", "MASSI"),  # buy / sell
-        ("Volatility", "BBANDS"),  # buy / sell
+        ("Volatility", "BBANDS"),  # buy / sell - 256.59 - 36
         ("Volatility", "ACCBANDS"),  # buy / sell
         ("Volume", "PVT"),  # buy / sell
         ("Volume", "ADOSC"),  # buy / sell

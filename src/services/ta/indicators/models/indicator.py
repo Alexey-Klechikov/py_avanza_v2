@@ -23,7 +23,7 @@ class Plot(BaseModel):
                 "markersize": self.markersize,
                 "ylim": self.ylim,
                 "secondary_y": self.secondary_y,
-                "ylabel": self.ylabel,
+                "ylabel": None if not self.ylabel else self.ylabel.replace(" ", "\n"),
             }.items()
             if v
         }
