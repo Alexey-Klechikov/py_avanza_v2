@@ -44,6 +44,7 @@ jobs:
         # Define cronjobs as a simple array of strings
         cronjobs=(
           "task_eod 0 19 * * 1-5"
+          "task_eow 0 9 * * 6"
           "task_trade 45 9 * * 1-5"
         )
 
