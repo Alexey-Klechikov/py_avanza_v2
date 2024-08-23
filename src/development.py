@@ -135,12 +135,7 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
 
     # drift=2, length_ema=14
     for drift, length_ema in (
-        [
-            # (2, 14),
-        ]
-        + [(i, 25) for i in range(4, 20, 2)]
-        + [(i, 30) for i in range(4, 20, 2)]
-        + [(i, 35) for i in range(4, 20, 2)]
+        [(i, 25) for i in range(4, 20, 2)] + [(i, 30) for i in range(4, 20, 2)] + [(i, 35) for i in range(4, 20, 2)]
     ):
         kwargs = {"drift": drift, "length_ema": length_ema}
 
