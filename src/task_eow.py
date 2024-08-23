@@ -69,7 +69,7 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]]):
 
 
 if __name__ == "__main__":
-    indicators_selector: List[Tuple[str, str]] = [
+    indicators_selector = [
         ("Trend", "ADX"),  # buy / sell
         ("Trend", "TII"),  # buy / sell
         ("Trend", "PSAR"),  # buy / sell
