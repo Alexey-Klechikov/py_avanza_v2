@@ -98,12 +98,12 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = "LINREG"
+    indicator_to_test = "BBANDS"
     new_strategies_file_name_prefix = f"strategies_dev_7_indicators_{indicator_to_test}_"
 
-    # # length=14, limit=0.1
-    for length, limit in [(16, i / 100) for i in range(15, 45, 10)]:
-        kwargs = {"length": length, "limit": limit}
+    # length=14, std=1.8
+    for length, std in [(i, 2.0) for i in range(10, 30, 2)]:
+        kwargs = {"length": length, "std": std}
 
         log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
         backtest(
@@ -143,19 +143,19 @@ if __name__ == "__main__":
     indicators_selector = [
         ("Trend", "ADX"),  # buy / sell
         ("Trend", "TII"),  # buy / sell
-        ("Trend", "PSAR"),  # buy / sell - 284.22 - 27
+        ("Trend", "PSAR"),  # buy / sell
         ("Trend", "CHOP"),  # exit
         ("Overlap", "LINREG"),  # buy / sell
-        ("Overlap", "SUPERTREND"),  # buy / sell - 284.22 - 27
+        ("Overlap", "SUPERTREND"),  # buy / sell
         ("Momentum", "MACD_DEMA"),  # buy / sell
-        ("Momentum", "STC"),  # buy / sell - 236.59 - 35
+        ("Momentum", "STC"),  # buy / sell
         ("Momentum", "CCI"),  # buy / sell
         ("Momentum", "RVGI"),  # buy / sell
-        ("Momentum", "STOCH"),  # buy / sell -- 104
+        ("Momentum", "STOCH"),  # buy / sell
         ("Cycles", "EBSW"),  # buy / sell
         ("Volatility", "STARC"),  # buy / sell
         ("Volatility", "MASSI"),  # buy / sell
-        ("Volatility", "BBANDS"),  # buy / sell - 256.59 - 36
+        ("Volatility", "BBANDS"),  # buy / sell
         ("Volatility", "ACCBANDS"),  # buy / sell
         ("Volume", "PVT"),  # buy / sell
         ("Volume", "ADOSC"),  # buy / sell

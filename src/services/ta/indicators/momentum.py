@@ -35,14 +35,14 @@ class Momentum(IndicatorsCategoryBase):
 
         self.indicators["STC"] = Indicator(
             signal=Signal(
-                LONG=lambda x: x[column_name] > 75,
-                SHORT=lambda x: x[column_name] < 25,
+                LONG=lambda x: x[column_name] > 50,
+                SHORT=lambda x: x[column_name] < 50,
             ),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=[column_name], color="orange", ylim=[-10, 110], ylabel="Momentum [STC]")],
-                horizontal_lines=[HorizontalLine(y=25, color="red"), HorizontalLine(y=75, color="blue")],
+                horizontal_lines=[HorizontalLine(y=50, color="red")],
             ),
         )
 

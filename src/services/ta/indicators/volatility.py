@@ -96,17 +96,12 @@ class Volatility(IndicatorsCategoryBase):
             log.debug("Indicator 'Volatility -> BBANDS' can not be added.")
             return
 
-        column_name_BBM_lag = column_names["BBM"] + "_lag"
-        self.data[column_name_BBM_lag] = self.data[column_names["BBM"]].shift(1)
-
         self.indicators["BBANDS"] = Indicator(
             signal=Signal(
-                LONG=lambda x: (x["Close"] > x[column_names["BBU"]])
-                and (x[column_names["BBM"]] > x[column_name_BBM_lag]),
-                SHORT=lambda x: (x["Close"] < x[column_names["BBL"]])
-                and (x[column_names["BBM"]] < x[column_name_BBM_lag]),
+                LONG=lambda x: (x["Close"] > x[column_names["BBU"]]),
+                SHORT=lambda x: (x["Close"] < x[column_names["BBL"]]),
             ),
-            columns=list(column_names.values()) + [column_name_BBM_lag],
+            columns=list(column_names.values()),
             plots=Plots(
                 panel=Panel.MAIN,
                 list=[Plot(columns=list(column_names.values()), ylabel="Volatility [BBANDS]")],

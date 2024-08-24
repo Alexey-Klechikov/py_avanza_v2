@@ -27,7 +27,7 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
 
     momentum = Momentum(data)
     momentum.add_macd_dema(length_fast=10, length_slow=20)  # MACD_DEMA
-    momentum.add_schaff_trend_cycle(tclength=10, fast=23, slow=50, factor=0.4)  # STC
+    momentum.add_schaff_trend_cycle(tclength=10, fast=23, slow=45, factor=0.55)  # STC
     momentum.add_commodity_channel_index(length=16, c=0.02)  # CCI
     momentum.add_relative_vigor_index(length=14, length_swma=4)  # RVI
     momentum.add_stochastic_oscillator(k=10, d=3, smooth_k=2, mamode="dema")  # STOCH
@@ -38,7 +38,7 @@ def get_indicators(data, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     volatility = Volatility(data)
     volatility.add_starc_bands(length_sma=10, length_atr=15, multiplier_atr=2.0)  # STARC
     volatility.add_mass_index(fast=9, slow=25)  # MASSI
-    volatility.add_bollinger_bands(length=14, std=1.8)  # BBANDS
+    volatility.add_bollinger_bands(length=22, std=2.0)  # BBANDS
     volatility.add_acceleration_bands(length=14, c=1, mamode="dema")  # ACCBANDS
 
     volume = Volume(data)
