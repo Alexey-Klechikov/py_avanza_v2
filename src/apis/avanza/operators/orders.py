@@ -6,7 +6,7 @@ from avanza.constants import OrderType
 
 from apis.avanza.client import get_client
 from apis.avanza.client.models import Deal, Order, OrderException
-from data.settings import ACCOUNT_ID
+from data.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()
@@ -20,7 +20,7 @@ class Orders:
         self.active_order = None
 
         orders = get_client().list_orders().orders
-        orders = [i for i in orders if i.account.account_id == ACCOUNT_ID]
+        orders = [i for i in orders if i.account.account_id == AVANZA_ACCOUNT.ACCOUNT_ID]
 
         active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
         if not active_orders:
@@ -42,7 +42,7 @@ class Orders:
 
     def get_past(self) -> List[Deal]:
         return sorted(
-            [i for i in get_client().get_past_orders().deals if i.account.account_id == ACCOUNT_ID],
+            [i for i in get_client().get_past_orders().deals if i.account.account_id == AVANZA_ACCOUNT.ACCOUNT_ID],
             key=lambda x: x.time,
         )
 
@@ -83,7 +83,7 @@ class Orders:
 
         try:
             _ = get_client().place_order(
-                account_id=ACCOUNT_ID,
+                account_id=AVANZA_ACCOUNT.ACCOUNT_ID,
                 order_book_id=order_book_id,
                 order_type=order_type,
                 price=price,
@@ -102,7 +102,7 @@ class Orders:
 
     def _delete(self, order_id: str) -> Optional[str]:
         try:
-            _ = get_client().delete_order(account_id=ACCOUNT_ID, order_id=order_id)
+            _ = get_client().delete_order(account_id=AVANZA_ACCOUNT.ACCOUNT_ID, order_id=order_id)
 
             log.info("Order deleted")
 
@@ -111,7 +111,7 @@ class Orders:
 
     def delete_all(self):
         orders = get_client().list_orders().orders
-        orders = [i for i in orders if i.account.account_id == ACCOUNT_ID]
+        orders = [i for i in orders if i.account.account_id == AVANZA_ACCOUNT.ACCOUNT_ID]
 
         for order in orders:
             self._delete(order.order_id)

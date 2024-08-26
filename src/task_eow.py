@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from apis.telegram.operators import Telegram
 from backtest import backtest
-from data.settings import OMX30_YAHOO
+from data.settings import OMX
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -20,7 +20,7 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]]):
     resolution = "2m"
     period_days = 60
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX.YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -51,7 +51,7 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]]):
     resolution = "2m"
     period_days = 20
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX.YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]

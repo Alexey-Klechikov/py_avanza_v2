@@ -27,7 +27,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from data.settings import USERNAME
+from data.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()
@@ -38,7 +38,7 @@ class Avanza(AvanzaBase):
         self,
         path: str,
         http_method: str = "GET",
-        options: Optional[dict] = None,
+        options: Optional[Union[dict, list]] = None,
     ) -> dict:
         request = CallRequest(
             path=path,
@@ -126,7 +126,7 @@ class Avanza(AvanzaBase):
 
         return InstrumentIndex(**data)
 
-    def get_accounts_overview(self, account_url_parameter) -> AccountOverview:
+    def get_accounts_overview(self, account_url_parameter: str) -> AccountOverview:
         data = self._retry_call(
             "/_api/account-performance/overview/total-values",
             http_method="POST",
@@ -264,7 +264,7 @@ class Avanza(AvanzaBase):
 
 
 @cache
-def get_client(user: str = USERNAME) -> Avanza:
+def get_client(user: str = AVANZA_ACCOUNT.USERNAME) -> Avanza:
     """time is a dummy argument to make the function bypass the cache once every hour"""
 
     log.debug("Connect to Avanza")

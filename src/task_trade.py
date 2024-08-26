@@ -12,7 +12,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from data.settings import MINIMUM_BUDGET, OMX30_AVA, OMX30_YAHOO, TRADING_RESOLUTION
+from data.settings import OMX, TRADING
 from services.storage import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
@@ -39,16 +39,16 @@ class Data:
         self.strategies = []
 
     def get(self):
-        storage = Storage(OMX30_YAHOO, resolution=TRADING_RESOLUTION)
+        storage = Storage(OMX.YAHOO, resolution=TRADING.RESOLUTION)
 
         data = storage.read()
         data_size_before = data.shape[0]
 
-        data_ava = Chart.get_chart_data(OMX30_AVA, TimePeriod.TODAY, Resolution.TWO_MINUTES)
+        data_ava = Chart.get_chart_data(OMX.AVA, TimePeriod.TODAY, Resolution.TWO_MINUTES)
         storage.write(data_ava)
 
         if data_ava.empty:
-            data_yahoo = Ticker(OMX30_YAHOO).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+            data_yahoo = Ticker(OMX.YAHOO).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
             storage.write(data_yahoo)
 
         data = storage.read()
@@ -122,7 +122,7 @@ class Data:
 
 class Budget:
     def __init__(self):
-        self.value = MINIMUM_BUDGET
+        self.value = TRADING.MINIMUM_BUDGET
         self.starting_balance = 0
 
     def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
@@ -132,9 +132,9 @@ class Budget:
         for past_order in past_orders:
             self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
 
-        self.value = int(max([(self.starting_balance // 500 - 4) * 500, MINIMUM_BUDGET]))
-        if self.value != MINIMUM_BUDGET:
-            log.warning(f"Budget adjusted: {MINIMUM_BUDGET} -> {self.value}")
+        self.value = int(max([(self.starting_balance // 500 - 4) * 500, TRADING.MINIMUM_BUDGET]))
+        if self.value != TRADING.MINIMUM_BUDGET:
+            log.warning(f"Budget adjusted: {TRADING.MINIMUM_BUDGET} -> {self.value}")
 
 
 class Telegram(TelegramBase):
@@ -296,7 +296,7 @@ class Flow:
 
 # MAIN
 def trade(dry_run: bool) -> None:
-    log.info(f"Start trading strategies on OMX30 | {TRADING_RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
+    log.info(f"Start trading strategies on {OMX.NAME} | {TRADING.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
 
     data = Data()
     data.get()

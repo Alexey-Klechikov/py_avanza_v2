@@ -4,7 +4,7 @@ from avanza.constants import InstrumentType
 
 from apis.avanza.client import get_client
 from apis.avanza.operators.models import Position
-from data.settings import ACCOUNT_ID
+from data.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()
@@ -30,7 +30,7 @@ class Portfolio:
         if not self._account_url_parameter:
             self.reload_positions()
 
-        account_overview = get_client().get_accounts_overview(self._account_url_parameter)
+        account_overview = get_client().get_accounts_overview(self._account_url_parameter)  # type: ignore
 
         self.total_value = account_overview.total_value.total_value.value
         self.buying_power = account_overview.buying_power.total.value
@@ -39,7 +39,7 @@ class Portfolio:
         positions = get_client().get_accounts_positions()
 
         self._account_url_parameter = [
-            i.account.url_parameter_id for i in positions.cash_positions if i.account.id == ACCOUNT_ID
+            i.account.url_parameter_id for i in positions.cash_positions if i.account.id == AVANZA_ACCOUNT.ACCOUNT_ID
         ][0]
 
         self.positions = [
@@ -67,7 +67,7 @@ class Portfolio:
                 },
             )
             for i in positions.with_orderbook
-            if i.account.id == ACCOUNT_ID
+            if i.account.id == AVANZA_ACCOUNT.ACCOUNT_ID
         ]
 
         if self.positions:

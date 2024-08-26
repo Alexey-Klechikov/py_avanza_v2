@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import List, Tuple
 
 from backtest import backtest
-from data.settings import OMX30_YAHOO
+from data.settings import OMX
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -21,7 +21,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
     resolution = "2m"
     period_days = 60
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX.YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -52,7 +52,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]]):
     resolution = "2m"
     period_days = 20
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX.YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -73,7 +73,7 @@ def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]
     resolution = "2m"
     period_days = 5
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX.YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -93,7 +93,7 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]])
     resolution = "2m"
     period_days = 60
 
-    data = Storage(OMX30_YAHOO, resolution=resolution).read()
+    data = Storage(OMX.YAHOO, resolution=resolution).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -163,6 +163,6 @@ if __name__ == "__main__":
         ("Volume", "KVO"),  # buy / sell
     ]
 
-    # run_full_strategies_generation(indicators_selector)
+    run_full_strategies_generation(indicators_selector)
     # run_test_for_selected_indicators(indicators_selector)
-    run_plotting_for_active_strategies(indicators_selector)
+    # run_plotting_for_active_strategies(indicators_selector)

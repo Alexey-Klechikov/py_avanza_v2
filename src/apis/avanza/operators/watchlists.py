@@ -2,7 +2,7 @@ from avanza.models import WatchList
 
 from apis.avanza.client import get_client
 from apis.avanza.operators.models import Orderbook, PreferredInstrument, ValidInstruments
-from data.settings import CERTIFICATE_MULTIPLIER
+from data.settings import TRADING
 from utils.logger import get_logger
 
 log = get_logger()
@@ -39,7 +39,7 @@ class Watchlists:
             )
 
     def _refresh_watchlist(self, watchlist: WatchList):
-        watchlist_instrument_direction, watchlist_instrument_type = watchlist.name.split("_")[1:]
+        watchlist_instrument_direction, watchlist_instrument, watchlist_instrument_type = watchlist.name.split("_")[1:]
 
         for orderbook_id in watchlist.orderbooks:
             if watchlist_instrument_type == "CERTIFICATE":
@@ -50,8 +50,8 @@ class Watchlists:
                 instrument_info = get_client().get_instrument_warrant(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.key_indicators.direction]
                 if (
-                    instrument_info.key_indicators.leverage < CERTIFICATE_MULTIPLIER * 0.75
-                    or instrument_info.key_indicators.leverage > CERTIFICATE_MULTIPLIER * 1.35
+                    instrument_info.key_indicators.leverage < TRADING.MULTIPLIER * 0.75
+                    or instrument_info.key_indicators.leverage > TRADING.MULTIPLIER * 1.35
                 ):
                     continue
             else:
@@ -104,10 +104,10 @@ class Watchlists:
     def _update_watchlist(self, watchlist: WatchList):
         log.debug(f"Update watchlist {watchlist.name}")
 
-        instrument_direction, instrument_type = watchlist.name.split("_")[1:]
+        instrument_direction, instrument, instrument_type = watchlist.name.split("_")[1:]
 
         if instrument_type == "CERTIFICATE":
-            search_string = f"{instrument_direction} OMX AVA X{CERTIFICATE_MULTIPLIER}"
+            search_string = f"{instrument_direction} OMX AVA X{TRADING.MULTIPLIER}"
         elif instrument_type == "WARRANT":
             search_string = f"{'L' if instrument_direction == 'BULL' else 'S'} OMX AVA"
         else:
