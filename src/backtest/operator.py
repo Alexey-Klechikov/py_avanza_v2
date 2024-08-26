@@ -70,10 +70,10 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy):
         )
 
     for column in ["LONG", "SHORT", "EXIT"]:
-        for non_trading_time in (["09:00", "9:45"], ["17:15", "17:30"]):
+        for non_trading_time in (["09:00", "9:45"], ["17:00", "17:30"]):
             data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
 
-    data.loc[data.between_time("17:15", "17:16").index, "EXIT"] = (data["High"] + data["Low"]) / 2
+    data.loc[data.between_time("17:00", "17:01").index, "EXIT"] = (data["High"] + data["Low"]) / 2
 
 
 def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):

@@ -265,14 +265,14 @@ class Flow:
             [
                 not orders.active_order,
                 not portfolio.positions,
-                data.data.iloc[-1].name.time() >= time(17, 0),  # type: ignore
+                datetime.now().time() >= time(17, 0),
             ],
         ):
             self.action = FlowAction.EXIT_TRADING
         elif any(
             [
                 data.too_old,
-                datetime.now().time() > time(17, 15),
+                datetime.now().time() >= time(17, 0),
             ],
         ):
             self.action = FlowAction.EXIT_POSITION
