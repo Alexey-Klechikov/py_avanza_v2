@@ -127,7 +127,7 @@ class Data:
 class Budget:
     def __init__(self, settings):
         self.value = settings.MINIMUM_BUDGET
-        self.minimum_budget = settings.MINIMUM_BUDGET
+        self.settings = settings
         self.starting_balance = 0
 
     def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
@@ -135,11 +135,17 @@ class Budget:
 
         past_orders = orders.get_past()
         for past_order in past_orders:
+            if (
+                past_order.time.time() <= self.settings.TRADING_START
+                or past_order.time.time() >= self.settings.TRADING_END
+            ):
+                continue
+
             self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
 
-        self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.minimum_budget]))
-        if self.value != self.minimum_budget:
-            log.warning(f"Budget adjusted: {self.minimum_budget} -> {self.value}")
+        self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.settings.MINIMUM_BUDGET]))
+        if self.value != self.settings.MINIMUM_BUDGET:
+            log.warning(f"Budget adjusted: {self.settings.MINIMUM_BUDGET} -> {self.value}")
 
 
 class Telegram(TelegramBase):
@@ -163,7 +169,7 @@ class Telegram(TelegramBase):
 
         self.final_balance = portfolio.total_value
 
-    def log_deals(self, orders: Orders) -> None:
+    def log_deals(self, orders: Orders, settings) -> None:
         deals = orders.get_past()
 
         if not deals:
@@ -175,6 +181,9 @@ class Telegram(TelegramBase):
                 continue
             group.sort_values("time", inplace=True)
             group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
+
+            if group["time"].iloc[0].time() <= settings.TRADING_START:
+                continue
 
             self.deals.append((round(group["amount"].sum()), group["time"].iloc[0].strftime("%Y-%m-%d %H:%M:%S")))
 
@@ -366,13 +375,14 @@ def trade(dry_run: bool, settings) -> None:
     portfolio.reload_balance()
 
     telegram.log_final_balance(portfolio)
-    telegram.log_deals(orders)
+    telegram.log_deals(orders, settings)
     telegram.send_message(budget)
 
 
 if __name__ == "__main__":
     try:
         trade(dry_run=(True if platform.system() == "Darwin" else False), settings=SETTINGS.OMX)
+        trade(dry_run=(True if platform.system() == "Darwin" else False), settings=SETTINGS.NASDAQ)
 
     except Exception as e:
         telegram = TelegramBase()

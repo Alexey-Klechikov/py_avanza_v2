@@ -13,6 +13,19 @@ INSTRUMENT_DIRECTIONS = {
 }
 
 
+class UnpackedWatchlistName:
+    def __init__(self, name: str):
+        self.trading_perspective = ""
+        self.direction = ""
+        self.instrument = ""
+        self.instrument_type = ""
+
+        if not name.startswith("DT") or not len(name.split("_")) == 4:
+            return
+
+        self.trading_perspective, self.direction, self.instrument, self.instrument_type = name.split("_")
+
+
 class Watchlists:
     def __init__(self, settings):
         self.settings = settings
@@ -38,15 +51,13 @@ class Watchlists:
                 + f" [leverage {self.preferred_instrument.__getattribute__(instrument_direction).leverage}]",
             )
 
-    def _refresh_watchlist(self, watchlist: WatchList):
-        watchlist_instrument_direction, watchlist_instrument, watchlist_instrument_type = watchlist.name.split("_")[1:]
-
+    def _refresh_watchlist(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
         for orderbook_id in watchlist.orderbooks:
-            if watchlist_instrument_type == "CERTIFICATE":
+            if watchlist_name.instrument_type == "CERTIFICATE":
                 instrument_info = get_client().get_instrument_certificate(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.direction]
 
-            elif watchlist_instrument_type == "WARRANT":
+            elif watchlist_name.instrument_type == "WARRANT":
                 instrument_info = get_client().get_instrument_warrant(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.key_indicators.direction]
                 if (
@@ -57,8 +68,8 @@ class Watchlists:
             else:
                 continue
 
-            if (watchlist_instrument_type.upper() != instrument_info.type) or (
-                watchlist_instrument_direction != instrument_direction
+            if (watchlist_name.instrument_type != instrument_info.type) or (
+                watchlist_name.direction != instrument_direction
             ):
                 log.error(
                     "> Wrong instrument in the watchlist %s - %s",
@@ -67,7 +78,7 @@ class Watchlists:
                 )
                 continue
 
-            self.valid_instruments.__getattribute__(watchlist_instrument_direction).append(
+            self.valid_instruments.__getattribute__(watchlist_name.direction).append(
                 Orderbook(
                     id=orderbook_id,
                     name=instrument_info.name,
@@ -81,17 +92,19 @@ class Watchlists:
             )
 
     def refresh_watchlists(self):
-        # Watchlist name is expected as "DT_{direction}_{type}"
-
         log.debug("Refresh watchlists")
 
         self.valid_instruments = ValidInstruments()
 
         for watchlist in get_client().get_watchlists():
-            if not watchlist.name.startswith("DT"):
+            unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
+            if (
+                unpacked_watchlist_name.trading_perspective != "DT"
+                or unpacked_watchlist_name.instrument != self.settings.NAME
+            ):
                 continue
 
-            self._refresh_watchlist(watchlist)
+            self._refresh_watchlist(watchlist, unpacked_watchlist_name)
 
         self._set_preferred_instrument()
 
@@ -101,23 +114,21 @@ class Watchlists:
         for instrument_id in watchlist.orderbooks:
             get_client().remove_from_watchlist(instrument_id, watchlist.id)
 
-    def _update_watchlist(self, watchlist: WatchList):
+    def _update_watchlist(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
         log.debug(f"Update watchlist {watchlist.name}")
 
-        instrument_direction, instrument, instrument_type = watchlist.name.split("_")[1:]
-
-        if instrument_type == "CERTIFICATE":
-            search_string = f"{instrument_direction} OMX AVA X{self.settings.MULTIPLIER}"
-        elif instrument_type == "WARRANT":
-            search_string = f"{'L' if instrument_direction == 'BULL' else 'S'} OMX AVA"
+        if watchlist_name.instrument_type == "CERTIFICATE":
+            search_string = f"{watchlist_name.direction} {self.settings.NAME} AVA X{self.settings.MULTIPLIER}"
+        elif watchlist_name.instrument_type == "WARRANT":
+            search_string = f"{'L' if watchlist_name.direction == 'BULL' else 'S'} {self.settings.NAME} AVA"
         else:
             return
 
-        search_result = get_client().search_instrument(search_string, [instrument_type])
+        search_result = get_client().search_instrument(search_string, [watchlist_name.instrument_type])
 
         if search_result.total_number_of_hits == 0:
             log.error(
-                f"> Failed to find {instrument_type} instruments using '{search_string}'",
+                f"> Failed to find {watchlist_name.instrument_type} instruments using '{search_string}'",
             )
             return
 
@@ -139,8 +150,14 @@ class Watchlists:
         log.info("Update watchlists")
 
         for watchlist in get_client().get_watchlists():
-            if not watchlist.name.startswith("DT"):
+            unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
+            if (
+                unpacked_watchlist_name.trading_perspective != "DT"
+                or unpacked_watchlist_name.instrument != self.settings.NAME
+            ):
                 continue
 
-            self._clear_watchlist(watchlist)
-            self._update_watchlist(watchlist)
+            self._clear_watchlist(
+                watchlist,
+            )
+            self._update_watchlist(watchlist, unpacked_watchlist_name)

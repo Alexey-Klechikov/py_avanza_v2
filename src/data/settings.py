@@ -11,7 +11,7 @@ class TRADING:
 
 @dataclass
 class OMX(TRADING):
-    NAME: str = "OMX (Sweden)"
+    NAME: str = "OMX"
     DIR: str = "OMX"
 
     AVA: str = "19002"
@@ -24,7 +24,7 @@ class OMX(TRADING):
 
 @dataclass
 class NASDAQ(TRADING):
-    NAME: str = "NASDAQ (USA)"
+    NAME: str = "NASDAQ"
     DIR: str = "NDX"
 
     AVA: str = "155541"
