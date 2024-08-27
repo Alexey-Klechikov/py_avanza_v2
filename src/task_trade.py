@@ -3,7 +3,7 @@ import warnings
 from datetime import datetime, time, timedelta
 from enum import Enum
 from time import sleep
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 from avanza.constants import OrderType, Resolution, TimePeriod
@@ -12,7 +12,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from data.settings import OMX, TRADING
+from data.settings import NASDAQ, OMX, TRADING
 from services.storage import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
@@ -32,23 +32,24 @@ class Signal(Enum):
 
 
 class Data:
-    def __init__(self):
+    def __init__(self, settings_index: Union[OMX, NASDAQ]):
+        self.settings_index = settings_index
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.too_old = False
         self.strategies = []
 
     def get(self):
-        storage = Storage(OMX.YAHOO, resolution=TRADING.RESOLUTION)
+        storage = Storage(self.settings_index, resolution=TRADING.RESOLUTION)
 
         data = storage.read()
         data_size_before = data.shape[0]
 
-        data_ava = Chart.get_chart_data(OMX.AVA, TimePeriod.TODAY, Resolution.TWO_MINUTES)
+        data_ava = Chart.get_chart_data(self.settings_index, TimePeriod.TODAY, Resolution.TWO_MINUTES)
         storage.write(data_ava)
 
         if data_ava.empty:
-            data_yahoo = Ticker(OMX.YAHOO).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+            data_yahoo = Ticker(self.settings_index).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
             storage.write(data_yahoo)
 
         data = storage.read()
@@ -64,7 +65,7 @@ class Data:
 
     def get_strategies(self):
         indicators_mapping = get_indicators(self.data)
-        strategies = read_top_strategies(indicators_mapping, "strategies.json")
+        strategies = read_top_strategies(indicators_mapping, f"{self.settings_index.DIR}/strategies.json")
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
                 log.info(f"Strategy {i+1}: {strategy.name}")
@@ -94,7 +95,10 @@ class Data:
                 )
 
         for column in ["LONG", "SHORT", "EXIT"]:
-            for non_trading_time in (["09:00", "9:45"], ["17:15", "17:30"]):
+            for non_trading_time in (
+                ["09:00", self.settings_index.TRADING_START.strftime("%H:%M")],
+                [self.settings_index.TRADING_END.strftime("%H:%M"), "22:30"],
+            ):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
 
     def get_signal(self) -> Optional[Signal]:
@@ -254,8 +258,9 @@ class FlowAction(Enum):
 
 
 class Flow:
-    def __init__(self):
+    def __init__(self, settings_index: Union[OMX, NASDAQ]):
         self.action: FlowAction = FlowAction.TRADE
+        self.settings_index = settings_index
 
     def decide(self, data: Data, orders: Orders, portfolio: Portfolio) -> None:
         orders.reload_active()
@@ -265,14 +270,14 @@ class Flow:
             [
                 not orders.active_order,
                 not portfolio.positions,
-                datetime.now().time() >= time(17, 0),
+                datetime.now().time() >= self.settings_index.TRADING_END,
             ],
         ):
             self.action = FlowAction.EXIT_TRADING
         elif any(
             [
                 data.too_old,
-                datetime.now().time() >= time(17, 0),
+                datetime.now().time() >= self.settings_index.TRADING_END,
             ],
         ):
             self.action = FlowAction.EXIT_POSITION
@@ -295,10 +300,12 @@ class Flow:
 
 
 # MAIN
-def trade(dry_run: bool) -> None:
-    log.info(f"Start trading strategies on {OMX.NAME} | {TRADING.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""))
+def trade(dry_run: bool, settings_index: Union[OMX, NASDAQ]) -> None:
+    log.info(
+        f"Start trading strategies on {settings_index.NAME} | {TRADING.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""),
+    )
 
-    data = Data()
+    data = Data(settings_index)
     data.get()
 
     orders = Orders()
@@ -317,9 +324,9 @@ def trade(dry_run: bool) -> None:
     watchlist = Watchlists()
     watchlist.update_watchlists()
 
-    flow = Flow()
+    flow = Flow(settings_index)
 
-    while datetime.now().time() < time(17, 30):
+    while datetime.now().time() < time(22, 10):
         flow.decide(data, orders, portfolio)
         if flow.action == FlowAction.DO_NOTHING:
             continue
@@ -364,7 +371,7 @@ def trade(dry_run: bool) -> None:
 
 if __name__ == "__main__":
     try:
-        trade(dry_run=(True if platform.system() == "Darwin" else False))
+        trade(dry_run=(True if platform.system() == "Darwin" else False), settings_index=OMX())
 
     except Exception as e:
         telegram = TelegramBase()

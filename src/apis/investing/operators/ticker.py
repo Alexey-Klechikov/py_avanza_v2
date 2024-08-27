@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
+from typing import Union
 
 import pandas as pd
 
 from apis.investing.client import get_investing
 from apis.investing.client.models import Resolution
+from data.settings import NASDAQ, OMX
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Ticker:
-    def __init__(self, ticker_investing: str):
-        self.ticker_investing = ticker_investing
+    def __init__(self, settings_index: Union[OMX, NASDAQ]):
+        self.ticker_investing = settings_index.INVESTING
 
     def get_history(self, resolution: Resolution, period_days: int) -> pd.DataFrame:
         log.debug(

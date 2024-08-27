@@ -1,5 +1,7 @@
+import platform
 import warnings
 from datetime import date, datetime, timedelta
+from typing import Union
 
 import pandas_market_calendars as mcal
 from avanza.constants import Resolution, TimePeriod
@@ -8,11 +10,12 @@ from workalendar.europe import Sweden
 from apis.avanza.client import get_client
 from apis.avanza.operators import Chart
 from apis.investing.client.models import Resolution as InvestingResolution
+from apis.investing.operators import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from backtest import backtest
-from data.settings import OMX, TRADING
+from data.settings import NASDAQ, OMX, TRADING
 from services.analytics import Analytics, AnalyticsType
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -121,8 +124,8 @@ def get_exchange_working_hours(shift_days: int = 0):
     return dict(sorted(exchange_working_hours.items()))
 
 
-def cache_omx30():
-    log.warning(f"TASK 1: Cache {OMX.NAME} data")
+def cache_history(settings_index: Union[OMX, NASDAQ]):
+    log.warning(f"TASK: Cache {settings_index.NAME} data")
 
     for resolution_ava, resolution_investing, interval_yahoo in [
         (Resolution.MINUTE, InvestingResolution.ONE_MINUTE, Interval.ONE_MINUTE),
@@ -130,33 +133,34 @@ def cache_omx30():
         (Resolution.FIVE_MINUTES, InvestingResolution.FIVE_MINUTES, Interval.FIVE_MINUTES),
         (Resolution.HOUR, InvestingResolution.SIXTY_MINUTES, Interval.SIXTY_MINUTES),
     ]:
-        storage = Storage(OMX.YAHOO, resolution=interval_yahoo.value.raw)
+        storage = Storage(settings_index, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
-        data_ava = Chart.get_chart_data(OMX.AVA, TimePeriod.TODAY, resolution_ava)
+        data_ava = Chart.get_chart_data(settings_index, TimePeriod.TODAY, resolution_ava)
         storage.write(data_ava)
 
-        # if resolution_investing and platform.system() == "Darwin":
-        #     data_investing = InvestingTicker(OMX.INVESTING).get_history(
-        #         resolution=resolution_investing,
-        #         period_days=60,
-        #     )
-        #     storage.write(data_investing)
+        if False and resolution_investing and platform.system() == "Darwin":
+            for i in range(5, 60, 5):
+                data_investing = InvestingTicker(settings_index).get_history(
+                    resolution=resolution_investing,
+                    period_days=i,
+                )
+                storage.write(data_investing)
 
         if storage.read().shape[0] == rows_before:
-            data_yahoo = YahooTicker(OMX.YAHOO).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+            data_yahoo = YahooTicker(settings_index).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
             storage.write(data_yahoo)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def backtest_strategies():
+def backtest_strategies(settings_index: Union[OMX, NASDAQ]):
     period_days = 20
 
-    log.warning(f"TASK 2: Backtest strategies on {OMX.NAME} | {TRADING.RESOLUTION} | {period_days} days")
+    log.warning(f"TASK: Backtest strategies on {settings_index.NAME} | {TRADING.RESOLUTION} | {period_days} days")
 
-    data = Storage(OMX.YAHOO, resolution=TRADING.RESOLUTION).read()
+    data = Storage(settings_index, resolution=TRADING.RESOLUTION).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -165,6 +169,7 @@ def backtest_strategies():
         data,
         [],
         ComposeStrategiesListMethod.READ,
+        settings_index=settings_index,
         old_strategies_file_name="strategies_dev_7_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
@@ -172,7 +177,7 @@ def backtest_strategies():
 
 
 def gather_analytics():
-    log.warning("TASK 3: Gather analytics")
+    log.warning("TASK: Gather analytics")
 
     update_exchange_working_hours(shift_days=1)
     exchange_working_hours = get_exchange_working_hours(shift_days=1)
@@ -183,26 +188,20 @@ def gather_analytics():
             if any(
                 [
                     datetime.strptime(daytime, "%H:%M:%S") <= datetime.strptime("09:00", "%H:%M"),
-                    datetime.strptime(daytime, "%H:%M:%S") >= datetime.strptime("17:30", "%H:%M"),
+                    datetime.strptime(daytime, "%H:%M:%S") >= datetime.strptime("23:00", "%H:%M"),
                 ],
             ):
                 continue
 
             log.info(f"{daytime}: {', '.join(events)}")
 
-    update_stock_events()
-    stock_events = get_stock_events(shift_days=1)
-    if not stock_events:
-        log.info("No upcoming events")
-    else:
-        for event in stock_events:
-            log.info(event)
-
 
 if __name__ == "__main__":
     try:
-        cache_omx30()
-        backtest_strategies()
+        for settings_index in (OMX(), NASDAQ()):
+            cache_history(settings_index)
+            backtest_strategies(settings_index)
+
         gather_analytics()
 
     except Exception as e:

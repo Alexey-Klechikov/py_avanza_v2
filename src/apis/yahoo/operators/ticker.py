@@ -1,17 +1,19 @@
 from datetime import date, timedelta
+from typing import Union
 
 import pandas as pd
 
 from apis.yahoo.client import Yahoo
 from apis.yahoo.client.models import Interval, Period
+from data.settings import NASDAQ, OMX
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Ticker:
-    def __init__(self, ticker_yahoo: str):
-        self.ticker_yahoo = ticker_yahoo
+    def __init__(self, settings_index: Union[OMX, NASDAQ]):
+        self.ticker_yahoo = settings_index.YAHOO
 
     def _get_extended_history(
         self,

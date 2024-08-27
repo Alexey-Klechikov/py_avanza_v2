@@ -1,27 +1,27 @@
 import os
 import pickle
-import re
+from typing import Union
 
 import pandas as pd
 
-from data.settings import DATA_COLUMNS
+from data.settings import DATA_COLUMNS, NASDAQ, OMX
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Storage:
-    def __init__(self, ticker_name: str, resolution: str) -> None:  # TODO: make resolution enum
-        self.ticker_name = ticker_name
+    def __init__(self, settings_index: Union[OMX, NASDAQ], resolution: str) -> None:  # TODO: make resolution enum
+        self.ticker_name = settings_index.DIR
         self.resolution = resolution
 
         self.path = self._get_path()
 
     def _get_path(self) -> str:
         project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
-        file_name = re.sub(r"\W+", "", f"{self.ticker_name}_{self.resolution}")
+        file_name = f"{self.ticker_name}_{self.resolution}"
 
-        return f"{project_root_dir}/data/{file_name}.pickle"
+        return f"{project_root_dir}/data/{self.ticker_name}/{file_name}.pickle"
 
     def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):
