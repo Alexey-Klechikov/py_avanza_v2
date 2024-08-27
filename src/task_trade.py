@@ -381,8 +381,10 @@ def trade(dry_run: bool, settings) -> None:
 
 if __name__ == "__main__":
     try:
-        trade(dry_run=(True if platform.system() == "Darwin" else False), settings=SETTINGS.OMX)
-        trade(dry_run=(True if platform.system() == "Darwin" else False), settings=SETTINGS.NASDAQ)
+        dry_run = platform.system() == "Darwin"
+
+        trade(dry_run, SETTINGS.OMX)
+        trade(dry_run, SETTINGS.NASDAQ)
 
     except Exception as e:
         telegram = TelegramBase()
