@@ -2,10 +2,10 @@ import json
 import os
 import warnings
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from backtest import backtest
-from data.settings import NASDAQ, OMX
+from data.settings import SETTINGS
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -17,11 +17,10 @@ set_handlers("development")
 log = get_logger()
 
 
-def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]], settings_index: Union[OMX, NASDAQ]):
-    resolution = "2m"
+def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]], settings):
     period_days = 60
 
-    data = Storage(settings_index, resolution=resolution).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -31,7 +30,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]], s
         data,
         indicators_selector,
         ComposeStrategiesListMethod.GENERATE,
-        settings_index=settings_index,
+        settings,
         old_strategies_file_name=None,
         new_strategies_file_name="strategies_dev_3_indicators.json",
         indicators_filter=[],
@@ -44,17 +43,16 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]], s
             data,
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            settings_index=settings_index,
+            settings,
             old_strategies_file_name=f"strategies_dev_{i}_indicators.json",
             new_strategies_file_name=f"strategies_dev_{i + 1}_indicators.json",
             indicators_filter=[],
             plot=False,
         )
 
-    resolution = "2m"
     period_days = 20
 
-    data = Storage(settings_index, resolution=resolution).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -64,7 +62,7 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]], s
         data,
         indicators_selector,
         ComposeStrategiesListMethod.READ,
-        settings_index=settings_index,
+        settings,
         old_strategies_file_name="strategies_dev_7_indicators.json",
         new_strategies_file_name="strategies.json",
         indicators_filter=[],
@@ -72,11 +70,10 @@ def run_full_strategies_generation(indicators_selector: List[Tuple[str, str]], s
     )
 
 
-def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]], settings_index: Union[OMX, NASDAQ]):
-    resolution = "2m"
+def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]], settings):
     period_days = 5
 
-    data = Storage(settings_index, resolution=resolution).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -85,7 +82,7 @@ def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]
         data.copy(),
         indicators_selector,
         ComposeStrategiesListMethod.READ,
-        settings_index=settings_index,
+        settings,
         old_strategies_file_name="strategies.json",
         new_strategies_file_name=None,
         indicators_filter=[],
@@ -93,11 +90,10 @@ def run_plotting_for_active_strategies(indicators_selector: List[Tuple[str, str]
     )
 
 
-def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]], settings_index: Union[OMX, NASDAQ]):
-    resolution = "2m"
+def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]], settings):
     period_days = 60
 
-    data = Storage(settings_index, resolution=resolution).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -114,7 +110,7 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]],
             data.copy(),
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            settings_index=settings_index,
+            settings,
             old_strategies_file_name="strategies_dev_6_indicators.json",
             new_strategies_file_name=new_strategies_file_name_prefix
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
@@ -124,10 +120,10 @@ def run_test_for_selected_indicators(indicators_selector: List[Tuple[str, str]],
         )
 
     stats = []
-    dir = f"src/data/{settings_index.DIR}"
-    for file in os.listdir(dir):
+    directory = f"src/data/{settings.DIR}"
+    for file in os.listdir(directory):
         if file.startswith(new_strategies_file_name_prefix):
-            strategies = json.load(open(f"{dir}/{file}"))
+            strategies = json.load(open(f"{directory}/{file}"))
             s = strategies[0]
             stats.append(
                 (
@@ -168,8 +164,8 @@ if __name__ == "__main__":
         ("Volume", "CMF"),  # buy / sell
         ("Volume", "KVO"),  # buy / sell
     ]
-    settings_index = OMX()
+    settings = SETTINGS.OMX
 
-    # run_full_strategies_generation(indicators_selector, settings_index)
-    # run_test_for_selected_indicators(indicators_selector, settings_index)
-    run_plotting_for_active_strategies(indicators_selector, settings_index)
+    # run_full_strategies_generation(indicators_selector, settings)
+    # run_test_for_selected_indicators(indicators_selector, settings)
+    run_plotting_for_active_strategies(indicators_selector, settings)

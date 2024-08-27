@@ -1,7 +1,6 @@
 import platform
 import warnings
 from datetime import date, datetime, timedelta
-from typing import Union
 
 import pandas_market_calendars as mcal
 from avanza.constants import Resolution, TimePeriod
@@ -15,7 +14,7 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from backtest import backtest
-from data.settings import NASDAQ, OMX, TRADING
+from data.settings import SETTINGS
 from services.analytics import Analytics, AnalyticsType
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -124,8 +123,8 @@ def get_exchange_working_hours(shift_days: int = 0):
     return dict(sorted(exchange_working_hours.items()))
 
 
-def cache_history(settings_index: Union[OMX, NASDAQ]):
-    log.warning(f"TASK: Cache {settings_index.NAME} data")
+def cache_history(settings):
+    log.warning(f"TASK: Cache {settings.NAME} data")
 
     for resolution_ava, resolution_investing, interval_yahoo in [
         (Resolution.MINUTE, InvestingResolution.ONE_MINUTE, Interval.ONE_MINUTE),
@@ -133,34 +132,34 @@ def cache_history(settings_index: Union[OMX, NASDAQ]):
         (Resolution.FIVE_MINUTES, InvestingResolution.FIVE_MINUTES, Interval.FIVE_MINUTES),
         (Resolution.HOUR, InvestingResolution.SIXTY_MINUTES, Interval.SIXTY_MINUTES),
     ]:
-        storage = Storage(settings_index, resolution=interval_yahoo.value.raw)
+        storage = Storage(settings, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
-        data_ava = Chart.get_chart_data(settings_index, TimePeriod.TODAY, resolution_ava)
+        data_ava = Chart.get_chart_data(settings, TimePeriod.TODAY, resolution_ava)
         storage.write(data_ava)
 
         if False and resolution_investing and platform.system() == "Darwin":
             for i in range(5, 60, 5):
-                data_investing = InvestingTicker(settings_index).get_history(
+                data_investing = InvestingTicker(settings).get_history(
                     resolution=resolution_investing,
                     period_days=i,
                 )
                 storage.write(data_investing)
 
         if storage.read().shape[0] == rows_before:
-            data_yahoo = YahooTicker(settings_index).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+            data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
             storage.write(data_yahoo)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def backtest_strategies(settings_index: Union[OMX, NASDAQ]):
+def backtest_strategies(settings):
     period_days = 20
 
-    log.warning(f"TASK: Backtest strategies on {settings_index.NAME} | {TRADING.RESOLUTION} | {period_days} days")
+    log.warning(f"TASK: Backtest strategies on {settings.NAME} | {settings.RESOLUTION} | {period_days} days")
 
-    data = Storage(settings_index, resolution=TRADING.RESOLUTION).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
@@ -169,7 +168,7 @@ def backtest_strategies(settings_index: Union[OMX, NASDAQ]):
         data,
         [],
         ComposeStrategiesListMethod.READ,
-        settings_index=settings_index,
+        settings,
         old_strategies_file_name="strategies_dev_7_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
@@ -198,9 +197,9 @@ def gather_analytics():
 
 if __name__ == "__main__":
     try:
-        for settings_index in (OMX(), NASDAQ()):
-            cache_history(settings_index)
-            backtest_strategies(settings_index)
+        for settings in (SETTINGS.OMX, SETTINGS.NASDAQ):
+            cache_history(settings)
+            backtest_strategies(settings)
 
         gather_analytics()
 

@@ -1,19 +1,19 @@
 import os
 import pickle
-from typing import Union
+from typing import Optional
 
 import pandas as pd
 
-from data.settings import DATA_COLUMNS, NASDAQ, OMX
+from data.settings import DATA_COLUMNS
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Storage:
-    def __init__(self, settings_index: Union[OMX, NASDAQ], resolution: str) -> None:  # TODO: make resolution enum
-        self.ticker_name = settings_index.DIR
-        self.resolution = resolution
+    def __init__(self, settings, resolution: Optional[str] = None) -> None:
+        self.ticker_name = settings.DIR
+        self.resolution = resolution if resolution else settings.RESOLUTION
 
         self.path = self._get_path()
 

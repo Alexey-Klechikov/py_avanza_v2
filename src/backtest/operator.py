@@ -1,11 +1,10 @@
 import warnings
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 
-from data.settings import NASDAQ, OMX
 from services.ta import Figure, get_indicators, get_strategies, save_strategies
 from services.ta.indicators.models import Panel, Plot, Plots
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
@@ -39,11 +38,7 @@ class Wallet(BaseModel):
     SHORT: Optional[Order] = None
 
 
-def _consider_signals(
-    data: pd.DataFrame,
-    strategy: Strategy,
-    settings_index: Union[OMX, NASDAQ],
-) -> None:
+def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
     for column in ["LONG", "SHORT", "EXIT"]:
         combination_condition = all if column in ["LONG", "SHORT"] else any
 
@@ -64,12 +59,12 @@ def _consider_signals(
 
     for column in ["LONG", "SHORT", "EXIT"]:
         for non_trading_time in (
-            ["09:00", settings_index.TRADING_START.strftime("%H:%M")],
-            [settings_index.TRADING_END.strftime("%H:%M"), "23:00"],
+            ["09:00", settings.TRADING_START.strftime("%H:%M")],
+            [settings.TRADING_END.strftime("%H:%M"), "23:00"],
         ):
             data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
 
-    data.loc[data.between_time(settings_index.TRADING_END.strftime("%H:%M"), "22:00").index, "EXIT"] = (
+    data.loc[data.between_time(settings.TRADING_END.strftime("%H:%M"), "22:00").index, "EXIT"] = (
         data["High"] + data["Low"]
     ) / 2
 
@@ -114,12 +109,12 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
             strategy.counter.profitable_trades += 1 if profit > 0 else 0
 
 
-def add_signals(data: pd.DataFrame, strategy: Strategy, settings_index: Union[OMX, NASDAQ]) -> None:
+def add_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
     data["LONG"] = data["High"]
     data["SHORT"] = data["Low"]
     data["EXIT"] = (data["High"] + data["Low"]) / 2
 
-    _consider_signals(data, strategy, settings_index)
+    _consider_signals(data, strategy, settings)
     _consider_trading_logic(data, strategy)
 
 
@@ -160,7 +155,7 @@ def backtest(
     data: pd.DataFrame,
     indicators_selector: List[Tuple[str, str]],
     compose_strategies_list_method: ComposeStrategiesListMethod,
-    settings_index: Union[OMX, NASDAQ],
+    settings,
     indicators_filter: Optional[List[str]] = None,
     old_strategies_file_name: Optional[str] = None,
     new_strategies_file_name: Optional[str] = None,
@@ -173,7 +168,7 @@ def backtest(
         compose_strategies_list_method,
         indicators_mapping,
         indicators_selector,
-        None if not old_strategies_file_name else f"{settings_index.DIR}/{old_strategies_file_name}",
+        None if not old_strategies_file_name else f"{settings.DIR}/{old_strategies_file_name}",
     )
 
     if indicators_filter:
@@ -182,7 +177,7 @@ def backtest(
         ]
 
     for i, strategy in enumerate(strategies):
-        add_signals(data, strategy, settings_index)
+        add_signals(data, strategy, settings)
 
         log.debug(f"Strategy {i + 1}/{len(strategies)}: {strategy.name} ({round(strategy.counter.total_profit)})")
 
@@ -201,5 +196,5 @@ def backtest(
 
     save_strategies(
         strategies,
-        None if not new_strategies_file_name else f"{settings_index.DIR}/{new_strategies_file_name}",
+        None if not new_strategies_file_name else f"{settings.DIR}/{new_strategies_file_name}",
     )

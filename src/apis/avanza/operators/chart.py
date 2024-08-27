@@ -1,10 +1,7 @@
-from typing import Union
-
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.client import get_client
-from data.settings import NASDAQ, OMX
 from utils.logger import get_logger
 
 log = get_logger()
@@ -17,7 +14,7 @@ class Chart:
     @classmethod
     def get_chart_data(
         cls,
-        settings_index: Union[OMX, NASDAQ],
+        settings,
         period: TimePeriod,
         resolution: Resolution,
     ) -> pd.DataFrame:
@@ -38,10 +35,10 @@ class Chart:
             )
             period = available_period
 
-        chart_data = get_client().get_chart_data(settings_index.AVA, period, resolution)
+        chart_data = get_client().get_chart_data(settings.AVA, period, resolution)
 
         if not chart_data:
-            log.warning(f"No chart data found for {settings_index.AVA}")
+            log.warning(f"No chart data found for {settings.AVA}")
             return pd.DataFrame(columns=["Datetime", "Open", "High", "Low", "Close", "Volume"]).set_index("Datetime")
 
         ohlc_data = [i.model_dump() for i in chart_data.ohlc]

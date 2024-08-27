@@ -20,3 +20,6 @@ known_first_party = ["black", "blib2to3", "blackd", "_black_version"]
 minversion = "6.0"
 pythonpath = ["src"]
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.pylint]
+disable = "redefined-outer-name,too-few-public-methods,cell-var-from-loop,unspecified-encoding"

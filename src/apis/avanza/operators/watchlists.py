@@ -2,7 +2,6 @@ from avanza.models import WatchList
 
 from apis.avanza.client import get_client
 from apis.avanza.operators.models import Orderbook, PreferredInstrument, ValidInstruments
-from data.settings import TRADING
 from utils.logger import get_logger
 
 log = get_logger()
@@ -15,7 +14,8 @@ INSTRUMENT_DIRECTIONS = {
 
 
 class Watchlists:
-    def __init__(self):
+    def __init__(self, settings):
+        self.settings = settings
         self.valid_instruments = ValidInstruments()
         self.preferred_instrument = PreferredInstrument()
 
@@ -50,8 +50,8 @@ class Watchlists:
                 instrument_info = get_client().get_instrument_warrant(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.key_indicators.direction]
                 if (
-                    instrument_info.key_indicators.leverage < TRADING.MULTIPLIER * 0.75
-                    or instrument_info.key_indicators.leverage > TRADING.MULTIPLIER * 1.35
+                    instrument_info.key_indicators.leverage < self.settings.MULTIPLIER * 0.75
+                    or instrument_info.key_indicators.leverage > self.settings.MULTIPLIER * 1.35
                 ):
                     continue
             else:
@@ -107,7 +107,7 @@ class Watchlists:
         instrument_direction, instrument, instrument_type = watchlist.name.split("_")[1:]
 
         if instrument_type == "CERTIFICATE":
-            search_string = f"{instrument_direction} OMX AVA X{TRADING.MULTIPLIER}"
+            search_string = f"{instrument_direction} OMX AVA X{self.settings.MULTIPLIER}"
         elif instrument_type == "WARRANT":
             search_string = f"{'L' if instrument_direction == 'BULL' else 'S'} OMX AVA"
         else:

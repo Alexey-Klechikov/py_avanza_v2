@@ -1,10 +1,10 @@
 import warnings
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from apis.telegram.operators import Telegram
 from backtest import backtest
-from data.settings import NASDAQ, OMX
+from data.settings import SETTINGS
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -16,21 +16,20 @@ set_handlers("eow")
 log = get_logger()
 
 
-def generate_strategies(indicators_selector: List[Tuple[str, str]], settings_index: Union[OMX, NASDAQ]) -> None:
-    resolution = "2m"
+def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) -> None:
     period_days = 60
 
-    data = Storage(settings_index, resolution=resolution).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    log.warning(f"Generating strategies for {settings_index.NAME} ({resolution}, {period_days} days)")
+    log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
     backtest(
         data,
         indicators_selector,
         ComposeStrategiesListMethod.GENERATE,
-        settings_index,
+        settings,
         old_strategies_file_name=None,
         new_strategies_file_name="strategies_dev_3_indicators.json",
         indicators_filter=[],
@@ -38,32 +37,33 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings_ind
     )
 
     for i in range(3, 7):
-        log.warning(f"Extending strategies ({i} -> {i + 1}) for {settings_index.NAME} ({resolution}, {period_days} days)")
+        log.warning(
+            f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)",
+        )
         backtest(
             data,
             indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
-            settings_index,
+            settings,
             old_strategies_file_name=f"strategies_dev_{i}_indicators.json",
             new_strategies_file_name=f"strategies_dev_{i + 1}_indicators.json",
             indicators_filter=[],
             plot=False,
         )
 
-    resolution = "2m"
     period_days = 20
 
-    data = Storage(settings_index, resolution=resolution).read()
+    data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    log.warning(f"Backtesting strategies for {settings_index.NAME} ({resolution}, {period_days} days)")
+    log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
     backtest(
         data,
         indicators_selector,
         ComposeStrategiesListMethod.READ,
-        settings_index,
+        settings,
         old_strategies_file_name="strategies_dev_7_indicators.json",
         new_strategies_file_name="strategies.json",
         indicators_filter=[],
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     ]
 
     try:
-        generate_strategies(indicators_selector, settings_index=OMX())
+        generate_strategies(indicators_selector, settings=SETTINGS.OMX)
 
     except Exception as e:
         telegram = Telegram()
