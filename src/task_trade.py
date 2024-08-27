@@ -133,15 +133,21 @@ class Budget:
     def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
         self.starting_balance = portfolio.buying_power
 
-        past_orders = orders.get_past()
-        for past_order in past_orders:
-            if (
-                past_order.time.time() <= self.settings.TRADING_START
-                or past_order.time.time() >= self.settings.TRADING_END
-            ):
+        deals = orders.get_past()
+        if not deals:
+            return
+
+        deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
+        for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
+            if len(group) == 1:
+                continue
+            group.sort_values("time", inplace=True)
+            group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
+
+            if group["time"].iloc[0].time() <= self.settings.TRADING_START:
                 continue
 
-            self.starting_balance += past_order.amount * (1 if past_order.side == "BUY" else -1)
+            self.starting_balance -= group["amount"].sum()
 
         self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.settings.MINIMUM_BUDGET]))
         if self.value != self.settings.MINIMUM_BUDGET:
@@ -171,12 +177,11 @@ class Telegram(TelegramBase):
 
     def log_deals(self, orders: Orders, settings) -> None:
         deals = orders.get_past()
-
         if not deals:
             return
 
         deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
-        for _, group in deals_df.groupby("orderbook_id")[["volume", "price", "amount", "time", "side"]]:
+        for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
             if len(group) == 1:
                 continue
             group.sort_values("time", inplace=True)
@@ -189,9 +194,9 @@ class Telegram(TelegramBase):
 
         self.deals.sort(key=lambda x: x[1])
 
-    def send_message(self, budget: Budget) -> None:
+    def send_message(self, budget: Budget, settings) -> None:
         self.messages = [
-            f"Finished trading with budget: {budget.value}",
+            f"Finished trading {settings.NAME} with budget: {budget.value}",
             f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
             f"[{round(100 * (self.final_balance - self.starting_balance)/budget.value)} %]",
             f"Total value: {round(self.final_balance)}",
@@ -376,7 +381,7 @@ def trade(dry_run: bool, settings) -> None:
 
     telegram.log_final_balance(portfolio)
     telegram.log_deals(orders, settings)
-    telegram.send_message(budget)
+    telegram.send_message(budget, settings)
 
 
 if __name__ == "__main__":
