@@ -20,7 +20,7 @@ class OMX(TRADING):
 
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(17, 0)
-
+    TRADING_DATA: str = "avanza"
 
 @dataclass
 class NASDAQ(TRADING):
@@ -33,6 +33,8 @@ class NASDAQ(TRADING):
 
     TRADING_START: time = time(17, 0)
     TRADING_END: time = time(21, 50)
+    TRADING_DATA: str = "yahoo"
+
 
 
 @dataclass

@@ -45,12 +45,13 @@ class Data:
         data = storage.read()
         data_size_before = data.shape[0]
 
-        data_ava = Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.TWO_MINUTES)
-        storage.write(data_ava)
+        if self.settings.TRADING_DATA == "avanza":
+            new_data = Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.TWO_MINUTES)
 
-        if data_ava.empty:
-            data_yahoo = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
-            storage.write(data_yahoo)
+        if self.settings.TRADING_DATA == "yahoo":
+            new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+        
+        storage.write(new_data)
 
         data = storage.read()
         data_size_after = data.shape[0]
@@ -60,7 +61,6 @@ class Data:
         ]
 
         self.too_old = ((datetime.now() - self.data.index[-1]).seconds // 60) > 15
-
         self.is_new = data_size_before != data_size_after
 
     def get_strategies(self):
