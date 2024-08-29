@@ -392,6 +392,8 @@ if __name__ == "__main__":
         trade(dry_run, SETTINGS.NASDAQ)
 
     except Exception as e:
+        log.exception(str(e))
+
         telegram = TelegramBase()
         telegram.messages = ["Error in task_trade.py"]
         telegram.send_message()
