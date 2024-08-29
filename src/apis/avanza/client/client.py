@@ -57,7 +57,6 @@ class Avanza(AvanzaBase):
             if response:
                 return response if isinstance(response, dict) else json.loads(response, parse_float=float)
 
-        log.error(f"Failed to get {path}")
         return {}
 
     def get_chart_data(
