@@ -58,7 +58,7 @@ class Ticker:
         return history.drop_duplicates().sort_index(axis=0)
 
     def get_history(self, period: Period, interval: Interval) -> pd.DataFrame:
-        log.debug(f"Fetching history for {self.ticker_yahoo} with period {period} and interval {interval}")
+        log.debug(f"Fetch chart data [{period} - {interval}]")
 
         history = (
             self._get_extended_history(period, interval)

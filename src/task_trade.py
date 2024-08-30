@@ -149,7 +149,7 @@ class Budget:
 
         self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.settings.MINIMUM_BUDGET]))
         if self.value != self.settings.MINIMUM_BUDGET:
-            log.warning(f"Budget adjusted: {self.settings.MINIMUM_BUDGET} -> {self.value}")
+            log.info(f"Budget adjusted: {self.settings.MINIMUM_BUDGET} -> {self.value}")
 
 
 class Telegram(TelegramBase):
@@ -314,7 +314,7 @@ class Flow:
 
 # MAIN
 def trade(dry_run: bool, settings) -> None:
-    log.info(
+    log.warning(
         f"Start trading strategies on {settings.NAME} | {settings.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""),
     )
 
