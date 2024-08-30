@@ -134,20 +134,18 @@ class Budget:
         self.starting_balance = portfolio.buying_power
 
         deals = orders.get_past()
-        if not deals:
-            return
+        if deals:
+            deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
+            for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
+                if len(group) == 1:
+                    continue
+                group.sort_values("time", inplace=True)
+                group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
 
-        deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
-        for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
-            if len(group) == 1:
-                continue
-            group.sort_values("time", inplace=True)
-            group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
+                if group["time"].iloc[0].time() <= self.settings.TRADING_START:
+                    continue
 
-            if group["time"].iloc[0].time() <= self.settings.TRADING_START:
-                continue
-
-            self.starting_balance -= group["amount"].sum()
+                self.starting_balance -= group["amount"].sum()
 
         self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.settings.MINIMUM_BUDGET]))
         if self.value != self.settings.MINIMUM_BUDGET:
