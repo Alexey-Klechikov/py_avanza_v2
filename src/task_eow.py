@@ -32,7 +32,6 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
         settings,
         old_strategies_file_name=None,
         new_strategies_file_name="strategies_dev_3_indicators.json",
-        indicators_filter=[],
         plot=False,
     )
 
@@ -47,7 +46,6 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
             settings,
             old_strategies_file_name=f"strategies_dev_{i}_indicators.json",
             new_strategies_file_name=f"strategies_dev_{i + 1}_indicators.json",
-            indicators_filter=[],
             plot=False,
         )
 
@@ -59,14 +57,14 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
     ]
 
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
+    strategies_base_number_indicators = 7 if settings.NAME == "OMX" else 5
     backtest(
         data,
         indicators_selector,
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name="strategies_dev_7_indicators.json",
+        old_strategies_file_name=f"strategies_dev_{strategies_base_number_indicators}_indicators.json",
         new_strategies_file_name="strategies.json",
-        indicators_filter=[],
         plot=False,
     )
 

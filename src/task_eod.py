@@ -164,12 +164,14 @@ def backtest_strategies(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
+    strategies_base_number_indicators = 7 if settings.NAME == "OMX" else 5
+
     backtest(
         data,
         [],
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name="strategies_dev_7_indicators.json",
+        old_strategies_file_name=f"strategies_dev_{strategies_base_number_indicators}_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
