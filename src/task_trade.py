@@ -147,6 +147,7 @@ class Budget:
 
                 self.starting_balance -= group["amount"].sum()
 
+        return # TODO: return to auto-adjusting budget once more confident in NASDAQ algo
         self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.settings.MINIMUM_BUDGET]))
         if self.value != self.settings.MINIMUM_BUDGET:
             log.info(f"Budget adjusted: {self.settings.MINIMUM_BUDGET} -> {self.value}")

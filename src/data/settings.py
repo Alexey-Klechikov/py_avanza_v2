@@ -6,7 +6,6 @@ from datetime import time
 class TRADING:
     MULTIPLIER: int = 20
     RESOLUTION = "2m"
-    MINIMUM_BUDGET = 2000
 
 
 @dataclass
@@ -22,6 +21,9 @@ class OMX(TRADING):
     TRADING_END: time = time(17, 0)
     TRADING_DATA: str = "avanza"
 
+    MINIMUM_BUDGET = 2000
+
+
 @dataclass
 class NASDAQ(TRADING):
     NAME: str = "NASDAQ"
@@ -35,6 +37,7 @@ class NASDAQ(TRADING):
     TRADING_END: time = time(21, 50)
     TRADING_DATA: str = "yahoo"
 
+    MINIMUM_BUDGET = 1500
 
 
 @dataclass
