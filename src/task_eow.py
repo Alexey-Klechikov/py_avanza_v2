@@ -94,7 +94,8 @@ if __name__ == "__main__":
     ]
 
     try:
-        generate_strategies(indicators_selector, settings=SETTINGS.OMX)
+        for settings in (SETTINGS.OMX, SETTINGS.NASDAQ):
+            generate_strategies(indicators_selector, settings)
 
     except Exception as e:
         telegram = Telegram()
