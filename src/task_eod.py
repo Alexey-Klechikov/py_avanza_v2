@@ -135,8 +135,14 @@ def cache_history(settings):
         storage = Storage(settings, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
-        data_ava = Chart.get_chart_data(settings, TimePeriod.TODAY, resolution_ava)
-        storage.write(data_ava)
+        if settings.TRADING_DATA == "ava":
+            data_ava = Chart.get_chart_data(settings, TimePeriod.TODAY, resolution_ava)
+            storage.write(data_ava)
+
+        elif settings.TRADING_DATA == "yahoo":
+            data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+            storage.write(data_yahoo)
+
 
         if False and resolution_investing and platform.system() == "Darwin":
             for i in range(5, 60, 5):
@@ -145,10 +151,6 @@ def cache_history(settings):
                     period_days=i,
                 )
                 storage.write(data_investing)
-
-        if storage.read().shape[0] == rows_before:
-            data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
-            storage.write(data_yahoo)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
@@ -164,14 +166,12 @@ def backtest_strategies(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    strategies_base_number_indicators = 7 if settings.NAME == "OMX" else 5
-
     backtest(
         data,
         [],
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"strategies_dev_{strategies_base_number_indicators}_indicators.json",
+        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
@@ -203,7 +203,7 @@ if __name__ == "__main__":
             cache_history(settings)
             backtest_strategies(settings)
 
-        gather_analytics()
+        # gather_analytics()
 
     except Exception as e:
         telegram = Telegram()

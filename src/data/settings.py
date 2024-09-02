@@ -21,7 +21,10 @@ class OMX(TRADING):
     TRADING_END: time = time(17, 0)
     TRADING_DATA: str = "avanza"
 
-    MINIMUM_BUDGET = 2000
+    MINIMUM_BUDGET: int = 2000
+    ADJUST_BUDGET: bool = True
+
+    TRADING_STRATEGY_INDICATORS: int = 7
 
 
 @dataclass
@@ -38,6 +41,9 @@ class NASDAQ(TRADING):
     TRADING_DATA: str = "yahoo"
 
     MINIMUM_BUDGET = 1500
+    ADJUST_BUDGET: bool = False
+
+    TRADING_STRATEGY_INDICATORS: int = 5
 
 
 @dataclass

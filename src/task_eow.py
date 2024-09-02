@@ -35,7 +35,7 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
         plot=False,
     )
 
-    for i in range(3, 7):
+    for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
         log.warning(
             f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)",
         )
@@ -57,13 +57,12 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
     ]
 
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    strategies_base_number_indicators = 7 if settings.NAME == "OMX" else 5
     backtest(
         data,
         indicators_selector,
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"strategies_dev_{strategies_base_number_indicators}_indicators.json",
+        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}_indicators.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
@@ -94,8 +93,8 @@ if __name__ == "__main__":
     ]
 
     try:
-        for settings in (SETTINGS.OMX, SETTINGS.NASDAQ):
-            generate_strategies(indicators_selector, settings)
+        generate_strategies(indicators_selector, SETTINGS.OMX)
+        generate_strategies(indicators_selector, SETTINGS.NASDAQ)
 
     except Exception as e:
         telegram = Telegram()
