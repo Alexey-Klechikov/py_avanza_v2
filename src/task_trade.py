@@ -50,7 +50,7 @@ class Data:
 
         if self.settings.TRADING_DATA == "yahoo":
             new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
-        
+
         storage.write(new_data)
 
         data = storage.read()
@@ -126,7 +126,7 @@ class Data:
 
 class Budget:
     def __init__(self, settings):
-        self.value = settings.MINIMUM_BUDGET
+        self.value = settings.BUDGET_MINIMUM
         self.settings = settings
         self.starting_balance = 0
 
@@ -147,10 +147,9 @@ class Budget:
 
                 self.starting_balance -= group["amount"].sum()
 
-        if self.settings.ADJUST_BUDGET:
-            self.value = int(max([(self.starting_balance // 500 - 4) * 500, self.settings.MINIMUM_BUDGET]))
-            if self.value != self.settings.MINIMUM_BUDGET:
-                log.info(f"Budget adjusted: {self.settings.MINIMUM_BUDGET} -> {self.value}")
+        self.value = int(max([self.starting_balance * self.settings.BUDGET_PERCENT, self.settings.BUDGET_MINIMUM]))
+        if self.value != self.settings.BUDGET_MINIMUM:
+            log.info(f"Budget adjusted: {self.settings.BUDGET_MINIMUM} -> {self.value}")
 
 
 class Telegram(TelegramBase):

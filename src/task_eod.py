@@ -143,7 +143,6 @@ def cache_history(settings):
             data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
             storage.write(data_yahoo)
 
-
         if False and resolution_investing and platform.system() == "Darwin":
             for i in range(5, 60, 5):
                 data_investing = InvestingTicker(settings).get_history(

@@ -21,8 +21,8 @@ class OMX(TRADING):
     TRADING_END: time = time(17, 0)
     TRADING_DATA: str = "avanza"
 
-    MINIMUM_BUDGET: int = 2000
-    ADJUST_BUDGET: bool = True
+    BUDGET_MINIMUM: int = 2500
+    BUDGET_PERCENT: float = 0.6
 
     TRADING_STRATEGY_INDICATORS: int = 7
 
@@ -40,8 +40,8 @@ class NASDAQ(TRADING):
     TRADING_END: time = time(21, 50)
     TRADING_DATA: str = "yahoo"
 
-    MINIMUM_BUDGET = 1500
-    ADJUST_BUDGET: bool = False
+    BUDGET_MINIMUM = 1500
+    BUDGET_PERCENT: float = 0.3
 
     TRADING_STRATEGY_INDICATORS: int = 5
 
