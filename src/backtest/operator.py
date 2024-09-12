@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -153,7 +153,6 @@ def plot_indicators(data: pd.DataFrame, strategy: Strategy):
 # MAIN
 def backtest(
     data: pd.DataFrame,
-    indicators_selector: List[Tuple[str, str]],
     compose_strategies_list_method: ComposeStrategiesListMethod,
     settings,
     indicators_filter: Optional[List[str]] = None,
@@ -162,13 +161,12 @@ def backtest(
     plot: bool = False,
     **kwargs,
 ) -> None:
-    indicators_mapping = get_indicators(data, **kwargs)
+    indicators_mapping = get_indicators(data, settings, **kwargs)
 
     strategies = get_strategies(
         compose_strategies_list_method,
         indicators_mapping,
-        indicators_selector,
-        None if not old_strategies_file_name else f"{settings.DIR}/{old_strategies_file_name}",
+        None if not old_strategies_file_name else f"{settings.FILE_PREFIX}_{old_strategies_file_name}",
     )
 
     if indicators_filter:
@@ -196,5 +194,5 @@ def backtest(
 
     save_strategies(
         strategies,
-        None if not new_strategies_file_name else f"{settings.DIR}/{new_strategies_file_name}",
+        None if not new_strategies_file_name else f"{settings.FILE_PREFIX}_{new_strategies_file_name}",
     )

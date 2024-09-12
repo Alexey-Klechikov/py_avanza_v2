@@ -6,7 +6,7 @@ from avanza.constants import OrderType
 
 from apis.avanza.client import get_client
 from apis.avanza.client.models import Deal, Order, OrderException
-from data.settings import AVANZA_ACCOUNT
+from config.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()

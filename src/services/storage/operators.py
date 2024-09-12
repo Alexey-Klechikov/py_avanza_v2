@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from data.settings import DATA_COLUMNS
+from config.settings import DATA_COLUMNS
 from utils.logger import get_logger
 
 log = get_logger()
@@ -12,16 +12,15 @@ log = get_logger()
 
 class Storage:
     def __init__(self, settings, resolution: Optional[str] = None) -> None:
-        self.ticker_name = settings.DIR
+        self.file_prefix = settings.FILE_PREFIX
         self.resolution = resolution if resolution else settings.RESOLUTION
 
         self.path = self._get_path()
 
     def _get_path(self) -> str:
         project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
-        file_name = f"{self.ticker_name}_{self.resolution}"
 
-        return f"{project_root_dir}/data/{self.ticker_name}/{file_name}.pickle"
+        return f"{project_root_dir}/data/{self.file_prefix}_{self.resolution}.pickle"
 
     def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):

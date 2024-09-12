@@ -1,0 +1,135 @@
+from dataclasses import dataclass, field
+from datetime import time
+
+
+@dataclass
+class TRADING:
+    MULTIPLIER: int = 20
+    RESOLUTION = "2m"
+
+
+@dataclass
+class OMX(TRADING):
+    NAME: str = "OMX"
+    FILE_PREFIX: str = "OMX"
+
+    AVA: str = "19002"
+    YAHOO: str = "^OMX"
+    INVESTING: str = "25685"
+
+    TRADING_START: time = time(9, 45)
+    TRADING_END: time = time(17, 0)
+    TRADING_DATA: str = "avanza"
+
+    BUDGET_MINIMUM: int = 2500
+    BUDGET_PERCENT: float = 0.6
+
+    TRADING_STRATEGY_INDICATORS: int = 7
+
+    INDICATORS: dict = field(
+        default_factory=lambda: {
+            "Trend": {
+                "ADX": {"length": 14, "lensig": 14, "mamode": "rma"},
+                "TII": {"length_sma": 20, "length_signal": 5},
+                "PSAR": {"acceleration": 0.02, "maximum": 0.2},
+                "CHOP": {"length": 14, "length_atr": 2, "scalar": 80.0},
+            },
+            "Overlap": {
+                "LINREG": {"length": 12, "limit": 0.32},
+                "SUPERTREND": {"length": 7, "multiplier": 3.0},
+            },
+            "Momentum": {
+                "MACD_DEMA": {"length_fast": 10, "length_slow": 20},
+                "STC": {"tclength": 14, "fast": 23, "slow": 45, "factor": 0.55},
+                "CCI": {"length": 16, "c": 0.015},
+                "RVGI": {"length": 14, "length_swma": 4},
+                "STOCH": {"k": 10, "d": 3, "smooth_k": 2, "mamode": "dema"},
+            },
+            "Cycles": {
+                "EBSW": {"length": 40, "bars": 14},
+            },
+            "Volatility": {
+                "STARC": {"length_sma": 10, "length_atr": 15, "multiplier_atr": 2.0},
+                "MASSI": {"fast": 9, "slow": 25},
+                "BBANDS": {"length": 22, "std": 2.0},
+                "ACCBANDS": {"length": 14, "c": 1, "mamode": "dema"},
+            },
+            "Volume": {
+                "PVT": {"drift": 12, "length_sma": 30},
+                "ADOSC": {"fast": 6, "slow": 14},
+                "CMF": {"length": 26},
+                "KVO": {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema"},
+            },
+        },
+    )
+
+
+@dataclass
+class NASDAQ(TRADING):
+    NAME: str = "NASDAQ"
+    FILE_PREFIX: str = "NDX"
+
+    AVA: str = "155541"
+    YAHOO: str = "^NDX"
+    INVESTING: str = "20"
+
+    TRADING_START: time = time(17, 0)
+    TRADING_END: time = time(21, 50)
+    TRADING_DATA: str = "yahoo"
+
+    BUDGET_MINIMUM = 1500
+    BUDGET_PERCENT: float = 0.3
+
+    TRADING_STRATEGY_INDICATORS: int = 7
+
+    INDICATORS: dict = field(
+        default_factory=lambda: {
+            "Trend": {
+                "ADX": {"length": 14, "lensig": 14, "mamode": "rma"},
+                "TII": {"length_sma": 12, "length_signal": 5},
+                "PSAR": {"acceleration": 0.01, "maximum": 0.2},
+                "CHOP": {"length": 14, "length_atr": 2, "scalar": 80.0},
+            },
+            "Overlap": {
+                "LINREG": {"length": 8, "limit": 0.3},
+                "SUPERTREND": {"length": 7, "multiplier": 3.0},
+            },
+            "Momentum": {
+                "MACD_DEMA": {"length_fast": 10, "length_slow": 20},
+                "STC": {"tclength": 10, "fast": 23, "slow": 45, "factor": 0.55},
+                "CCI": {"length": 16, "c": 0.02},
+                "RVGI": {"length": 14, "length_swma": 4},
+                "STOCH": {"k": 10, "d": 3, "smooth_k": 2, "mamode": "dema"},
+            },
+            "Cycles": {
+                "EBSW": {"length": 40, "bars": 16},
+            },
+            "Volatility": {
+                "STARC": {"length_sma": 10, "length_atr": 15, "multiplier_atr": 2.0},
+                "MASSI": {"fast": 9, "slow": 25},
+                "BBANDS": {"length": 22, "std": 2.0},
+                "ACCBANDS": {"length": 14, "c": 1, "mamode": "dema"},
+            },
+            "Volume": {
+                "PVT": {"drift": 12, "length_sma": 30},
+                "ADOSC": {"fast": 6, "slow": 14},
+                "CMF": {"length": 24},
+                "KVO": {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema"},
+            },
+        },
+    )
+
+
+@dataclass
+class SETTINGS:
+    OMX = OMX()
+    NASDAQ = NASDAQ()
+
+
+@dataclass
+class AVANZA_ACCOUNT:
+    USERNAME: str = "ava_elbe"
+    ACCOUNT_ID: str = "5554179"
+
+
+DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]

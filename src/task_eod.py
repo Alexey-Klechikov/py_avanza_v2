@@ -14,7 +14,7 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from backtest import backtest
-from data.settings import SETTINGS
+from config.settings import SETTINGS
 from services.analytics import Analytics, AnalyticsType
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -167,10 +167,9 @@ def backtest_strategies(settings):
 
     backtest(
         data,
-        [],
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}_indicators.json",
+        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )

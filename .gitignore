@@ -4,5 +4,5 @@ logs/
 ___*
 *.pickle
 .vscode/*
-strategies*.json
+*strategies*.json
 analytics*.json

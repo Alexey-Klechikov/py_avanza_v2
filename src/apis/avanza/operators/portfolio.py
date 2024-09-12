@@ -4,7 +4,7 @@ from avanza.constants import InstrumentType
 
 from apis.avanza.client import get_client
 from apis.avanza.operators.models import Position
-from data.settings import AVANZA_ACCOUNT
+from config.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()

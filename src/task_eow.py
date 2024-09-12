@@ -1,10 +1,9 @@
 import warnings
 from datetime import datetime, timedelta
-from typing import List, Tuple
 
 from apis.telegram.operators import Telegram
 from backtest import backtest
-from data.settings import SETTINGS
+from config.settings import SETTINGS
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -16,7 +15,7 @@ set_handlers("eow")
 log = get_logger()
 
 
-def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) -> None:
+def generate_strategies(settings) -> None:
     period_days = 60
 
     data = Storage(settings).read()
@@ -27,11 +26,10 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
     log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
     backtest(
         data,
-        indicators_selector,
         ComposeStrategiesListMethod.GENERATE,
         settings,
         old_strategies_file_name=None,
-        new_strategies_file_name="strategies_dev_3_indicators.json",
+        new_strategies_file_name="strategies_dev_3.json",
         plot=False,
     )
 
@@ -41,11 +39,10 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
         )
         backtest(
             data,
-            indicators_selector,
             ComposeStrategiesListMethod.EXTEND,
             settings,
-            old_strategies_file_name=f"strategies_dev_{i}_indicators.json",
-            new_strategies_file_name=f"strategies_dev_{i + 1}_indicators.json",
+            old_strategies_file_name=f"strategies_dev_{i}.json",
+            new_strategies_file_name=f"strategies_dev_{i + 1}.json",
             plot=False,
         )
 
@@ -59,42 +56,18 @@ def generate_strategies(indicators_selector: List[Tuple[str, str]], settings) ->
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
     backtest(
         data,
-        indicators_selector,
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}_indicators.json",
+        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",
         new_strategies_file_name="strategies.json",
         plot=False,
     )
 
 
 if __name__ == "__main__":
-    indicators_selector = [
-        ("Trend", "ADX"),  # buy / sell
-        ("Trend", "TII"),  # buy / sell
-        ("Trend", "PSAR"),  # buy / sell
-        ("Trend", "CHOP"),  # exit
-        ("Overlap", "LINREG"),  # buy / sell
-        ("Overlap", "SUPERTREND"),  # buy / sell
-        ("Momentum", "MACD_DEMA"),  # buy / sell
-        ("Momentum", "STC"),  # buy / sell
-        ("Momentum", "CCI"),  # buy / sell
-        ("Momentum", "RVGI"),  # buy / sell
-        ("Momentum", "STOCH"),  # buy / sell
-        ("Cycles", "EBSW"),  # buy / sell
-        ("Volatility", "STARC"),  # buy / sell
-        ("Volatility", "MASSI"),  # buy / sell
-        ("Volatility", "BBANDS"),  # buy / sell
-        ("Volatility", "ACCBANDS"),  # buy / sell
-        ("Volume", "PVT"),  # buy / sell
-        ("Volume", "ADOSC"),  # buy / sell
-        ("Volume", "CMF"),  # buy / sell
-        ("Volume", "KVO"),  # buy / sell
-    ]
-
     try:
-        generate_strategies(indicators_selector, SETTINGS.OMX)
-        generate_strategies(indicators_selector, SETTINGS.NASDAQ)
+        generate_strategies(SETTINGS.OMX)
+        generate_strategies(SETTINGS.NASDAQ)
 
     except Exception as e:
         telegram = Telegram()

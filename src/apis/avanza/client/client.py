@@ -27,7 +27,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from data.settings import AVANZA_ACCOUNT
+from config.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()

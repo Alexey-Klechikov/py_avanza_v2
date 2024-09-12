@@ -2,7 +2,7 @@ import json
 import os
 import warnings
 from copy import deepcopy
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from services.ta.indicators.models import Indicator
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
@@ -17,16 +17,18 @@ log = get_logger()
 def _get_file_path(filename: Optional[str]) -> str:
     current_file_path = os.path.abspath(__file__)
     root_dir = "/src" if "/src" in current_file_path else "/pyAvanza"
-    return current_file_path.split(root_dir)[0] + f"{root_dir}/data/{filename}"
+    return current_file_path.split(root_dir)[0] + f"{root_dir}/config/{filename}"
 
 
-def _generate_strategies(
-    indicators_selector: List[Tuple[str, str]],
-    indicators_mapping: Dict[str, Dict[str, Indicator]],
-) -> List[Strategy]:
+def _generate_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]]) -> List[Strategy]:
     strategies: List[Strategy] = []
-    for i1, indicator1 in enumerate(indicators_selector):
-        if len(indicators_selector) == 1:
+
+    indicators = [
+        (category, indicator) for category, indicators in indicators_mapping.items() for indicator in indicators.keys()
+    ]
+
+    for i1, indicator1 in enumerate(indicators):
+        if len(indicators) == 1:
             strategies.append(
                 deepcopy(
                     Strategy(
@@ -36,8 +38,8 @@ def _generate_strategies(
                 ),
             )
 
-        for i2, indicator2 in enumerate(indicators_selector[i1 + 1 :]):
-            if len(indicators_selector) <= 2:
+        for i2, indicator2 in enumerate(indicators[i1 + 1 :]):
+            if len(indicators) <= 2:
                 strategies.append(
                     deepcopy(
                         Strategy(
@@ -47,7 +49,7 @@ def _generate_strategies(
                     ),
                 )
 
-            for _, indicator3 in enumerate(indicators_selector[i1 + i2 + 2 :]):
+            for _, indicator3 in enumerate(indicators[i1 + i2 + 2 :]):
                 strategies.append(
                     deepcopy(
                         Strategy(
@@ -61,11 +63,15 @@ def _generate_strategies(
 
 
 def _extend_strategies(
-    indicators_selector: List[Tuple[str, str]],
     indicators_mapping: Dict[str, Dict[str, Indicator]],
     old_strategies_file_path: str,
 ) -> List[Strategy]:
     extended_strategies: List[Strategy] = []
+
+    indicators = [
+        (category, indicator) for category, indicators in indicators_mapping.items() for indicator in indicators.keys()
+    ]
+
     for strategy in json.load(open(old_strategies_file_path)):
         if "Original" in strategy["name"]:
             continue
@@ -82,7 +88,7 @@ def _extend_strategies(
             ),
         )
 
-        for category, indicator in indicators_selector:
+        for category, indicator in indicators:
             if (category, indicator) in strategy_indicators:
                 continue
 
@@ -123,14 +129,13 @@ def _read_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], old_st
 def compose_strategies_list(
     method: ComposeStrategiesListMethod,
     indicators_mapping: Dict[str, Dict[str, Indicator]],
-    indicators_selector: List[Tuple[str, str]],
     old_strategies_file_name: Optional[str] = None,
 ) -> List[Strategy]:
-    if method == ComposeStrategiesListMethod.GENERATE and len(indicators_selector) > 0:
-        strategies = _generate_strategies(indicators_selector, indicators_mapping)
+    if method == ComposeStrategiesListMethod.GENERATE:
+        strategies = _generate_strategies(indicators_mapping)
 
     elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_name:
-        strategies = _extend_strategies(indicators_selector, indicators_mapping, _get_file_path(old_strategies_file_name))
+        strategies = _extend_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))
 
     elif method == ComposeStrategiesListMethod.READ and old_strategies_file_name:
         strategies = _read_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))

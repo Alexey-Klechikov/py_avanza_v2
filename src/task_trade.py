@@ -12,7 +12,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from data.settings import SETTINGS
+from config.settings import SETTINGS
 from services.storage import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
@@ -64,8 +64,8 @@ class Data:
         self.is_new = data_size_before != data_size_after
 
     def get_strategies(self):
-        indicators_mapping = get_indicators(self.data)
-        strategies = read_top_strategies(indicators_mapping, f"{self.settings.DIR}/strategies.json")
+        indicators_mapping = get_indicators(self.data, self.settings)
+        strategies = read_top_strategies(indicators_mapping, f"{self.settings.FILE_PREFIX}_strategies.json")
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
                 log.info(f"Strategy {i+1}: {strategy.name}")
