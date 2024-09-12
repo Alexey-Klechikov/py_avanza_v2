@@ -137,8 +137,6 @@ class Budget:
         if deals:
             deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
             for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
-                if len(group) == 1:
-                    continue
                 group.sort_values("time", inplace=True)
                 group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
 
