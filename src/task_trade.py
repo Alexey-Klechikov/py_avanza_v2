@@ -302,7 +302,7 @@ class Flow:
             data.is_new = False
             self.action = FlowAction.TRADE
         else:
-            sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 2)
+            sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
             data.get()
             self.action = FlowAction.DO_NOTHING
 
