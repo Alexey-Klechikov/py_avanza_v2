@@ -304,6 +304,12 @@ class Flow:
         else:
             sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
             data.get()
+
+            if not data.is_new:
+                sleep(20)
+                data.get()
+                log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {data.is_new}")
+
             self.action = FlowAction.DO_NOTHING
 
         if orders.active_order:
