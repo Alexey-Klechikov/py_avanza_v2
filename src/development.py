@@ -47,7 +47,7 @@ def run_full_strategies_generation(settings):
             plot=False,
         )
 
-    period_days = 20
+    period_days = 30
 
     data = Storage(settings).read()
     data = data.loc[
@@ -139,8 +139,8 @@ def run_test_for_selected_indicators(settings):
 
 
 if __name__ == "__main__":
-    settings = SETTINGS.OMX
+    settings = SETTINGS.NASDAQ
 
     # run_full_strategies_generation(settings)
-    run_test_for_selected_indicators(settings)
-    # run_plotting_for_active_strategies(settings)
+    # run_test_for_selected_indicators(settings)
+    run_plotting_for_active_strategies(settings)

@@ -80,7 +80,7 @@ class NASDAQ(TRADING):
     BUDGET_MINIMUM = 1500
     BUDGET_PERCENT: float = 0.3
 
-    TRADING_STRATEGY_INDICATORS: int = 7
+    TRADING_STRATEGY_INDICATORS: int = 6
 
     INDICATORS: dict = field(
         default_factory=lambda: {
