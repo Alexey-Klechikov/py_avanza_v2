@@ -78,7 +78,7 @@ class NASDAQ(TRADING):
     TRADING_DATA: str = "yahoo"
 
     BUDGET_MINIMUM = 1500
-    BUDGET_PERCENT: float = 0.3
+    BUDGET_PERCENT: float = 0.4
 
     TRADING_STRATEGY_INDICATORS: int = 6
 
