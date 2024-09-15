@@ -35,7 +35,7 @@ def run_full_strategies_generation(settings):
         plot=False,
     )
 
-    for i in range(3, 7):
+    for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
         log.warning(f"Extending strategies ({i} -> {i + 1})")
         backtest(
             data,

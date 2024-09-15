@@ -30,6 +30,9 @@ class Order(BaseModel):
         profit = profit if instrument_type == "LONG" else -profit
         profit -= 0.4  # Spread
 
+        if profit > self.buy_price * 0.01:
+            profit = self.buy_price * 0.01
+
         return profit
 
 
