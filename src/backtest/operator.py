@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 
 import numpy as np
 import pandas as pd
+from pathos.multiprocessing import ProcessingPool as Pool
 from pydantic import BaseModel
 
 from services.ta import Figure, get_indicators, get_strategies, save_strategies
@@ -112,13 +113,24 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
             strategy.counter.profitable_trades += 1 if profit > 0 else 0
 
 
-def add_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
+def process_strategy(kwargs: dict) -> Strategy:
+    data: pd.DataFrame = kwargs["data"]
+    strategy: Strategy = kwargs["strategy"]
+    settings = kwargs["settings"]
+    strategy_rank: Optional[str] = kwargs.get("strategy_rank")
+
     data["LONG"] = data["High"]
     data["SHORT"] = data["Low"]
     data["EXIT"] = (data["High"] + data["Low"]) / 2
 
     _consider_signals(data, strategy, settings)
     _consider_trading_logic(data, strategy)
+
+    log.debug(
+        f"Strategy{strategy_rank if strategy_rank else ''}: {strategy.name} ({round(strategy.counter.total_profit)})",
+    )
+
+    return strategy
 
 
 def print_strategies_performance(strategies: List[Strategy]) -> None:
@@ -177,15 +189,26 @@ def backtest(
             strategy for strategy in strategies if any(indicator in strategy.name for indicator in indicators_filter)
         ]
 
-    for i, strategy in enumerate(strategies):
-        add_signals(data, strategy, settings)
+    with Pool() as pool:
+        strategies = list(
+            pool.map(
+                process_strategy,
+                [
+                    {
+                        "data": data,
+                        "strategy": strategy,
+                        "settings": settings,
+                        "strategy_rank": f" {i+1} / {len(strategies)}",
+                    }
+                    for i, strategy in enumerate(strategies)
+                ],
+            ),
+        )
 
-        log.debug(f"Strategy {i + 1}/{len(strategies)}: {strategy.name} ({round(strategy.counter.total_profit)})")
-
-        if not plot:
-            continue
-
-        plot_indicators(data, strategy)
+    if plot:
+        for strategy in strategies:
+            process_strategy({"data": data, "strategy": strategy, "settings": settings})
+            plot_indicators(data, strategy)
 
     strategies = [strategy for strategy in strategies if strategy.counter.total_profit > 0]
     strategies.sort(

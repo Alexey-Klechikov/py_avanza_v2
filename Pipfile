@@ -19,6 +19,7 @@ beautifulsoup4 = "*"
 requests-html = "*"
 lxml-html-clean = "*"
 cloudscraper = "*"
+pathos = "*"
 
 [dev-packages]
 black = "*"
