@@ -46,7 +46,7 @@ def generate_strategies(settings) -> None:
             plot=False,
         )
 
-    period_days = 30
+    period_days = 25
 
     data = Storage(settings).read()
     data = data.loc[
