@@ -30,7 +30,7 @@ class OMX(TRADING):
         default_factory=lambda: {
             "Trend": {
                 "ADX": {"length": 14, "lensig": 14, "mamode": "rma"},
-                "TII": {"length_sma": 20, "length_signal": 5},
+                "TII": {"length_sma": 22, "length_signal": 3},
                 "PSAR": {"acceleration": 0.02, "maximum": 0.2},
                 "CHOP": {"length": 14, "length_atr": 2, "scalar": 80.0},
             },
@@ -85,7 +85,7 @@ class NASDAQ(TRADING):
     INDICATORS: dict = field(
         default_factory=lambda: {
             "Trend": {
-                "ADX": {"length": 14, "lensig": 14, "mamode": "rma"},
+                "ADX": {"length": 10, "lensig": 16, "mamode": "rma"},
                 "TII": {"length_sma": 12, "length_signal": 5},
                 "PSAR": {"acceleration": 0.01, "maximum": 0.2},
                 "CHOP": {"length": 14, "length_atr": 2, "scalar": 80.0},
