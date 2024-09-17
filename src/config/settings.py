@@ -41,7 +41,7 @@ class OMX(TRADING):
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 10, "length_slow": 20},
                 "STC": {"tclength": 14, "fast": 23, "slow": 45, "factor": 0.55},
-                "CCI": {"length": 16, "c": 0.015},
+                "CCI": {"length": 14, "c": 0.015},
                 "RVGI": {"length": 14, "length_swma": 4},
                 "STOCH": {"k": 10, "d": 3, "smooth_k": 2, "mamode": "dema"},
             },
@@ -57,7 +57,7 @@ class OMX(TRADING):
             "Volume": {
                 "PVT": {"drift": 12, "length_sma": 30},
                 "ADOSC": {"fast": 6, "slow": 14},
-                "CMF": {"length": 26},
+                "CMF": {"length": 24},
                 "KVO": {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema"},
             },
         },
@@ -80,7 +80,7 @@ class NASDAQ(TRADING):
     BUDGET_MINIMUM = 1500
     BUDGET_PERCENT: float = 0.4
 
-    TRADING_STRATEGY_INDICATORS: int = 6
+    TRADING_STRATEGY_INDICATORS: int = 7
 
     INDICATORS: dict = field(
         default_factory=lambda: {
@@ -107,7 +107,7 @@ class NASDAQ(TRADING):
             "Volatility": {
                 "STARC": {"length_sma": 10, "length_atr": 15, "multiplier_atr": 2.0},
                 "MASSI": {"fast": 9, "slow": 25},
-                "BBANDS": {"length": 22, "std": 2.0},
+                "BBANDS": {"length": 16, "std": 2.4},
                 "ACCBANDS": {"length": 14, "c": 1, "mamode": "dema"},
             },
             "Volume": {

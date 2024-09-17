@@ -93,14 +93,14 @@ def run_test_for_selected_indicators(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = ("Overlap", "LINREG")
+    indicator_to_test = ("Volatility", "BBANDS")
     new_strategies_file_name_prefix = f"strategies_dev_7_{'-'.join(indicator_to_test)}_"
 
-    for length, c in [(i, 0.26) for i in range(6, 18, 2)]:
-        kwargs = {"length": length, "limit": c}
+    for length, std in [(i, 1.4) for i in range(12, 26, 2)]:
+        kwargs = {"length": length, "std": std}
         settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
 
-        log.warning(f"Testing for {indicator_to_test}_{kwargs.items()}")
+        log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
         backtest(
             data.copy(),
             ComposeStrategiesListMethod.EXTEND,
@@ -121,6 +121,9 @@ def run_test_for_selected_indicators(settings):
             continue
 
         strategies = json.load(open(f"src/config/{file}"))
+        if not strategies:
+            continue
+
         s = strategies[0]
         stats.append(
             (
@@ -139,8 +142,8 @@ def run_test_for_selected_indicators(settings):
 
 
 if __name__ == "__main__":
-    settings = SETTINGS.OMX
+    settings = SETTINGS.NASDAQ
 
-    run_full_strategies_generation(settings)
-    # run_test_for_selected_indicators(settings)
-    run_plotting_for_active_strategies(settings)
+    # run_full_strategies_generation(settings)
+    run_test_for_selected_indicators(settings)
+    # run_plotting_for_active_strategies(settings)
