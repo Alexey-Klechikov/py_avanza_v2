@@ -15,7 +15,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from config.settings import TRADING
+from config.settings import BASE_TRADING
 
 
 class Test_AvanzaClient(TestCase):
@@ -53,7 +53,7 @@ class Test_AvanzaClient(TestCase):
         self.assertIsInstance(result, InstrumentIndex)
 
     def test_get_accounts_overview(self):
-        result = self.client.get_accounts_overview(account_url_parameter=TRADING.ACCOUNT_ID)
+        result = self.client.get_accounts_overview(account_url_parameter=BASE_TRADING.ACCOUNT_ID)
 
         self.assertIsInstance(result, AccountOverview)
 
@@ -81,7 +81,7 @@ class Test_AvanzaClient(TestCase):
     def test_place_order(self):
         with self.assertRaises(OrderException):
             _ = self.client.place_order(
-                account_id=TRADING.ACCOUNT_ID,
+                account_id=BASE_TRADING.ACCOUNT_ID,
                 order_book_id="1757509",
                 order_type=OrderType.BUY,
                 price=1,
@@ -91,7 +91,7 @@ class Test_AvanzaClient(TestCase):
 
         with self.assertRaises(OrderException):
             _ = self.client.place_order(
-                account_id=TRADING.ACCOUNT_ID,
+                account_id=BASE_TRADING.ACCOUNT_ID,
                 order_book_id="1757509",
                 order_type=OrderType.SELL,
                 price=1000000,

@@ -27,7 +27,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from config.settings import TRADING
+from config.settings import BASE_TRADING
 from utils.logger import get_logger
 
 log = get_logger()
@@ -263,7 +263,7 @@ class Avanza(AvanzaBase):
 
 
 @cache
-def get_client(user: str = TRADING.ACCOUNT_USERNAME) -> Avanza:
+def get_client(user: str = BASE_TRADING.ACCOUNT_USERNAME) -> Avanza:
     """time is a dummy argument to make the function bypass the cache once every hour"""
 
     log.debug("Connect to Avanza")
