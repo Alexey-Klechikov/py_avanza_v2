@@ -14,7 +14,7 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from backtest import backtest
-from config.settings import SETTINGS
+from config.settings import SETTINGS_TRADING
 from services.analytics import Analytics, AnalyticsType
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -22,7 +22,7 @@ from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
-set_handlers("eod")
+set_handlers("end_of_day")
 log = get_logger()
 
 log = get_logger()
@@ -197,7 +197,7 @@ def gather_analytics():
 
 if __name__ == "__main__":
     try:
-        for settings in (SETTINGS.OMX, SETTINGS.NASDAQ):
+        for settings in (SETTINGS_TRADING.OMX, SETTINGS_TRADING.NASDAQ):
             cache_history(settings)
             backtest_strategies(settings)
 

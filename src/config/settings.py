@@ -3,13 +3,16 @@ from datetime import time
 
 
 @dataclass
-class TRADING:
+class BASE_TRADING:
+    ACCOUNT_USERNAME: str = "ava_elbe"
+    ACCOUNT_ID: str = "5554179"
+
     MULTIPLIER: int = 20
     RESOLUTION = "2m"
 
 
 @dataclass
-class OMX(TRADING):
+class OMX(BASE_TRADING):
     NAME: str = "OMX"
     FILE_PREFIX: str = "OMX"
 
@@ -65,7 +68,7 @@ class OMX(TRADING):
 
 
 @dataclass
-class NASDAQ(TRADING):
+class NASDAQ(BASE_TRADING):
     NAME: str = "NASDAQ"
     FILE_PREFIX: str = "NDX"
 
@@ -121,15 +124,9 @@ class NASDAQ(TRADING):
 
 
 @dataclass
-class SETTINGS:
+class SETTINGS_TRADING:
     OMX = OMX()
     NASDAQ = NASDAQ()
-
-
-@dataclass
-class AVANZA_ACCOUNT:
-    USERNAME: str = "ava_elbe"
-    ACCOUNT_ID: str = "5554179"
 
 
 DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from apis.telegram.operators import Telegram
 from backtest import backtest
-from config.settings import SETTINGS
+from config.settings import SETTINGS_TRADING
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -11,7 +11,7 @@ from utils.logger import get_logger, set_handlers
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
 
-set_handlers("eow")
+set_handlers("end_of_week")
 log = get_logger()
 
 
@@ -66,8 +66,8 @@ def generate_strategies(settings) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(SETTINGS.OMX)
-        generate_strategies(SETTINGS.NASDAQ)
+        for settings in (SETTINGS_TRADING.OMX, SETTINGS_TRADING.NASDAQ):
+            generate_strategies(settings)
 
     except Exception as e:
         telegram = Telegram()

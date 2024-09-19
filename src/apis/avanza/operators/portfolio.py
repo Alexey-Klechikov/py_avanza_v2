@@ -4,7 +4,6 @@ from avanza.constants import InstrumentType
 
 from apis.avanza.client import get_client
 from apis.avanza.operators.models import Position
-from config.settings import AVANZA_ACCOUNT
 from utils.logger import get_logger
 
 log = get_logger()
@@ -17,12 +16,13 @@ class AcquiredInstrument:
 
 
 class Portfolio:
-    def __init__(self):
+    def __init__(self, account_id: str):
         self.acquired_instrument: AcquiredInstrument = AcquiredInstrument()
         self.total_value = 0
         self.buying_power = 0
         self.positions: List[Position] = []
         self._account_url_parameter: Optional[str] = None
+        self.account_id = account_id
 
     def reload_balance(self) -> None:
         log.debug("Reload account balance")
@@ -39,7 +39,7 @@ class Portfolio:
         positions = get_client().get_accounts_positions()
 
         self._account_url_parameter = [
-            i.account.url_parameter_id for i in positions.cash_positions if i.account.id == AVANZA_ACCOUNT.ACCOUNT_ID
+            i.account.url_parameter_id for i in positions.cash_positions if i.account.id == self.account_id
         ][0]
 
         self.positions = [
@@ -67,7 +67,7 @@ class Portfolio:
                 },
             )
             for i in positions.with_orderbook
-            if i.account.id == AVANZA_ACCOUNT.ACCOUNT_ID
+            if i.account.id == self.account_id
         ]
 
         if self.positions:

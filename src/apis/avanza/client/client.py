@@ -27,7 +27,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from config.settings import AVANZA_ACCOUNT
+from config.settings import TRADING
 from utils.logger import get_logger
 
 log = get_logger()
@@ -47,12 +47,12 @@ class Avanza(AvanzaBase):
         ).model_dump()
 
         response = {}
-        for _ in range(10):
+        for i in range(10):
             try:
                 response = self.__call(**request, return_content=True)
 
             except HTTPError:
-                time.sleep(5)
+                time.sleep((i + 1) * 3)
 
             if response:
                 return response if isinstance(response, dict) else json.loads(response, parse_float=float)
@@ -263,7 +263,7 @@ class Avanza(AvanzaBase):
 
 
 @cache
-def get_client(user: str = AVANZA_ACCOUNT.USERNAME) -> Avanza:
+def get_client(user: str = TRADING.ACCOUNT_USERNAME) -> Avanza:
     """time is a dummy argument to make the function bypass the cache once every hour"""
 
     log.debug("Connect to Avanza")
