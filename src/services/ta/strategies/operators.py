@@ -188,7 +188,7 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
 
 
 def get_top_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> List[Strategy]:
-    top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:3]
+    top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:5]
 
     return [
         Strategy(
