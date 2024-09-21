@@ -156,7 +156,7 @@ def cache_history(settings):
 
 
 def backtest_strategies(settings):
-    period_days = 25
+    period_days = 60
 
     log.warning(f"TASK: Backtest strategies on {settings.NAME} | {settings.RESOLUTION} | {period_days} days")
 
