@@ -18,6 +18,7 @@ class Orders:
         filter_side: Optional[str] = None,
         filter_orderbook_direction: Optional[str] = None,
         filter_orderbook_name: Optional[str] = None,
+        dry_run: bool = False,
     ):
         self.active_order: Optional[Order] = None
 
@@ -25,6 +26,8 @@ class Orders:
         self.filter_side = filter_side
         self.filter_orderbook_direction = filter_orderbook_direction
         self.filter_orderbook_name = filter_orderbook_name
+
+        self.dry_run = dry_run
 
     def reload_active(self):
         self.active_order = None
@@ -93,6 +96,9 @@ class Orders:
         volume: int,
         valid_until: date = date.today() + timedelta(days=7),
     ) -> Optional[str]:
+        if self.dry_run:
+            log.warning(f"Dry run: {order_type.value} order not placed")
+
         if not price:
             log.warning("No price set for order: %s %s", order_book_id, order_type.value)
             return
@@ -117,6 +123,9 @@ class Orders:
             log.error(f"Exception: {exc}")
 
     def delete(self, order_id: str) -> Optional[str]:
+        if self.dry_run:
+            log.warning("Dry run: DELETE order not placed")
+
         try:
             _ = get_client().delete_order(account_id=self.account_id, order_id=order_id)
 

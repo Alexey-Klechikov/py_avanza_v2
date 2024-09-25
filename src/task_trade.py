@@ -325,7 +325,7 @@ def trade(dry_run: bool, settings) -> None:
     data = Data(settings)
     data.get()
 
-    orders = Orders(account_id=settings.ACCOUNT_ID)
+    orders = Orders(account_id=settings.ACCOUNT_ID, dry_run=dry_run)
     orders.delete_all()
 
     portfolio = Portfolio(account_id=settings.ACCOUNT_ID)
@@ -366,7 +366,6 @@ def trade(dry_run: bool, settings) -> None:
             [
                 signal == Signal.LONG and portfolio.acquired_instrument.BULL,
                 signal == Signal.SHORT and portfolio.acquired_instrument.BEAR,
-                dry_run,
             ],
         ):
             continue

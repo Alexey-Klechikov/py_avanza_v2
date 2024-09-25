@@ -36,7 +36,6 @@ class Event:
     at: time
     orderbook_direction: Direction
     action: Action
-    orderbook_name: str
     settings: HoldOMX
     take_profit: float
     budget: int
@@ -54,7 +53,6 @@ class Plan:
                     at=rule.buy_time,
                     action=Action.BUY,
                     orderbook_direction=Direction[rule.orderbook_direction],
-                    orderbook_name=settings.NAME,
                     take_profit=rule.take_profit,
                     budget=rule.budget,
                     settings=settings,
@@ -65,14 +63,21 @@ class Plan:
                     at=rule.sell_time,
                     action=Action.SELL,
                     orderbook_direction=Direction[rule.orderbook_direction],
-                    orderbook_name=settings.NAME,
                     take_profit=rule.take_profit,
                     budget=rule.budget,
                     settings=settings,
                 ),
             )
 
-        self.events.sort(key=lambda x: x.at)
+        events = {}
+        for event in self.events:
+            key = (event.at, event.orderbook_direction)
+            if key in events:
+                if events[key].action == Action.BUY:
+                    continue
+            events[key] = event
+
+        self.events = sorted(events.values(), key=lambda x: x.at)
 
     def pop_next_event(self) -> None:
         while self.events:
@@ -84,7 +89,7 @@ class Plan:
                 "Next event: {} {} {} at {}".format(
                     self.event.action.value,
                     self.event.orderbook_direction.value,
-                    self.event.orderbook_name,
+                    self.event.settings.NAME,
                     self.event.at.strftime("%H:%M"),
                 ),
             )
@@ -124,18 +129,17 @@ class Trade:
 
         instrument_to_sell = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
 
-        if dry_run:
-            log.warning(f"Would sell {instrument_to_sell.instrument.name} at {instrument_to_sell.quote.sell}")
-            return
-
         while True:
             orders.place(
                 order_book_id=instrument_to_sell.instrument.id,
                 instrument_name=instrument_to_sell.instrument.name,
                 order_type=OrderType.SELL,
-                price=instrument_to_sell.quote.sell,
+                price=instrument_to_sell.quote.buy,
                 volume=int(instrument_to_sell.volume),
             )
+
+            if dry_run:
+                break
 
             if orders.active_order:
                 orders.delete(order_id=orders.active_order.order_id)
@@ -159,42 +163,53 @@ class Trade:
             log.warning(
                 "Already holding position(s): {}".format(" | ".join([i.instrument.name for i in portfolio.positions])),
             )
-            return
 
-        watchlist = Watchlists(event.settings)
-        watchlist.refresh_watchlists(filter_orderbook_type="CERTIFICATE")
+            position = portfolio.positions[0]
 
-        instrument_to_buy = getattr(watchlist.preferred_instrument, event.orderbook_direction.value)
-
-        if dry_run:
-            log.warning(f"Would buy {instrument_to_buy.instrument.name} at {instrument_to_buy.quote.buy}")
-            return
-
-        volume = event.budget // instrument_to_buy.quote.buy
-
-        while True:
             orders.place(
-                order_book_id=instrument_to_buy.instrument.id,
-                instrument_name=instrument_to_buy.instrument.name,
-                order_type=OrderType.BUY,
-                price=instrument_to_buy.quote.buy,
-                volume=volume,
+                order_book_id=position.instrument.id,
+                instrument_name=position.instrument.name,
+                order_type=OrderType.SELL,
+                price=round(
+                    (position.quote.buy if position.quote.buy else position.acquired_price) * (1 + event.take_profit),
+                    2,
+                ),
+                volume=int(position.volume),
             )
 
-            if orders.active_order:
-                orders.delete(order_id=orders.active_order.order_id)
+        else:
+            while True:
+                watchlist = Watchlists(event.settings)
+                watchlist.refresh_watchlists(filter_orderbook_type="CERTIFICATE")
 
-            portfolio.reload_positions()
-            if portfolio.positions:
-                break
+                instrument_to_buy = getattr(watchlist.preferred_instrument, event.orderbook_direction.value)
+                volume = event.budget // instrument_to_buy.sell
 
-        orders.place(
-            order_book_id=instrument_to_buy.instrument.id,
-            instrument_name=instrument_to_buy.instrument.name,
-            order_type=OrderType.SELL,
-            price=round(instrument_to_buy.quote.sell * (1 + event.take_profit), 2),
-            volume=volume,
-        )
+                orders.place(
+                    order_book_id=instrument_to_buy.id,
+                    instrument_name=instrument_to_buy.name,
+                    order_type=OrderType.BUY,
+                    price=instrument_to_buy.sell,
+                    volume=volume,
+                )
+
+                if dry_run:
+                    break
+
+                if orders.active_order:
+                    orders.delete(order_id=orders.active_order.order_id)
+
+                portfolio.reload_positions()
+                if portfolio.positions:
+                    break
+
+            orders.place(
+                order_book_id=instrument_to_buy.id,
+                instrument_name=instrument_to_buy.name,
+                order_type=OrderType.SELL,
+                price=round(instrument_to_buy.sell * (1 + event.take_profit), 2),
+                volume=volume,
+            )
 
 
 def hold(dry_run: bool, list_of_settings: list) -> None:
@@ -215,17 +230,17 @@ def hold(dry_run: bool, list_of_settings: list) -> None:
 
         orders = Orders(
             account_id=plan.event.settings.ACCOUNT_ID,
-            filter_side=plan.event.action.value,
-            filter_orderbook_name=plan.event.orderbook_name,
+            filter_orderbook_name=plan.event.settings.NAME,
             filter_orderbook_direction=plan.event.orderbook_direction.value,
+            filter_side=plan.event.action.value,
         )
         orders.reload_active()
-        if orders.active_order and not dry_run:
+        if orders.active_order:
             orders.delete(orders.active_order.order_id)
 
         portfolio = Portfolio(
             account_id=plan.event.settings.ACCOUNT_ID,
-            filter_orderbook_name=plan.event.orderbook_name,
+            filter_orderbook_name=plan.event.settings.NAME,
             filter_orderbook_direction=plan.event.orderbook_direction.value,
         )
         portfolio.reload_positions()

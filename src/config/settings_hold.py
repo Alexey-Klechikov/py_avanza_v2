@@ -10,8 +10,8 @@ class HoldRule:
     orderbook_direction: str
     buy_time: time
     sell_time: time
-    budget: float
     take_profit: float
+    budget: float = 1300
 
 
 @dataclass
@@ -21,9 +21,26 @@ class HoldOMX(BaseOMX, BaseHold):
             HoldRule(
                 orderbook_direction="BULL",
                 buy_time=time(17, 0),
-                sell_time=time(10, 10),
-                budget=1300,
+                sell_time=time(10, 00),
                 take_profit=0.3,
+            ),
+            HoldRule(
+                orderbook_direction="BULL",
+                buy_time=time(10, 20),
+                sell_time=time(14, 30),
+                take_profit=0.04,
+            ),
+            HoldRule(
+                orderbook_direction="BULL",
+                buy_time=time(14, 30),
+                sell_time=time(16, 30),
+                take_profit=0.12,
+            ),
+            HoldRule(
+                orderbook_direction="BEAR",
+                buy_time=time(12, 40),
+                sell_time=time(16, 50),
+                take_profit=0.18,
             ),
         ],
     )

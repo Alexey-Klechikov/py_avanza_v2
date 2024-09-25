@@ -147,10 +147,10 @@ def run_test_for_selected_indicators(settings):
 def test_gaps(settings):
     from pprint import pprint
 
-    period_days = 70
+    period_days = 40
 
-    close = "09:36"
-    side = "BEAR"
+    close = "10:00"
+    side = "BULL"
 
     data = Storage(settings).read()
     data = data.loc[
@@ -213,6 +213,97 @@ def test_gaps(settings):
         print(cut_off, round(counter / len(gaps), 2), round(total, 2))
 
 
+def test_hold(settings):
+    from pprint import pprint
+
+    period_days = 30
+
+    side = "BEAR"
+
+    times = pd.date_range(start="09:00", end="17:00", freq="10min").time
+    buy_time_sell_time_combinations = [
+        (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
+    ]
+
+    result_for_intervals = {}
+    for buy_time, sell_time in buy_time_sell_time_combinations:
+        result_for_intervals[(buy_time, sell_time)] = []
+
+        data = Storage(settings).read()
+        data = data.loc[
+            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+        ]
+        data.index = pd.to_datetime(data.index)
+        daily_data = data.resample("D")
+
+        price_at_buy_time = daily_data["Close"].apply(lambda x: x.at_time(buy_time))
+        price_at_sell_time = daily_data["Close"].apply(lambda x: x.at_time(sell_time))
+
+        high_between_buy_and_sell_times = daily_data["High"].apply(
+            lambda x: x[(x.index.time >= buy_time) & (x.index.time <= sell_time)].max(),
+        )
+        low_between_buy_and_sell_times = daily_data["Low"].apply(
+            lambda x: x[(x.index.time >= buy_time) & (x.index.time <= sell_time)].min(),
+        )
+
+        result = pd.DataFrame(
+            {
+                "buy": price_at_buy_time,
+                "sell": price_at_sell_time,
+                "high": high_between_buy_and_sell_times,
+                "low": low_between_buy_and_sell_times,
+            },
+        )
+        result.index = pd.to_datetime(result.index)
+        grouped = result.groupby(result.index.date)
+
+        result = grouped.agg(
+            {
+                "buy": "first",
+                "sell": "first",
+                "high": "first",
+                "low": "first",
+            },
+        ).dropna()
+
+        # print(result)
+
+        for cut_off in range(5, 50, 2):
+            counter = 0
+            total = 0
+            for i, row in result.iterrows():
+                if (side == "BULL" and (row["high"] - row["buy"] > cut_off)) or (
+                    side == "BEAR" and (row["buy"] - row["low"] > cut_off)
+                ):
+                    # print("CUT_OFF", i, row["buy"], row["low" if side == "BEAR" else "high"])
+                    total += cut_off
+                    counter += 1
+
+                else:
+                    profit = (row["sell"] - row["buy"]) * (1 if side == "BULL" else -1)
+                    total += profit
+                    if profit > 0:
+                        # print("TIMEOUT", i, row["buy"], row["sell"])
+                        counter += 1
+
+            efficiency = round(counter / result.shape[0], 2)
+            if efficiency > 0.5 and total > 0:
+                result_for_intervals[(buy_time, sell_time)].append((cut_off, efficiency, round(total, 2)))
+
+            # print(cut_off, round(counter / result.shape[0], 2), round(total, 2))
+
+    pprint(result_for_intervals)
+
+    print("(-----------")
+    reformed_results = [
+        (interval, sorted(efficiencies, key=lambda x: x[1] * x[2], reverse=True)[0])
+        for interval, efficiencies in result_for_intervals.items()
+        if efficiencies
+    ]
+
+    pprint(sorted(reformed_results, key=lambda x: x[1][1] * x[1][2], reverse=True))
+
+
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_NASDAQ
     settings = SETTINGS_TRADE_OMX
@@ -221,4 +312,5 @@ if __name__ == "__main__":
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
-    test_gaps(settings)
+    # test_gaps(settings)
+    test_hold(settings)
