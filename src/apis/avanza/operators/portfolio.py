@@ -16,13 +16,21 @@ class AcquiredInstrument:
 
 
 class Portfolio:
-    def __init__(self, account_id: str):
+    def __init__(
+        self,
+        account_id: str,
+        filter_orderbook_name: Optional[str] = None,
+        filter_orderbook_direction: Optional[str] = None,
+    ):
         self.acquired_instrument: AcquiredInstrument = AcquiredInstrument()
         self.total_value = 0
         self.buying_power = 0
         self.positions: List[Position] = []
         self._account_url_parameter: Optional[str] = None
+
         self.account_id = account_id
+        self.filter_orderbook_name = filter_orderbook_name
+        self.filter_orderbook_direction = filter_orderbook_direction
 
     def reload_balance(self) -> None:
         log.debug("Reload account balance")
@@ -69,6 +77,12 @@ class Portfolio:
             for i in positions.with_orderbook
             if i.account.id == self.account_id
         ]
+
+        if self.filter_orderbook_name:
+            self.positions = [i for i in self.positions if self.filter_orderbook_name in i.instrument.name]
+
+        if self.filter_orderbook_direction:
+            self.positions = [i for i in self.positions if self.filter_orderbook_direction in i.instrument.name]
 
         if self.positions:
             log.debug(f"Active positions found [{len(self.positions)} st.]")

@@ -12,7 +12,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from config.settings import SETTINGS_TRADING
+from config import SETTINGS_TRADE_NASDAQ, SETTINGS_TRADE_OMX
 from services.storage import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
@@ -21,7 +21,7 @@ from utils.logger import get_logger, set_handlers
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
-set_handlers("trade_day")
+set_handlers("trade")
 log = get_logger()
 
 
@@ -390,7 +390,7 @@ if __name__ == "__main__":
     try:
         dry_run = platform.system() == "Darwin"
 
-        for settings in (SETTINGS_TRADING.OMX, SETTINGS_TRADING.NASDAQ):
+        for settings in (SETTINGS_TRADE_OMX, SETTINGS_TRADE_NASDAQ):
             trade(dry_run, settings)
 
     except Exception as e:

@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from config.settings import DATA_COLUMNS
+from config import DATA_COLUMNS
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
 from services.ta.strategies import compose_strategies_list, dump_strategies_in_file, get_top_strategies

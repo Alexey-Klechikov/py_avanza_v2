@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from config.settings import DATA_COLUMNS
+from config import DATA_COLUMNS
 from utils.logger import get_logger
 
 log = get_logger()

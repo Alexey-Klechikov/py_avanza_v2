@@ -1,7 +1,7 @@
 import json
 import time
 from datetime import date
-from functools import cache
+from functools import lru_cache
 from typing import List, Optional, Union
 
 import keyring
@@ -27,7 +27,7 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from config.settings import BASE_TRADING
+from config import ACCOUNT_USERNAME
 from utils.logger import get_logger
 
 log = get_logger()
@@ -262,10 +262,8 @@ class Avanza(AvanzaBase):
         return parsed_response.order_id
 
 
-@cache
-def get_client(user: str = BASE_TRADING.ACCOUNT_USERNAME) -> Avanza:
-    """time is a dummy argument to make the function bypass the cache once every hour"""
-
+@lru_cache
+def get_client(user: str = ACCOUNT_USERNAME) -> Avanza:
     log.debug("Connect to Avanza")
 
     credentials = {

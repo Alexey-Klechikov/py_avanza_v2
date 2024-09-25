@@ -1,25 +1,11 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-
-@dataclass
-class BASE_TRADING:
-    ACCOUNT_USERNAME: str = "ava_elbe"
-    ACCOUNT_ID: str = "5554179"
-
-    MULTIPLIER: int = 20
-    RESOLUTION = "2m"
+from config.settings_base import BaseNASDAQ, BaseOMX, BaseTrade
 
 
 @dataclass
-class OMX(BASE_TRADING):
-    NAME: str = "OMX"
-    FILE_PREFIX: str = "OMX"
-
-    AVA: str = "19002"
-    YAHOO: str = "^OMX"
-    INVESTING: str = "25685"
-
+class TradeOMX(BaseOMX, BaseTrade):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(17, 0)
     TRADING_DATA: str = "avanza"
@@ -68,19 +54,12 @@ class OMX(BASE_TRADING):
 
 
 @dataclass
-class NASDAQ(BASE_TRADING):
-    NAME: str = "NASDAQ"
-    FILE_PREFIX: str = "NDX"
-
-    AVA: str = "155541"
-    YAHOO: str = "^NDX"
-    INVESTING: str = "20"
-
+class TradeNASDAQ(BaseNASDAQ, BaseTrade):
     TRADING_START: time = time(17, 0)
     TRADING_END: time = time(21, 50)
     TRADING_DATA: str = "yahoo"
 
-    BUDGET_MINIMUM = 1500
+    BUDGET_MINIMUM: int = 1500
     BUDGET_PERCENT: float = 0.4
 
     TRADING_STRATEGY_INDICATORS: int = 7
@@ -121,12 +100,3 @@ class NASDAQ(BASE_TRADING):
             },
         },
     )
-
-
-@dataclass
-class SETTINGS_TRADING:
-    OMX = OMX()
-    NASDAQ = NASDAQ()
-
-
-DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]

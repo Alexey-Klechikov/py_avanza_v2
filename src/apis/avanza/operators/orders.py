@@ -12,9 +12,19 @@ log = get_logger()
 
 
 class Orders:
-    def __init__(self, account_id: str):
+    def __init__(
+        self,
+        account_id: str,
+        filter_side: Optional[str] = None,
+        filter_orderbook_direction: Optional[str] = None,
+        filter_orderbook_name: Optional[str] = None,
+    ):
         self.active_order: Optional[Order] = None
+
         self.account_id = account_id
+        self.filter_side = filter_side
+        self.filter_orderbook_direction = filter_orderbook_direction
+        self.filter_orderbook_name = filter_orderbook_name
 
     def reload_active(self):
         self.active_order = None
@@ -23,6 +33,12 @@ class Orders:
         orders = [i for i in orders if i.account.account_id == self.account_id]
 
         active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
+        if self.filter_side:
+            active_orders = [i for i in active_orders if i.side == self.filter_side]
+        if self.filter_orderbook_direction:
+            active_orders = [i for i in active_orders if self.filter_orderbook_direction in i.orderbook.name]
+        if self.filter_orderbook_name:
+            active_orders = [i for i in active_orders if self.filter_orderbook_name in i.orderbook.name]
         if not active_orders:
             return
 
@@ -32,13 +48,13 @@ class Orders:
         for order in active_orders:
             if order.order_id == self.active_order.order_id:
                 continue
-            self._delete(order.order_id)
+            self.delete(order.order_id)
 
         inactive_orders = [i for i in orders if i.state == "FAILED"]
         if len(inactive_orders) > 0:
             log.warning(f"Inactive order(s) found ({len(inactive_orders)} st)")
             for order in inactive_orders:
-                self._delete(order.order_id)
+                self.delete(order.order_id)
 
     def get_past(self) -> List[Deal]:
         return sorted(
@@ -100,7 +116,7 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-    def _delete(self, order_id: str) -> Optional[str]:
+    def delete(self, order_id: str) -> Optional[str]:
         try:
             _ = get_client().delete_order(account_id=self.account_id, order_id=order_id)
 
@@ -114,4 +130,4 @@ class Orders:
         orders = [i for i in orders if i.account.account_id == self.account_id]
 
         for order in orders:
-            self._delete(order.order_id)
+            self.delete(order.order_id)

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from avanza.models import WatchList
 
 from apis.avanza.client import get_client
@@ -91,7 +93,7 @@ class Watchlists:
                 ),
             )
 
-    def refresh_watchlists(self):
+    def refresh_watchlists(self, filter_orderbook_type: Optional[str] = None):
         log.debug("Refresh watchlists")
 
         self.valid_instruments = ValidInstruments()
@@ -101,6 +103,7 @@ class Watchlists:
             if (
                 unpacked_watchlist_name.trading_perspective != "DT"
                 or unpacked_watchlist_name.instrument != self.settings.NAME
+                or (filter_orderbook_type and filter_orderbook_type not in watchlist.name)
             ):
                 continue
 

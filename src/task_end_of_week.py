@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from apis.telegram.operators import Telegram
 from backtest import backtest
-from config.settings import SETTINGS_TRADING
+from config import SETTINGS_TRADE_NASDAQ, SETTINGS_TRADE_OMX
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -66,7 +66,7 @@ def generate_strategies(settings) -> None:
 
 if __name__ == "__main__":
     try:
-        for settings in (SETTINGS_TRADING.OMX, SETTINGS_TRADING.NASDAQ):
+        for settings in (SETTINGS_TRADE_OMX, SETTINGS_TRADE_NASDAQ):
             generate_strategies(settings)
 
     except Exception as e:
