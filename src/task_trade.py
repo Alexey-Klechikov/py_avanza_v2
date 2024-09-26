@@ -164,13 +164,13 @@ class Telegram(TelegramBase):
         self.total_value = 0
         self.deals = []
 
-    def log_starting_balance(self, budget: Budget, portfolio: Portfolio) -> None:
+    def log_starting_balance(self, budget: Budget) -> None:
         self.starting_balance = budget.starting_balance
 
     def log_final_balance(self, portfolio: Portfolio) -> None:
         self.final_balance = portfolio.total_value
 
-    def log_deals(self, orders: Orders, settings) -> None:
+    def log_deals(self, orders: Orders) -> None:
         deals = orders.get_past()
         if not deals:
             return
@@ -349,7 +349,7 @@ def trade(dry_run: bool, settings) -> None:
     budget.adjust(orders, portfolio)
 
     telegram = Telegram()
-    telegram.log_starting_balance(budget, portfolio)
+    telegram.log_starting_balance(budget)
 
     watchlist = Watchlists(settings)
     watchlist.update_watchlists()
@@ -388,7 +388,7 @@ def trade(dry_run: bool, settings) -> None:
     portfolio.reload_balance()
 
     telegram.log_final_balance(portfolio)
-    telegram.log_deals(orders, settings)
+    telegram.log_deals(orders)
     telegram.send_message(budget, settings)
 
 
