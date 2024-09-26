@@ -77,7 +77,8 @@ class Plan:
                     continue
             events[key] = event
 
-        self.events = sorted(events.values(), key=lambda x: x.at)
+        self.events = sorted(events.values(), key=lambda x: x.action.value, reverse=True)
+        self.events = sorted(self.events, key=lambda x: x.at)
 
     def pop_next_event(self) -> None:
         while self.events:
@@ -105,6 +106,9 @@ class Plan:
         sleep_time = (datetime.combine(datetime.today(), self.event.at) - datetime.now()).seconds
         hours, remainder = divmod(sleep_time, 3600)
         minutes, _ = divmod(remainder, 60)
+
+        if sleep_time <= 0:
+            return
 
         log.info(f"Sleeping for {hours} hours and {minutes} minutes")
 
