@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, time
 from enum import Enum
 from time import sleep
+from typing import Union
 
 import pandas as pd
 from avanza.constants import OrderType
@@ -11,7 +12,7 @@ from avanza.constants import OrderType
 from apis.avanza.client import get_client
 from apis.avanza.operators import Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
-from config import SETTINGS_HOLD_OMX, HoldOMX
+from config import SETTINGS_HOLD_OMX_DT, SETTINGS_HOLD_OMX_MAIN, HoldOMX_DT, HoldOMX_Main
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -36,7 +37,7 @@ class Event:
     at: time
     orderbook_direction: Direction
     action: Action
-    settings: HoldOMX
+    settings: Union[HoldOMX_Main, HoldOMX_DT]
     take_profit: float
     budget: int
 
@@ -258,13 +259,13 @@ if __name__ == "__main__":
     try:
         dry_run = platform.system() == "Darwin"
 
-        hold(dry_run, [SETTINGS_HOLD_OMX])
+        hold(dry_run, [SETTINGS_HOLD_OMX_DT, SETTINGS_HOLD_OMX_MAIN])
 
     except Exception as e:
         log.exception(str(e))
 
         telegram = TelegramBase()
         telegram.messages = ["Error in task_hold.py"]
-        telegram.send_message()
+        # telegram.send_message()
 
         raise e

@@ -31,6 +31,11 @@ class Signal(Enum):
     EXIT = "EXIT"
 
 
+class Direction(Enum):
+    BULL = "BULL"
+    BEAR = "BEAR"
+
+
 class Data:
     def __init__(self, settings):
         self.settings = settings
@@ -160,15 +165,9 @@ class Telegram(TelegramBase):
         self.deals = []
 
     def log_starting_balance(self, budget: Budget, portfolio: Portfolio) -> None:
-        if portfolio.total_value != portfolio.buying_power:
-            self.messages.append("> Order is pending at start")
-
         self.starting_balance = budget.starting_balance
 
     def log_final_balance(self, portfolio: Portfolio) -> None:
-        if portfolio.total_value != portfolio.buying_power:
-            self.messages.append("> Order is pending in the end")
-
         self.final_balance = portfolio.total_value
 
     def log_deals(self, orders: Orders, settings) -> None:
@@ -180,13 +179,22 @@ class Telegram(TelegramBase):
         for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
             if len(group) == 1:
                 continue
+
             group.sort_values("time", inplace=True)
             group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
 
-            if group["time"].iloc[0].time() <= settings.TRADING_START:
-                continue
+            group_sum = 0
+            deal_time = None
+            for _, row in group.iterrows():
+                if group_sum == 0 and row["side"] == "SELL":
+                    continue
 
-            self.deals.append((round(group["amount"].sum()), group["time"].iloc[0].strftime("%Y-%m-%d %H:%M:%S")))
+                if not deal_time:
+                    deal_time = row["time"].strftime("%Y-%m-%d %H:%M:%S")
+
+                group_sum += row["amount"]
+
+            self.deals.append((round(group_sum), deal_time))
 
         self.deals.sort(key=lambda x: x[1])
 
@@ -204,14 +212,19 @@ class Telegram(TelegramBase):
 
 class Trade:
     @classmethod
-    def sell(cls, signal: Signal, orders: Orders, portfolio: Portfolio) -> None:
-        for tested_signal, instrument_direction_to_sell in [(Signal.LONG, "BEAR"), (Signal.SHORT, "BULL")]:
-            if signal != tested_signal:
-                continue
+    def sell(
+        cls,
+        direction: Direction,
+        orders: Orders,
+        portfolio: Portfolio,
+    ) -> None:
+        while True:
+            orders.delete_all()
 
-            instrument_to_sell = getattr(portfolio.acquired_instrument, instrument_direction_to_sell)
+            portfolio.reload_positions()
+            instrument_to_sell = getattr(portfolio.acquired_instrument, direction.value)
             if not instrument_to_sell:
-                continue
+                return
 
             orders.place(
                 order_book_id=instrument_to_sell.instrument.id,
@@ -224,22 +237,21 @@ class Trade:
     @classmethod
     def buy(
         cls,
-        signal: Optional[Signal],
+        direction: Direction,
         orders: Orders,
         watchlist: Watchlists,
         portfolio: Portfolio,
         budget: Budget,
     ) -> None:
-        for tested_signal, instrument_direction_to_buy in [(Signal.LONG, "BULL"), (Signal.SHORT, "BEAR")]:
-            if signal != tested_signal:
-                continue
+        while True:
+            orders.delete_all()
 
-            instrument_acquired = getattr(portfolio.acquired_instrument, instrument_direction_to_buy)
-            if instrument_acquired:
-                continue
+            portfolio.reload_positions()
+            if getattr(portfolio.acquired_instrument, direction.value):
+                return
 
             watchlist.refresh_watchlists()
-            instrument_preferred = getattr(watchlist.preferred_instrument, instrument_direction_to_buy)
+            instrument_preferred = getattr(watchlist.preferred_instrument, direction.value)
 
             orders.place(
                 order_book_id=instrument_preferred.id,
@@ -250,15 +262,32 @@ class Trade:
             )
 
     @classmethod
+    def take_profit(
+        cls,
+        direction: Direction,
+        orders: Orders,
+        portfolio: Portfolio,
+        take_profit: float,
+    ) -> None:
+        portfolio.reload_positions()
+        instrument_to_take_profit = getattr(portfolio.acquired_instrument, direction.value)
+        if not instrument_to_take_profit:
+            return
+
+        orders.delete_all()
+
+        orders.place(
+            order_book_id=instrument_to_take_profit.instrument.id,
+            instrument_name=instrument_to_take_profit.instrument.name,
+            order_type=OrderType.SELL,
+            price=round(instrument_to_take_profit.quote.sell * (1 + take_profit), 2),
+            volume=int(instrument_to_take_profit.volume),
+        )
+
+    @classmethod
     def exit(cls, orders: Orders, portfolio: Portfolio) -> None:
-        for position in portfolio.positions:
-            orders.place(
-                order_book_id=position.instrument.id,
-                instrument_name=position.instrument.name,
-                order_type=OrderType.SELL,
-                price=position.quote.buy,
-                volume=int(position.volume),
-            )
+        for instrument_direction_to_sell in [Direction.BULL, Direction.BEAR]:
+            Trade.sell(instrument_direction_to_sell, orders, portfolio)
 
 
 class FlowAction(Enum):
@@ -273,31 +302,12 @@ class Flow:
         self.action: FlowAction = FlowAction.TRADE
         self.settings = settings
 
-    def decide(self, data: Data, orders: Orders, portfolio: Portfolio) -> None:
-        orders.reload_active()
-        portfolio.reload_positions()
-
-        if all(
-            [
-                not orders.active_order,
-                not portfolio.positions,
-                datetime.now().time() >= self.settings.TRADING_END,
-            ],
-        ):
+    def decide(self, data: Data) -> None:
+        if datetime.now().time() >= self.settings.TRADING_END:
             self.action = FlowAction.EXIT_TRADING
-        elif any(
-            [
-                data.too_old,
-                datetime.now().time() >= self.settings.TRADING_END,
-            ],
-        ):
+        elif data.too_old:
             self.action = FlowAction.EXIT_POSITION
-        elif any(
-            [
-                orders.active_order,
-                data.is_new,
-            ],
-        ):
+        elif data.is_new:
             data.get_strategies()
             data.is_new = False
             self.action = FlowAction.TRADE
@@ -312,9 +322,6 @@ class Flow:
 
             self.action = FlowAction.DO_NOTHING
 
-        if orders.active_order:
-            orders.delete_all()
-
 
 # MAIN
 def trade(dry_run: bool, settings) -> None:
@@ -325,10 +332,16 @@ def trade(dry_run: bool, settings) -> None:
     data = Data(settings)
     data.get()
 
-    orders = Orders(account_id=settings.ACCOUNT_ID, dry_run=dry_run)
-    orders.delete_all()
+    orders = Orders(
+        account_id=settings.ACCOUNT_ID,
+        filter_orderbook_name=settings.NAME,
+        dry_run=dry_run,
+    )
 
-    portfolio = Portfolio(account_id=settings.ACCOUNT_ID)
+    portfolio = Portfolio(
+        account_id=settings.ACCOUNT_ID,
+        filter_orderbook_name=settings.NAME,
+    )
     portfolio.reload_positions()
     portfolio.reload_balance()
 
@@ -344,7 +357,7 @@ def trade(dry_run: bool, settings) -> None:
     flow = Flow(settings)
 
     while datetime.now().time() < time(22, 10):
-        flow.decide(data, orders, portfolio)
+        flow.decide(data)
         if flow.action == FlowAction.DO_NOTHING:
             continue
         elif flow.action == FlowAction.EXIT_TRADING:
@@ -362,21 +375,15 @@ def trade(dry_run: bool, settings) -> None:
             continue
 
         portfolio.detect_acquired_instruments()
-        if any(
-            [
-                signal == Signal.LONG and portfolio.acquired_instrument.BULL,
-                signal == Signal.SHORT and portfolio.acquired_instrument.BEAR,
-            ],
-        ):
-            continue
-
-        Trade.sell(signal, orders, portfolio)
-
         orders.reload_active()
-        if orders.active_order:
-            continue
 
-        Trade.buy(signal, orders, watchlist, portfolio, budget)
+        instrument_direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
+        instrument_direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR
+        instrument_direction_to_take_profit = Direction.BULL if signal == Signal.LONG else Direction.BEAR
+
+        Trade.sell(instrument_direction_to_sell, orders, portfolio)
+        Trade.buy(instrument_direction_to_buy, orders, watchlist, portfolio, budget)
+        Trade.take_profit(instrument_direction_to_take_profit, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
     portfolio.reload_balance()
 

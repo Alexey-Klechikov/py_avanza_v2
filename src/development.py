@@ -49,7 +49,7 @@ def run_full_strategies_generation(settings):
             plot=False,
         )
 
-    period_days = 20
+    period_days = 60
 
     data = Storage(settings).read()
     data = data.loc[
@@ -149,7 +149,7 @@ def test_gaps(settings):
 
     period_days = 40
 
-    close = "10:00"
+    close = "09:40"
     side = "BULL"
 
     data = Storage(settings).read()
@@ -308,9 +308,9 @@ if __name__ == "__main__":
     settings = SETTINGS_TRADE_NASDAQ
     settings = SETTINGS_TRADE_OMX
 
-    # run_full_strategies_generation(settings)
+    run_full_strategies_generation(settings)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     # test_gaps(settings)
-    test_hold(settings)
+    # test_hold(settings)

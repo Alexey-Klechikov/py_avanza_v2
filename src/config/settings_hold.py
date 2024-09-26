@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import time
 from typing import List
 
-from config.settings_base import BaseHold, BaseOMX
+from config.settings_base import BaseHold, BaseOMX, BaseTrade
 
 
 @dataclass
@@ -15,7 +15,7 @@ class HoldRule:
 
 
 @dataclass
-class HoldOMX(BaseOMX, BaseHold):
+class HoldOMX_Main(BaseOMX, BaseHold):
     RULES: List[HoldRule] = field(
         default_factory=lambda: [
             HoldRule(
@@ -41,6 +41,21 @@ class HoldOMX(BaseOMX, BaseHold):
                 buy_time=time(12, 40),
                 sell_time=time(16, 50),
                 take_profit=0.18,
+            ),
+        ],
+    )
+
+
+@dataclass
+class HoldOMX_DT(BaseOMX, BaseTrade):
+    RULES: List[HoldRule] = field(
+        default_factory=lambda: [
+            HoldRule(
+                orderbook_direction="BULL",
+                buy_time=time(17, 2),
+                sell_time=time(9, 40),
+                take_profit=0.3,
+                budget=1500,
             ),
         ],
     )

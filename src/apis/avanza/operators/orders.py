@@ -29,19 +29,24 @@ class Orders:
 
         self.dry_run = dry_run
 
+    def _list_orders(self) -> List[Order]:
+        orders = get_client().list_orders().orders
+
+        if self.account_id:
+            orders = [i for i in orders if i.account.account_id == self.account_id]
+        if self.filter_side:
+            orders = [i for i in orders if i.side == self.filter_side]
+        if self.filter_orderbook_direction:
+            orders = [i for i in orders if self.filter_orderbook_direction in i.orderbook.name]
+        if self.filter_orderbook_name:
+            orders = [i for i in orders if self.filter_orderbook_name in i.orderbook.name]
+
+        return orders
+
     def reload_active(self):
         self.active_order = None
 
-        orders = get_client().list_orders().orders
-        orders = [i for i in orders if i.account.account_id == self.account_id]
-
-        active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
-        if self.filter_side:
-            active_orders = [i for i in active_orders if i.side == self.filter_side]
-        if self.filter_orderbook_direction:
-            active_orders = [i for i in active_orders if self.filter_orderbook_direction in i.orderbook.name]
-        if self.filter_orderbook_name:
-            active_orders = [i for i in active_orders if self.filter_orderbook_name in i.orderbook.name]
+        active_orders = [i for i in self._list_orders() if i.state in ("ACTIVE", "ACTIVE_PENDING")]
         if not active_orders:
             return
 
@@ -53,7 +58,7 @@ class Orders:
                 continue
             self.delete(order.order_id)
 
-        inactive_orders = [i for i in orders if i.state == "FAILED"]
+        inactive_orders = [i for i in self._list_orders() if i.state == "FAILED"]
         if len(inactive_orders) > 0:
             log.warning(f"Inactive order(s) found ({len(inactive_orders)} st)")
             for order in inactive_orders:
@@ -112,7 +117,6 @@ class Orders:
                 volume=volume,
                 valid_until=valid_until,
             )
-
             log.info("Order placed: %s %s %s", instrument_name, order_type.value, price)
 
             sleep(3)
@@ -127,16 +131,12 @@ class Orders:
             log.warning("Dry run: DELETE order not placed")
 
         try:
-            _ = get_client().delete_order(account_id=self.account_id, order_id=order_id)
-
+            get_client().delete_order(account_id=self.account_id, order_id=order_id)
             log.info("Order deleted")
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
     def delete_all(self):
-        orders = get_client().list_orders().orders
-        orders = [i for i in orders if i.account.account_id == self.account_id]
-
-        for order in orders:
+        for order in self._list_orders():
             self.delete(order.order_id)

@@ -20,6 +20,9 @@ log = get_logger()
 class Order(BaseModel):
     buy_price: float
     buy_datetime: Any
+
+    take_profit_price: float
+
     sell_price: Optional[float] = None
     sell_datetime: Optional[Any] = None
 
@@ -73,17 +76,21 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
     ) / 2
 
 
-def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
+def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) -> None:
     wallet = Wallet()
 
-    for i, row in data[data["LONG"].notna() | data["SHORT"].notna() | data["EXIT"].notna()][
-        ["LONG", "SHORT", "EXIT"]
-    ].iterrows():
+    target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
+
+    for i, row in data[["LONG", "SHORT", "EXIT", "High", "Low"]].iterrows():
         profit = None
 
         # LONG
         if wallet.LONG is None and row["LONG"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["SHORT"]):
-            wallet.LONG = Order(buy_price=row["LONG"], buy_datetime=i)
+            wallet.LONG = Order(
+                buy_price=row["LONG"],
+                buy_datetime=i,
+                take_profit_price=row["LONG"] * (1 + target_profit),
+            )
 
             if wallet.SHORT is not None:
                 profit = wallet.SHORT.sell(row["LONG"], i, "SHORT")
@@ -94,9 +101,21 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
             profit = wallet.LONG.sell(sell_price, i, "LONG")
             wallet.LONG = None
 
+        if wallet.LONG is not None and row["LONG"] > 0:
+            wallet.LONG.take_profit_price = row["LONG"] * (1 + target_profit)
+
+        if wallet.LONG is not None and row["High"] > wallet.LONG.take_profit_price:
+            sell_price = wallet.LONG.take_profit_price
+            profit = wallet.LONG.sell(sell_price, i, "LONG")
+            wallet.LONG = None
+
         # SHORT
         if wallet.SHORT is None and row["SHORT"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["LONG"]):
-            wallet.SHORT = Order(buy_price=row["SHORT"], buy_datetime=i)
+            wallet.SHORT = Order(
+                buy_price=row["SHORT"],
+                buy_datetime=i,
+                take_profit_price=row["SHORT"] * (1 - target_profit),
+            )
 
             if wallet.LONG is not None:
                 profit = wallet.LONG.sell(row["SHORT"], i, "LONG")
@@ -104,6 +123,14 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy):
 
         if wallet.SHORT is not None and row["EXIT"] > 0:
             sell_price = row["EXIT"]
+            profit = wallet.SHORT.sell(sell_price, i, "SHORT")
+            wallet.SHORT = None
+
+        if wallet.SHORT is not None and row["SHORT"] > 0:
+            wallet.SHORT.take_profit_price = row["SHORT"] * (1 - target_profit)
+
+        if wallet.SHORT is not None and row["Low"] < wallet.SHORT.take_profit_price:
+            sell_price = wallet.SHORT.take_profit_price
             profit = wallet.SHORT.sell(sell_price, i, "SHORT")
             wallet.SHORT = None
 
@@ -124,7 +151,7 @@ def process_strategy(kwargs: dict) -> Strategy:
     data["EXIT"] = (data["High"] + data["Low"]) / 2
 
     _consider_signals(data, strategy, settings)
-    _consider_trading_logic(data, strategy)
+    _consider_trading_logic(data, strategy, settings)
 
     log.debug(
         f"Strategy{strategy_rank if strategy_rank else ''}: {strategy.name} ({round(strategy.counter.total_profit)})",

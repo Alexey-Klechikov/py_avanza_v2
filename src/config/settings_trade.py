@@ -6,7 +6,7 @@ from config.settings_base import BaseNASDAQ, BaseOMX, BaseTrade
 
 @dataclass
 class TradeOMX(BaseOMX, BaseTrade):
-    TRADING_START: time = time(9, 45)
+    TRADING_START: time = time(10, 45)
     TRADING_END: time = time(17, 0)
     TRADING_DATA: str = "avanza"
 
@@ -14,6 +14,7 @@ class TradeOMX(BaseOMX, BaseTrade):
     BUDGET_PERCENT: float = 0.6
 
     TRADING_STRATEGY_INDICATORS: int = 7
+    TRADING_TAKE_PROFIT: float = 0.11
 
     INDICATORS: dict = field(
         default_factory=lambda: {
@@ -63,6 +64,7 @@ class TradeNASDAQ(BaseNASDAQ, BaseTrade):
     BUDGET_PERCENT: float = 0.4
 
     TRADING_STRATEGY_INDICATORS: int = 7
+    TRADING_TAKE_PROFIT: float = 0.13
 
     INDICATORS: dict = field(
         default_factory=lambda: {
