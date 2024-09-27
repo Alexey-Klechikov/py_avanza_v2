@@ -216,7 +216,6 @@ def hold(dry_run: bool, list_of_settings: list) -> None:
             account_id=plan.event.settings.ACCOUNT_ID,
             filter_orderbook_name=plan.event.settings.NAME,
             filter_orderbook_direction=plan.event.orderbook_direction.value,
-            filter_side=plan.event.action.value,
         )
         orders.reload_active()
         if orders.active_order:

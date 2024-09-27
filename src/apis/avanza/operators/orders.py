@@ -15,7 +15,6 @@ class Orders:
     def __init__(
         self,
         account_id: str,
-        filter_side: Optional[str] = None,
         filter_orderbook_direction: Optional[str] = None,
         filter_orderbook_name: Optional[str] = None,
         dry_run: bool = False,
@@ -23,7 +22,6 @@ class Orders:
         self.active_order: Optional[Order] = None
 
         self.account_id = account_id
-        self.filter_side = filter_side
         self.filter_orderbook_direction = filter_orderbook_direction
         self.filter_orderbook_name = filter_orderbook_name
 
@@ -34,8 +32,6 @@ class Orders:
 
         if self.account_id:
             orders = [i for i in orders if i.account.account_id == self.account_id]
-        if self.filter_side:
-            orders = [i for i in orders if i.side == self.filter_side]
         if self.filter_orderbook_direction:
             orders = [i for i in orders if self.filter_orderbook_direction in i.orderbook.name]
         if self.filter_orderbook_name:
