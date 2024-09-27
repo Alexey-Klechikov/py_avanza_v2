@@ -106,12 +106,12 @@ class Plan:
 
         sleep_time = (datetime.combine(datetime.today(), self.event.at) - datetime.now()).seconds
         hours, remainder = divmod(sleep_time, 3600)
-        minutes, _ = divmod(remainder, 60)
+        minutes, remainder = divmod(remainder, 60)
 
         if sleep_time <= 0:
             return
 
-        log.info(f"Sleeping for {hours} hours and {minutes} minutes")
+        log.info(f"Sleeping for {hours}:{minutes}:{remainder}")
 
         sleep(sleep_time)
 
@@ -228,7 +228,6 @@ def hold(dry_run: bool, list_of_settings: list) -> None:
             filter_orderbook_direction=plan.event.orderbook_direction.value,
         )
         portfolio.reload_positions()
-        portfolio.detect_acquired_instruments()
 
         Trade.sell(plan.event, orders, portfolio, dry_run)
         Trade.buy(plan.event, orders, portfolio, dry_run)

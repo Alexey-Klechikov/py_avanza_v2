@@ -86,8 +86,9 @@ class Portfolio:
 
         if self.positions:
             log.debug(f"Active positions found [{len(self.positions)} st.]")
+            self._detect_acquired_instruments()
 
-    def detect_acquired_instruments(self) -> None:
+    def _detect_acquired_instruments(self) -> None:
         self.acquired_instrument = AcquiredInstrument()
 
         for position in self.positions:

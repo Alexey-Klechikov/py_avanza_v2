@@ -373,8 +373,8 @@ def trade(dry_run: bool, settings) -> None:
             Trade.exit(orders, portfolio)
             continue
 
-        portfolio.detect_acquired_instruments()
         orders.reload_active()
+        portfolio.reload_positions()
 
         instrument_direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
         instrument_direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR

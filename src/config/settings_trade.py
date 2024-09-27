@@ -64,7 +64,7 @@ class TradeNASDAQ(BaseNASDAQ, BaseTrade):
     BUDGET_PERCENT: float = 0.4
 
     TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.13
+    TRADING_TAKE_PROFIT: float = 0.12
 
     INDICATORS: dict = field(
         default_factory=lambda: {
