@@ -59,3 +59,18 @@ class HoldOMX_DT(BaseOMX, BaseTrade):
             ),
         ],
     )
+
+
+# @dataclass
+# class HoldNDX_DT(BaseNASDAQ, BaseTrade):
+#     RULES: List[HoldRule] = field(
+#         default_factory=lambda: [
+#             HoldRule(
+#                 orderbook_direction="BULL",
+#                 buy_time=time(17, 50),
+#                 sell_time=time(21, 40),
+#                 take_profit=0.1,
+#                 budget=1500,
+#             ),
+#         ],
+#     )

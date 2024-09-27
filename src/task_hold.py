@@ -130,8 +130,14 @@ class Trade:
         if event.action != Action.SELL:
             return
 
-        acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
-        while not acquired_instrument:
+        for _ in range(5):
+            orders.delete_all()
+
+            portfolio.reload_positions()
+            acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
+            if not acquired_instrument:
+                break
+
             orders.place(
                 order_book_id=acquired_instrument.instrument.id,
                 instrument_name=acquired_instrument.instrument.name,
@@ -142,12 +148,6 @@ class Trade:
 
             if dry_run:
                 return
-
-            if orders.active_order:
-                orders.delete(order_id=orders.active_order.order_id)
-
-            portfolio.reload_positions()
-            acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
 
     @classmethod
     def buy(
@@ -160,12 +160,33 @@ class Trade:
         if event.action != Action.BUY:
             return
 
-        acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
-        while not acquired_instrument:
-            watchlist = Watchlists(event.settings)
-            watchlist.refresh_watchlists(filter_orderbook_type="CERTIFICATE")
+        for _ in range(5):
+            orders.delete_all()
 
-            preferred_instrument = getattr(watchlist.preferred_instrument, event.orderbook_direction.value)
+            portfolio.reload_positions()
+            acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
+            if acquired_instrument:
+                orders.place(
+                    order_book_id=acquired_instrument.instrument.id,
+                    instrument_name=acquired_instrument.instrument.name,
+                    order_type=OrderType.SELL,
+                    price=round(
+                        (
+                            acquired_instrument.quote.buy
+                            if acquired_instrument.quote.buy
+                            else acquired_instrument.acquired_price
+                        )
+                        * (1 + event.take_profit),
+                        2,
+                    ),
+                    volume=int(acquired_instrument.volume),
+                )
+                break
+
+            watchlists = Watchlists(event.settings)
+            watchlists.refresh_all(filter_orderbook_type="CERTIFICATE")
+
+            preferred_instrument = getattr(watchlists.preferred_instrument, event.orderbook_direction.value)
             volume = event.budget // preferred_instrument.sell
 
             orders.place(
@@ -177,25 +198,7 @@ class Trade:
             )
 
             if dry_run:
-                return
-
-            if orders.active_order:
-                orders.delete(order_id=orders.active_order.order_id)
-
-            portfolio.reload_positions()
-            acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
-
-        orders.place(
-            order_book_id=acquired_instrument.instrument.id,
-            instrument_name=acquired_instrument.instrument.name,
-            order_type=OrderType.SELL,
-            price=round(
-                (acquired_instrument.quote.buy if acquired_instrument.quote.buy else acquired_instrument.acquired_price)
-                * (1 + event.take_profit),
-                2,
-            ),
-            volume=int(acquired_instrument.volume),
-        )
+                break
 
 
 def hold(dry_run: bool, list_of_settings: list) -> None:
@@ -228,6 +231,13 @@ def hold(dry_run: bool, list_of_settings: list) -> None:
         )
         portfolio.reload_positions()
 
+        if plan.event.action == Action.BUY:
+            portfolio.reload_balance()
+
+            if portfolio.buying_power < plan.event.budget:
+                log.warning(f"Insufficient buying power: {portfolio.buying_power} < {plan.event.budget}")
+                continue
+
         Trade.sell(plan.event, orders, portfolio, dry_run)
         Trade.buy(plan.event, orders, portfolio, dry_run)
 
@@ -243,6 +253,6 @@ if __name__ == "__main__":
 
         telegram = TelegramBase()
         telegram.messages = ["Error in task_hold.py"]
-        # telegram.send_message()
+        telegram.send_message()
 
         raise e

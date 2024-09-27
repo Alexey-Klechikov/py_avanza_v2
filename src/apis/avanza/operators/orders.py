@@ -42,19 +42,22 @@ class Orders:
     def reload_active(self):
         self.active_order = None
 
-        active_orders = [i for i in self._list_orders() if i.state in ("ACTIVE", "ACTIVE_PENDING")]
-        if not active_orders:
+        orders = self._list_orders()
+        if not orders:
+            log.debug("No orders found")
             return
 
-        self.active_order = max(active_orders, key=lambda x: x.created)
-        log.debug(f"Active orders found [{len(active_orders)} st.]")
+        active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
+        if active_orders:
+            self.active_order = max(active_orders, key=lambda x: x.created)
+            log.debug(f"Active orders found [{len(active_orders)} st.]")
 
-        for order in active_orders:
-            if order.order_id == self.active_order.order_id:
-                continue
-            self.delete(order.order_id)
+            for order in active_orders:
+                if order.order_id == self.active_order.order_id:
+                    continue
+                self.delete(order.order_id)
 
-        inactive_orders = [i for i in self._list_orders() if i.state == "FAILED"]
+        inactive_orders = [i for i in orders if i.state == "FAILED"]
         if len(inactive_orders) > 0:
             log.warning(f"Inactive order(s) found ({len(inactive_orders)} st)")
             for order in inactive_orders:
@@ -105,7 +108,7 @@ class Orders:
             return
 
         try:
-            _ = get_client().place_order(
+            get_client().place_order(
                 account_id=self.account_id,
                 order_book_id=order_book_id,
                 order_type=order_type,
@@ -117,14 +120,15 @@ class Orders:
 
             sleep(3)
 
-            self.reload_active()
-
         except OrderException as exc:
             log.error(f"Exception: {exc}")
+
+        self.reload_active()
 
     def delete(self, order_id: str) -> Optional[str]:
         if self.dry_run:
             log.warning("Dry run: DELETE order not placed")
+            return
 
         try:
             get_client().delete_order(account_id=self.account_id, order_id=order_id)

@@ -53,7 +53,7 @@ class Watchlists:
                 + f" [leverage {self.preferred_instrument.__getattribute__(instrument_direction).leverage}]",
             )
 
-    def _refresh_watchlist(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
+    def _refresh_one(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
         for orderbook_id in watchlist.orderbooks:
             if watchlist_name.instrument_type == "CERTIFICATE":
                 instrument_info = get_client().get_instrument_certificate(orderbook_id)
@@ -93,7 +93,7 @@ class Watchlists:
                 ),
             )
 
-    def refresh_watchlists(self, filter_orderbook_type: Optional[str] = None):
+    def refresh_all(self, filter_orderbook_type: Optional[str] = None):
         log.debug("Refresh watchlists")
 
         self.valid_instruments = ValidInstruments()
@@ -107,17 +107,17 @@ class Watchlists:
             ):
                 continue
 
-            self._refresh_watchlist(watchlist, unpacked_watchlist_name)
+            self._refresh_one(watchlist, unpacked_watchlist_name)
 
         self._set_preferred_instrument()
 
-    def _clear_watchlist(self, watchlist: WatchList):
+    def _clear_one(self, watchlist: WatchList):
         log.debug(f"Clear watchlist {watchlist.name}")
 
         for instrument_id in watchlist.orderbooks:
             get_client().remove_from_watchlist(instrument_id, watchlist.id)
 
-    def _update_watchlist(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
+    def _update_one(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
         log.debug(f"Update watchlist {watchlist.name}")
 
         if watchlist_name.instrument_type == "CERTIFICATE":
@@ -149,7 +149,7 @@ class Watchlists:
 
                 get_client().add_to_watchlist(hit.order_book_id, watchlist.id)
 
-    def update_watchlists(self):
+    def update_all(self):
         log.info("Update watchlists")
 
         for watchlist in get_client().get_watchlists():
@@ -160,7 +160,7 @@ class Watchlists:
             ):
                 continue
 
-            self._clear_watchlist(
+            self._clear_one(
                 watchlist,
             )
-            self._update_watchlist(watchlist, unpacked_watchlist_name)
+            self._update_one(watchlist, unpacked_watchlist_name)

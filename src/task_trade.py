@@ -238,16 +238,19 @@ class Trade:
         cls,
         direction: Direction,
         orders: Orders,
-        watchlist: Watchlists,
+        watchlists: Watchlists,
         portfolio: Portfolio,
         budget: Budget,
     ) -> None:
         acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
-        while not acquired_instrument:
+        if acquired_instrument:
+            return
+
+        for _ in range(5):
             orders.delete_all()
 
-            watchlist.refresh_watchlists()
-            instrument_preferred = getattr(watchlist.preferred_instrument, direction.value)
+            watchlists.refresh_all()
+            instrument_preferred = getattr(watchlists.preferred_instrument, direction.value)
 
             orders.place(
                 order_book_id=instrument_preferred.id,
@@ -259,6 +262,8 @@ class Trade:
 
             portfolio.reload_positions()
             acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
+            if acquired_instrument:
+                return
 
     @classmethod
     def take_profit(
@@ -301,15 +306,22 @@ class Flow:
         self.action: FlowAction = FlowAction.TRADE
         self.settings = settings
 
-    def decide(self, data: Data) -> None:
+    def decide(self, data: Data, portfolio: Portfolio, dry_run) -> None:
         if datetime.now().time() >= self.settings.TRADING_END:
-            self.action = FlowAction.EXIT_TRADING
+            portfolio.reload_positions()
+            if not portfolio.positions or dry_run:
+                self.action = FlowAction.EXIT_TRADING
+            else:
+                self.action = FlowAction.EXIT_POSITION
+
         elif data.too_old:
             self.action = FlowAction.EXIT_POSITION
+
         elif data.is_new:
             data.get_strategies()
             data.is_new = False
             self.action = FlowAction.TRADE
+
         else:
             sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
             data.get()
@@ -350,13 +362,13 @@ def trade(dry_run: bool, settings) -> None:
     telegram = Telegram()
     telegram.log_starting_balance(budget)
 
-    watchlist = Watchlists(settings)
-    watchlist.update_watchlists()
+    watchlists = Watchlists(settings)
+    watchlists.update_all()
 
     flow = Flow(settings)
 
     while datetime.now().time() < time(22, 10):
-        flow.decide(data)
+        flow.decide(data, portfolio, dry_run)
         if flow.action == FlowAction.DO_NOTHING:
             continue
         elif flow.action == FlowAction.EXIT_TRADING:
@@ -381,7 +393,7 @@ def trade(dry_run: bool, settings) -> None:
         instrument_direction_to_take_profit = Direction.BULL if signal == Signal.LONG else Direction.BEAR
 
         Trade.sell(instrument_direction_to_sell, orders, portfolio)
-        Trade.buy(instrument_direction_to_buy, orders, watchlist, portfolio, budget)
+        Trade.buy(instrument_direction_to_buy, orders, watchlists, portfolio, budget)
         Trade.take_profit(instrument_direction_to_take_profit, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
     portfolio.reload_balance()

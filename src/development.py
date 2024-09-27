@@ -147,8 +147,9 @@ def run_test_for_selected_indicators(settings):
 def test_gaps(settings):
     from pprint import pprint
 
-    period_days = 40
+    period_days = 90
 
+    eod = "17:00"
     close = "09:40"
     side = "BULL"
 
@@ -161,15 +162,16 @@ def test_gaps(settings):
     price_morning_high = daily_data["High"].apply(lambda x: x[x.index.time < pd.to_datetime(close).time()].max())
     price_morning_low = daily_data["Low"].apply(lambda x: x[x.index.time < pd.to_datetime(close).time()].min())
     price_morning_end = daily_data["Close"].apply(lambda x: x.at_time(close))
-    price_day_close = daily_data["Close"].apply(lambda x: x.at_time("17:00"))
+    price_day_close = daily_data["Close"].apply(lambda x: x.at_time(eod))
     result = pd.DataFrame(
         {
             f"Top price before {close}": price_morning_high,
             f"Low price before {close}": price_morning_low,
             f"End price at {close}": price_morning_end,
-            "Price at 17:00": price_day_close,
+            "Price at eod": price_day_close,
         },
     )
+
     result.index = pd.to_datetime(result.index)
     grouped = result.groupby(result.index.date)
     result = grouped.agg(
@@ -177,7 +179,7 @@ def test_gaps(settings):
             f"Top price before {close}": "first",
             f"Low price before {close}": "first",
             f"End price at {close}": "first",
-            "Price at 17:00": "last",
+            "Price at eod": "last",
         },
     ).dropna()
 
@@ -188,9 +190,9 @@ def test_gaps(settings):
     for index, row in result.iterrows():
         if previous_day is not None:
             gaps[previous_day] = {
-                "high": row[f"Top price before {close}"] - result.loc[previous_day]["Price at 17:00"],
-                "low": row[f"Low price before {close}"] - result.loc[previous_day]["Price at 17:00"],
-                "close": row[f"End price at {close}"] - result.loc[previous_day]["Price at 17:00"],
+                "high": row[f"Top price before {close}"] - result.loc[previous_day]["Price at eod"],
+                "low": row[f"Low price before {close}"] - result.loc[previous_day]["Price at eod"],
+                "close": row[f"End price at {close}"] - result.loc[previous_day]["Price at eod"],
             }
 
         previous_day = index
@@ -216,7 +218,7 @@ def test_gaps(settings):
 def test_hold(settings):
     from pprint import pprint
 
-    period_days = 30
+    period_days = 90
 
     side = "BEAR"
 
@@ -286,6 +288,9 @@ def test_hold(settings):
                         # print("TIMEOUT", i, row["buy"], row["sell"])
                         counter += 1
 
+            if result.shape[0] == 0:
+                continue
+
             efficiency = round(counter / result.shape[0], 2)
             if efficiency > 0.5 and total > 0:
                 result_for_intervals[(buy_time, sell_time)].append((cut_off, efficiency, round(total, 2)))
@@ -308,9 +313,9 @@ if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
     settings = SETTINGS_TRADE_NASDAQ
 
-    run_full_strategies_generation(settings)
+    # run_full_strategies_generation(settings)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     # test_gaps(settings)
-    # test_hold(settings)
+    test_hold(settings)
