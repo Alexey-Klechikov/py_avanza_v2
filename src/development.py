@@ -305,8 +305,8 @@ def test_hold(settings):
 
 
 if __name__ == "__main__":
-    settings = SETTINGS_TRADE_NASDAQ
     settings = SETTINGS_TRADE_OMX
+    settings = SETTINGS_TRADE_NASDAQ
 
     run_full_strategies_generation(settings)
     # run_test_for_selected_indicators(settings)
