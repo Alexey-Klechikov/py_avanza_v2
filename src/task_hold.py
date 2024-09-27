@@ -115,6 +115,8 @@ class Plan:
 
         sleep(sleep_time)
 
+        get_client.cache_clear()
+
 
 class Trade:
     @classmethod
@@ -128,30 +130,24 @@ class Trade:
         if event.action != Action.SELL:
             return
 
-        if not portfolio.positions:
-            log.info("No positions to sell")
-            return
-
-        instrument_to_sell = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
-
-        while True:
+        acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
+        while not acquired_instrument:
             orders.place(
-                order_book_id=instrument_to_sell.instrument.id,
-                instrument_name=instrument_to_sell.instrument.name,
+                order_book_id=acquired_instrument.instrument.id,
+                instrument_name=acquired_instrument.instrument.name,
                 order_type=OrderType.SELL,
-                price=instrument_to_sell.quote.buy,
-                volume=int(instrument_to_sell.volume),
+                price=acquired_instrument.quote.buy,
+                volume=int(acquired_instrument.volume),
             )
 
             if dry_run:
-                break
+                return
 
             if orders.active_order:
                 orders.delete(order_id=orders.active_order.order_id)
 
             portfolio.reload_positions()
-            if not portfolio.positions:
-                break
+            acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
 
     @classmethod
     def buy(
@@ -164,57 +160,42 @@ class Trade:
         if event.action != Action.BUY:
             return
 
-        if portfolio.positions:
-            log.warning(
-                "Already holding position(s): {}".format(" | ".join([i.instrument.name for i in portfolio.positions])),
-            )
+        acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
+        while not acquired_instrument:
+            watchlist = Watchlists(event.settings)
+            watchlist.refresh_watchlists(filter_orderbook_type="CERTIFICATE")
 
-            position = portfolio.positions[0]
-
-            orders.place(
-                order_book_id=position.instrument.id,
-                instrument_name=position.instrument.name,
-                order_type=OrderType.SELL,
-                price=round(
-                    (position.quote.buy if position.quote.buy else position.acquired_price) * (1 + event.take_profit),
-                    2,
-                ),
-                volume=int(position.volume),
-            )
-
-        else:
-            while True:
-                watchlist = Watchlists(event.settings)
-                watchlist.refresh_watchlists(filter_orderbook_type="CERTIFICATE")
-
-                instrument_to_buy = getattr(watchlist.preferred_instrument, event.orderbook_direction.value)
-                volume = event.budget // instrument_to_buy.sell
-
-                orders.place(
-                    order_book_id=instrument_to_buy.id,
-                    instrument_name=instrument_to_buy.name,
-                    order_type=OrderType.BUY,
-                    price=instrument_to_buy.sell,
-                    volume=volume,
-                )
-
-                if dry_run:
-                    break
-
-                if orders.active_order:
-                    orders.delete(order_id=orders.active_order.order_id)
-
-                portfolio.reload_positions()
-                if portfolio.positions:
-                    break
+            preferred_instrument = getattr(watchlist.preferred_instrument, event.orderbook_direction.value)
+            volume = event.budget // preferred_instrument.sell
 
             orders.place(
-                order_book_id=instrument_to_buy.id,
-                instrument_name=instrument_to_buy.name,
-                order_type=OrderType.SELL,
-                price=round(instrument_to_buy.sell * (1 + event.take_profit), 2),
+                order_book_id=preferred_instrument.id,
+                instrument_name=preferred_instrument.name,
+                order_type=OrderType.BUY,
+                price=preferred_instrument.sell,
                 volume=volume,
             )
+
+            if dry_run:
+                return
+
+            if orders.active_order:
+                orders.delete(order_id=orders.active_order.order_id)
+
+            portfolio.reload_positions()
+            acquired_instrument = getattr(portfolio.acquired_instrument, event.orderbook_direction.value)
+
+        orders.place(
+            order_book_id=acquired_instrument.instrument.id,
+            instrument_name=acquired_instrument.instrument.name,
+            order_type=OrderType.SELL,
+            price=round(
+                (acquired_instrument.quote.buy if acquired_instrument.quote.buy else acquired_instrument.acquired_price)
+                * (1 + event.take_profit),
+                2,
+            ),
+            volume=int(acquired_instrument.volume),
+        )
 
 
 def hold(dry_run: bool, list_of_settings: list) -> None:
@@ -230,8 +211,6 @@ def hold(dry_run: bool, list_of_settings: list) -> None:
             return
 
         plan.sleep_until_next_event()
-
-        get_client.cache_clear()
 
         orders = Orders(
             account_id=plan.event.settings.ACCOUNT_ID,

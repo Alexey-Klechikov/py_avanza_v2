@@ -218,21 +218,20 @@ class Trade:
         orders: Orders,
         portfolio: Portfolio,
     ) -> None:
-        while True:
+        acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
+        while acquired_instrument:
             orders.delete_all()
 
-            portfolio.reload_positions()
-            instrument_to_sell = getattr(portfolio.acquired_instrument, direction.value)
-            if not instrument_to_sell:
-                return
-
             orders.place(
-                order_book_id=instrument_to_sell.instrument.id,
-                instrument_name=instrument_to_sell.instrument.name,
+                order_book_id=acquired_instrument.instrument.id,
+                instrument_name=acquired_instrument.instrument.name,
                 order_type=OrderType.SELL,
-                price=instrument_to_sell.quote.buy,
-                volume=int(instrument_to_sell.volume),
+                price=acquired_instrument.quote.buy,
+                volume=int(acquired_instrument.volume),
             )
+
+            portfolio.reload_positions()
+            acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
 
     @classmethod
     def buy(
@@ -243,12 +242,9 @@ class Trade:
         portfolio: Portfolio,
         budget: Budget,
     ) -> None:
-        while True:
+        acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
+        while not acquired_instrument:
             orders.delete_all()
-
-            portfolio.reload_positions()
-            if getattr(portfolio.acquired_instrument, direction.value):
-                return
 
             watchlist.refresh_watchlists()
             instrument_preferred = getattr(watchlist.preferred_instrument, direction.value)
@@ -261,6 +257,9 @@ class Trade:
                 volume=budget.value // instrument_preferred.sell,
             )
 
+            portfolio.reload_positions()
+            acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
+
     @classmethod
     def take_profit(
         cls,
@@ -270,18 +269,18 @@ class Trade:
         take_profit: float,
     ) -> None:
         portfolio.reload_positions()
-        instrument_to_take_profit = getattr(portfolio.acquired_instrument, direction.value)
-        if not instrument_to_take_profit:
+        acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
+        if not acquired_instrument:
             return
 
         orders.delete_all()
 
         orders.place(
-            order_book_id=instrument_to_take_profit.instrument.id,
-            instrument_name=instrument_to_take_profit.instrument.name,
+            order_book_id=acquired_instrument.instrument.id,
+            instrument_name=acquired_instrument.instrument.name,
             order_type=OrderType.SELL,
-            price=round(instrument_to_take_profit.quote.sell * (1 + take_profit), 2),
-            volume=int(instrument_to_take_profit.volume),
+            price=round(acquired_instrument.quote.sell * (1 + take_profit), 2),
+            volume=int(acquired_instrument.volume),
         )
 
     @classmethod
