@@ -401,13 +401,12 @@ def trade(dry_run: bool, settings) -> None:
         orders.delete_all()
         portfolio.reload_positions()
 
-        instrument_direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
-        instrument_direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR
-        instrument_direction_to_take_profit = Direction.BULL if signal == Signal.LONG else Direction.BEAR
+        direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
+        direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR
 
-        Trade.sell(instrument_direction_to_sell, orders, portfolio)
-        Trade.buy(instrument_direction_to_buy, orders, watchlists, portfolio, budget)
-        Trade.take_profit(instrument_direction_to_take_profit, orders, portfolio, settings.TRADING_TAKE_PROFIT)
+        Trade.sell(direction_to_sell, orders, portfolio)
+        Trade.buy(direction_to_buy, orders, watchlists, portfolio, budget)
+        Trade.take_profit(direction_to_buy, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
     portfolio.reload_balance()
 
