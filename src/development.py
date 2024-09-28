@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from backtest import backtest
-from config import SETTINGS_TRADE_NASDAQ, SETTINGS_TRADE_OMX
+from config import SETTINGS_TRADE_OMX
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -149,8 +149,8 @@ def test_gaps(settings):
 
     period_days = 90
 
-    eod = "17:00"
-    close = "09:40"
+    eod = "16:50"
+    close = "10:00"
     side = "BULL"
 
     data = Storage(settings).read()
@@ -220,9 +220,9 @@ def test_hold(settings):
 
     period_days = 90
 
-    side = "BEAR"
+    side = "BULL"
 
-    times = pd.date_range(start="09:00", end="17:00", freq="10min").time
+    times = pd.date_range(start="09:00", end="17:00", freq="5min").time
     buy_time_sell_time_combinations = [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]
@@ -310,12 +310,9 @@ def test_hold(settings):
 
 
 if __name__ == "__main__":
-    settings = SETTINGS_TRADE_OMX
-    settings = SETTINGS_TRADE_NASDAQ
+    run_full_strategies_generation(SETTINGS_TRADE_OMX)
+    # run_test_for_selected_indicators(SETTINGS_TRADE_OMX)
+    # run_plotting_for_active_strategies(SETTINGS_TRADE_OMX)
 
-    # run_full_strategies_generation(settings)
-    # run_test_for_selected_indicators(settings)
-    # run_plotting_for_active_strategies(settings)
-
-    # test_gaps(settings)
-    test_hold(settings)
+    # test_gaps(SETTINGS_TRADE_OMX)
+    # test_hold(SETTINGS_TRADE_OMX)

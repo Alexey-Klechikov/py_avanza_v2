@@ -20,7 +20,7 @@ class HoldOMX_Main(BaseOMX, BaseHold):
         default_factory=lambda: [
             HoldRule(
                 orderbook_direction="BULL",
-                buy_time=time(17, 0),
+                buy_time=time(16, 50),
                 sell_time=time(10, 00),
                 take_profit=0.3,
             ),
@@ -52,25 +52,10 @@ class HoldOMX_DT(BaseOMX, BaseTrade):
         default_factory=lambda: [
             HoldRule(
                 orderbook_direction="BULL",
-                buy_time=time(17, 2),
-                sell_time=time(9, 40),
+                buy_time=time(16, 50),
+                sell_time=time(10, 00),
                 take_profit=0.3,
                 budget=1500,
             ),
         ],
     )
-
-
-# @dataclass
-# class HoldNDX_DT(BaseNASDAQ, BaseTrade):
-#     RULES: List[HoldRule] = field(
-#         default_factory=lambda: [
-#             HoldRule(
-#                 orderbook_direction="BULL",
-#                 buy_time=time(17, 50),
-#                 sell_time=time(21, 40),
-#                 take_profit=0.1,
-#                 budget=1500,
-#             ),
-#         ],
-#     )

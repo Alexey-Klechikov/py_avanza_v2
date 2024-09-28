@@ -24,13 +24,3 @@ class BaseOMX:
     AVA: str = "19002"
     YAHOO: str = "^OMX"
     INVESTING: str = "25685"
-
-
-@dataclass
-class BaseNASDAQ:
-    NAME: str = "NASDAQ"
-    FILE_PREFIX: str = "NDX"
-
-    AVA: str = "155541"
-    YAHOO: str = "^NDX"
-    INVESTING: str = "20"

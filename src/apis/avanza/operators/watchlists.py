@@ -37,21 +37,17 @@ class Watchlists:
     def _set_preferred_instrument(self):
         log.info("Set preferred instruments using watchlists")
         for instrument_direction in INSTRUMENT_DIRECTIONS.values():
-            if not self.valid_instruments.__getattribute__(instrument_direction):
+            if not self.valid_instruments.get(instrument_direction):
                 continue
 
-            self.preferred_instrument.__setattr__(
-                instrument_direction,
-                max(
-                    self.valid_instruments.__getattribute__(instrument_direction),
-                    key=lambda x: (x.leverage / x.spread) if x.leverage and x.spread else 0,
-                ),
+            preferred_instrument = max(
+                self.valid_instruments.get(instrument_direction),
+                key=lambda x: (x.leverage / x.spread) if x.leverage and x.spread else 0,
             )
 
-            log.info(
-                f"> Top instrument set: {self.preferred_instrument.__getattribute__(instrument_direction).name}"
-                + f" [leverage {self.preferred_instrument.__getattribute__(instrument_direction).leverage}]",
-            )
+            if preferred_instrument:
+                self.preferred_instrument.set(instrument_direction, preferred_instrument)
+                log.info(f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]")
 
     def _refresh_one(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
         for orderbook_id in watchlist.orderbooks:
@@ -80,7 +76,8 @@ class Watchlists:
                 )
                 continue
 
-            self.valid_instruments.__getattribute__(watchlist_name.direction).append(
+            self.valid_instruments.append(
+                watchlist_name.direction,
                 Orderbook(
                     id=orderbook_id,
                     name=instrument_info.name,
@@ -92,24 +89,6 @@ class Watchlists:
                     start_date=instrument_info.historical_closing_prices.start_date,
                 ),
             )
-
-    def refresh_all(self, filter_orderbook_type: Optional[str] = None):
-        log.debug("Refresh watchlists")
-
-        self.valid_instruments = ValidInstruments()
-
-        for watchlist in get_client().get_watchlists():
-            unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
-            if (
-                unpacked_watchlist_name.trading_perspective != "DT"
-                or unpacked_watchlist_name.instrument != self.settings.NAME
-                or (filter_orderbook_type and filter_orderbook_type not in watchlist.name)
-            ):
-                continue
-
-            self._refresh_one(watchlist, unpacked_watchlist_name)
-
-        self._set_preferred_instrument()
 
     def _clear_one(self, watchlist: WatchList):
         log.debug(f"Clear watchlist {watchlist.name}")
@@ -143,11 +122,29 @@ class Watchlists:
                 and hit.price.spread < 1.5
                 and hit.price.last
                 and hit.price.last > 1
-                and hit.price.last < 200
+                and hit.price.last < 130
             ):
                 log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
 
                 get_client().add_to_watchlist(hit.order_book_id, watchlist.id)
+
+    def refresh_all(self, filter_orderbook_type: Optional[str] = None):
+        log.debug("Refresh watchlists")
+
+        self.valid_instruments = ValidInstruments()
+
+        for watchlist in get_client().get_watchlists():
+            unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
+            if (
+                unpacked_watchlist_name.trading_perspective != "DT"
+                or unpacked_watchlist_name.instrument != self.settings.NAME
+                or (filter_orderbook_type and filter_orderbook_type not in watchlist.name)
+            ):
+                continue
+
+            self._refresh_one(watchlist, unpacked_watchlist_name)
+
+        self._set_preferred_instrument()
 
     def update_all(self):
         log.info("Update watchlists")
@@ -160,7 +157,5 @@ class Watchlists:
             ):
                 continue
 
-            self._clear_one(
-                watchlist,
-            )
+            self._clear_one(watchlist)
             self._update_one(watchlist, unpacked_watchlist_name)

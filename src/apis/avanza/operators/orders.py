@@ -27,7 +27,7 @@ class Orders:
 
         self.dry_run = dry_run
 
-    def _list_orders(self) -> List[Order]:
+    def _list(self) -> List[Order]:
         orders = get_client().list_orders().orders
 
         if self.account_id:
@@ -38,58 +38,6 @@ class Orders:
             orders = [i for i in orders if self.filter_orderbook_name in i.orderbook.name]
 
         return orders
-
-    def reload_active(self):
-        self.active_order = None
-
-        orders = self._list_orders()
-        if not orders:
-            log.debug("No orders found")
-            return
-
-        active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
-        if active_orders:
-            self.active_order = max(active_orders, key=lambda x: x.created)
-            log.debug(f"Active orders found [{len(active_orders)} st.]")
-
-            for order in active_orders:
-                if order.order_id == self.active_order.order_id:
-                    continue
-                self.delete(order.order_id)
-
-        inactive_orders = [i for i in orders if i.state == "FAILED"]
-        if len(inactive_orders) > 0:
-            log.warning(f"Inactive order(s) found ({len(inactive_orders)} st)")
-            for order in inactive_orders:
-                self.delete(order.order_id)
-
-    def get_past(self) -> List[Deal]:
-        return sorted(
-            [i for i in get_client().get_past_orders().deals if i.account.account_id == self.account_id],
-            key=lambda x: x.time,
-        )
-
-    def edit_active(self, new_price: float):
-        try:
-            if not self.active_order:
-                log.warning("No active order found")
-                return
-
-            _ = get_client().edit_order(
-                self.active_order.order_id,
-                self.active_order.account.account_id,
-                new_price,
-                self.active_order.valid_until.date(),
-                self.active_order.volume,
-            )
-
-            self.active_order.price = new_price
-            self.active_order.amount = new_price * self.active_order.volume
-
-            log.info("Order edited")
-
-        except OrderException as exc:
-            log.error(f"Exception: {exc}")
 
     def place(
         self,
@@ -123,8 +71,6 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-        self.reload_active()
-
     def delete(self, order_id: str) -> Optional[str]:
         if self.dry_run:
             log.warning("Dry run: DELETE order not placed")
@@ -137,6 +83,53 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
+    def get_past(self) -> List[Deal]:
+        past_orders = get_client().get_past_orders().deals
+        past_orders = [i for i in past_orders if i.account.account_id == self.account_id]
+
+        return sorted(past_orders, key=lambda x: x.time)
+
+    def reload_active(self):
+        self.active_order = None
+
+        orders = self._list()
+        if not orders:
+            log.debug("No orders found")
+            return
+
+        active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
+        if active_orders:
+            self.active_order = max(active_orders, key=lambda x: x.created)
+            log.debug(f"Active orders found [{len(active_orders)} st.]")
+
+        for order in orders:
+            if self.active_order and self.active_order.order_id == order.order_id:
+                continue
+
+            self.delete(order.order_id)
+
+    def edit_active(self, new_price: float):
+        if not self.active_order:
+            log.warning("No active order found")
+            return
+
+        try:
+            get_client().edit_order(
+                self.active_order.order_id,
+                self.active_order.account.account_id,
+                new_price,
+                self.active_order.valid_until.date(),
+                self.active_order.volume,
+            )
+
+            self.active_order.price = new_price
+            self.active_order.amount = new_price * self.active_order.volume
+
+            log.info("Order edited")
+
+        except OrderException as exc:
+            log.error(f"Exception: {exc}")
+
     def delete_all(self):
-        for order in self._list_orders():
+        for order in self._list():
             self.delete(order.order_id)

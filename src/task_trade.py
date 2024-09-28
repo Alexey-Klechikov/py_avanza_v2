@@ -12,7 +12,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from config import SETTINGS_TRADE_NASDAQ, SETTINGS_TRADE_OMX
+from config import SETTINGS_TRADE_OMX
 from services.storage import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
@@ -136,22 +136,26 @@ class Budget:
         self.starting_balance = 0
 
     def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
-        self.starting_balance = portfolio.buying_power
+        if datetime.now().time() < time(10, 0):
+            self.starting_balance = portfolio.total_value
 
-        deals = orders.get_past()
-        if deals:
-            deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
-            for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
-                group.sort_values("time", inplace=True)
-                group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
+        else:
+            self.starting_balance = portfolio.buying_power
 
-                if group["time"].iloc[0].time() <= self.settings.TRADING_START:
-                    continue
+            deals = orders.get_past()
+            if deals:
+                deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
+                deals_df.sort_values("time", inplace=True)
+                deals_df = deals_df[deals_df["time"].dt.time >= self.settings.TRADING_START]
+                deals_df["amount"] = deals_df.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
 
-                self.starting_balance -= group["amount"].sum()
+                self.starting_balance -= deals_df["amount"].sum()
+
+            if portfolio.positions:
+                self.starting_balance += sum([position.value for position in portfolio.positions])
 
         self.value = int(max([self.starting_balance * self.settings.BUDGET_PERCENT, self.settings.BUDGET_MINIMUM]))
-        if self.value != self.settings.BUDGET_MINIMUM:
+        if self.value > self.settings.BUDGET_MINIMUM:
             log.info(f"Budget adjusted: {self.settings.BUDGET_MINIMUM} -> {self.value}")
 
 
@@ -185,8 +189,8 @@ class Telegram(TelegramBase):
 
             group_sum = 0
             deal_time = None
-            for _, row in group.iterrows():
-                if group_sum == 0 and row["side"] == "SELL":
+            for i, (_, row) in enumerate(group.iterrows()):
+                if i == 0 and row["side"] == "SELL":
                     continue
 
                 if not deal_time:
@@ -199,10 +203,13 @@ class Telegram(TelegramBase):
         self.deals.sort(key=lambda x: x[1])
 
     def send_message(self, budget: Budget, settings) -> None:
+        performance = 0
+        if self.deals:
+            performance = round(sum([i[0] for i in self.deals]))
+
         self.messages = [
             f"Finished trading {settings.NAME} with budget: {budget.value}",
-            f"Performance: {round(self.final_balance - self.starting_balance)} SEK "
-            f"[{round(100 * (self.final_balance - self.starting_balance)/budget.value)} %]",
+            f"Performance: {performance} SEK [{round(100 * (performance)/budget.value)} %]",
             f"Total value: {round(self.final_balance)}",
             f"Deals: {len(self.deals)} st. " + (f"{[i[0] for i in self.deals]}" if self.deals else ""),
         ] + self.messages
@@ -218,9 +225,13 @@ class Trade:
         orders: Orders,
         portfolio: Portfolio,
     ) -> None:
-        acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
-        while acquired_instrument:
+        for _ in range(5):
             orders.delete_all()
+
+            portfolio.reload_positions()
+            acquired_instrument = portfolio.acquired_instrument.get(direction.value)
+            if not acquired_instrument:
+                return
 
             orders.place(
                 order_book_id=acquired_instrument.instrument.id,
@@ -229,9 +240,6 @@ class Trade:
                 price=acquired_instrument.quote.buy,
                 volume=int(acquired_instrument.volume),
             )
-
-            portfolio.reload_positions()
-            acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
 
     @classmethod
     def buy(
@@ -242,28 +250,26 @@ class Trade:
         portfolio: Portfolio,
         budget: Budget,
     ) -> None:
-        acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
-        if acquired_instrument:
-            return
-
         for _ in range(5):
             orders.delete_all()
 
+            portfolio.reload_positions()
+            acquired_instrument = portfolio.acquired_instrument.get(direction.value)
+            if acquired_instrument:
+                return
+
             watchlists.refresh_all()
-            instrument_preferred = getattr(watchlists.preferred_instrument, direction.value)
+            instrument_preferred = watchlists.preferred_instrument.get(direction.value)
+            if not instrument_preferred or not instrument_preferred.sell:
+                continue
 
             orders.place(
                 order_book_id=instrument_preferred.id,
                 instrument_name=instrument_preferred.name,
                 order_type=OrderType.BUY,
                 price=instrument_preferred.sell,
-                volume=budget.value // instrument_preferred.sell,
+                volume=round(budget.value // instrument_preferred.sell),
             )
-
-            portfolio.reload_positions()
-            acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
-            if acquired_instrument:
-                return
 
     @classmethod
     def take_profit(
@@ -273,12 +279,12 @@ class Trade:
         portfolio: Portfolio,
         take_profit: float,
     ) -> None:
-        portfolio.reload_positions()
-        acquired_instrument = getattr(portfolio.acquired_instrument, direction.value)
-        if not acquired_instrument:
-            return
-
         orders.delete_all()
+
+        portfolio.reload_positions()
+        acquired_instrument = portfolio.acquired_instrument.get(direction.value)
+        if not acquired_instrument or not acquired_instrument.quote.sell:
+            return
 
         orders.place(
             order_book_id=acquired_instrument.instrument.id,
@@ -302,17 +308,24 @@ class FlowAction(Enum):
 
 
 class Flow:
-    def __init__(self, settings):
+    def __init__(self, settings, dry_run=False):
         self.action: FlowAction = FlowAction.TRADE
         self.settings = settings
+        self.dry_run = dry_run
 
-    def decide(self, data: Data, portfolio: Portfolio, dry_run) -> None:
-        if datetime.now().time() >= self.settings.TRADING_END:
-            portfolio.reload_positions()
-            if not portfolio.positions or dry_run:
-                self.action = FlowAction.EXIT_TRADING
-            else:
-                self.action = FlowAction.EXIT_POSITION
+    def _have_position(self, portfolio: Portfolio) -> bool:
+        portfolio.reload_positions()
+        return bool(portfolio.positions or self.dry_run)
+
+    def decide(self, data: Data, portfolio: Portfolio) -> None:
+        if (
+            datetime.now().time()
+            >= (datetime.combine(datetime.today(), self.settings.TRADING_END) - timedelta(minutes=10)).time()
+        ) and not self._have_position(portfolio):
+            self.action = FlowAction.EXIT_TRADING
+
+        elif datetime.now().time() >= self.settings.TRADING_END:
+            self.action = FlowAction.EXIT_POSITION if self._have_position(portfolio) else FlowAction.EXIT_TRADING
 
         elif data.too_old:
             self.action = FlowAction.EXIT_POSITION
@@ -365,10 +378,10 @@ def trade(dry_run: bool, settings) -> None:
     watchlists = Watchlists(settings)
     watchlists.update_all()
 
-    flow = Flow(settings)
+    flow = Flow(settings, dry_run)
 
-    while datetime.now().time() < time(22, 10):
-        flow.decide(data, portfolio, dry_run)
+    while datetime.now().time() < time(17, 4):
+        flow.decide(data, portfolio)
         if flow.action == FlowAction.DO_NOTHING:
             continue
         elif flow.action == FlowAction.EXIT_TRADING:
@@ -385,7 +398,7 @@ def trade(dry_run: bool, settings) -> None:
             Trade.exit(orders, portfolio)
             continue
 
-        orders.reload_active()
+        orders.delete_all()
         portfolio.reload_positions()
 
         instrument_direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
@@ -407,8 +420,7 @@ if __name__ == "__main__":
     try:
         dry_run = platform.system() == "Darwin"
 
-        for settings in (SETTINGS_TRADE_OMX, SETTINGS_TRADE_NASDAQ):
-            trade(dry_run, settings)
+        trade(dry_run, SETTINGS_TRADE_OMX)
 
     except Exception as e:
         log.exception(str(e))

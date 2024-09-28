@@ -14,6 +14,14 @@ class AcquiredInstrument:
         self.BULL: Optional[Position] = None
         self.BEAR: Optional[Position] = None
 
+    def get(self, direction: str) -> Optional[Position]:
+        if direction == "BULL":
+            return self.BULL
+        elif direction == "BEAR":
+            return self.BEAR
+        else:
+            raise ValueError(f"Unknown instrument direction {direction}")
+
 
 class Portfolio:
     def __init__(
@@ -26,17 +34,39 @@ class Portfolio:
         self.total_value = 0
         self.buying_power = 0
         self.positions: List[Position] = []
-        self._account_url_parameter: Optional[str] = None
 
         self.account_id = account_id
         self.filter_orderbook_name = filter_orderbook_name
         self.filter_orderbook_direction = filter_orderbook_direction
 
+        self._account_url_parameter: str = self._get_account_url_parameter()
+
+    def _get_account_url_parameter(self) -> str:
+        return [
+            i.account.url_parameter_id
+            for i in get_client().get_accounts_positions().cash_positions
+            if i.account.id == self.account_id
+        ][0]
+
+    def _detect_acquired_instruments(self) -> None:
+        self.acquired_instrument = AcquiredInstrument()
+
+        for position in self.positions:
+            if position.instrument.type not in [
+                InstrumentType.WARRANT,
+                InstrumentType.CERTIFICATE,
+            ]:
+                continue
+
+            if "BULL " in position.instrument.name or " L " in position.instrument.name:
+                self.acquired_instrument.BULL = position
+            elif "BEAR " in position.instrument.name or " S " in position.instrument.name:
+                self.acquired_instrument.BEAR = position
+            else:
+                raise ValueError(f"Unknown instrument direction for {position.instrument.name}")
+
     def reload_balance(self) -> None:
         log.debug("Reload account balance")
-
-        if not self._account_url_parameter:
-            self.reload_positions()
 
         account_overview = get_client().get_accounts_overview(self._account_url_parameter)  # type: ignore
 
@@ -44,12 +74,6 @@ class Portfolio:
         self.buying_power = account_overview.buying_power.total.value
 
     def reload_positions(self) -> None:
-        positions = get_client().get_accounts_positions()
-
-        self._account_url_parameter = [
-            i.account.url_parameter_id for i in positions.cash_positions if i.account.id == self.account_id
-        ][0]
-
         self.positions = [
             Position(
                 **{
@@ -74,44 +98,12 @@ class Portfolio:
                     },
                 },
             )
-            for i in positions.with_orderbook
+            for i in get_client().get_accounts_positions().with_orderbook
             if i.account.id == self.account_id
+            and (not self.filter_orderbook_name or self.filter_orderbook_name in i.instrument.name)
+            and (not self.filter_orderbook_direction or self.filter_orderbook_direction in i.instrument.name)
         ]
-
-        if self.filter_orderbook_name:
-            self.positions = [i for i in self.positions if self.filter_orderbook_name in i.instrument.name]
-
-        if self.filter_orderbook_direction:
-            self.positions = [i for i in self.positions if self.filter_orderbook_direction in i.instrument.name]
 
         if self.positions:
             log.debug(f"Active positions found [{len(self.positions)} st.]")
             self._detect_acquired_instruments()
-
-    def _detect_acquired_instruments(self) -> None:
-        self.acquired_instrument = AcquiredInstrument()
-
-        for position in self.positions:
-            if position.instrument.type not in [
-                InstrumentType.WARRANT,
-                InstrumentType.CERTIFICATE,
-            ]:
-                continue
-
-            instrument_direction = None
-
-            if "BULL " in position.instrument.name or " L " in position.instrument.name:
-                instrument_direction = "BULL"
-            elif "BEAR " in position.instrument.name or " S " in position.instrument.name:
-                instrument_direction = "BEAR"
-            elif position.quote.sell is not None:
-                instrument_direction = (
-                    "BULL"
-                    if (position.quote.sell > position.acquired_price and position.performance.percent > 0)
-                    else "BEAR"
-                )
-
-            if not instrument_direction:
-                raise ValueError(f"Unknown instrument direction for {position.instrument.name}")
-
-            self.acquired_instrument.__setattr__(instrument_direction, position)
