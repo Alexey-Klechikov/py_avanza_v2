@@ -28,7 +28,8 @@ log = get_logger()
 class Signal(Enum):
     LONG = "LONG"
     SHORT = "SHORT"
-    EXIT = "EXIT"
+    EXIT_BOTH = "EXIT_BOTH"
+    EXIT_BEAR = "EXIT_BEAR"
 
 
 class Direction(Enum):
@@ -114,7 +115,7 @@ class Data:
 
             last_complete_candle = self.data.iloc[-2]
             if last_complete_candle["EXIT"]:
-                signal = Signal.EXIT
+                signal = Signal.EXIT_BOTH
 
             if last_complete_candle["LONG"] and not last_complete_candle["SHORT"]:
                 signal = Signal.LONG
@@ -133,14 +134,13 @@ class Budget:
     def __init__(self, settings):
         self.value = settings.BUDGET_MINIMUM
         self.settings = settings
-        self.starting_balance = 0
 
     def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
         if datetime.now().time() < time(10, 0):
-            self.starting_balance = portfolio.total_value
+            starting_balance = portfolio.total_value
 
         else:
-            self.starting_balance = portfolio.buying_power
+            starting_balance = portfolio.buying_power
 
             deals = orders.get_past()
             if deals:
@@ -149,12 +149,12 @@ class Budget:
                 deals_df = deals_df[deals_df["time"].dt.time >= self.settings.TRADING_START]
                 deals_df["amount"] = deals_df.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
 
-                self.starting_balance -= deals_df["amount"].sum()
+                starting_balance -= deals_df["amount"].sum()
 
             if portfolio.positions:
-                self.starting_balance += sum([position.value for position in portfolio.positions])
+                starting_balance += sum([position.value for position in portfolio.positions])
 
-        self.value = int(max([self.starting_balance * self.settings.BUDGET_PERCENT, self.settings.BUDGET_MINIMUM]))
+        self.value = int(max([starting_balance * self.settings.BUDGET_PERCENT, self.settings.BUDGET_MINIMUM]))
         if self.value > self.settings.BUDGET_MINIMUM:
             log.info(f"Budget adjusted: {self.settings.BUDGET_MINIMUM} -> {self.value}")
 
@@ -163,13 +163,9 @@ class Telegram(TelegramBase):
     def __init__(self):
         super().__init__()
 
-        self.starting_balance = 0
         self.final_balance = 0
         self.total_value = 0
         self.deals = []
-
-    def log_starting_balance(self, budget: Budget) -> None:
-        self.starting_balance = budget.starting_balance
 
     def log_final_balance(self, portfolio: Portfolio) -> None:
         self.final_balance = portfolio.total_value
@@ -294,17 +290,13 @@ class Trade:
             volume=int(acquired_instrument.volume),
         )
 
-    @classmethod
-    def exit(cls, orders: Orders, portfolio: Portfolio) -> None:
-        for instrument_direction_to_sell in [Direction.BULL, Direction.BEAR]:
-            Trade.sell(instrument_direction_to_sell, orders, portfolio)
-
 
 class FlowAction(Enum):
     TRADE = "TRADE"
     DO_NOTHING = "DO_NOTHING"
     EXIT_TRADING = "EXIT_TRADING"
-    EXIT_POSITION = "EXIT_POSITION"
+    EXIT_POSITION_BEAR = "EXIT_POSITION_BEAR"
+    EXIT_POSITION_BOTH = "EXIT_POSITION_BOTH"
 
 
 class Flow:
@@ -313,22 +305,32 @@ class Flow:
         self.settings = settings
         self.dry_run = dry_run
 
-    def _have_position(self, portfolio: Portfolio) -> bool:
-        portfolio.reload_positions(caller="decide")
-        return bool(portfolio.positions or self.dry_run)
-
     def decide(self, data: Data, portfolio: Portfolio) -> None:
-        if (
-            datetime.now().time()
-            >= (datetime.combine(datetime.today(), self.settings.TRADING_END) - timedelta(minutes=10)).time()
-        ) and not self._have_position(portfolio):
-            self.action = FlowAction.EXIT_TRADING
+        if datetime.now().time() >= self.settings.TRADING_END:
+            portfolio.reload_positions(caller="decide")
+            self.action = (
+                FlowAction.EXIT_TRADING if not portfolio.acquired_instrument.BEAR else FlowAction.EXIT_POSITION_BEAR
+            )
 
-        elif datetime.now().time() >= self.settings.TRADING_END:
-            self.action = FlowAction.EXIT_POSITION if self._have_position(portfolio) else FlowAction.EXIT_TRADING
+        elif (
+            datetime.now().time()
+            >= (datetime.combine(datetime.today(), self.settings.TRADING_END) - timedelta(minutes=15)).time()
+        ):
+            portfolio.reload_positions(caller="decide")
+            self.action = (
+                FlowAction.EXIT_TRADING
+                if any(
+                    [
+                        self.dry_run,
+                        not portfolio.positions,
+                        portfolio.acquired_instrument.BULL,
+                    ],
+                )
+                else FlowAction.TRADE
+            )
 
         elif data.too_old:
-            self.action = FlowAction.EXIT_POSITION
+            self.action = FlowAction.EXIT_POSITION_BOTH
 
         elif data.is_new:
             data.get_strategies()
@@ -373,7 +375,6 @@ def trade(dry_run: bool, settings) -> None:
     budget.adjust(orders, portfolio)
 
     telegram = Telegram()
-    telegram.log_starting_balance(budget)
 
     watchlists = Watchlists(settings)
     watchlists.update_all()
@@ -386,24 +387,25 @@ def trade(dry_run: bool, settings) -> None:
             continue
         elif flow.action == FlowAction.EXIT_TRADING:
             break
-        elif flow.action == FlowAction.EXIT_POSITION:
-            signal = Signal.EXIT
+        elif flow.action == FlowAction.EXIT_POSITION_BEAR:
+            signal = Signal.EXIT_BEAR
+        elif flow.action == FlowAction.EXIT_POSITION_BOTH:
+            signal = Signal.EXIT_BOTH
         elif flow.action == FlowAction.TRADE:
             signal = data.get_signal()
 
-        if not signal:
-            continue
+        if signal == Signal.EXIT_BEAR:
+            Trade.sell(Direction.BEAR, orders, portfolio)
+        elif signal == Signal.EXIT_BOTH:
+            Trade.sell(Direction.BEAR, orders, portfolio)
+            Trade.sell(Direction.BULL, orders, portfolio)
+        else:
+            direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
+            direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR
 
-        if signal == Signal.EXIT:
-            Trade.exit(orders, portfolio)
-            continue
-
-        direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
-        direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR
-
-        Trade.sell(direction_to_sell, orders, portfolio)
-        Trade.buy(direction_to_buy, orders, watchlists, portfolio, budget)
-        Trade.take_profit(direction_to_buy, orders, portfolio, settings.TRADING_TAKE_PROFIT)
+            Trade.sell(direction_to_sell, orders, portfolio)
+            Trade.buy(direction_to_buy, orders, watchlists, portfolio, budget)
+            Trade.take_profit(direction_to_buy, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
     portfolio.reload_balance()
 
