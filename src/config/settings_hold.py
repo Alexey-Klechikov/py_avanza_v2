@@ -14,4 +14,4 @@ class HoldOMX_Main(BaseOMX, BaseHold):
 @dataclass
 class HoldOMX_DT(BaseOMX, BaseTrade):
     BUDGET: float = 1500
-    SCOPES: List[Scope] = field(default_factory=lambda: [Scope.INTRADAY])
+    SCOPES: List[Scope] = field(default_factory=lambda: [Scope.INTERDAY])
