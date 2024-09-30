@@ -3,7 +3,7 @@ import warnings
 from datetime import datetime, time, timedelta
 from enum import Enum
 from time import sleep
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 from avanza.constants import OrderType, Resolution, TimePeriod
@@ -28,8 +28,7 @@ log = get_logger()
 class Signal(Enum):
     LONG = "LONG"
     SHORT = "SHORT"
-    EXIT_BOTH = "EXIT_BOTH"
-    EXIT_BEAR = "EXIT_BEAR"
+    EXIT = "EXIT"
 
 
 class Direction(Enum):
@@ -115,7 +114,7 @@ class Data:
 
             last_complete_candle = self.data.iloc[-2]
             if last_complete_candle["EXIT"]:
-                signal = Signal.EXIT_BOTH
+                signal = Signal.EXIT
 
             if last_complete_candle["LONG"] and not last_complete_candle["SHORT"]:
                 signal = Signal.LONG
@@ -295,58 +294,62 @@ class FlowAction(Enum):
     TRADE = "TRADE"
     DO_NOTHING = "DO_NOTHING"
     EXIT_TRADING = "EXIT_TRADING"
-    EXIT_POSITION_BEAR = "EXIT_POSITION_BEAR"
-    EXIT_POSITION_BOTH = "EXIT_POSITION_BOTH"
 
 
 class Flow:
     def __init__(self, settings, dry_run=False):
-        self.action: FlowAction = FlowAction.TRADE
-        self.settings = settings
-        self.dry_run = dry_run
+        self.trading_ends: time = settings.TRADING_END
+        self.dry_run: bool = dry_run
 
-    def decide(self, data: Data, portfolio: Portfolio) -> None:
-        if datetime.now().time() >= self.settings.TRADING_END:
-            portfolio.reload_positions(caller="decide")
-            self.action = (
-                FlowAction.EXIT_TRADING if not portfolio.acquired_instrument.BEAR else FlowAction.EXIT_POSITION_BEAR
-            )
+        self.directions_sell: List[Direction] = []
+        self.directions_buy: List[Direction] = []
 
-        elif (
-            datetime.now().time()
-            >= (datetime.combine(datetime.today(), self.settings.TRADING_END) - timedelta(minutes=15)).time()
-        ):
-            portfolio.reload_positions(caller="decide")
-            self.action = (
-                FlowAction.EXIT_TRADING
-                if any(
-                    [
-                        self.dry_run,
-                        not portfolio.positions,
-                        portfolio.acquired_instrument.BULL,
-                    ],
-                )
-                else FlowAction.TRADE
-            )
+    def get_action(self, data: Data, portfolio: Portfolio) -> FlowAction:
+        self.directions_sell = []
+        self.directions_buy = []
+
+        if datetime.now().time() >= self.trading_ends:
+            portfolio.reload_positions(caller="get_action")
+            if not portfolio.acquired_instrument.BEAR:
+                return FlowAction.EXIT_TRADING
+
+            self.directions_sell = [Direction.BEAR]
+            return FlowAction.TRADE
+
+        elif (datetime.now() + timedelta(minutes=10)).time() >= self.trading_ends:
+            portfolio.reload_positions(caller="get_action")
+            if not portfolio.acquired_instrument.BEAR or self.dry_run:
+                return FlowAction.EXIT_TRADING
 
         elif data.too_old:
-            self.action = FlowAction.EXIT_POSITION_BOTH
+            self.directions_sell = [Direction.BEAR, Direction.BULL]
+            return FlowAction.TRADE
 
         elif data.is_new:
-            data.get_strategies()
             data.is_new = False
-            self.action = FlowAction.TRADE
+            data.get_strategies()
+            signal = data.get_signal()
 
-        else:
-            sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
+            if signal == Signal.LONG:
+                self.directions_sell = [Direction.BEAR]
+                self.directions_buy = [Direction.BULL]
+            elif signal == Signal.SHORT:
+                self.directions_sell = [Direction.BULL]
+                self.directions_buy = [Direction.BEAR]
+            elif signal == Signal.EXIT:
+                self.directions_sell = [Direction.BEAR, Direction.BULL]
+
+            return FlowAction.TRADE
+
+        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
+        data.get()
+
+        if not data.is_new:
+            sleep(20)
             data.get()
+            log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {data.is_new}")
 
-            if not data.is_new:
-                sleep(20)
-                data.get()
-                log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {data.is_new}")
-
-            self.action = FlowAction.DO_NOTHING
+        return FlowAction.DO_NOTHING
 
 
 # MAIN
@@ -382,30 +385,20 @@ def trade(dry_run: bool, settings) -> None:
     flow = Flow(settings, dry_run)
 
     while datetime.now().time() < time(17, 4):
-        flow.decide(data, portfolio)
-        if flow.action == FlowAction.DO_NOTHING:
+        action = flow.get_action(data, portfolio)
+        if action == FlowAction.DO_NOTHING:
             continue
-        elif flow.action == FlowAction.EXIT_TRADING:
+        elif action == FlowAction.EXIT_TRADING:
             break
-        elif flow.action == FlowAction.EXIT_POSITION_BEAR:
-            signal = Signal.EXIT_BEAR
-        elif flow.action == FlowAction.EXIT_POSITION_BOTH:
-            signal = Signal.EXIT_BOTH
-        elif flow.action == FlowAction.TRADE:
-            signal = data.get_signal()
+        elif action == FlowAction.TRADE:
+            pass
 
-        if signal == Signal.EXIT_BEAR:
-            Trade.sell(Direction.BEAR, orders, portfolio)
-        elif signal == Signal.EXIT_BOTH:
-            Trade.sell(Direction.BEAR, orders, portfolio)
-            Trade.sell(Direction.BULL, orders, portfolio)
-        else:
-            direction_to_sell = Direction.BEAR if signal == Signal.LONG else Direction.BULL
-            direction_to_buy = Direction.BULL if signal == Signal.LONG else Direction.BEAR
+        for direction in flow.directions_sell:
+            Trade.sell(direction, orders, portfolio)
 
-            Trade.sell(direction_to_sell, orders, portfolio)
-            Trade.buy(direction_to_buy, orders, watchlists, portfolio, budget)
-            Trade.take_profit(direction_to_buy, orders, portfolio, settings.TRADING_TAKE_PROFIT)
+        for direction in flow.directions_buy:
+            Trade.buy(direction, orders, watchlists, portfolio, budget)
+            Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
     portfolio.reload_balance()
 
