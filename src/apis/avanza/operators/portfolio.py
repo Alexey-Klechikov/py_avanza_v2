@@ -104,6 +104,7 @@ class Portfolio:
             and (not self.filter_orderbook_direction or self.filter_orderbook_direction in i.instrument.name)
         ]
 
+        self._detect_acquired_instruments()
+
         if self.positions:
             log.debug(f"Active positions found [{len(self.positions)} st.]" + (f" [caller {caller}]" if caller else ""))
-            self._detect_acquired_instruments()

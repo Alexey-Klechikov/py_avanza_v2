@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from backtest import backtest
+from backtest import backtest_strategies
 from config import SETTINGS_TRADE_OMX
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -27,7 +27,7 @@ def run_full_strategies_generation(settings):
     ]
 
     log.warning("Generating strategies")
-    backtest(
+    backtest_strategies(
         data,
         ComposeStrategiesListMethod.GENERATE,
         settings,
@@ -39,7 +39,7 @@ def run_full_strategies_generation(settings):
 
     for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
         log.warning(f"Extending strategies ({i} -> {i + 1})")
-        backtest(
+        backtest_strategies(
             data,
             ComposeStrategiesListMethod.EXTEND,
             settings,
@@ -58,7 +58,7 @@ def run_full_strategies_generation(settings):
     ]
 
     log.warning("Backtesting strategies")
-    backtest(
+    backtest_strategies(
         data,
         ComposeStrategiesListMethod.READ,
         settings,
@@ -77,7 +77,7 @@ def run_plotting_for_active_strategies(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    backtest(
+    backtest_strategies(
         data.copy(),
         ComposeStrategiesListMethod.READ,
         settings,
@@ -104,7 +104,7 @@ def run_test_for_selected_indicators(settings):
         settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
 
         log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
-        backtest(
+        backtest_strategies(
             data.copy(),
             ComposeStrategiesListMethod.EXTEND,
             settings,
@@ -273,7 +273,7 @@ def test_hold(settings):
         for cut_off in range(5, 50, 2):
             counter = 0
             total = 0
-            for i, row in result.iterrows():
+            for _, row in result.iterrows():
                 if (side == "BULL" and (row["high"] - row["buy"] > cut_off)) or (
                     side == "BEAR" and (row["buy"] - row["low"] > cut_off)
                 ):
@@ -310,9 +310,9 @@ def test_hold(settings):
 
 
 if __name__ == "__main__":
-    run_full_strategies_generation(SETTINGS_TRADE_OMX)
+    # run_full_strategies_generation(SETTINGS_TRADE_OMX)
     # run_test_for_selected_indicators(SETTINGS_TRADE_OMX)
     # run_plotting_for_active_strategies(SETTINGS_TRADE_OMX)
 
     # test_gaps(SETTINGS_TRADE_OMX)
-    # test_hold(SETTINGS_TRADE_OMX)
+    test_hold(SETTINGS_TRADE_OMX)

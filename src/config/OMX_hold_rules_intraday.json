@@ -1,0 +1,9 @@
+[
+  {
+    "budget": 1500,
+    "buy_time": "16:50",
+    "orderbook_direction": "BULL",
+    "sell_time": "10:00",
+    "take_profit": 0.3
+  }
+]

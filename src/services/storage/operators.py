@@ -4,7 +4,6 @@ from typing import Optional
 
 import pandas as pd
 
-from config import DATA_COLUMNS
 from utils.logger import get_logger
 
 log = get_logger()
@@ -25,7 +24,7 @@ class Storage:
     def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):
             log.warning(f"File does not exist: {self.path}")
-            return pd.DataFrame(columns=DATA_COLUMNS)
+            return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
 
         with open(self.path, "rb") as f:
             return pickle.load(f)
@@ -45,7 +44,7 @@ class Storage:
                 combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()].set_index("Datetime").sort_index()
             )
 
-        combined_data = combined_data[DATA_COLUMNS].dropna(how="any")
+        combined_data = combined_data[["Open", "High", "Low", "Close", "Volume"]].dropna(how="any")
 
         with open(self.path, "wb") as f:
             pickle.dump(combined_data, f)

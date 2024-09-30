@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional
 
-from config import DATA_COLUMNS
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
 from services.ta.strategies import compose_strategies_list, dump_strategies_in_file, get_top_strategies
@@ -45,7 +44,7 @@ def get_indicators(data, settings, **kwargs) -> Dict[str, Dict[str, Indicator]]:
     volume.add_chaikin_money_flow(**settings.INDICATORS.get("Volume", {}).get("CMF", {}))
     volume.add_klinger_volume_oscillator(**settings.INDICATORS.get("Volume", {}).get("KVO", {}))
 
-    columns_keep = set(DATA_COLUMNS)
+    columns_keep = {"Open", "High", "Low", "Close", "Volume"}
     for category in [trend, volatility, volume, cycles, overlap, momentum]:
         for indicator in category.indicators.values():
             columns_keep |= set(indicator.columns)

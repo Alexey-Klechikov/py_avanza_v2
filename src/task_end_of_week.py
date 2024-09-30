@@ -2,7 +2,7 @@ import warnings
 from datetime import datetime, timedelta
 
 from apis.telegram.operators import Telegram
-from backtest import backtest
+from backtest import backtest_strategies
 from config import SETTINGS_TRADE_OMX
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -24,7 +24,7 @@ def generate_strategies(settings) -> None:
     ]
 
     log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    backtest(
+    backtest_strategies(
         data,
         ComposeStrategiesListMethod.GENERATE,
         settings,
@@ -37,7 +37,7 @@ def generate_strategies(settings) -> None:
         log.warning(
             f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)",
         )
-        backtest(
+        backtest_strategies(
             data,
             ComposeStrategiesListMethod.EXTEND,
             settings,
@@ -54,7 +54,7 @@ def generate_strategies(settings) -> None:
     ]
 
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    backtest(
+    backtest_strategies(
         data,
         ComposeStrategiesListMethod.READ,
         settings,

@@ -1,1 +1,1 @@
-from backtest.operator import backtest
+from backtest.strategies import backtest_strategies
