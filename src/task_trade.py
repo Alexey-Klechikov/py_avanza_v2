@@ -228,7 +228,7 @@ class Trade:
         for _ in range(5):
             orders.delete_all()
 
-            portfolio.reload_positions()
+            portfolio.reload_positions(caller="sell")
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
                 return
@@ -253,7 +253,7 @@ class Trade:
         for _ in range(5):
             orders.delete_all()
 
-            portfolio.reload_positions()
+            portfolio.reload_positions(caller="buy")
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
             if acquired_instrument:
                 return
@@ -281,7 +281,7 @@ class Trade:
     ) -> None:
         orders.delete_all()
 
-        portfolio.reload_positions()
+        portfolio.reload_positions(caller="take_profit")
         acquired_instrument = portfolio.acquired_instrument.get(direction.value)
         if not acquired_instrument or not acquired_instrument.quote.sell:
             return
@@ -314,7 +314,7 @@ class Flow:
         self.dry_run = dry_run
 
     def _have_position(self, portfolio: Portfolio) -> bool:
-        portfolio.reload_positions()
+        portfolio.reload_positions(caller="decide")
         return bool(portfolio.positions or self.dry_run)
 
     def decide(self, data: Data, portfolio: Portfolio) -> None:

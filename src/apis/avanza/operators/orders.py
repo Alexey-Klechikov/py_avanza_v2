@@ -71,14 +71,14 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-    def delete(self, order_id: str) -> Optional[str]:
+    def delete(self, order: Order) -> Optional[str]:
         if self.dry_run:
             log.warning("Dry run: DELETE order not placed")
             return
 
         try:
-            get_client().delete_order(account_id=self.account_id, order_id=order_id)
-            log.info("Order deleted")
+            get_client().delete_order(account_id=self.account_id, order_id=order.order_id)
+            log.info(f"Order deleted: {order.side} {order.orderbook.name} {order.price} [{order.state}]")
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
@@ -106,7 +106,7 @@ class Orders:
             if self.active_order and self.active_order.order_id == order.order_id:
                 continue
 
-            self.delete(order.order_id)
+            self.delete(order)
 
     def edit_active(self, new_price: float):
         if not self.active_order:
@@ -132,4 +132,4 @@ class Orders:
 
     def delete_all(self):
         for order in self._list():
-            self.delete(order.order_id)
+            self.delete(order)

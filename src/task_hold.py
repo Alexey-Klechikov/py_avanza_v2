@@ -128,7 +128,7 @@ class Trade:
         for _ in range(5):
             orders.delete_all()
 
-            portfolio.reload_positions()
+            portfolio.reload_positions(caller="sell")
             acquired_instrument = portfolio.acquired_instrument.get(event.orderbook_direction.value)
             if not acquired_instrument:
                 break
@@ -155,7 +155,7 @@ class Trade:
         for _ in range(5):
             orders.delete_all()
 
-            portfolio.reload_positions()
+            portfolio.reload_positions(caller="buy")
             acquired_instrument = portfolio.acquired_instrument.get(event.orderbook_direction.value)
             if acquired_instrument:
                 break
@@ -184,7 +184,7 @@ class Trade:
     def take_profit(cls, event: Event, orders: Orders, portfolio: Portfolio) -> None:
         orders.delete_all()
 
-        portfolio.reload_positions()
+        portfolio.reload_positions(caller="take_profit")
         acquired_instrument = portfolio.acquired_instrument.get(event.orderbook_direction.value)
         if acquired_instrument:
             orders.place(

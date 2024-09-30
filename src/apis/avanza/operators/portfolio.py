@@ -73,7 +73,7 @@ class Portfolio:
         self.total_value = account_overview.total_value.total_value.value
         self.buying_power = account_overview.buying_power.total.value
 
-    def reload_positions(self) -> None:
+    def reload_positions(self, caller: str = "") -> None:
         self.positions = [
             Position(
                 **{
@@ -105,5 +105,5 @@ class Portfolio:
         ]
 
         if self.positions:
-            log.debug(f"Active positions found [{len(self.positions)} st.]")
+            log.debug(f"Active positions found [{len(self.positions)} st.]" + (f" [caller {caller}]" if caller else ""))
             self._detect_acquired_instruments()
