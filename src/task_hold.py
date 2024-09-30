@@ -175,6 +175,6 @@ if __name__ == "__main__":
 
         telegram = TelegramBase()
         telegram.messages = ["Error in task_hold.py"]
-        # telegram.send_message()
+        telegram.send_message()
 
         raise e
