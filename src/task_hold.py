@@ -112,7 +112,7 @@ def sleep_until_next_event(event: Event) -> None:
     hours, remainder = divmod(sleep_time, 3600)
     minutes, remainder = divmod(remainder, 60)
 
-    if sleep_time <= 0:
+    if (datetime.now() - datetime.combine(datetime.today(), event.at)).seconds < 120:
         return
 
     log.info(f"Sleeping for {hours}:{minutes}:{remainder}")
