@@ -22,6 +22,7 @@ class Order(BaseModel):
     buy_datetime: Any
 
     take_profit_price: float
+    stop_loss_price: float
 
     sell_price: Optional[float] = None
     sell_datetime: Optional[Any] = None
@@ -43,6 +44,15 @@ class Order(BaseModel):
 class Wallet(BaseModel):
     LONG: Optional[Order] = None
     SHORT: Optional[Order] = None
+
+    def get(self, direction: str) -> Optional[Order]:
+        return self.LONG if direction == "LONG" else self.SHORT
+
+    def set(self, direction: str, order: Optional[Order]) -> None:
+        if direction == "LONG":
+            self.LONG = order
+        else:
+            self.SHORT = order
 
 
 def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
@@ -80,59 +90,69 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
     wallet = Wallet()
 
     target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
+    stop_loss = settings.TRADING_STOP_LOSS / settings.MULTIPLIER
 
     for i, row in data[["LONG", "SHORT", "EXIT", "High", "Low"]].iterrows():
         profit = None
 
-        # LONG
-        if wallet.LONG is None and row["LONG"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["SHORT"]):
-            wallet.LONG = Order(
-                buy_price=row["LONG"],
-                buy_datetime=i,
-                take_profit_price=row["LONG"] * (1 + target_profit),
-            )
+        for tested_direction, opposite_direction in [("LONG", "SHORT"), ("SHORT", "LONG")]:
+            tested_instrument = wallet.get(tested_direction)
+            opposite_instrument = wallet.get(opposite_direction)
 
-            if wallet.SHORT is not None:
-                profit = wallet.SHORT.sell(row["LONG"], i, "SHORT")
-                wallet.SHORT = None
+            tested_direction_price: float = row[tested_direction]  # type: ignore
+            tick_price = row["Low"] if tested_direction == "LONG" else row["High"]
+            direction_correction = 1 if tested_direction == "LONG" else -1
 
-        if wallet.LONG is not None and row["EXIT"] > 0:
-            sell_price = row["EXIT"]
-            profit = wallet.LONG.sell(sell_price, i, "LONG")
-            wallet.LONG = None
+            # Buy signal without open positions
+            if (
+                tested_instrument is None
+                and tested_direction_price > 0
+                and np.isnan(row["EXIT"])
+                and np.isnan(row[opposite_direction])
+            ):
+                wallet.set(
+                    tested_direction,
+                    Order(
+                        buy_price=tested_direction_price,  # type: ignore
+                        buy_datetime=i,
+                        take_profit_price=tested_direction_price * (1 + (direction_correction * target_profit)),
+                        stop_loss_price=tested_direction_price * (1 - (direction_correction * stop_loss)),
+                    ),
+                )
 
-        if wallet.LONG is not None and row["LONG"] > 0:
-            wallet.LONG.take_profit_price = row["LONG"] * (1 + target_profit)
+                if opposite_instrument is not None:
+                    profit = opposite_instrument.sell(tested_direction_price, i, opposite_direction)
+                    wallet.set(opposite_direction, None)
 
-        if wallet.LONG is not None and row["High"] > wallet.LONG.take_profit_price:
-            sell_price = wallet.LONG.take_profit_price
-            profit = wallet.LONG.sell(sell_price, i, "LONG")
-            wallet.LONG = None
+            # Buy signal with open positions
+            if tested_instrument is not None and tested_direction_price > 0:
+                tested_instrument.take_profit_price = tested_direction_price * (
+                    1 + (direction_correction * target_profit)
+                )
 
-        # SHORT
-        if wallet.SHORT is None and row["SHORT"] > 0 and np.isnan(row["EXIT"]) and np.isnan(row["LONG"]):
-            wallet.SHORT = Order(
-                buy_price=row["SHORT"],
-                buy_datetime=i,
-                take_profit_price=row["SHORT"] * (1 - target_profit),
-            )
+            # Exit signal
+            if tested_instrument is not None and row["EXIT"] > 0:
+                sell_price = row["EXIT"]
+                profit = tested_instrument.sell(sell_price, i, tested_direction)
+                wallet.set(tested_direction, None)
 
-            if wallet.LONG is not None:
-                profit = wallet.LONG.sell(row["SHORT"], i, "LONG")
-                wallet.LONG = None
+            # Take profit
+            if tested_instrument is not None and (
+                (tested_direction == "LONG" and row["High"] > tested_instrument.take_profit_price)
+                or (tested_direction == "SHORT" and row["Low"] < tested_instrument.take_profit_price)
+            ):
+                sell_price = tested_instrument.take_profit_price
+                profit = tested_instrument.sell(sell_price, i, tested_direction)
+                wallet.set(tested_direction, None)
 
-        if wallet.SHORT is not None and row["EXIT"] > 0:
-            sell_price = row["EXIT"]
-            profit = wallet.SHORT.sell(sell_price, i, "SHORT")
-            wallet.SHORT = None
-
-        if wallet.SHORT is not None and row["SHORT"] > 0:
-            wallet.SHORT.take_profit_price = row["SHORT"] * (1 - target_profit)
-
-        if wallet.SHORT is not None and row["Low"] < wallet.SHORT.take_profit_price:
-            sell_price = wallet.SHORT.take_profit_price
-            profit = wallet.SHORT.sell(sell_price, i, "SHORT")
-            wallet.SHORT = None
+            # Stop loss
+            if tested_instrument is not None and (
+                (tested_direction == "LONG" and tick_price < tested_instrument.stop_loss_price)
+                or (tested_direction == "SHORT" and tick_price > tested_instrument.stop_loss_price)
+            ):
+                sell_price = tick_price
+                profit = tested_instrument.sell(sell_price, i, tested_direction)
+                wallet.set(tested_direction, None)
 
         if profit is not None:
             strategy.counter.total_trades += 1

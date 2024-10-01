@@ -299,6 +299,7 @@ class FlowAction(Enum):
 class Flow:
     def __init__(self, settings, dry_run=False):
         self.trading_ends: time = settings.TRADING_END
+        self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
 
         self.directions_sell: List[Direction] = []
@@ -308,23 +309,42 @@ class Flow:
         self.directions_sell = []
         self.directions_buy = []
 
+        portfolio.reload_positions(caller="get_action")
+
+        # Stop loss
+        if portfolio.positions:
+            for direction in [Direction.BULL, Direction.BEAR]:
+                acquired_instrument = portfolio.acquired_instrument.get(direction.value)
+                if not acquired_instrument:
+                    continue
+
+                if (
+                    acquired_instrument
+                    and acquired_instrument.quote.sell
+                    and acquired_instrument.quote.sell < acquired_instrument.acquired_price * (1 - self.stop_loss)
+                ):
+                    self.directions_sell = [direction]
+                    return FlowAction.TRADE
+
+        # End of day
         if datetime.now().time() >= self.trading_ends:
-            portfolio.reload_positions(caller="get_action")
             if not portfolio.acquired_instrument.BEAR:
                 return FlowAction.EXIT_TRADING
 
             self.directions_sell = [Direction.BEAR]
             return FlowAction.TRADE
 
+        # Near end of day
         elif (datetime.now() + timedelta(minutes=10)).time() >= self.trading_ends:
-            portfolio.reload_positions(caller="get_action")
             if not portfolio.acquired_instrument.BEAR or self.dry_run:
                 return FlowAction.EXIT_TRADING
 
+        # No new data
         elif data.too_old:
             self.directions_sell = [Direction.BEAR, Direction.BULL]
             return FlowAction.TRADE
 
+        # Trade
         elif data.is_new:
             data.is_new = False
             data.get_strategies()
@@ -341,6 +361,7 @@ class Flow:
 
             return FlowAction.TRADE
 
+        # Wait for new data
         sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
         data.get()
 
