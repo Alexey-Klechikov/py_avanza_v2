@@ -64,7 +64,7 @@ class Orders:
                 volume=volume,
                 valid_until=valid_until,
             )
-            log.info("Order placed: %s %s %s", instrument_name, order_type.value, price)
+            log.info(f"Order placed: {order_type.value} {instrument_name} {price}")
 
             sleep(3)
 
