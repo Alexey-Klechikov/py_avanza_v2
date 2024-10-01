@@ -1,1 +1,3 @@
+from backtest.hold_interday import backtest_hold_interday
+from backtest.hold_intraday import backtest_hold_intraday
 from backtest.strategies import backtest_strategies

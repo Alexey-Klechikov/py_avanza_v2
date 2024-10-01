@@ -28,7 +28,7 @@ class Backlog:
     def extract_events_from_rules(self):
         events = []
         for rule in self.rules:
-            events += [
+            events.append(
                 Event(
                     at=rule.buy_time,
                     action=Action.BUY,
@@ -37,6 +37,12 @@ class Backlog:
                     budget=rule.settings.BUDGET,
                     settings=rule.settings,
                 ),
+            )
+
+            if not rule.sell_time:
+                continue
+
+            events.append(
                 Event(
                     at=rule.sell_time,
                     action=Action.SELL,
@@ -45,7 +51,7 @@ class Backlog:
                     budget=rule.settings.BUDGET,
                     settings=rule.settings,
                 ),
-            ]
+            )
 
         events_deduplicated = {}
         for event in events:

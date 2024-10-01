@@ -1,20 +1,32 @@
 [
   {
-    "buy_time": "10:20",
+    "buy_time": "11:10",
     "orderbook_direction": "BULL",
-    "sell_time": "14:30",
-    "take_profit": 0.04
+    "sell_time": "12:30",
+    "take_profit": 0.11
   },
   {
-    "buy_time": "14:30",
+    "buy_time": "14:20",
     "orderbook_direction": "BULL",
-    "sell_time": "16:30",
-    "take_profit": 0.12
+    "sell_time": "15:20",
+    "take_profit": 0.18
   },
   {
-    "buy_time": "12:40",
+    "buy_time": "15:50",
+    "orderbook_direction": "BULL",
+    "sell_time": "16:10",
+    "take_profit": 0.11
+  },
+  {
+    "buy_time": "10:00",
     "orderbook_direction": "BEAR",
     "sell_time": "16:50",
-    "take_profit": 0.18
+    "take_profit": 0.2
+  },
+  {
+    "buy_time": "13:20",
+    "orderbook_direction": "BEAR",
+    "sell_time": "16:50",
+    "take_profit": 0.22
   }
 ]
