@@ -25,6 +25,12 @@ class Backlog:
             with open(data_file_path, "r") as file:
                 self.rules += [HoldRule(settings=settings, **i) for i in json.load(file)]
 
+    def write_rules(self, settings, scope: Scope) -> None:
+        data_file_path = self._get_path(settings.FILE_PREFIX, scope)
+
+        with open(data_file_path, "w") as file:
+            json.dump([i.dump_dict() for i in self.rules], file, indent=2)
+
     def extract_events_from_rules(self):
         events = []
         for rule in self.rules:

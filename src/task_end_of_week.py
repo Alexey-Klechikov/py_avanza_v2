@@ -1,9 +1,13 @@
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
+
+import pandas as pd
 
 from apis.telegram.operators import Telegram
-from backtest import backtest_strategies
+from backtest import backtest_hold_intraday, backtest_strategies
 from config import SETTINGS_TRADE_OMX
+from services.hold.models import Direction, Scope
+from services.hold.operators import Backlog
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -64,9 +68,48 @@ def generate_strategies(settings) -> None:
     )
 
 
+def generate_hold_rules_intraday(settings) -> None:
+    period_days = 60
+
+    start = time(10, 0)
+    end = time(16, 50)
+
+    log.warning(f"Generating hold rules using period {period_days} days with buy/sell time between {start} and {end}")
+
+    omx_reference_price = 2600
+
+    times = [i.time() for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq="10min")]
+    buy_time_sell_time_combinations = [
+        (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
+    ]
+
+    data = Storage(settings).read()
+    data = data.loc[
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+    ]
+    data.index = pd.to_datetime(data.index)
+
+    backlog = Backlog()
+    for direction in [Direction.BULL, Direction.BEAR]:
+        hold_rules_per_direction = backtest_hold_intraday(
+            data,
+            buy_time_sell_time_combinations,
+            direction,
+            omx_reference_price,
+        )
+
+        backlog.rules += hold_rules_per_direction
+
+    for hold_rule in backlog.rules:
+        log.debug(f"Hold Rule: {hold_rule.dump_dict()}")
+
+    backlog.write_rules(settings, Scope.INTRADAY)
+
+
 if __name__ == "__main__":
     try:
         generate_strategies(SETTINGS_TRADE_OMX)
+        generate_hold_rules_intraday(SETTINGS_TRADE_OMX)
 
     except Exception as e:
         telegram = Telegram()
