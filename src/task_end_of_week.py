@@ -4,8 +4,8 @@ from datetime import datetime, time, timedelta
 import pandas as pd
 
 from apis.telegram.operators import Telegram
-from backtest import backtest_hold_intraday, backtest_strategies
-from config import SETTINGS_TRADE_OMX
+from backtest import backtest_hold_interday, backtest_hold_intraday, backtest_strategies
+from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
 from services.hold.models import Direction, Scope
 from services.hold.operators import Backlog
 from services.storage import Storage
@@ -74,9 +74,10 @@ def generate_hold_rules_intraday(settings) -> None:
     start = time(10, 0)
     end = time(16, 50)
 
-    log.warning(f"Generating hold rules using period {period_days} days with buy/sell time between {start} and {end}")
-
-    omx_reference_price = 2600
+    log.warning(
+        f"Generating INTRADAY hold rules using period {period_days} days "
+        + f"with buy/sell time between {start} and {end}",
+    )
 
     times = [i.time() for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq="10min")]
     buy_time_sell_time_combinations = [
@@ -95,21 +96,49 @@ def generate_hold_rules_intraday(settings) -> None:
             data,
             buy_time_sell_time_combinations,
             direction,
-            omx_reference_price,
+            settings.REF_PRICE,
         )
 
         backlog.rules += hold_rules_per_direction
 
     for hold_rule in backlog.rules:
-        log.debug(f"Hold Rule: {hold_rule.dump_dict()}")
+        log.info(f"Hold Rule: {hold_rule.dump_dict()}")
 
     backlog.write_rules(settings, Scope.INTRADAY)
+
+
+def generate_hold_rules_interday(settings) -> None:
+    period_days = 60
+
+    eod = time(16, 50)
+    close = time(10, 00)
+    direction = Direction.BULL
+
+    log.warning(
+        f"Generating INTERDAY hold rules for direction {direction.value} "
+        + f"using period {period_days} days with eod/close time between {eod} and {close}",
+    )
+
+    data = Storage(settings).read()
+    data = data.loc[
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+    ]
+
+    backlog = Backlog()
+
+    hold_rule = backtest_hold_interday(data, eod, close, direction, settings.REF_PRICE)
+
+    log.info(f"Hold Rule: {hold_rule.dump_dict()}")
+
+    backlog.rules.append(hold_rule)
+    backlog.write_rules(settings, Scope.INTERDAY)
 
 
 if __name__ == "__main__":
     try:
         generate_strategies(SETTINGS_TRADE_OMX)
-        generate_hold_rules_intraday(SETTINGS_TRADE_OMX)
+        generate_hold_rules_intraday(SETTINGS_HOLD_OMX_DT)
+        generate_hold_rules_interday(SETTINGS_HOLD_OMX_DT)
 
     except Exception as e:
         telegram = Telegram()

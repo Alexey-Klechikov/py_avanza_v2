@@ -3,7 +3,7 @@ from datetime import time
 
 import pandas as pd
 
-from services.hold.models import Direction
+from services.hold.models import Direction, HoldRule
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -86,12 +86,21 @@ def backtest_hold_interday(
     close_time: time,
     direction: Direction,
     omx_reference_price: int,
-) -> dict:
+) -> HoldRule:
     data_aggregated_by_time = _aggregate_data_by_time(data, end_od_day, close_time)
     gaps = _calculate_gaps(data_aggregated_by_time)
 
-    result = {}
-    for cut_off in range(5, 100, 2):
-        result[cut_off] = _calculate_result(gaps, direction, cut_off, omx_reference_price)
+    results_per_cut_off = {}
+    for cut_off in range(5, 50, 2):
+        results_per_cut_off[cut_off] = _calculate_result(gaps, direction, cut_off, omx_reference_price)
 
-    return result
+    top_total = sorted(results_per_cut_off.values(), key=lambda x: x["total"], reverse=True)[0]["total"]
+    target_profit = [i for i in results_per_cut_off.values() if i["total"] >= top_total * 0.9][0]["take_profit"]
+
+    return HoldRule(
+        orderbook_direction=direction,
+        buy_time=end_od_day,
+        sell_time=close_time,
+        take_profit=target_profit,
+        settings=None,
+    )

@@ -22,3 +22,5 @@ class BaseOMX:
 
     MULTIPLIER: int = 20
     RESOLUTION = "2m"
+
+    REF_PRICE: float = 2600

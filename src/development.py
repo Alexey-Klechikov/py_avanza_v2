@@ -2,7 +2,6 @@ import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
-from pprint import pprint
 
 import pandas as pd
 
@@ -154,16 +153,18 @@ def test_hold_interday(settings):
     close = time(10, 00)
     direction = Direction.BULL
 
-    omx_reference_price = 2600
-
     data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    result = backtest_hold_interday(data, eod, close, direction, omx_reference_price)
+    hold_rule = backtest_hold_interday(data, eod, close, direction, settings.REF_PRICE)
 
-    pprint(result)
+    log.info(f"Hold Rule: {hold_rule.dump_dict()}")
+
+    backlog = Backlog()
+    backlog.rules.append(hold_rule)
+    backlog.write_rules(settings, Scope.INTERDAY)
 
 
 def test_hold_intraday(settings):
@@ -171,8 +172,6 @@ def test_hold_intraday(settings):
 
     start = time(10, 0)
     end = time(17, 0)
-
-    omx_reference_price = 2600
 
     times = [i.time() for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq="10min")]
     buy_time_sell_time_combinations = [
@@ -191,13 +190,13 @@ def test_hold_intraday(settings):
             data,
             buy_time_sell_time_combinations,
             direction,
-            omx_reference_price,
+            settings.REF_PRICE,
         )
 
         backlog.rules += hold_rules_per_direction
 
     for hold_rule in backlog.rules:
-        log.debug(f"Hold Rule: {hold_rule.dump_dict()}")
+        log.info(f"Hold Rule: {hold_rule.dump_dict()}")
 
     backlog.write_rules(settings, Scope.INTRADAY)
 
@@ -208,6 +207,6 @@ if __name__ == "__main__":
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
-    settings = SETTINGS_HOLD_OMX_DT  # SETTINGS_HOLD_OMX_MAIN
-    # test_hold_interday(settings)
-    test_hold_intraday(settings)
+    settings = SETTINGS_HOLD_OMX_DT
+    test_hold_interday(settings)
+    # test_hold_intraday(settings)
