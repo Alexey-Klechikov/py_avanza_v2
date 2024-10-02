@@ -20,8 +20,8 @@ class Value(BaseModel):
 
 
 class Quote(BaseModel):
-    highest: Value
-    lowest: Value
+    highest: Optional[Value]
+    lowest: Optional[Value]
     buy: Optional[Value]
     sell: Optional[Value]
     latest: Value
