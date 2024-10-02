@@ -359,7 +359,8 @@ class Flow:
             elif signal == Signal.EXIT:
                 self.directions_sell = [Direction.BEAR, Direction.BULL]
 
-            return FlowAction.TRADE
+            if signal:
+                return FlowAction.TRADE
 
         # Wait for new data
         sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
