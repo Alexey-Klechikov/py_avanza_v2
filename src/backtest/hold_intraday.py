@@ -112,7 +112,7 @@ def _split_intervals_to_10_min_time_points(
         interval_duration = (end_time.hour - start_time.hour) * 60 + end_time.minute - start_time.minute
         weight = interval[1].total / interval_duration
 
-        for drift in range(0, interval_duration, 10):
+        for drift in range(0, interval_duration, 4):
             time_point = (datetime.combine(date.today(), start_time) + timedelta(minutes=drift)).time()
             if time_point in time_points and time_points[time_point].weight > weight:
                 continue
@@ -148,7 +148,7 @@ def _aggregate_time_points_to_rules(direction: Direction, time_points: List[Tupl
 
         if (t.hour - current_hold_rule_kwargs["sell_time"].hour) * 60 + t.minute - current_hold_rule_kwargs[
             "sell_time"
-        ].minute == 10:
+        ].minute == 4:
             current_hold_rule_kwargs["sell_time"] = t
 
         else:
@@ -192,7 +192,7 @@ def backtest_hold_intraday(
 
         data_aggregated_by_time = _aggregate_data_by_time(data, buy_time, sell_time)
 
-        for cut_off in range(5, 50, 2):
+        for cut_off in range(5, 30, 2):
             result_per_cut_off = _calculate_result(data_aggregated_by_time, direction, cut_off, omx_reference_price)
             if not result_per_cut_off:
                 continue

@@ -79,7 +79,7 @@ def generate_hold_rules_intraday(settings) -> None:
         + f"with buy/sell time between {start} and {end}",
     )
 
-    times = [i.time() for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq="10min")]
+    times = [i.time() for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq="4min")]
     buy_time_sell_time_combinations = [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]
