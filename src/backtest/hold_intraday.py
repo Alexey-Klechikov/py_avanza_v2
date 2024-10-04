@@ -103,7 +103,7 @@ def _sort_intervals(
     ]
 
 
-def _split_intervals_to_10_min_time_points(
+def _split_intervals_to_4_min_time_points(
     intervals: List[Tuple[Tuple[time, time], CutOffResult]],
 ) -> List[Tuple[time, TimePoint]]:
     time_points = {}
@@ -200,7 +200,7 @@ def backtest_hold_intraday(
             intervals[(buy_time, sell_time)].append(result_per_cut_off)
 
     sorted_intervals = _sort_intervals(intervals)
-    time_points = _split_intervals_to_10_min_time_points(sorted_intervals)
+    time_points = _split_intervals_to_4_min_time_points(sorted_intervals)
     rules = _aggregate_time_points_to_rules(direction, time_points)
 
     return rules

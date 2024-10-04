@@ -147,7 +147,7 @@ def run_test_for_selected_indicators(settings):
 
 
 def test_hold_interday(settings):
-    period_days = 60
+    period_days = 40
 
     eod = time(16, 50)
     close = time(10, 00)
@@ -168,7 +168,7 @@ def test_hold_interday(settings):
 
 
 def test_hold_intraday(settings):
-    period_days = 60
+    period_days = 40
 
     start = time(10, 0)
     end = time(17, 0)
@@ -203,10 +203,10 @@ def test_hold_intraday(settings):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
-    run_full_strategies_generation(settings)
+    # run_full_strategies_generation(settings)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
-    # test_hold_intraday(settings)
+    test_hold_intraday(settings)
     # test_hold_interday(settings)

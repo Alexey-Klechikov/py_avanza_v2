@@ -20,7 +20,7 @@ log = get_logger()
 
 
 def generate_strategies(settings) -> None:
-    period_days = 60
+    period_days = 40
 
     data = Storage(settings).read()
     data = data.loc[
@@ -69,7 +69,7 @@ def generate_strategies(settings) -> None:
 
 
 def generate_hold_rules_intraday(settings) -> None:
-    period_days = 60
+    period_days = 40
 
     start = time(10, 0)
     end = time(16, 50)
