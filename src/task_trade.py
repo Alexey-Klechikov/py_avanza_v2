@@ -253,7 +253,7 @@ class Trade:
             if acquired_instrument:
                 return
 
-            watchlists.refresh_all()
+            watchlists.refresh_all(filter_orderbook_type="WARRANT")
             instrument_preferred = watchlists.preferred_instrument.get(direction.value)
             if not instrument_preferred or not instrument_preferred.sell:
                 continue
