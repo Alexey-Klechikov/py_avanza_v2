@@ -108,7 +108,7 @@ def generate_hold_rules_intraday(settings) -> None:
 
 
 def generate_hold_rules_interday(settings) -> None:
-    period_days = 60
+    period_days = 40
 
     eod = time(16, 50)
     close = time(10, 00)
