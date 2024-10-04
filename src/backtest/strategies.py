@@ -1,4 +1,5 @@
 import warnings
+from datetime import datetime, time
 from typing import Any, List, Optional
 
 import numpy as np
@@ -24,10 +25,12 @@ class Order(BaseModel):
     take_profit_price: float
     stop_loss_price: float
 
+    signal_confirmation_time: datetime
+
     sell_price: Optional[float] = None
     sell_datetime: Optional[Any] = None
 
-    def sell(self, sell_price: float, sell_datetime: Any, instrument_type: str) -> float:
+    def sell(self, sell_price: float, sell_datetime: datetime, instrument_type: str) -> float:
         self.sell_price = sell_price
         self.sell_datetime = sell_datetime
 
@@ -92,14 +95,16 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
     target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
     stop_loss = settings.TRADING_STOP_LOSS / settings.MULTIPLIER
 
-    for i, row in data[["LONG", "SHORT", "EXIT", "High", "Low"]].iterrows():
+    for i, row in data[["Close", "LONG", "SHORT", "EXIT", "High", "Low"]].iterrows():
         profit = None
+        timestamp: datetime = i.to_pydatetime()  # type: ignore
 
         for tested_direction, opposite_direction in [("LONG", "SHORT"), ("SHORT", "LONG")]:
             tested_instrument = wallet.get(tested_direction)
             opposite_instrument = wallet.get(opposite_direction)
 
             tested_direction_price: float = row[tested_direction]  # type: ignore
+            close_price = row["Close"]
             tick_price = row["Low"] if tested_direction == "LONG" else row["High"]
             direction_correction = 1 if tested_direction == "LONG" else -1
 
@@ -113,15 +118,16 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 wallet.set(
                     tested_direction,
                     Order(
-                        buy_price=tested_direction_price,  # type: ignore
-                        buy_datetime=i,
+                        buy_price=tested_direction_price,
+                        buy_datetime=timestamp,
                         take_profit_price=tested_direction_price * (1 + (direction_correction * target_profit)),
                         stop_loss_price=tested_direction_price * (1 - (direction_correction * stop_loss)),
+                        signal_confirmation_time=timestamp,
                     ),
                 )
 
                 if opposite_instrument is not None:
-                    profit = opposite_instrument.sell(tested_direction_price, i, opposite_direction)
+                    profit = opposite_instrument.sell(tested_direction_price, timestamp, opposite_direction)
                     wallet.set(opposite_direction, None)
 
             # Buy signal with open positions
@@ -129,11 +135,12 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 tested_instrument.take_profit_price = tested_direction_price * (
                     1 + (direction_correction * target_profit)
                 )
+                tested_instrument.signal_confirmation_time = timestamp
 
             # Exit signal
             if tested_instrument is not None and row["EXIT"] > 0:
                 sell_price = row["EXIT"]
-                profit = tested_instrument.sell(sell_price, i, tested_direction)
+                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Take profit
@@ -142,7 +149,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 or (tested_direction == "SHORT" and row["Low"] < tested_instrument.take_profit_price)
             ):
                 sell_price = tested_instrument.take_profit_price
-                profit = tested_instrument.sell(sell_price, i, tested_direction)
+                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Stop loss
@@ -151,7 +158,18 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 or (tested_direction == "SHORT" and tick_price > tested_instrument.stop_loss_price)
             ):
                 sell_price = tick_price
-                profit = tested_instrument.sell(sell_price, i, tested_direction)
+                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                wallet.set(tested_direction, None)
+
+            # Edge case for SHORT signals at 14:30
+            if (
+                tested_direction == "SHORT"
+                and tested_instrument is not None
+                and timestamp.time() == time(14, 24)
+                and (timestamp - tested_instrument.signal_confirmation_time).total_seconds() > 2 * 60 * 60
+            ):
+                sell_price = close_price
+                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
         if profit is not None:

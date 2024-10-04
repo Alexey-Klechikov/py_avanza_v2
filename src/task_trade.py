@@ -305,7 +305,7 @@ class Flow:
         self.directions_sell: List[Direction] = []
         self.directions_buy: List[Direction] = []
 
-    def get_action(self, data: Data, portfolio: Portfolio) -> FlowAction:
+    def get_action(self, data: Data, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.directions_buy = []
 
@@ -324,6 +324,14 @@ class Flow:
                     and acquired_instrument.quote.sell < acquired_instrument.acquired_price * (1 - self.stop_loss)
                 ):
                     self.directions_sell = [direction]
+                    return FlowAction.TRADE
+
+        # Edge case: Sell BEAR at 14:24 if last signal was more than 2.5 hours ago
+        if datetime.now().time() == time(14, 26) and portfolio.acquired_instrument.BEAR:
+            orders.reload_active()
+            if orders.active_order:
+                if (datetime.now() - orders.active_order.created).total_seconds() > (2.5 * 60 * 60):
+                    self.directions_sell = [Direction.BEAR]
                     return FlowAction.TRADE
 
         # End of day
@@ -407,7 +415,7 @@ def trade(dry_run: bool, settings) -> None:
     flow = Flow(settings, dry_run)
 
     while datetime.now().time() < time(17, 4):
-        action = flow.get_action(data, portfolio)
+        action = flow.get_action(data, portfolio, orders)
         if action == FlowAction.DO_NOTHING:
             continue
         elif action == FlowAction.EXIT_TRADING:

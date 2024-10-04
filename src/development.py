@@ -203,10 +203,10 @@ def test_hold_intraday(settings):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
-    # run_full_strategies_generation(settings)
+    run_full_strategies_generation(settings)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
-    test_hold_intraday(settings)
+    # test_hold_intraday(settings)
     # test_hold_interday(settings)
