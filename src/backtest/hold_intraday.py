@@ -190,7 +190,7 @@ def backtest_hold_intraday(
     times: List[Tuple[time, time]],
     direction: Direction,
     omx_reference_price: int,
-    slice_duration: int = 4,
+    slice_duration: int,
 ):
     intervals: Dict[Tuple[time, time], List[CutOffResult]] = {}
     for buy_time, sell_time in times:

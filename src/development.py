@@ -1,7 +1,7 @@
 import json
 import os
 import warnings
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 
 import pandas as pd
 
@@ -146,11 +146,11 @@ def run_test_for_selected_indicators(settings):
         log.info("> " + " | ".join([str(i) for i in s]))
 
 
-def test_hold_interday(settings):
+def test_hold_interday(settings, slice_duration):
     period_days = 40
 
-    eod = time(16, 50)
-    close = time(10, 00)
+    eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
+    close_times = [i.time() for i in pd.date_range(start="09:02", end="10:00", freq=f"{slice_duration}min")]
     direction = Direction.BULL
 
     data = Storage(settings).read()
@@ -158,7 +158,7 @@ def test_hold_interday(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    hold_rule = backtest_hold_interday(data, eod, close, direction, settings.REF_PRICE)
+    hold_rule = backtest_hold_interday(data, eod_times, close_times, direction, settings.REF_PRICE)
 
     log.info(f"Hold Rule: {hold_rule.dump_dict()}")
 
@@ -170,13 +170,7 @@ def test_hold_interday(settings):
 def test_hold_intraday(settings, slice_duration):
     period_days = 40
 
-    start = time(10, 0)
-    end = time(17, 0)
-
-    times = [
-        i.time()
-        for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq=f"{slice_duration}min")
-    ]
+    times = [i.time() for i in pd.date_range(start="10:00", end="17:00", freq=f"{slice_duration}min")]
     buy_time_sell_time_combinations = [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]
@@ -212,5 +206,5 @@ if __name__ == "__main__":
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
-    test_hold_intraday(settings, slice_duration=2)
-    # test_hold_interday(settings)
+    # test_hold_intraday(settings, slice_duration=4)
+    test_hold_interday(settings, slice_duration=2)

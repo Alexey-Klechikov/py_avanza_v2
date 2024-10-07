@@ -1,5 +1,6 @@
 import warnings
 from datetime import time
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -73,34 +74,60 @@ def _calculate_result(gaps: dict, direction: Direction, cut_off: int, omx_refere
                 counter += 1
 
     return {
-        "efficiency": round(counter / len(gaps), 2),
+        "efficiency": 0.0 if not gaps else round(counter / len(gaps), 2),
         "total": round(total, 2),
         "take_profit": round(20 * cut_off / omx_reference_price, 2),
     }
 
 
+def _get_top_hold_rule(intervals: Dict[Tuple[time, time], dict]) -> Optional[dict]:
+    hold_rule_kwargs: Optional[dict] = {}
+    for interval, results_per_cut_off in intervals.items():
+        top_total = sorted(results_per_cut_off.values(), key=lambda x: x["total"], reverse=True)[0]["total"]
+        filtered_rules = [i for i in results_per_cut_off.values() if i["total"] >= top_total * 0.9]
+        if not filtered_rules:
+            continue
+
+        log.debug(f"Interval: {interval}. Top total: {top_total}. Selected rule: {filtered_rules[0]}")
+
+        if not hold_rule_kwargs or (
+            filtered_rules[0]["total"] * filtered_rules[0]["efficiency"]
+            > hold_rule_kwargs.get("total", 0) * hold_rule_kwargs.get("efficiency", 0)
+        ):
+            hold_rule_kwargs = {**filtered_rules[0], "end_od_day": interval[0], "close_time": interval[1]}
+
+    return hold_rule_kwargs
+
+
 # MAIN
 def backtest_hold_interday(
     data: pd.DataFrame,
-    end_od_day: time,
-    close_time: time,
+    end_od_day_times: List[time],
+    close_times: List[time],
     direction: Direction,
     omx_reference_price: int,
 ) -> HoldRule:
-    data_aggregated_by_time = _aggregate_data_by_time(data, end_od_day, close_time)
-    gaps = _calculate_gaps(data_aggregated_by_time)
+    intervals: Dict[Tuple[time, time], dict] = {}
+    for end_od_day in end_od_day_times:
+        for close_time in close_times:
+            data_aggregated_by_time = _aggregate_data_by_time(data, end_od_day, close_time)
+            gaps = _calculate_gaps(data_aggregated_by_time)
 
-    results_per_cut_off = {}
-    for cut_off in range(5, 50, 2):
-        results_per_cut_off[cut_off] = _calculate_result(gaps, direction, cut_off, omx_reference_price)
+            results_per_cut_off = {}
+            for cut_off in range(10, 40, 2):
+                results_per_cut_off[cut_off] = _calculate_result(gaps, direction, cut_off, omx_reference_price)
 
-    top_total = sorted(results_per_cut_off.values(), key=lambda x: x["total"], reverse=True)[0]["total"]
-    target_profit = [i for i in results_per_cut_off.values() if i["total"] >= top_total * 0.9][0]["take_profit"]
+            intervals[(end_od_day, close_time)] = results_per_cut_off
+
+    hold_rule_kwargs = _get_top_hold_rule(intervals)
+
+    if not hold_rule_kwargs:
+        raise Exception("No hold rule found")
 
     return HoldRule(
         orderbook_direction=direction,
-        buy_time=end_od_day,
-        sell_time=close_time,
-        take_profit=target_profit,
+        buy_time=hold_rule_kwargs["end_od_day"],
+        sell_time=hold_rule_kwargs["close_time"],
+        take_profit=hold_rule_kwargs["take_profit"],
         settings=None,
     )

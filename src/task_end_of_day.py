@@ -2,6 +2,7 @@ import platform
 import warnings
 from datetime import datetime, timedelta
 
+import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.operators import Chart
@@ -10,8 +11,11 @@ from apis.investing.operators import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
+from backtest import backtest_hold_interday, backtest_hold_intraday
 from backtest import backtest_strategies as _backtest_strategies
-from config import SETTINGS_TRADE_OMX
+from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
+from services.hold.models import Direction, Scope
+from services.hold.operators import Backlog
 from services.storage import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -34,7 +38,7 @@ def cache_history(settings):
         storage = Storage(settings, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
-        if settings.TRADING_DATA == "ava":
+        if settings.TRADING_DATA == "avanza":
             data_ava = Chart.get_chart_data(settings, TimePeriod.TODAY, resolution_ava)
             storage.write(data_ava)
 
@@ -74,10 +78,75 @@ def backtest_strategies(settings):
     )
 
 
+def generate_hold_rules_intraday(settings, slice_duration: int = 4) -> None:
+    period_days = 40
+
+    log.warning(
+        f"Generating INTRADAY hold rules using period {period_days} days "
+        + f"using slice_duration {slice_duration} mins.",
+    )
+
+    times = [i.time() for i in pd.date_range(start="10:00", end="17:00", freq=f"{slice_duration}min")]
+    buy_time_sell_time_combinations = [
+        (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
+    ]
+
+    data = Storage(settings).read()
+    data = data.loc[
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+    ]
+    data.index = pd.to_datetime(data.index)
+
+    backlog = Backlog()
+    for direction in [Direction.BULL, Direction.BEAR]:
+        hold_rules_per_direction = backtest_hold_intraday(
+            data,
+            buy_time_sell_time_combinations,
+            direction,
+            settings.REF_PRICE,
+            slice_duration,
+        )
+
+        backlog.rules += hold_rules_per_direction
+
+    for hold_rule in backlog.rules:
+        log.info(f"Hold Rule: {hold_rule.dump_dict()}")
+
+    backlog.write_rules(settings, Scope.INTRADAY)
+
+
+def generate_hold_rules_interday(settings, slice_duration: int = 2) -> None:
+    period_days = 40
+    direction = Direction.BULL
+
+    log.warning(
+        f"Generating INTERDAY hold rules for direction {direction.value} "
+        + f"using slice_duration {slice_duration} mins.",
+    )
+
+    eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
+    close_times = [i.time() for i in pd.date_range(start="09:02", end="10:00", freq=f"{slice_duration}min")]
+
+    data = Storage(settings).read()
+    data = data.loc[
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+    ]
+
+    hold_rule = backtest_hold_interday(data, eod_times, close_times, direction, settings.REF_PRICE)
+
+    log.info(f"Hold Rule: {hold_rule.dump_dict()}")
+
+    backlog = Backlog()
+    backlog.rules.append(hold_rule)
+    backlog.write_rules(settings, Scope.INTERDAY)
+
+
 if __name__ == "__main__":
     try:
         cache_history(SETTINGS_TRADE_OMX)
         backtest_strategies(SETTINGS_TRADE_OMX)
+        generate_hold_rules_intraday(SETTINGS_HOLD_OMX_DT)
+        generate_hold_rules_interday(SETTINGS_HOLD_OMX_DT)
 
     except Exception as e:
         telegram = Telegram()
