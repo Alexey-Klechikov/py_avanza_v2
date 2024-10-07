@@ -30,6 +30,7 @@ class Trade:
         portfolio: Portfolio,
         dry_run: bool,
     ) -> None:
+        trade_result = None
         for _ in range(5):
             orders.delete_all()
 
@@ -46,8 +47,12 @@ class Trade:
                 volume=int(acquired_instrument.volume),
             )
 
+            trade_result = f"Trade result: {acquired_instrument.acquired_value} -> {acquired_instrument.value}"
+
             if dry_run:
                 return
+
+        log.warning(trade_result)
 
     @classmethod
     def buy(
