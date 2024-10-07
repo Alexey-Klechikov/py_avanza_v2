@@ -58,9 +58,7 @@ def cache_history(settings):
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def backtest_strategies(settings):
-    period_days = 60
-
+def backtest_strategies(settings, period_days: int):
     log.warning(f"TASK: Backtest strategies on {settings.NAME} | {settings.RESOLUTION} | {period_days} days")
 
     data = Storage(settings).read()
@@ -78,9 +76,7 @@ def backtest_strategies(settings):
     )
 
 
-def generate_hold_rules_intraday(settings, slice_duration: int = 4) -> None:
-    period_days = 40
-
+def generate_hold_rules_intraday(settings, period_days: int, slice_duration: int) -> None:
     log.warning(
         f"Generating INTRADAY hold rules using period {period_days} days "
         + f"using slice_duration {slice_duration} mins.",
@@ -115,8 +111,7 @@ def generate_hold_rules_intraday(settings, slice_duration: int = 4) -> None:
     backlog.write_rules(settings, Scope.INTRADAY)
 
 
-def generate_hold_rules_interday(settings, slice_duration: int = 2) -> None:
-    period_days = 40
+def generate_hold_rules_interday(settings, period_days: int, slice_duration: int) -> None:
     direction = Direction.BULL
 
     log.warning(
@@ -144,9 +139,9 @@ def generate_hold_rules_interday(settings, slice_duration: int = 2) -> None:
 if __name__ == "__main__":
     try:
         cache_history(SETTINGS_TRADE_OMX)
-        backtest_strategies(SETTINGS_TRADE_OMX)
-        generate_hold_rules_intraday(SETTINGS_HOLD_OMX_DT)
-        generate_hold_rules_interday(SETTINGS_HOLD_OMX_DT)
+        backtest_strategies(SETTINGS_TRADE_OMX, period_days=40)
+        generate_hold_rules_intraday(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=4)
+        generate_hold_rules_interday(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=2)
 
     except Exception as e:
         telegram = Telegram()

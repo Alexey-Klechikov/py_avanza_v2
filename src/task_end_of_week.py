@@ -15,12 +15,10 @@ set_handlers("end_of_week")
 log = get_logger()
 
 
-def generate_strategies(settings) -> None:
-    period_days = 40
-
+def generate_strategies(settings, period_days: int) -> None:
     data = Storage(settings).read()
     data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
+        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days + 20)
     ]
 
     log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
@@ -46,8 +44,6 @@ def generate_strategies(settings) -> None:
             plot=False,
         )
 
-    period_days = 60
-
     data = Storage(settings).read()
     data = data.loc[
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
@@ -66,7 +62,7 @@ def generate_strategies(settings) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(SETTINGS_TRADE_OMX)
+        generate_strategies(SETTINGS_TRADE_OMX, period_days=40)
 
     except Exception as e:
         telegram = Telegram()
