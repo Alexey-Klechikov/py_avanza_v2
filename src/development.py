@@ -167,13 +167,16 @@ def test_hold_interday(settings):
     backlog.write_rules(settings, Scope.INTERDAY)
 
 
-def test_hold_intraday(settings):
+def test_hold_intraday(settings, slice_duration):
     period_days = 40
 
     start = time(10, 0)
     end = time(17, 0)
 
-    times = [i.time() for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq="4min")]
+    times = [
+        i.time()
+        for i in pd.date_range(start=start.strftime("%H:%M"), end=end.strftime("%H:%M"), freq=f"{slice_duration}min")
+    ]
     buy_time_sell_time_combinations = [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]
@@ -191,6 +194,7 @@ def test_hold_intraday(settings):
             buy_time_sell_time_combinations,
             direction,
             settings.REF_PRICE,
+            slice_duration,
         )
 
         backlog.rules += hold_rules_per_direction
@@ -208,5 +212,5 @@ if __name__ == "__main__":
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
-    test_hold_intraday(settings)
+    test_hold_intraday(settings, slice_duration=2)
     # test_hold_interday(settings)

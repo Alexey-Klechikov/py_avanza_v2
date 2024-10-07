@@ -103,8 +103,9 @@ def _sort_intervals(
     ]
 
 
-def _split_intervals_to_4_min_time_points(
+def _split_intervals(
     intervals: List[Tuple[Tuple[time, time], CutOffResult]],
+    slice_duration: int,
 ) -> List[Tuple[time, TimePoint]]:
     time_points = {}
     for interval in intervals:
@@ -112,7 +113,7 @@ def _split_intervals_to_4_min_time_points(
         interval_duration = (end_time.hour - start_time.hour) * 60 + end_time.minute - start_time.minute
         weight = interval[1].total / interval_duration
 
-        for drift in range(0, interval_duration, 4):
+        for drift in range(0, interval_duration, slice_duration):
             time_point = (datetime.combine(date.today(), start_time) + timedelta(minutes=drift)).time()
             if time_point in time_points and time_points[time_point].weight > weight:
                 continue
@@ -126,7 +127,11 @@ def _split_intervals_to_4_min_time_points(
     return sorted([(k, v) for k, v in time_points.items()], key=lambda x: x[0])
 
 
-def _aggregate_time_points_to_rules(direction: Direction, time_points: List[Tuple[time, TimePoint]]) -> List[HoldRule]:
+def _aggregate_time_points_to_rules(
+    direction: Direction,
+    time_points: List[Tuple[time, TimePoint]],
+    slice_duration: int,
+) -> List[HoldRule]:
     hold_rules = []
 
     current_hold_rule_kwargs = {}
@@ -148,7 +153,7 @@ def _aggregate_time_points_to_rules(direction: Direction, time_points: List[Tupl
 
         if (t.hour - current_hold_rule_kwargs["sell_time"].hour) * 60 + t.minute - current_hold_rule_kwargs[
             "sell_time"
-        ].minute == 4:
+        ].minute == slice_duration:
             current_hold_rule_kwargs["sell_time"] = t
 
         else:
@@ -185,6 +190,7 @@ def backtest_hold_intraday(
     times: List[Tuple[time, time]],
     direction: Direction,
     omx_reference_price: int,
+    slice_duration: int = 4,
 ):
     intervals: Dict[Tuple[time, time], List[CutOffResult]] = {}
     for buy_time, sell_time in times:
@@ -200,7 +206,7 @@ def backtest_hold_intraday(
             intervals[(buy_time, sell_time)].append(result_per_cut_off)
 
     sorted_intervals = _sort_intervals(intervals)
-    time_points = _split_intervals_to_4_min_time_points(sorted_intervals)
-    rules = _aggregate_time_points_to_rules(direction, time_points)
+    time_points = _split_intervals(sorted_intervals, slice_duration)
+    rules = _aggregate_time_points_to_rules(direction, time_points, slice_duration)
 
     return rules
