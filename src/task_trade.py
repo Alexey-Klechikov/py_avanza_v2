@@ -343,9 +343,8 @@ class Flow:
             return FlowAction.TRADE
 
         # Near end of day
-        elif (datetime.now() + timedelta(minutes=10)).time() >= self.trading_ends:
-            if not portfolio.acquired_instrument.BEAR or self.dry_run:
-                return FlowAction.EXIT_TRADING
+        elif (datetime.now() + timedelta(minutes=10)).time() >= self.trading_ends and not portfolio.positions:
+            return FlowAction.EXIT_TRADING
 
         # No new data
         elif data.too_old:

@@ -20,38 +20,36 @@ set_handlers("development")
 log = get_logger()
 
 
-def run_full_strategies_generation(settings):
-    period_days = 60
+def run_strategies_generation(settings, period_days, full, comment: str = ""):
+    if full:
+        data = Storage(settings).read()
+        data = data.loc[
+            data.index
+            >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days + 20)
+        ]
 
-    data = Storage(settings).read()
-    data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
-    ]
-
-    log.warning("Generating strategies")
-    backtest_strategies(
-        data,
-        ComposeStrategiesListMethod.GENERATE,
-        settings,
-        old_strategies_file_name=None,
-        new_strategies_file_name="strategies_dev_3.json",
-        indicators_filter=[],
-        plot=False,
-    )
-
-    for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
-        log.warning(f"Extending strategies ({i} -> {i + 1})")
+        log.warning("Generating strategies")
         backtest_strategies(
             data,
-            ComposeStrategiesListMethod.EXTEND,
+            ComposeStrategiesListMethod.GENERATE,
             settings,
-            old_strategies_file_name=f"strategies_dev_{i}.json",
-            new_strategies_file_name=f"strategies_dev_{i + 1}.json",
+            old_strategies_file_name=None,
+            new_strategies_file_name="strategies_dev_3.json",
             indicators_filter=[],
             plot=False,
         )
 
-    period_days = 60
+        for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
+            log.warning(f"Extending strategies ({i} -> {i + 1})")
+            backtest_strategies(
+                data,
+                ComposeStrategiesListMethod.EXTEND,
+                settings,
+                old_strategies_file_name=f"strategies_dev_{i}.json",
+                new_strategies_file_name=f"strategies_dev_{i + 1}.json",
+                indicators_filter=[],
+                plot=False,
+            )
 
     data = Storage(settings).read()
     data = data.loc[
@@ -65,7 +63,7 @@ def run_full_strategies_generation(settings):
         ComposeStrategiesListMethod.READ,
         settings,
         old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",
-        new_strategies_file_name="strategies.json",
+        new_strategies_file_name="strategies.json" if not comment else f"strategies_{comment}.json",
         indicators_filter=[],
         plot=False,
     )
@@ -201,10 +199,10 @@ def test_hold_intraday(settings, slice_duration):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
-    # run_full_strategies_generation(settings)
+    # run_strategies_generation(settings, period_days=40, full=False)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
     # test_hold_intraday(settings, slice_duration=4)
-    test_hold_interday(settings, slice_duration=2)
+    # test_hold_interday(settings, slice_duration=2)
