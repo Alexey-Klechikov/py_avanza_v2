@@ -323,6 +323,7 @@ class Flow:
                     and acquired_instrument.quote.sell
                     and acquired_instrument.quote.sell < acquired_instrument.acquired_price * (1 - self.stop_loss)
                 ):
+                    log.info(f"Stop loss triggered for {direction.value}")
                     self.directions_sell = [direction]
                     return FlowAction.TRADE
 

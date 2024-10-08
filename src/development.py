@@ -146,10 +146,10 @@ def run_test_for_selected_indicators(settings):
 
 def test_hold_interday(settings, slice_duration):
     period_days = 40
+    direction = Direction.BULL
 
     eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
     close_times = [i.time() for i in pd.date_range(start="09:02", end="10:00", freq=f"{slice_duration}min")]
-    direction = Direction.BULL
 
     data = Storage(settings).read()
     data = data.loc[
@@ -205,4 +205,4 @@ if __name__ == "__main__":
 
     settings = SETTINGS_HOLD_OMX_DT
     # test_hold_intraday(settings, slice_duration=4)
-    # test_hold_interday(settings, slice_duration=2)
+    test_hold_interday(settings, slice_duration=2)
