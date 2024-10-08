@@ -115,8 +115,8 @@ def generate_hold_rules_interday(settings, period_days: int, slice_duration: int
     direction = Direction.BULL
 
     log.warning(
-        f"Generating INTERDAY hold rules for direction {direction.value} "
-        + f"using slice_duration {slice_duration} mins.",
+        f"Generating INTERDAY hold rules using period {period_days} days "
+        + f"for direction {direction.value} using slice_duration {slice_duration} mins.",
     )
 
     eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]

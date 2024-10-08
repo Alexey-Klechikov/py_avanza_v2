@@ -1,5 +1,7 @@
+import json
+import os
 from dataclasses import dataclass, field
-from datetime import time
+from datetime import datetime, time, timedelta
 
 from config.settings_base import BaseOMX, BaseTrade
 
@@ -53,3 +55,17 @@ class TradeOMX(BaseOMX, BaseTrade):
             },
         },
     )
+
+    def __post_init__(self):
+        try:
+            project_root_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
+
+            with open(f"{project_root_dir}/config/OMX_hold_rules_interday.json", "r") as f:
+                interday_rule = json.load(f)[0]
+                self.TRADING_END = (
+                    datetime.combine(datetime.now(), datetime.strptime(interday_rule["buy_time"], "%H:%M").time())
+                    - timedelta(minutes=3)
+                ).time()
+
+        except Exception:
+            pass

@@ -161,7 +161,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
-            # Edge case for SHORT signals at 14:30
+            # Edge case for SHORT signals at 14:24
             if (
                 tested_direction == "SHORT"
                 and tested_instrument is not None
