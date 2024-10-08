@@ -337,10 +337,16 @@ class Flow:
 
         # End of day
         if datetime.now().time() >= self.trading_ends:
-            if not portfolio.acquired_instrument.BEAR:
+            if not portfolio.positions:
                 return FlowAction.EXIT_TRADING
 
-            self.directions_sell = [Direction.BEAR]
+            for direction in [Direction.BULL, Direction.BEAR]:
+                acquired_instrument = portfolio.acquired_instrument.get(direction.value)
+                if not acquired_instrument:
+                    continue
+
+                self.directions_sell.append(direction)
+
             return FlowAction.TRADE
 
         # Near end of day

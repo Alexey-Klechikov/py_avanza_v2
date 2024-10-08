@@ -96,11 +96,11 @@ def run_test_for_selected_indicators(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = ("Momentum", "STC")
+    indicator_to_test = ("Volatility", "STARC")
     new_strategies_file_name_prefix = f"strategies_dev_6_{'-'.join(indicator_to_test)}_"
 
-    for tclength, fast, slow in [(14, 22, i) for i in range(35, 55, 2)]:
-        kwargs = {"tclength": tclength, "fast": fast, "slow": slow, "factor": 0.55}
+    for length_sma, length_atr, multiplier_atr in [(i, 16, 2.4) for i in range(8, 18, 2)]:
+        kwargs = {"length_sma": length_sma, "length_atr": length_atr, "multiplier_atr": multiplier_atr}
         settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
 
         log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
@@ -199,10 +199,10 @@ def test_hold_intraday(settings, slice_duration):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
-    # run_strategies_generation(settings, period_days=40, full=False)
+    run_strategies_generation(settings, period_days=40, full=True)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
     # test_hold_intraday(settings, slice_duration=4)
-    test_hold_interday(settings, slice_duration=2)
+    # test_hold_interday(settings, slice_duration=2)
