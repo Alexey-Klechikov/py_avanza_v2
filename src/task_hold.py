@@ -47,7 +47,9 @@ class Trade:
                 volume=int(acquired_instrument.volume),
             )
 
-            trade_result = f"Trade result: {acquired_instrument.acquired_value} -> {acquired_instrument.value}"
+            trade_result = (
+                f"Trade result: {round(acquired_instrument.acquired_value)} -> {round(acquired_instrument.value)}"
+            )
 
             if dry_run:
                 return

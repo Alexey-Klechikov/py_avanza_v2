@@ -128,6 +128,6 @@ def backtest_hold_interday(
         orderbook_direction=direction,
         buy_time=hold_rule_kwargs["end_od_day"],
         sell_time=hold_rule_kwargs["close_time"],
-        take_profit=hold_rule_kwargs["take_profit"],
+        take_profit=hold_rule_kwargs["take_profit"] - 0.1,
         settings=None,
     )
