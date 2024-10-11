@@ -7,11 +7,11 @@ from services.hold.models import Scope
 
 @dataclass
 class HoldOMX_Main(BaseOMX, BaseHold):
-    BUDGET: float = 1400
+    BUDGET: float = 1300
     SCOPES: List[Scope] = field(default_factory=lambda: [Scope.INTERDAY, Scope.INTRADAY])
 
 
 @dataclass
 class HoldOMX_DT(BaseOMX, BaseTrade):
-    BUDGET: float = 2000
+    BUDGET: float = 1500
     SCOPES: List[Scope] = field(default_factory=lambda: [Scope.INTERDAY])

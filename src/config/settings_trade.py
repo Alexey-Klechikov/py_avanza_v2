@@ -12,7 +12,7 @@ class TradeOMX(BaseOMX, BaseTrade):
     TRADING_END: time = time(16, 48)
     TRADING_DATA: str = "avanza"
 
-    BUDGET_MINIMUM: int = 2500
+    BUDGET_MINIMUM: int = 2000
     BUDGET_PERCENT: float = 0.6
 
     TRADING_STRATEGY_INDICATORS: int = 7
