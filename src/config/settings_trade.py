@@ -29,6 +29,7 @@ class TradeOMX(BaseOMX, BaseTrade):
             },
             "Overlap": {
                 "LINREG": {"length": 12, "limit": 0.32},
+                "SLOPE": {"length": 24, "limit": 0},
                 "SUPERTREND": {"length": 7, "multiplier": 3.0},
             },
             "Momentum": {

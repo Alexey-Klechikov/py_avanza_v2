@@ -10,7 +10,7 @@ log = get_logger()
 class Overlap(IndicatorsCategoryBase):
     def add_linear_regression(self, length: int, limit: float) -> None:
         """
-        LINREG (Linear Regression)
+        LINREG (Linear Regression Correlation)
 
         default: length=14, limit=0.1
 
@@ -35,6 +35,37 @@ class Overlap(IndicatorsCategoryBase):
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=[column_name], color="orange", ylabel="Overlap [LINREG]")],
+                horizontal_lines=[HorizontalLine(y=0, color="red")],
+            ),
+        )
+
+    def add_slope(self, length: int, limit: float) -> None:
+        """
+        SLOPE (Linear Regression Slope)
+
+        default: length=14, limit=0.1
+
+        Linear Regression Moving Average (LINREG). This is a simplified version of a
+        Standard Linear Regression. LINREG is a rolling regression of one variable. A
+        Standard Linear Regression is between two or more variables.
+        """
+
+        column_name = f"LRm_{length}"
+
+        self.data.ta.linreg(length=length, slope=True, append=True)
+        if column_name not in self.data.columns:
+            log.debug("Indicator 'Overlap -> SLOPE' can not be added.")
+            return
+
+        self.indicators["SLOPE"] = Indicator(
+            signal=Signal(
+                LONG=lambda x: x[column_name] > limit,
+                SHORT=lambda x: x[column_name] < -1 * limit,
+            ),
+            columns=[column_name],
+            plots=Plots(
+                panel=Panel.SEPARATE,
+                list=[Plot(columns=[column_name], color="orange", ylabel="Overlap [SLOPE]")],
                 horizontal_lines=[HorizontalLine(y=0, color="red")],
             ),
         )

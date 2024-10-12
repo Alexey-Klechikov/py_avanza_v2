@@ -20,6 +20,7 @@ def get_indicators(data, settings, **kwargs) -> Dict[str, Dict[str, Indicator]]:
 
     overlap = Overlap(data)
     overlap.add_linear_regression(**settings.INDICATORS.get("Overlap", {}).get("LINREG", {}))
+    overlap.add_slope(**settings.INDICATORS.get("Overlap", {}).get("SLOPE", {}))
     overlap.add_supertrend(**settings.INDICATORS.get("Overlap", {}).get("SUPERTREND", {}))
 
     momentum = Momentum(data)
