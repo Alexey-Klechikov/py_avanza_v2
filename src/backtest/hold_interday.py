@@ -19,8 +19,8 @@ def _aggregate_data_by_time(data: pd.DataFrame, end_od_day: time, close_time: ti
 
     data_aggregated_by_time = pd.DataFrame(
         {
-            "Top price before close_time": data_daily["High"].apply(lambda x: x[x.index.time < close_time].max()),
-            "Low price before close_time": data_daily["Low"].apply(lambda x: x[x.index.time < close_time].min()),
+            "Top price before close_time": data_daily["Close"].apply(lambda x: x[x.index.time < close_time].max()),
+            "Low price before close_time": data_daily["Close"].apply(lambda x: x[x.index.time < close_time].min()),
             "End price at close_time": data_daily["Close"].apply(lambda x: x.at_time(close_time)),
             "Price at end_od_day": data_daily["Close"].apply(lambda x: x.at_time(end_od_day)),
         },

@@ -37,10 +37,10 @@ def _aggregate_data_by_time(data: pd.DataFrame, buy_time: time, sell_time: time)
         {
             "buy": daily_data["Close"].apply(lambda x: x.at_time(buy_time)),
             "sell": daily_data["Close"].apply(lambda x: x.at_time(sell_time)),
-            "high": daily_data["High"].apply(
+            "high": daily_data["Close"].apply(
                 lambda x: x[(x.index.time >= buy_time) & (x.index.time <= sell_time)].max(),
             ),
-            "low": daily_data["Low"].apply(
+            "low": daily_data["Close"].apply(
                 lambda x: x[(x.index.time >= buy_time) & (x.index.time <= sell_time)].min(),
             ),
         },
