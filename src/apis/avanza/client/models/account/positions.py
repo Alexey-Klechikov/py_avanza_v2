@@ -27,11 +27,11 @@ class Quote(BaseModel):
     latest: Value
     change: Value
     change_percent: Value = Field(alias="changePercent")
-    updated: datetime
+    updated: Optional[datetime]
 
 
 class Turnover(BaseModel):
-    volume: Value
+    volume: Optional[Value]
     value: Optional[Value]
 
 
@@ -48,7 +48,7 @@ class Orderbook(BaseModel):
     trade_status: str = Field(alias="tradeStatus")
     quote: Quote
     turnover: Turnover
-    last_deal: dict = Field(alias="lastDeal")
+    last_deal: Optional[dict] = Field(alias="lastDeal")
 
 
 class Instrument(BaseModel):
@@ -76,7 +76,7 @@ class WithOrderbookPosition(BaseModel):
         alias="averageAcquiredPriceInstrumentCurrency",
     )
     acquired_value: Value = Field(alias="acquiredValue")
-    last_trading_day_performance: LastTradingDayPerformance = Field(
+    last_trading_day_performance: Optional[LastTradingDayPerformance] = Field(
         alias="lastTradingDayPerformance",
     )
     collateral_factor: Value = Field(alias="collateralFactor")

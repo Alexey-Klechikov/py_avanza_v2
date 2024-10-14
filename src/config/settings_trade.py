@@ -36,7 +36,7 @@ class TradeOMX(BaseOMX, BaseTrade):
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
                 "STC": {"tclength": 14, "fast": 23, "slow": 45, "factor": 0.55},
                 "CCI": {"length": 14, "c": 0.015},
-                "RVGI": {"length": 14, "length_swma": 4},
+                "RVGI": {"length": 14, "length_swma": 4, "length_divergence": 14},
                 "STOCH": {"k": 10, "d": 3, "smooth_k": 2, "mamode": "dema"},
             },
             "Cycles": {
@@ -49,10 +49,10 @@ class TradeOMX(BaseOMX, BaseTrade):
                 "ACCBANDS": {"length": 14, "c": 1, "mamode": "dema"},
             },
             "Volume": {
-                "PVT": {"drift": 12, "length_sma": 30},
-                "ADOSC": {"fast": 6, "slow": 14},
-                "CMF": {"length": 24},
-                "KVO": {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema"},
+                "PVT": {"drift": 12, "length_sma": 30, "length_divergence": 24},
+                "ADOSC": {"fast": 6, "slow": 14, "length_divergence": 28},
+                "CMF": {"length": 24, "length_divergence": 24},
+                "KVO": {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema", "length_divergence": 30},
             },
         },
     )

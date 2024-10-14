@@ -80,7 +80,7 @@ class Momentum(IndicatorsCategoryBase):
             ),
         )
 
-    def add_relative_vigor_index(self, length: int, length_swma: int) -> None:
+    def add_relative_vigor_index(self, length: int, length_swma: int, length_divergence: int) -> None:
         """
         RVGI (Relative Vigor Index)
         https://www.investopedia.com/terms/r/relative_vigor_index.asp
@@ -91,6 +91,15 @@ class Momentum(IndicatorsCategoryBase):
         its closing price to its trading range.  It is based on the belief that it tends
         to close higher than they open in uptrends or close lower than they open in
         downtrends.
+
+        RVI Divergences: Divergence between the RVI indicator and price suggests there will be
+        a near-term change in the trend in the direction of the RVI's trend. So, if a stock price is
+        rising and the RVI indicator is falling, it predicts the stock will reverse over the near term.
+
+        RVI Crossovers: Like many oscillators, the RVI has a signal line that's often calculated with
+        price inputs. A crossover above the signal line is a bullish indicator, while a crossover below the
+        signal line is a bearish indicator. These crossovers are designed to be leading indicators of
+        future price direction.
         """
 
         column_names = {
@@ -103,6 +112,17 @@ class Momentum(IndicatorsCategoryBase):
             log.debug("Indicator 'Momentum -> RVGI' can not be added.")
             return
 
+        column_names_slope = {
+            "RVGI": "RVGI_slope",
+            "close": f"Close_slope_{length_divergence}",
+        }
+        self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
+        self.data[column_names_slope["RVGI"]] = self.data.ta.linreg(
+            close=column_names["RVGI"],
+            length=length_divergence,
+            slope=True,
+        )
+
         self.indicators["RVGI"] = Indicator(
             signal=Signal(
                 LONG=lambda x: all(
@@ -111,6 +131,12 @@ class Momentum(IndicatorsCategoryBase):
                         x[column_names["RVGI"]] > 0,
                         x[column_names["RVGIs"]] > 0,
                     ],
+                )
+                or all(
+                    [
+                        x[column_names_slope["RVGI"]] > 0,
+                        x[column_names_slope["close"]] < 0,
+                    ],
                 ),
                 SHORT=lambda x: all(
                     [
@@ -118,9 +144,15 @@ class Momentum(IndicatorsCategoryBase):
                         x[column_names["RVGI"]] < 0,
                         x[column_names["RVGIs"]] < 0,
                     ],
+                )
+                or all(
+                    [
+                        x[column_names_slope["RVGI"]] < 0,
+                        x[column_names_slope["close"]] > 0,
+                    ],
                 ),
             ),
-            columns=list(column_names.values()),
+            columns=list(column_names.values()) + list(column_names_slope.values()),
             plots=Plots(
                 panel=Panel.SEPARATE,
                 list=[Plot(columns=list(column_names.values()), ylabel="Momentum [RVGI]")],
@@ -212,47 +244,3 @@ class Momentum(IndicatorsCategoryBase):
                 horizontal_lines=[HorizontalLine(y=70, color="red"), HorizontalLine(y=30, color="blue")],
             ),
         )
-
-
-#     # Momentum
-#     @staticmethod
-#     def impulse_macd(
-#         data: pd.DataFrame, length_ma: int, length_signal: int
-#     ) -> pd.DataFrame:
-#         """https://www.tradingview.com/script/qt6xLfLi-Impulse-MACD-LazyBear/"""
-
-#         make_name = lambda x: f"{x}_{length_ma}_{length_signal}"
-
-#         def _smooth_simple_moving_average(src, length):
-#             ssma = np.full(len(src), np.nan)
-#             ssma[0] = src[:length].mean()
-
-#             for i in range(1, len(src)):
-#                 ssma[i] = (ssma[i - 1] * (length - 1) + src[i]) / length
-
-#             return ssma
-
-#         def _zero_lag_exponential_moving_average(src, length):
-#             ema1 = pd.Series(src).ewm(span=length).mean()
-#             ema2 = ema1.ewm(span=length).mean()
-#             d = ema1 - ema2
-
-#             return ema1 + d
-
-#         high_smooth = _smooth_simple_moving_average(data["High"], length_ma)
-#         low_smooth = _smooth_simple_moving_average(data["Low"], length_ma)
-
-#         mean_price = data[["High", "Low", "Close"]].mean(axis=1)
-#         mean_zlema = _zero_lag_exponential_moving_average(mean_price, length_ma)
-
-#         data[make_name("IMPULSE")] = np.where(
-#             mean_zlema > high_smooth,
-#             mean_zlema - high_smooth,
-#             np.where(mean_zlema < low_smooth, mean_zlema - low_smooth, 0),
-#         )
-
-#         data[make_name("SIGNAL")] = (
-#             pd.Series(data[make_name("IMPULSE")]).rolling(length_signal).mean()
-#         )
-
-#         return data

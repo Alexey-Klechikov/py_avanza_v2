@@ -84,8 +84,6 @@ class Overlap(IndicatorsCategoryBase):
         """
 
         column_names = {
-            # "SUPERTREND": f"SUPERT_{length}_{multiplier}",
-            # "SUPERTREND_dir": f"SUPERTd_{length}_{multiplier}",
             "SUPERTREND_long": f"SUPERTl_{length}_{multiplier}",
             "SUPERTREND_short": f"SUPERTs_{length}_{multiplier}",
         }
