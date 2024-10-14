@@ -1,7 +1,6 @@
 import warnings
-from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import time
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -13,6 +12,12 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
+
+
+@dataclass(frozen=True)
+class IntervalTime:
+    start: time
+    end: time
 
 
 @dataclass
@@ -82,7 +87,7 @@ def _calculate_result(
             counter_profitable_trade += 1
 
     efficiency = 0.0 if data.shape[0] == 0 else round(counter_profitable_trade / data.shape[0], 2)
-    if efficiency < 0.55 or total <= 40:
+    if efficiency <= 0.65 or total <= 40:
         return
 
     return CutOffResult(
@@ -94,8 +99,8 @@ def _calculate_result(
 
 
 def _sort_intervals(
-    intervals: Dict[Tuple[time, time], List[CutOffResult]],
-) -> List[Tuple[Tuple[time, time], CutOffResult]]:
+    intervals: Dict[IntervalTime, List[CutOffResult]],
+) -> List[Tuple[IntervalTime, CutOffResult]]:
     return [
         (interval, sorted(cut_off_result, key=lambda x: x.total * x.efficiency, reverse=True)[0])
         for interval, cut_off_result in intervals.items()
@@ -103,85 +108,57 @@ def _sort_intervals(
     ]
 
 
-def _split_intervals(
-    intervals: List[Tuple[Tuple[time, time], CutOffResult]],
-    slice_duration: int,
-) -> List[Tuple[time, TimePoint]]:
-    time_points = {}
-    for interval in intervals:
-        start_time, end_time = interval[0]
-        interval_duration = (end_time.hour - start_time.hour) * 60 + end_time.minute - start_time.minute
-        weight = interval[1].total / interval_duration
+def _generate_rules(sorted_intervals: List[Tuple[IntervalTime, CutOffResult]], direction: Direction) -> List[HoldRule]:
+    rules = []
 
-        for drift in range(0, interval_duration, slice_duration):
-            time_point = (datetime.combine(date.today(), start_time) + timedelta(minutes=drift)).time()
-            if time_point in time_points and time_points[time_point].weight > weight:
-                continue
-
-            time_points[time_point] = TimePoint(
-                weight=round(weight, 2),
-                take_profit=interval[1].take_profit,
-                efficiency=interval[1].efficiency,
-            )
-
-    return sorted([(k, v) for k, v in time_points.items()], key=lambda x: x[0])
-
-
-def _aggregate_time_points_to_rules(
-    direction: Direction,
-    time_points: List[Tuple[time, TimePoint]],
-    slice_duration: int,
-) -> List[HoldRule]:
-    hold_rules = []
-
-    current_hold_rule_kwargs = {}
-    take_profit_counter = defaultdict(int)
-    for t, time_point in time_points:
-        take_profit_counter[time_point.take_profit] += 1
-
-        if not current_hold_rule_kwargs:
-            current_hold_rule_kwargs.update(
-                {
-                    "orderbook_direction": direction,
-                    "buy_time": t,
-                    "sell_time": t,
-                    "take_profit": time_point.take_profit,
-                    "settings": None,
-                },
-            )
-            continue
-
-        if (t.hour - current_hold_rule_kwargs["sell_time"].hour) * 60 + t.minute - current_hold_rule_kwargs[
-            "sell_time"
-        ].minute == slice_duration:
-            current_hold_rule_kwargs["sell_time"] = t
-
-        else:
-            hold_rules.append(HoldRule(**current_hold_rule_kwargs))
-            take_profit_counter = defaultdict(int)
-            take_profit_counter[time_point.take_profit] += 1
-
-            current_hold_rule_kwargs = {
-                "orderbook_direction": direction,
-                "buy_time": t,
-                "sell_time": t,
-                "take_profit": time_point.take_profit,
-                "settings": None,
-            }
-
-        current_hold_rule_kwargs["take_profit"] = round(
-            sorted(
-                [(k, v) for k, v in take_profit_counter.items() if v == max(take_profit_counter.values())],
-                key=lambda x: x[0],
-                reverse=True,
-            )[0][0]
-            - 0.01,
-            2,
+    while sorted_intervals:
+        max_efficiency_interval = max(sorted_intervals, key=lambda x: x[1].efficiency)
+        log.debug(
+            "Max efficiency interval: {} - {}, {}".format(
+                max_efficiency_interval[0].start,
+                max_efficiency_interval[0].end,
+                max_efficiency_interval[1],
+            ),
         )
 
-    hold_rules.append(HoldRule(**current_hold_rule_kwargs))
+        not_assigned_intervals = []
+        rule_extension_candidates = []
+        for interval in sorted_intervals:
+            if interval[0].start == max_efficiency_interval[0].start:
+                rule_extension_candidates.append(interval)
+                continue
+            elif any(
+                [
+                    interval[0].start <= max_efficiency_interval[0].start <= interval[0].end,
+                    interval[0].start <= max_efficiency_interval[0].end <= interval[0].end,
+                    max_efficiency_interval[0].start <= interval[0].start <= max_efficiency_interval[0].end,
+                ],
+            ):
+                continue
 
-    return hold_rules
+            not_assigned_intervals.append(interval)
+
+        rule = HoldRule(
+            orderbook_direction=direction,
+            buy_time=max_efficiency_interval[0].start,
+            sell_time=max_efficiency_interval[0].end,
+            take_profit=max_efficiency_interval[1].take_profit,
+            settings=None,
+        )
+        for rule_extension_candidate in rule_extension_candidates:
+            if all(
+                [
+                    rule.sell_time <= rule_extension_candidate[0].end,
+                    rule.take_profit <= rule_extension_candidate[1].take_profit,
+                ],
+            ):
+                rule.sell_time = rule_extension_candidate[0].end
+                log.debug(f"Rule is extended with end time: {rule.sell_time}")
+        rules.append(rule)
+
+        sorted_intervals = [i for i in not_assigned_intervals if i[0].start > rule.sell_time]
+
+    return rules
 
 
 # MAIN
@@ -190,11 +167,11 @@ def backtest_hold_intraday(
     times: List[Tuple[time, time]],
     direction: Direction,
     omx_reference_price: int,
-    slice_duration: int,
-):
-    intervals: Dict[Tuple[time, time], List[CutOffResult]] = {}
+) -> List[HoldRule]:
+    log.warn("Backtesting intraday hold strategy")
+    intervals: Dict[IntervalTime, List[CutOffResult]] = {}
     for buy_time, sell_time in times:
-        intervals[(buy_time, sell_time)] = []
+        intervals[IntervalTime(buy_time, sell_time)] = []
 
         data_aggregated_by_time = _aggregate_data_by_time(data, buy_time, sell_time)
 
@@ -203,10 +180,9 @@ def backtest_hold_intraday(
             if not result_per_cut_off:
                 continue
 
-            intervals[(buy_time, sell_time)].append(result_per_cut_off)
+            intervals[IntervalTime(buy_time, sell_time)].append(result_per_cut_off)
 
     sorted_intervals = _sort_intervals(intervals)
-    time_points = _split_intervals(sorted_intervals, slice_duration)
-    rules = _aggregate_time_points_to_rules(direction, time_points, slice_duration)
+    rules = _generate_rules(sorted_intervals, direction)
 
     return rules

@@ -96,11 +96,11 @@ def run_test_for_selected_indicators(settings):
         data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
     ]
 
-    indicator_to_test = ("Volatility", "STARC")
+    indicator_to_test = ("Volume", "KVO")
     new_strategies_file_name_prefix = f"strategies_dev_6_{'-'.join(indicator_to_test)}_"
 
-    for length_sma, length_atr, multiplier_atr in [(i, 16, 2.4) for i in range(8, 18, 2)]:
-        kwargs = {"length_sma": length_sma, "length_atr": length_atr, "multiplier_atr": multiplier_atr}
+    for length_divergence in [i for i in range(8, 34, 2)]:
+        kwargs = {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema", "length_divergence": length_divergence}
         settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
 
         log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
@@ -135,7 +135,7 @@ def run_test_for_selected_indicators(settings):
                 s["profitable_trades_share"],
                 s["total_profit"],
                 s["name"],
-                round(sum([i["profitable_trades_share"] for i in strategies])),
+                round(sum([i["profitable_trades_share"] for i in strategies]), 2),
             ),
         )
 
@@ -186,7 +186,6 @@ def test_hold_intraday(settings, slice_duration):
             buy_time_sell_time_combinations,
             direction,
             settings.REF_PRICE,
-            slice_duration,
         )
 
         backlog.rules += hold_rules_per_direction
@@ -199,10 +198,10 @@ def test_hold_intraday(settings, slice_duration):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
-    run_strategies_generation(settings, period_days=40, full=True)
+    # run_strategies_generation(settings, period_days=40, full=True)
     # run_test_for_selected_indicators(settings)
     # run_plotting_for_active_strategies(settings)
 
     settings = SETTINGS_HOLD_OMX_DT
-    # test_hold_intraday(settings, slice_duration=4)
-    # test_hold_interday(settings, slice_duration=2)
+    test_hold_intraday(settings, slice_duration=4)
+    # test_hold_interday(settings, slice_duration=4)

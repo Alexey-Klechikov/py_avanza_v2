@@ -122,7 +122,7 @@ class Watchlists:
                 and hit.price.spread < 1.5
                 and hit.price.last
                 and hit.price.last > 1
-                and hit.price.last < 130
+                and hit.price.last < 110
             ):
                 log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
 

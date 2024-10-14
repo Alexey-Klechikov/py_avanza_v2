@@ -100,7 +100,6 @@ def generate_hold_rules_intraday(settings, period_days: int, slice_duration: int
             buy_time_sell_time_combinations,
             direction,
             settings.REF_PRICE,
-            slice_duration,
         )
 
         backlog.rules += hold_rules_per_direction
