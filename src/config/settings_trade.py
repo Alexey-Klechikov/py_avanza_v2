@@ -17,7 +17,7 @@ class TradeOMX(BaseOMX, BaseTrade):
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.14
+    TRADING_STOP_LOSS: float = 0.13
 
     INDICATORS: dict = field(
         default_factory=lambda: {

@@ -105,7 +105,6 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
 
             tested_direction_price: float = row[tested_direction]  # type: ignore
             close_price = row["Close"]
-            tick_price = row["Low"] if tested_direction == "LONG" else row["High"]
             direction_correction = 1 if tested_direction == "LONG" else -1
 
             # Buy signal without open positions
@@ -154,10 +153,10 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
 
             # Stop loss
             if tested_instrument is not None and (
-                (tested_direction == "LONG" and tick_price < tested_instrument.stop_loss_price)
-                or (tested_direction == "SHORT" and tick_price > tested_instrument.stop_loss_price)
+                (tested_direction == "LONG" and close_price < tested_instrument.stop_loss_price)
+                or (tested_direction == "SHORT" and close_price > tested_instrument.stop_loss_price)
             ):
-                sell_price = tick_price
+                sell_price = close_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
