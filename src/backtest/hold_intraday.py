@@ -87,7 +87,7 @@ def _calculate_result(
             counter_profitable_trade += 1
 
     efficiency = 0.0 if data.shape[0] == 0 else round(counter_profitable_trade / data.shape[0], 2)
-    if efficiency <= 0.65 or total <= 40:
+    if efficiency <= 0.67 or total <= 40:
         return
 
     return CutOffResult(
@@ -168,7 +168,7 @@ def backtest_hold_intraday(
     direction: Direction,
     omx_reference_price: int,
 ) -> List[HoldRule]:
-    log.warn("Backtesting intraday hold strategy")
+    log.warn(f"Backtesting intraday hold strategy for {direction}")
     intervals: Dict[IntervalTime, List[CutOffResult]] = {}
     for buy_time, sell_time in times:
         intervals[IntervalTime(buy_time, sell_time)] = []
