@@ -46,7 +46,7 @@ def cache_history(settings):
             data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
             storage.write(data_yahoo)
 
-        if resolution_investing and platform.system() == "Darwin":
+        if False and resolution_investing and platform.system() == "Darwin":
             for i in range(5, 60, 5):
                 data_investing = InvestingTicker(settings).get_history(
                     resolution=resolution_investing,
@@ -82,7 +82,7 @@ def generate_hold_rules_intraday(settings, period_days: int, slice_duration: int
         + f"using slice_duration {slice_duration} mins.",
     )
 
-    times = [i.time() for i in pd.date_range(start="10:00", end="17:00", freq=f"{slice_duration}min")]
+    times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
     buy_time_sell_time_combinations = [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]
@@ -119,7 +119,7 @@ def generate_hold_rules_interday(settings, period_days: int, slice_duration: int
     )
 
     eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
-    close_times = [i.time() for i in pd.date_range(start="09:02", end="10:00", freq=f"{slice_duration}min")]
+    close_times = [i.time() for i in pd.date_range(start="09:02", end="09:58", freq=f"{slice_duration}min")]
 
     data = Storage(settings).read()
     data = data.loc[

@@ -149,7 +149,7 @@ def test_hold_interday(settings, slice_duration):
     direction = Direction.BULL
 
     eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
-    close_times = [i.time() for i in pd.date_range(start="09:02", end="10:00", freq=f"{slice_duration}min")]
+    close_times = [i.time() for i in pd.date_range(start="09:02", end="09:58", freq=f"{slice_duration}min")]
 
     data = Storage(settings).read()
     data = data.loc[
@@ -168,7 +168,7 @@ def test_hold_interday(settings, slice_duration):
 def test_hold_intraday(settings, slice_duration):
     period_days = 40
 
-    times = [i.time() for i in pd.date_range(start="10:00", end="17:00", freq=f"{slice_duration}min")]
+    times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
     buy_time_sell_time_combinations = [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]
@@ -204,4 +204,4 @@ if __name__ == "__main__":
 
     settings = SETTINGS_HOLD_OMX_DT
     test_hold_intraday(settings, slice_duration=4)
-    # test_hold_interday(settings, slice_duration=4)
+    # test_hold_interday(settings, slice_duration=2)

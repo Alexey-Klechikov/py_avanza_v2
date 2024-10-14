@@ -1,6 +1,7 @@
 import warnings
+from collections import defaultdict
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time, timedelta
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -18,6 +19,9 @@ log = get_logger()
 class IntervalTime:
     start: time
     end: time
+
+    def __str__(self) -> str:
+        return f"{self.start.strftime('%H:%M')} - {self.end.strftime('%H:%M')}"
 
 
 @dataclass
@@ -114,9 +118,8 @@ def _generate_rules(sorted_intervals: List[Tuple[IntervalTime, CutOffResult]], d
     while sorted_intervals:
         max_efficiency_interval = max(sorted_intervals, key=lambda x: x[1].efficiency)
         log.debug(
-            "Max efficiency interval: {} - {}, {}".format(
-                max_efficiency_interval[0].start,
-                max_efficiency_interval[0].end,
+            "Max efficiency interval: {}, {}".format(
+                max_efficiency_interval[0],
                 max_efficiency_interval[1],
             ),
         )
@@ -169,10 +172,8 @@ def backtest_hold_intraday(
     omx_reference_price: int,
 ) -> List[HoldRule]:
     log.warn(f"Backtesting intraday hold strategy for {direction}")
-    intervals: Dict[IntervalTime, List[CutOffResult]] = {}
+    intervals: Dict[IntervalTime, List[CutOffResult]] = defaultdict(list)
     for buy_time, sell_time in times:
-        intervals[IntervalTime(buy_time, sell_time)] = []
-
         data_aggregated_by_time = _aggregate_data_by_time(data, buy_time, sell_time)
 
         for cut_off in range(5, 30, 2):
@@ -180,7 +181,12 @@ def backtest_hold_intraday(
             if not result_per_cut_off:
                 continue
 
-            intervals[IntervalTime(buy_time, sell_time)].append(result_per_cut_off)
+            intervals[
+                IntervalTime(
+                    (datetime.combine(datetime.today(), buy_time) + timedelta(minutes=2)).time(),
+                    (datetime.combine(datetime.today(), sell_time) + timedelta(minutes=2)).time(),
+                )
+            ].append(result_per_cut_off)
 
     sorted_intervals = _sort_intervals(intervals)
     rules = _generate_rules(sorted_intervals, direction)

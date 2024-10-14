@@ -1,6 +1,8 @@
 import warnings
-from datetime import time
-from typing import Dict, List, Optional, Tuple
+from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -11,6 +13,15 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
+
+
+@dataclass(frozen=True)
+class IntervalTime:
+    start: time
+    end: time
+
+    def __str__(self) -> str:
+        return f"{self.start.strftime('%H:%M')} - {self.end.strftime('%H:%M')}"
 
 
 def _aggregate_data_by_time(data: pd.DataFrame, end_od_day: time, close_time: time) -> pd.DataFrame:
@@ -80,11 +91,11 @@ def _calculate_result(gaps: dict, direction: Direction, cut_off: int, omx_refere
     }
 
 
-def _get_top_hold_rule(intervals: Dict[Tuple[time, time], dict]) -> Optional[dict]:
+def _get_top_hold_rule(intervals: Dict[IntervalTime, dict]) -> Optional[dict]:
     hold_rule_kwargs: Optional[dict] = {}
-    for interval, results_per_cut_off in intervals.items():
-        top_total = sorted(results_per_cut_off.values(), key=lambda x: x["total"], reverse=True)[0]["total"]
-        filtered_rules = [i for i in results_per_cut_off.values() if i["total"] >= top_total * 0.9]
+    for interval, results_for_interval in intervals.items():
+        top_total = sorted(results_for_interval.values(), key=lambda x: x["total"], reverse=True)[0]["total"]
+        filtered_rules = [i for i in results_for_interval.values() if i["total"] >= top_total * 0.8]
         if not filtered_rules:
             continue
 
@@ -94,7 +105,7 @@ def _get_top_hold_rule(intervals: Dict[Tuple[time, time], dict]) -> Optional[dic
             filtered_rules[0]["total"] * filtered_rules[0]["efficiency"]
             > hold_rule_kwargs.get("total", 0) * hold_rule_kwargs.get("efficiency", 0)
         ):
-            hold_rule_kwargs = {**filtered_rules[0], "end_od_day": interval[0], "close_time": interval[1]}
+            hold_rule_kwargs = {**filtered_rules[0], "end_od_day": interval.start, "close_time": interval.end}
 
     return hold_rule_kwargs
 
@@ -107,7 +118,7 @@ def backtest_hold_interday(
     direction: Direction,
     omx_reference_price: int,
 ) -> HoldRule:
-    intervals: Dict[Tuple[time, time], dict] = {}
+    intervals: Dict[IntervalTime, dict] = defaultdict(dict)
     for end_od_day in end_od_day_times:
         for close_time in close_times:
             data_aggregated_by_time = _aggregate_data_by_time(data, end_od_day, close_time)
@@ -117,7 +128,12 @@ def backtest_hold_interday(
             for cut_off in range(10, 40, 2):
                 results_per_cut_off[cut_off] = _calculate_result(gaps, direction, cut_off, omx_reference_price)
 
-            intervals[(end_od_day, close_time)] = results_per_cut_off
+            intervals[
+                IntervalTime(
+                    (datetime.combine(datetime.today(), end_od_day) + timedelta(minutes=2)).time(),
+                    (datetime.combine(datetime.today(), close_time) + timedelta(minutes=2)).time(),
+                )
+            ] = results_per_cut_off
 
     hold_rule_kwargs = _get_top_hold_rule(intervals)
 
@@ -128,6 +144,6 @@ def backtest_hold_interday(
         orderbook_direction=direction,
         buy_time=hold_rule_kwargs["end_od_day"],
         sell_time=hold_rule_kwargs["close_time"],
-        take_profit=hold_rule_kwargs["take_profit"] - 0.1,
+        take_profit=hold_rule_kwargs["take_profit"] - 0.01,
         settings=None,
     )
