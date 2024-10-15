@@ -9,7 +9,7 @@ from avanza.constants import OrderType
 from apis.avanza.client import get_client
 from apis.avanza.operators import Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
-from config import SETTINGS_HOLD_OMX_DT, SETTINGS_HOLD_OMX_MAIN
+from config import SETTINGS_HOLD_OMX_MAIN
 from services.hold.models import Action, Event
 from services.hold.operators import Backlog
 from utils.logger import get_logger, set_handlers
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     try:
         dry_run = platform.system() == "Darwin"
 
-        hold(dry_run, [SETTINGS_HOLD_OMX_DT, SETTINGS_HOLD_OMX_MAIN])
+        hold(dry_run, [SETTINGS_HOLD_OMX_MAIN])
 
     except Exception as e:
         log.exception(str(e))
