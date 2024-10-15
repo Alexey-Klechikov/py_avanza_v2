@@ -54,7 +54,8 @@ class Trade:
             if dry_run:
                 return
 
-        log.warning(trade_result)
+        if trade_result:
+            log.warning(trade_result)
 
     @classmethod
     def buy(
