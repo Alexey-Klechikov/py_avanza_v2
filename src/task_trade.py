@@ -52,9 +52,10 @@ class Data:
 
         if self.settings.TRADING_DATA == "avanza":
             new_data = Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.TWO_MINUTES)
-
-        if self.settings.TRADING_DATA == "yahoo":
+        elif self.settings.TRADING_DATA == "yahoo":
             new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+        else:
+            raise ValueError(f"Unknown data source {self.settings.TRADING_DATA}")
 
         storage.write(new_data)
 
@@ -161,6 +162,7 @@ class Budget:
 class Telegram(TelegramBase):
     def __init__(self):
         super().__init__()
+        self.messages = []
 
         self.final_balance = 0
         self.total_value = 0
@@ -196,6 +198,9 @@ class Telegram(TelegramBase):
             self.deals.append((round(group_sum), deal_time))
 
         self.deals.sort(key=lambda x: x[1])
+
+        if orders.active_order:
+            self.messages.append(f"Active order: {orders.active_order.orderbook.name}")
 
     def send_message(self, budget: Budget, settings) -> None:
         performance = 0
@@ -327,11 +332,11 @@ class Flow:
                     self.directions_sell = [direction]
                     return FlowAction.TRADE
 
-        # Edge case: Sell BEAR at 14:24 if last signal was more than 2.5 hours ago
+        # Edge case: Sell BEAR at 14:24 if last signal was more than 90 mins ago
         if datetime.now().time() == time(14, 26) and portfolio.acquired_instrument.BEAR:
             orders.reload_active()
             if orders.active_order:
-                if (datetime.now() - orders.active_order.created).total_seconds() > (2.5 * 60 * 60):
+                if (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60):
                     self.directions_sell = [Direction.BEAR]
                     return FlowAction.TRADE
 
@@ -340,18 +345,14 @@ class Flow:
             if not portfolio.positions:
                 return FlowAction.EXIT_TRADING
 
-            for direction in [Direction.BULL, Direction.BEAR]:
-                acquired_instrument = portfolio.acquired_instrument.get(direction.value)
-                if not acquired_instrument:
-                    continue
-
-                self.directions_sell.append(direction)
+            # Edge case: Sell at the end of the day is last signal was more than 90 mins ago
+            orders.reload_active()
+            if not orders.active_order or (
+                orders.active_order and (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
+            ):
+                self.directions_sell = [Direction.BULL, Direction.BEAR]
 
             return FlowAction.TRADE
-
-        # Near end of day
-        elif (datetime.now() + timedelta(minutes=10)).time() >= self.trading_ends and not portfolio.positions:
-            return FlowAction.EXIT_TRADING
 
         # No new data
         elif data.too_old:

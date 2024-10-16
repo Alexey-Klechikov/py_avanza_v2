@@ -221,6 +221,7 @@ class Avanza(AvanzaBase):
         price: float,
         valid_until: date,
         volume: int,
+        **_,
     ):
         response = self._retry_call(
             path="/_api/trading-critical/rest/order/modify",

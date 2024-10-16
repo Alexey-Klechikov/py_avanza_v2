@@ -93,8 +93,12 @@ class Portfolio:
                     "acquired_price": i.average_acquired_price.value,
                     "acquired_value": i.acquired_value.value,
                     "performance": {
-                        "percent": i.last_trading_day_performance.relative.value,
-                        "value": i.last_trading_day_performance.absolute.value,
+                        "percent": (
+                            None if not i.last_trading_day_performance else i.last_trading_day_performance.relative.value
+                        ),
+                        "value": (
+                            None if not i.last_trading_day_performance else i.last_trading_day_performance.absolute.value
+                        ),
                     },
                 },
             )

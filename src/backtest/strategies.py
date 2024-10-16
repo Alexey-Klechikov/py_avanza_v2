@@ -84,10 +84,6 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
         ):
             data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
 
-    data.loc[data.between_time(settings.TRADING_END.strftime("%H:%M"), "22:00").index, "EXIT"] = (
-        data["High"] + data["Low"]
-    ) / 2
-
 
 def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) -> None:
     wallet = Wallet()
@@ -129,43 +125,42 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                     profit = opposite_instrument.sell(tested_direction_price, timestamp, opposite_direction)
                     wallet.set(opposite_direction, None)
 
+            if tested_instrument is None:
+                continue
+
             # Buy signal with open positions
-            if tested_instrument is not None and tested_direction_price > 0:
+            if tested_direction_price > 0:
                 tested_instrument.take_profit_price = tested_direction_price * (
                     1 + (direction_correction * target_profit)
                 )
                 tested_instrument.signal_confirmation_time = timestamp
 
             # Exit signal
-            if tested_instrument is not None and row["EXIT"] > 0:
+            if row["EXIT"] > 0:
                 sell_price = row["EXIT"]
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Take profit
-            if tested_instrument is not None and (
-                (tested_direction == "LONG" and row["High"] > tested_instrument.take_profit_price)
-                or (tested_direction == "SHORT" and row["Low"] < tested_instrument.take_profit_price)
+            if (tested_direction == "LONG" and row["High"] > tested_instrument.take_profit_price) or (
+                tested_direction == "SHORT" and row["Low"] < tested_instrument.take_profit_price
             ):
                 sell_price = tested_instrument.take_profit_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Stop loss
-            if tested_instrument is not None and (
-                (tested_direction == "LONG" and close_price < tested_instrument.stop_loss_price)
-                or (tested_direction == "SHORT" and close_price > tested_instrument.stop_loss_price)
+            if (tested_direction == "LONG" and close_price < tested_instrument.stop_loss_price) or (
+                tested_direction == "SHORT" and close_price > tested_instrument.stop_loss_price
             ):
                 sell_price = close_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
-            # Edge case for SHORT signals at 14:24
-            if (
-                tested_direction == "SHORT"
-                and tested_instrument is not None
-                and timestamp.time() == time(14, 24)
-                and (timestamp - tested_instrument.signal_confirmation_time).total_seconds() > 2 * 60 * 60
+            # Edge cases
+            if ((timestamp - tested_instrument.signal_confirmation_time).total_seconds() > 90 * 60) and (
+                (tested_direction == "SHORT" and timestamp.time() == time(14, 24))
+                or timestamp.time() >= settings.TRADING_END
             ):
                 sell_price = close_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
