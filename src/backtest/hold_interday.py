@@ -104,7 +104,10 @@ def _calculate_candidate_rule(gaps: dict, direction: Direction, cut_off: int, om
     )
 
 
-def _get_top_hold_rule(intervals: Dict[IntervalTime, List[CandidateRule]], direction: Direction) -> Optional[HoldRule]:
+def _get_hold_rule_from_candidate_rules(
+    intervals: Dict[IntervalTime, List[CandidateRule]],
+    direction: Direction,
+) -> HoldRule:
     final_candidate_rule: Optional[CandidateRule] = None
     for interval, candidate_rules in intervals.items():
         top_total = max([i.total for i in candidate_rules])
@@ -124,16 +127,15 @@ def _get_top_hold_rule(intervals: Dict[IntervalTime, List[CandidateRule]], direc
             final_candidate_rule.end_of_day = interval.start
             final_candidate_rule.close_time = interval.end
 
-    return (
-        None
-        if not final_candidate_rule or not final_candidate_rule.end_of_day or not final_candidate_rule.close_time
-        else HoldRule(
-            orderbook_direction=direction,
-            buy_time=final_candidate_rule.end_of_day,
-            sell_time=final_candidate_rule.close_time,
-            take_profit=final_candidate_rule.take_profit - 0.01,
-            settings=None,
-        )
+    if not final_candidate_rule or not final_candidate_rule.end_of_day or not final_candidate_rule.close_time:
+        raise Exception("No final candidate rule found")
+
+    return HoldRule(
+        orderbook_direction=direction,
+        buy_time=final_candidate_rule.end_of_day,
+        sell_time=final_candidate_rule.close_time,
+        take_profit=final_candidate_rule.take_profit - 0.01,
+        settings=None,
     )
 
 
@@ -159,8 +161,4 @@ def backtest_hold_interday(
                     )
                 ].append(_calculate_candidate_rule(gaps, direction, cut_off, omx_reference_price))
 
-    hold_rule = _get_top_hold_rule(intervals, direction)
-    if hold_rule:
-        return hold_rule
-
-    raise Exception("No hold rule found")
+    return _get_hold_rule_from_candidate_rules(intervals, direction)
