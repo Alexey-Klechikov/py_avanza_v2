@@ -24,6 +24,19 @@ class IntervalTime:
         return f"{self.start.strftime('%H:%M')} - {self.end.strftime('%H:%M')}"
 
 
+@dataclass
+class CandidateRule:
+    take_profit: float
+    efficiency: float
+    total: float
+
+    end_of_day: Optional[time] = None
+    close_time: Optional[time] = None
+
+    def __str__(self) -> str:
+        return f"Total: {self.total}. Take profit: {self.take_profit}. Efficiency: {self.efficiency}."
+
+
 def _aggregate_data_by_time(data: pd.DataFrame, end_od_day: time, close_time: time) -> pd.DataFrame:
     data.index = pd.to_datetime(data.index)
     data_daily = data.resample("D")
@@ -71,7 +84,7 @@ def _calculate_gaps(data: pd.DataFrame) -> dict:
     return gaps
 
 
-def _calculate_result(gaps: dict, direction: Direction, cut_off: int, omx_reference_price: int) -> dict:
+def _calculate_candidate_rule(gaps: dict, direction: Direction, cut_off: int, omx_reference_price: int) -> CandidateRule:
     counter = 0
     total = 0
     for gap in gaps.values():
@@ -84,30 +97,44 @@ def _calculate_result(gaps: dict, direction: Direction, cut_off: int, omx_refere
             if profit > 0:
                 counter += 1
 
-    return {
-        "efficiency": 0.0 if not gaps else round(counter / len(gaps), 2),
-        "total": round(total, 2),
-        "take_profit": round(20 * cut_off / omx_reference_price, 2),
-    }
+    return CandidateRule(
+        take_profit=round(20 * cut_off / omx_reference_price, 2),
+        efficiency=round(0.0 if not gaps else counter / len(gaps), 2),
+        total=round(total, 2),
+    )
 
 
-def _get_top_hold_rule(intervals: Dict[IntervalTime, dict]) -> Optional[dict]:
-    hold_rule_kwargs: Optional[dict] = {}
-    for interval, results_for_interval in intervals.items():
-        top_total = sorted(results_for_interval.values(), key=lambda x: x["total"], reverse=True)[0]["total"]
-        filtered_rules = [i for i in results_for_interval.values() if i["total"] >= top_total * 0.8]
-        if not filtered_rules:
+def _get_top_hold_rule(intervals: Dict[IntervalTime, List[CandidateRule]], direction: Direction) -> Optional[HoldRule]:
+    final_candidate_rule: Optional[CandidateRule] = None
+    for interval, candidate_rules in intervals.items():
+        top_total = max([i.total for i in candidate_rules])
+        filtered_candidate_rules = [i for i in candidate_rules if i.total >= top_total * 0.8]
+        if not filtered_candidate_rules:
             continue
 
-        log.debug(f"Interval: {interval}. Top total: {top_total}. Selected rule: {filtered_rules[0]}")
+        selected_candidate_rule = min(filtered_candidate_rules, key=lambda x: x.total)
 
-        if not hold_rule_kwargs or (
-            filtered_rules[0]["total"] * filtered_rules[0]["efficiency"]
-            > hold_rule_kwargs.get("total", 0) * hold_rule_kwargs.get("efficiency", 0)
+        log.debug(f"Interval: {interval}. Top total: {top_total}. {selected_candidate_rule}")
+
+        if not final_candidate_rule or (
+            selected_candidate_rule.total * selected_candidate_rule.efficiency
+            > final_candidate_rule.total * final_candidate_rule.efficiency
         ):
-            hold_rule_kwargs = {**filtered_rules[0], "end_od_day": interval.start, "close_time": interval.end}
+            final_candidate_rule = selected_candidate_rule
+            final_candidate_rule.end_of_day = interval.start
+            final_candidate_rule.close_time = interval.end
 
-    return hold_rule_kwargs
+    return (
+        None
+        if not final_candidate_rule or not final_candidate_rule.end_of_day or not final_candidate_rule.close_time
+        else HoldRule(
+            orderbook_direction=direction,
+            buy_time=final_candidate_rule.end_of_day,
+            sell_time=final_candidate_rule.close_time,
+            take_profit=final_candidate_rule.take_profit - 0.01,
+            settings=None,
+        )
+    )
 
 
 # MAIN
@@ -118,32 +145,22 @@ def backtest_hold_interday(
     direction: Direction,
     omx_reference_price: int,
 ) -> HoldRule:
-    intervals: Dict[IntervalTime, dict] = defaultdict(dict)
+    intervals: Dict[IntervalTime, List[CandidateRule]] = defaultdict(list)
     for end_od_day in end_od_day_times:
         for close_time in close_times:
             data_aggregated_by_time = _aggregate_data_by_time(data, end_od_day, close_time)
             gaps = _calculate_gaps(data_aggregated_by_time)
 
-            results_per_cut_off = {}
             for cut_off in range(10, 40, 2):
-                results_per_cut_off[cut_off] = _calculate_result(gaps, direction, cut_off, omx_reference_price)
+                intervals[
+                    IntervalTime(
+                        (datetime.combine(datetime.today(), end_od_day) + timedelta(minutes=2)).time(),
+                        (datetime.combine(datetime.today(), close_time) + timedelta(minutes=2)).time(),
+                    )
+                ].append(_calculate_candidate_rule(gaps, direction, cut_off, omx_reference_price))
 
-            intervals[
-                IntervalTime(
-                    (datetime.combine(datetime.today(), end_od_day) + timedelta(minutes=2)).time(),
-                    (datetime.combine(datetime.today(), close_time) + timedelta(minutes=2)).time(),
-                )
-            ] = results_per_cut_off
+    hold_rule = _get_top_hold_rule(intervals, direction)
+    if hold_rule:
+        return hold_rule
 
-    hold_rule_kwargs = _get_top_hold_rule(intervals)
-
-    if not hold_rule_kwargs:
-        raise Exception("No hold rule found")
-
-    return HoldRule(
-        orderbook_direction=direction,
-        buy_time=hold_rule_kwargs["end_od_day"],
-        sell_time=hold_rule_kwargs["close_time"],
-        take_profit=hold_rule_kwargs["take_profit"] - 0.01,
-        settings=None,
-    )
+    raise Exception("No hold rule found")
