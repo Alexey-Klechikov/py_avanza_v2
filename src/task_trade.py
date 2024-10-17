@@ -225,6 +225,7 @@ class Trade:
         orders: Orders,
         portfolio: Portfolio,
     ) -> None:
+        trade_result = None
         for _ in range(5):
             orders.delete_all()
 
@@ -240,6 +241,13 @@ class Trade:
                 price=acquired_instrument.quote.buy,
                 volume=int(acquired_instrument.volume),
             )
+
+            trade_result = (
+                f"Trade result: {round(acquired_instrument.acquired_value)} -> {round(acquired_instrument.value)}"
+            )
+
+        if trade_result:
+            log.warning(trade_result)
 
     @classmethod
     def buy(
