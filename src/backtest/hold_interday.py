@@ -37,7 +37,7 @@ class CandidateRule:
         return f"Total: {self.total}. Take profit: {self.take_profit}. Efficiency: {self.efficiency}."
 
 
-def _aggregate_data_by_time(data: pd.DataFrame, end_od_day: time, close_time: time) -> pd.DataFrame:
+def _aggregate_data_by_time(data: pd.DataFrame, end_of_day: time, close_time: time) -> pd.DataFrame:
     data.index = pd.to_datetime(data.index)
     data_daily = data.resample("D")
 
@@ -46,7 +46,7 @@ def _aggregate_data_by_time(data: pd.DataFrame, end_od_day: time, close_time: ti
             "Top price before close_time": data_daily["Close"].apply(lambda x: x[x.index.time < close_time].max()),
             "Low price before close_time": data_daily["Close"].apply(lambda x: x[x.index.time < close_time].min()),
             "End price at close_time": data_daily["Close"].apply(lambda x: x.at_time(close_time)),
-            "Price at end_od_day": data_daily["Close"].apply(lambda x: x.at_time(end_od_day)),
+            "Price at end_of_day": data_daily["Close"].apply(lambda x: x.at_time(end_of_day)),
         },
     )
 
@@ -57,7 +57,7 @@ def _aggregate_data_by_time(data: pd.DataFrame, end_od_day: time, close_time: ti
             "Top price before close_time": "first",
             "Low price before close_time": "first",
             "End price at close_time": "first",
-            "Price at end_od_day": "last",
+            "Price at end_of_day": "last",
         },
     ).dropna()
 
@@ -74,9 +74,9 @@ def _calculate_gaps(data: pd.DataFrame) -> dict:
             continue
 
         gaps[index] = {
-            "high": row["Top price before close_time"] - data.iloc[i - 1]["Price at end_od_day"],
-            "low": row["Low price before close_time"] - data.iloc[i - 1]["Price at end_od_day"],
-            "close": row["End price at close_time"] - data.iloc[i - 1]["Price at end_od_day"],
+            "high": row["Top price before close_time"] - data.iloc[i - 1]["Price at end_of_day"],
+            "low": row["Low price before close_time"] - data.iloc[i - 1]["Price at end_of_day"],
+            "close": row["End price at close_time"] - data.iloc[i - 1]["Price at end_of_day"],
         }
 
     # log.debug(f"Gaps: {gaps}")
@@ -142,21 +142,21 @@ def _get_hold_rule_from_candidate_rules(
 # MAIN
 def backtest_hold_interday(
     data: pd.DataFrame,
-    end_od_day_times: List[time],
+    end_of_day_times: List[time],
     close_times: List[time],
     direction: Direction,
     omx_reference_price: int,
 ) -> HoldRule:
     intervals: Dict[IntervalTime, List[CandidateRule]] = defaultdict(list)
-    for end_od_day in end_od_day_times:
+    for end_of_day in end_of_day_times:
         for close_time in close_times:
-            data_aggregated_by_time = _aggregate_data_by_time(data, end_od_day, close_time)
+            data_aggregated_by_time = _aggregate_data_by_time(data, end_of_day, close_time)
             gaps = _calculate_gaps(data_aggregated_by_time)
 
             for cut_off in range(10, 40, 2):
                 intervals[
                     IntervalTime(
-                        (datetime.combine(datetime.today(), end_od_day) + timedelta(minutes=2)).time(),
+                        (datetime.combine(datetime.today(), end_of_day) + timedelta(minutes=2)).time(),
                         (datetime.combine(datetime.today(), close_time) + timedelta(minutes=2)).time(),
                     )
                 ].append(_calculate_candidate_rule(gaps, direction, cut_off, omx_reference_price))
