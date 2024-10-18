@@ -2,12 +2,15 @@ import platform
 import warnings
 from datetime import datetime, time, timedelta
 from enum import Enum
+from http.client import RemoteDisconnected
 from time import sleep
 from typing import List, Optional
 
 import pandas as pd
 from avanza.constants import OrderType, Resolution, TimePeriod
+from requests.exceptions import ConnectionError
 
+from apis.avanza.client import get_client
 from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
@@ -430,7 +433,11 @@ def trade(dry_run: bool, settings) -> None:
     flow = Flow(settings, dry_run)
 
     while datetime.now().time() < time(17, 4):
-        action = flow.get_action(data, portfolio, orders)
+        try:
+            action = flow.get_action(data, portfolio, orders)
+        except (ConnectionError, RemoteDisconnected):
+            get_client.cache_clear()
+
         if action == FlowAction.DO_NOTHING:
             continue
         elif action == FlowAction.EXIT_TRADING:
