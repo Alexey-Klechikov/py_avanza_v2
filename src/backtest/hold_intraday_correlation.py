@@ -1,41 +1,18 @@
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, time
-from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
 
+from services.hold_correlation.models import Correlation, HoldRuleCorrelation, Interval
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
-
-
-class Correlation(Enum):
-    SAME = "SAME"
-    OPPOSITE = "OPPOSITE"
-
-    def __str__(self) -> str:
-        return self.value
-
-
-@dataclass(frozen=True)
-class Interval:
-    start: time
-    end: time
-
-    def __str__(self):
-        return f"{self.start.strftime('%H:%M')} -> {self.end.strftime('%H:%M')}"
-
-    def duration_min(self):
-        return (
-            datetime.combine(datetime.today(), self.end) - datetime.combine(datetime.today(), self.start)
-        ).seconds / 60
 
 
 @dataclass
@@ -112,10 +89,7 @@ def backtest_intervals_correlation_qualitatively(
         deciding_interval: Interval = kwargs["deciding_interval"]
         intervals: List[Interval] = kwargs["intervals"]
 
-        # log.debug(f"> Test deciding interval: {deciding_interval}")
-
         deciding_interval_correlations = defaultdict(lambda: {Correlation.SAME: 0, Correlation.OPPOSITE: 0})
-
         for tested_interval in intervals:
             if any(
                 [
@@ -191,8 +165,6 @@ def aggregate_intervals_correlations(
 
     correlated_intervals = [i for i in correlated_intervals if i.efficiency > min_efficiency]
     correlated_intervals = sorted(correlated_intervals, key=lambda x: x.efficiency, reverse=True)
-    for i, correlated_interval in enumerate(correlated_intervals):
-        log.debug(f"> {i + 1} - {correlated_interval}")
 
     return correlated_intervals
 
@@ -210,8 +182,6 @@ def backtest_intervals_correlation_quantitatively(
         deciding_interval: Interval = kwargs["deciding_interval"]
         action_interval: Interval = kwargs["action_interval"]
         correlation: Correlation = kwargs["correlation"]
-
-        # log.debug(f"> Test intervals combination: {deciding_interval} ---> {action_interval} ({correlation})")
 
         stats = []
         for _, day_data in resampled_data.groupby(resampled_data.index.date):  # type: ignore
@@ -295,12 +265,11 @@ def filter_intervals_correlations(
 ) -> List[IntervalsCorrelationQuantitative]:
     log.info("Filter intervals correlation results")
 
-    filtered_intervals_correlation: List[IntervalsCorrelationQuantitative] = []
-
     reshaped_intervals_correlation = defaultdict(list)
     for interval_correlation in intervals_correlation_efficiency_quantitative:
         reshaped_intervals_correlation[interval_correlation.deciding_interval].append(interval_correlation)
 
+    filtered_intervals_correlation: List[IntervalsCorrelationQuantitative] = []
     for interval_correlations in reshaped_intervals_correlation.values():
         max_efficiency_interval_correlation = max(interval_correlations, key=lambda x: x.counter_profit * x.efficiency)
         top_efficiency_interval_correlations = [
@@ -315,14 +284,11 @@ def filter_intervals_correlations(
         )
         filtered_intervals_correlation.append(shortest_duration_top_efficiency_interval_correlation)
 
-    for i, interval_combination in enumerate(filtered_intervals_correlation):
-        log.info(f"{i + 1} - {interval_combination}")
-
     return filtered_intervals_correlation
 
 
 # MAIN
-def backtest_hold_intraday_correlation(data: pd.DataFrame, slice_duration: int):
+def backtest_hold_intraday_correlation(data: pd.DataFrame, slice_duration: int) -> List[HoldRuleCorrelation]:
     resampled_data = aggregate_data_by_time(data, slice_duration)
     intervals = generate_intervals(
         slice_duration,
@@ -348,4 +314,13 @@ def backtest_hold_intraday_correlation(data: pd.DataFrame, slice_duration: int):
     )
     filtered_intervals_correlation = filter_intervals_correlations(intervals_correlation_efficiency_quantitative)
 
-    print(filtered_intervals_correlation)
+    return [
+        HoldRuleCorrelation(
+            deciding_interval=i.deciding_interval,
+            action_interval=i.action_interval,
+            correlation=i.correlation,
+            efficiency=i.efficiency,
+            multiplier=i.multiplier,
+        )
+        for i in filtered_intervals_correlation
+    ]

@@ -9,7 +9,7 @@ from avanza.constants import OrderType
 from apis.avanza.client import get_client
 from apis.avanza.operators import Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
-from config import SETTINGS_HOLD_OMX_MAIN
+from config import SETTINGS_HOLD_STATISTICS
 from services import BacklogHoldStatistics
 from services.hold_statistics.models import Action, Event
 from utils.logger import get_logger, set_handlers
@@ -131,12 +131,11 @@ def sleep_until_next_event(event: Event) -> None:
 
 
 # MAIN
-def hold(dry_run: bool, list_of_settings: list) -> None:
+def hold(dry_run: bool, settings) -> None:
     log.info("Start holding" + (" | DRY_RUN" if dry_run else ""))
 
     backlog = BacklogHoldStatistics()
-    for settings in list_of_settings:
-        backlog.read_rules(settings)
+    backlog.read_rules(settings)
     backlog.extract_events_from_rules()
 
     while datetime.now().time() < time(18, 0):
@@ -176,7 +175,7 @@ if __name__ == "__main__":
     try:
         dry_run = platform.system() == "Darwin"
 
-        hold(dry_run, [SETTINGS_HOLD_OMX_MAIN])
+        hold(dry_run, SETTINGS_HOLD_STATISTICS)
 
     except Exception as e:
         log.exception(str(e))

@@ -6,7 +6,7 @@ import pandas as pd
 
 from apis.telegram.operators import Telegram
 from backtest import backtest_trade_strategies
-from config import SETTINGS_TRADE_OMX
+from config import SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -61,7 +61,7 @@ def generate_strategies(settings, period_days: int) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(SETTINGS_TRADE_OMX, period_days=40)
+        generate_strategies(SETTINGS_TRADE_STRATEGIES, period_days=40)
 
     except Exception as e:
         telegram = Telegram()

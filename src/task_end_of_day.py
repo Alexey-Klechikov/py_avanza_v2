@@ -14,7 +14,7 @@ from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from backtest import backtest_hold_interday_statistics, backtest_hold_intraday_statistics
 from backtest import backtest_trade_strategies as _backtest_trade_strategies
-from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
+from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
 from services import BacklogHoldStatistics, Storage
 from services.hold_statistics.models import Direction, Scope
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -111,7 +111,7 @@ def generate_hold_rules_interday_statistics(
 ) -> None:
     log.warning(
         f"Generating INTERDAY hold rules using period {period_days} days "
-        + f"for direction {direction} using slice_duration {slice_duration} mins.",
+        + f"for direction {direction.value} using slice_duration {slice_duration} mins.",
     )
 
     hold_rule = backtest_hold_interday_statistics(
@@ -130,11 +130,11 @@ def generate_hold_rules_interday_statistics(
 
 if __name__ == "__main__":
     try:
-        cache_history(SETTINGS_TRADE_OMX)
-        backtest_trade_strategies(SETTINGS_TRADE_OMX, period_days=40)
-        generate_hold_rules_intraday_statistics(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=4)
+        cache_history(SETTINGS_TRADE_STRATEGIES)
+        backtest_trade_strategies(SETTINGS_TRADE_STRATEGIES, period_days=40)
+        generate_hold_rules_intraday_statistics(SETTINGS_HOLD_STATISTICS, period_days=40, slice_duration=4)
         generate_hold_rules_interday_statistics(
-            SETTINGS_HOLD_OMX_DT,
+            SETTINGS_HOLD_STATISTICS,
             period_days=40,
             slice_duration=2,
             direction=Direction.BULL,

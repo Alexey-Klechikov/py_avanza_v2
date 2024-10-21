@@ -12,8 +12,8 @@ from backtest import (
     backtest_hold_intraday_statistics,
     backtest_trade_strategies,
 )
-from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
-from services import BacklogHoldStatistics, Storage
+from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
+from services import BacklogHoldCorrelation, BacklogHoldStatistics, Storage
 from services.hold_statistics.models import Direction, Scope
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
@@ -155,19 +155,25 @@ def test_hold_intraday_statistics(settings, period_days: int, slice_duration: in
 
 
 def test_hold_intraday_correlation(settings, period_days: int, slice_duration: int):
-    backtest_hold_intraday_correlation(
+    backlog = BacklogHoldCorrelation()
+    hold_rules = backtest_hold_intraday_correlation(
         _get_data(period_days, settings, resolution="5m"),
         slice_duration,
     )
+    for i, hold_rule in enumerate(hold_rules):
+        log.info(f"Hold Rule {i+1}: {hold_rule.dump_dict()}")
+
+    backlog.rules = hold_rules
+    backlog.write_rules()
 
 
 if __name__ == "__main__":
-    settings = SETTINGS_TRADE_OMX
-    run_strategies_generation(settings, period_days=40, full=True)
+    settings = SETTINGS_TRADE_STRATEGIES
+    # run_strategies_generation(settings, period_days=40, full=True)
     # run_test_for_selected_indicators(settings, period_days=60)
     # run_plotting_for_active_strategies(settings, period_days=5)
 
-    settings = SETTINGS_HOLD_OMX_DT
+    settings = SETTINGS_HOLD_STATISTICS
     # test_hold_intraday_statistics(settings, period_days=40, slice_duration=4)
     # test_hold_interday_statistics(settings, period_days=40, slice_duration=2, direction=Direction.BULL)
-    # test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)
+    test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)

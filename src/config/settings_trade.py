@@ -5,7 +5,7 @@ from config.settings_base import BaseOMX, BaseTrade
 
 
 @dataclass
-class TradeOMX(BaseOMX, BaseTrade):
+class TradeStrategies(BaseOMX, BaseTrade):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
     TRADING_DATA: str = "avanza"

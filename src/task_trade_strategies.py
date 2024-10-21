@@ -15,7 +15,7 @@ from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
-from config import SETTINGS_TRADE_OMX
+from config import SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     try:
         dry_run = platform.system() == "Darwin"
 
-        trade(dry_run, SETTINGS_TRADE_OMX)
+        trade(dry_run, SETTINGS_TRADE_STRATEGIES)
 
     except Exception as e:
         log.exception(str(e))
