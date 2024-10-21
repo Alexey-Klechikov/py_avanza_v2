@@ -15,7 +15,7 @@ class Direction(Enum):
     BEAR = "BEAR"
 
 
-class HoldRule(BaseModel):
+class HoldRuleStatistics(BaseModel):
     orderbook_direction: Direction
     buy_time: time
     sell_time: time

@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from services.hold_statistics.models import Direction, HoldRule
+from services.hold_statistics.models import Direction, HoldRuleStatistics
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -112,7 +112,10 @@ def _sort_intervals(
     ]
 
 
-def _generate_rules(sorted_intervals: List[Tuple[IntervalTime, CutOffResult]], direction: Direction) -> List[HoldRule]:
+def _generate_rules(
+    sorted_intervals: List[Tuple[IntervalTime, CutOffResult]],
+    direction: Direction,
+) -> List[HoldRuleStatistics]:
     rules = []
 
     while sorted_intervals:
@@ -141,7 +144,7 @@ def _generate_rules(sorted_intervals: List[Tuple[IntervalTime, CutOffResult]], d
 
             not_assigned_intervals.append(interval)
 
-        rule = HoldRule(
+        rule = HoldRuleStatistics(
             orderbook_direction=direction,
             buy_time=max_efficiency_interval[0].start,
             sell_time=max_efficiency_interval[0].end,
@@ -170,7 +173,7 @@ def backtest_hold_intraday_statistics(
     slice_duration: int,
     direction: Direction,
     omx_reference_price: int,
-) -> List[HoldRule]:
+) -> List[HoldRuleStatistics]:
     log.warn(f"Backtesting intraday hold strategy for {direction}")
     times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
 

@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
-from services.hold_statistics.models import Direction, HoldRule
+from services.hold_statistics.models import Direction, HoldRuleStatistics
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -107,7 +107,7 @@ def _calculate_candidate_rule(gaps: dict, direction: Direction, cut_off: int, om
 def _get_hold_rule_from_candidate_rules(
     intervals: Dict[IntervalTime, List[CandidateRule]],
     direction: Direction,
-) -> HoldRule:
+) -> HoldRuleStatistics:
     final_candidate_rule: Optional[CandidateRule] = None
     for interval, candidate_rules in intervals.items():
         top_total = max([i.total for i in candidate_rules])
@@ -130,7 +130,7 @@ def _get_hold_rule_from_candidate_rules(
     if not final_candidate_rule or not final_candidate_rule.end_of_day or not final_candidate_rule.close_time:
         raise Exception("No final candidate rule found")
 
-    return HoldRule(
+    return HoldRuleStatistics(
         orderbook_direction=direction,
         buy_time=final_candidate_rule.end_of_day,
         sell_time=final_candidate_rule.close_time,
@@ -145,7 +145,7 @@ def backtest_hold_interday_statistics(
     slice_duration: int,
     direction: Direction,
     omx_reference_price: int,
-) -> HoldRule:
+) -> HoldRuleStatistics:
     eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
     close_times = [i.time() for i in pd.date_range(start="09:02", end="09:58", freq=f"{slice_duration}min")]
 
