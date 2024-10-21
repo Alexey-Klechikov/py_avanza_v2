@@ -7,7 +7,7 @@ import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
 from pydantic import BaseModel
 
-from services.ta import Figure, get_indicators, get_strategies, save_strategies
+from services.ta import Figure, dump_strategies_in_file, get_indicators, get_strategies
 from services.ta.indicators.models import Panel, Plot, Plots
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
 from utils.logger import get_logger
@@ -273,4 +273,4 @@ def backtest_trade_strategies(
 
     print_strategies_performance(strategies)
 
-    save_strategies(strategies, new_strategies_file_name)
+    dump_strategies_in_file(strategies, new_strategies_file_name)

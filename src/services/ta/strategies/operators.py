@@ -15,6 +15,7 @@ log = get_logger()
 
 
 def _get_file_path(filename: Optional[str]) -> str:
+    filename = f"trade_strategies_{filename}.json" if filename else "trade_strategies.json"
     current_file_path = os.path.abspath(__file__)
     root_dir = "/src" if "/src" in current_file_path else "/pyAvanza"
     return current_file_path.split(root_dir)[0] + f"{root_dir}/config/{filename}"
@@ -146,7 +147,7 @@ def compose_strategies_list(
     return strategies
 
 
-def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name: str):
+def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name: Optional[str]):
     rank = 1
     last_strategy_stats = ""
     strategies_for_file = []
@@ -187,7 +188,10 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
     json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=2, sort_keys=True)
 
 
-def get_top_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> List[Strategy]:
+def get_top_strategies(
+    indicators_mapping: Dict[str, Dict[str, Indicator]],
+    strategies_file_name: Optional[str],
+) -> List[Strategy]:
     top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:5]
 
     return [

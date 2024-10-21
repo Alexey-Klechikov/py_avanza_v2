@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
-from services.ta.strategies import compose_strategies_list, dump_strategies_in_file, get_top_strategies
+from services.ta.strategies import compose_strategies_list, get_top_strategies
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
 from utils.logger import get_logger
 
@@ -69,12 +69,8 @@ def get_strategies(
     )
 
 
-def read_top_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], strategies_file_name: str) -> List[Strategy]:
+def read_top_strategies(
+    indicators_mapping: Dict[str, Dict[str, Indicator]],
+    strategies_file_name: Optional[str] = None,
+) -> List[Strategy]:
     return get_top_strategies(indicators_mapping, strategies_file_name)
-
-
-def save_strategies(strategies: List[Strategy], new_strategies_file_name: Optional[str]) -> None:
-    if not new_strategies_file_name:
-        return
-
-    return dump_strategies_in_file(strategies, new_strategies_file_name)

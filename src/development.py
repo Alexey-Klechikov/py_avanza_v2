@@ -36,17 +36,14 @@ def _get_data(period_days: int, settings, resolution: Optional[str] = None):
     return data
 
 
-def run_strategies_generation(settings, period_days: int, full: bool, comment: str = ""):
+def run_strategies_generation(settings, period_days: int, full: bool, comment: Optional[str] = None):
     if full:
         log.warning("Generating strategies")
         backtest_trade_strategies(
             _get_data(period_days + 20, settings),
             ComposeStrategiesListMethod.GENERATE,
             settings,
-            old_strategies_file_name=None,
-            new_strategies_file_name="strategies_dev_3.json",
-            indicators_filter=[],
-            plot=False,
+            new_strategies_file_name="dev_3",
         )
 
         for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
@@ -55,10 +52,8 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
                 _get_data(period_days + 20, settings),
                 ComposeStrategiesListMethod.EXTEND,
                 settings,
-                old_strategies_file_name=f"strategies_dev_{i}.json",
-                new_strategies_file_name=f"strategies_dev_{i + 1}.json",
-                indicators_filter=[],
-                plot=False,
+                old_strategies_file_name=f"dev_{i}",
+                new_strategies_file_name=f"dev_{i + 1}",
             )
 
     log.warning("Backtesting strategies")
@@ -66,10 +61,8 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",
-        new_strategies_file_name="strategies.json" if not comment else f"strategies_{comment}.json",
-        indicators_filter=[],
-        plot=False,
+        old_strategies_file_name=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        new_strategies_file_name=comment,
     )
 
 
@@ -78,16 +71,13 @@ def run_plotting_for_active_strategies(settings, period_days: int):
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name="strategies.json",
-        new_strategies_file_name=None,
-        indicators_filter=[],
         plot=True,
     )
 
 
 def run_test_for_selected_indicators(settings, period_days: int):
     indicator_to_test = ("Volume", "KVO")
-    new_strategies_file_name_prefix = f"strategies_dev_6_{'-'.join(indicator_to_test)}_"
+    new_strategies_file_name_prefix = f"dev_6_{'-'.join(indicator_to_test)}_"
 
     for length_divergence in [i for i in range(8, 34, 2)]:
         kwargs = {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema", "length_divergence": length_divergence}
@@ -98,11 +88,10 @@ def run_test_for_selected_indicators(settings, period_days: int):
             _get_data(period_days, settings),
             ComposeStrategiesListMethod.EXTEND,
             settings,
-            old_strategies_file_name="strategies_dev_5.json",
+            old_strategies_file_name="dev_5",
             new_strategies_file_name=new_strategies_file_name_prefix
-            + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}.json",
+            + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}",
             indicators_filter=[indicator_to_test[1]],
-            plot=False,
             **kwargs,
         )
 
@@ -174,11 +163,11 @@ def test_hold_intraday_correlation(settings, period_days: int, slice_duration: i
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_OMX
-    # run_strategies_generation(settings, period_days=40, full=True)
+    run_strategies_generation(settings, period_days=40, full=True)
     # run_test_for_selected_indicators(settings, period_days=60)
     # run_plotting_for_active_strategies(settings, period_days=5)
 
     settings = SETTINGS_HOLD_OMX_DT
     # test_hold_intraday_statistics(settings, period_days=40, slice_duration=4)
     # test_hold_interday_statistics(settings, period_days=40, slice_duration=2, direction=Direction.BULL)
-    test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)
+    # test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)

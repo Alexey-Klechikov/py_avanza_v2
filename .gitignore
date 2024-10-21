@@ -5,5 +5,5 @@ ___*
 *.pickle
 .vscode/*
 hold*.json
-strategies*.json
+trade*.json
 analytics*.json

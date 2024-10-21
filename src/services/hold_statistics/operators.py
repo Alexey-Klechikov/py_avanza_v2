@@ -16,7 +16,7 @@ class Backlog:
 
     def _get_path(self, scope: Scope) -> str:
         project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
-        return f"{project_root_dir}/config/hold_rules_statistics_{scope.value.lower()}.json"
+        return f"{project_root_dir}/config/hold_{scope.value.lower()}_statistics_rules.json"
 
     def read_rules(self, settings) -> None:
         for scope in settings.SCOPES:

@@ -9,10 +9,16 @@ class Action(Enum):
     BUY = "BUY"
     SELL = "SELL"
 
+    def __str__(self):
+        return self.value
+
 
 class Direction(Enum):
     BULL = "BULL"
     BEAR = "BEAR"
+
+    def __str__(self):
+        return self.value
 
 
 class HoldRuleStatistics(BaseModel):

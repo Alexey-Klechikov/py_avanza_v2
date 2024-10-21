@@ -76,9 +76,7 @@ def backtest_trade_strategies(settings, period_days: int):
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",
-        new_strategies_file_name="strategies.json",
-        plot=False,
+        old_strategies_file_name=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
     )
 
 
@@ -113,7 +111,7 @@ def generate_hold_rules_interday_statistics(
 ) -> None:
     log.warning(
         f"Generating INTERDAY hold rules using period {period_days} days "
-        + f"for direction {direction.value} using slice_duration {slice_duration} mins.",
+        + f"for direction {direction} using slice_duration {slice_duration} mins.",
     )
 
     hold_rule = backtest_hold_interday_statistics(

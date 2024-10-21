@@ -74,7 +74,7 @@ class Data:
 
     def get_strategies(self):
         indicators_mapping = get_indicators(self.data, self.settings)
-        strategies = read_top_strategies(indicators_mapping, "strategies.json")
+        strategies = read_top_strategies(indicators_mapping)
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
                 log.info(f"Strategy {i+1}: {strategy.name}")
