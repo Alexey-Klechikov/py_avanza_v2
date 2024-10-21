@@ -13,7 +13,7 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from backtest import backtest_hold_interday_statistics, backtest_hold_intraday_statistics
-from backtest import backtest_strategies as _backtest_strategies
+from backtest import backtest_trade_strategies as _backtest_trade_strategies
 from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
 from services import BacklogHoldStatistics, Storage
 from services.hold_statistics.models import Direction, Scope
@@ -69,10 +69,10 @@ def cache_history(settings):
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def backtest_strategies(settings, period_days: int):
+def backtest_trade_strategies(settings, period_days: int):
     log.warning(f"TASK: Backtest strategies on {settings.NAME} | {settings.RESOLUTION} | {period_days} days")
 
-    _backtest_strategies(
+    _backtest_trade_strategies(
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
@@ -133,7 +133,7 @@ def generate_hold_rules_interday_statistics(
 if __name__ == "__main__":
     try:
         cache_history(SETTINGS_TRADE_OMX)
-        backtest_strategies(SETTINGS_TRADE_OMX, period_days=40)
+        backtest_trade_strategies(SETTINGS_TRADE_OMX, period_days=40)
         generate_hold_rules_intraday_statistics(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=4)
         generate_hold_rules_interday_statistics(
             SETTINGS_HOLD_OMX_DT,

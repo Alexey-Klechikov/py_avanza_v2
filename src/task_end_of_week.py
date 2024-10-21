@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 
 from apis.telegram.operators import Telegram
-from backtest import backtest_strategies
+from backtest import backtest_trade_strategies
 from config import SETTINGS_TRADE_OMX
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -31,7 +31,7 @@ def _get_data(period_days: int, settings, resolution: Optional[str] = None):
 
 def generate_strategies(settings, period_days: int) -> None:
     log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    backtest_strategies(
+    backtest_trade_strategies(
         _get_data(period_days + 20, settings),
         ComposeStrategiesListMethod.GENERATE,
         settings,
@@ -44,7 +44,7 @@ def generate_strategies(settings, period_days: int) -> None:
         log.warning(
             f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)",
         )
-        backtest_strategies(
+        backtest_trade_strategies(
             _get_data(period_days + 20, settings),
             ComposeStrategiesListMethod.EXTEND,
             settings,
@@ -54,7 +54,7 @@ def generate_strategies(settings, period_days: int) -> None:
         )
 
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    backtest_strategies(
+    backtest_trade_strategies(
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,

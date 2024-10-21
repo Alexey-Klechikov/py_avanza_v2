@@ -10,7 +10,7 @@ from backtest import (
     backtest_hold_interday_statistics,
     backtest_hold_intraday_correlation,
     backtest_hold_intraday_statistics,
-    backtest_strategies,
+    backtest_trade_strategies,
 )
 from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
 from services import BacklogHoldStatistics, Storage
@@ -39,7 +39,7 @@ def _get_data(period_days: int, settings, resolution: Optional[str] = None):
 def run_strategies_generation(settings, period_days: int, full: bool, comment: str = ""):
     if full:
         log.warning("Generating strategies")
-        backtest_strategies(
+        backtest_trade_strategies(
             _get_data(period_days + 20, settings),
             ComposeStrategiesListMethod.GENERATE,
             settings,
@@ -51,7 +51,7 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
 
         for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
             log.warning(f"Extending strategies ({i} -> {i + 1})")
-            backtest_strategies(
+            backtest_trade_strategies(
                 _get_data(period_days + 20, settings),
                 ComposeStrategiesListMethod.EXTEND,
                 settings,
@@ -62,7 +62,7 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
             )
 
     log.warning("Backtesting strategies")
-    backtest_strategies(
+    backtest_trade_strategies(
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
@@ -74,7 +74,7 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
 
 
 def run_plotting_for_active_strategies(settings, period_days: int):
-    backtest_strategies(
+    backtest_trade_strategies(
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
@@ -94,7 +94,7 @@ def run_test_for_selected_indicators(settings, period_days: int):
         settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
 
         log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
-        backtest_strategies(
+        backtest_trade_strategies(
             _get_data(period_days, settings),
             ComposeStrategiesListMethod.EXTEND,
             settings,

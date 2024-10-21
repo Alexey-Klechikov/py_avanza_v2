@@ -225,7 +225,7 @@ def plot_indicators(data: pd.DataFrame, strategy: Strategy):
 
 
 # MAIN
-def backtest_strategies(
+def backtest_trade_strategies(
     data: pd.DataFrame,
     compose_strategies_list_method: ComposeStrategiesListMethod,
     settings,
