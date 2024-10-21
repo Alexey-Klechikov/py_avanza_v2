@@ -237,11 +237,7 @@ def backtest_strategies(
 ) -> None:
     indicators_mapping = get_indicators(data, settings, **kwargs)
 
-    strategies = get_strategies(
-        compose_strategies_list_method,
-        indicators_mapping,
-        None if not old_strategies_file_name else f"{settings.FILE_PREFIX}_{old_strategies_file_name}",
-    )
+    strategies = get_strategies(compose_strategies_list_method, indicators_mapping, old_strategies_file_name)
 
     if indicators_filter:
         strategies = [
@@ -277,7 +273,4 @@ def backtest_strategies(
 
     print_strategies_performance(strategies)
 
-    save_strategies(
-        strategies,
-        None if not new_strategies_file_name else f"{settings.FILE_PREFIX}_{new_strategies_file_name}",
-    )
+    save_strategies(strategies, new_strategies_file_name)

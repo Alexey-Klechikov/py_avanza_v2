@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from config.settings_base import BaseHold, BaseOMX, BaseTrade
-from services.hold.models import Scope
+from services.hold_statistics.models import Scope
 
 
 @dataclass

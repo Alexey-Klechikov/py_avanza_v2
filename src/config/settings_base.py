@@ -14,7 +14,6 @@ class BaseHold:
 @dataclass
 class BaseOMX:
     NAME: str = "OMX"
-    FILE_PREFIX: str = "OMX"
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"

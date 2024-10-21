@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from services.hold.models import Direction, HoldRule
+from services.hold_statistics.models import Direction, HoldRule
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -165,15 +165,19 @@ def _generate_rules(sorted_intervals: List[Tuple[IntervalTime, CutOffResult]], d
 
 
 # MAIN
-def backtest_hold_intraday(
+def backtest_hold_intraday_statistics(
     data: pd.DataFrame,
-    times: List[Tuple[time, time]],
+    slice_duration: int,
     direction: Direction,
     omx_reference_price: int,
 ) -> List[HoldRule]:
     log.warn(f"Backtesting intraday hold strategy for {direction}")
+    times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
+
     intervals: Dict[IntervalTime, List[CutOffResult]] = defaultdict(list)
-    for buy_time, sell_time in times:
+    for buy_time, sell_time in [
+        (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
+    ]:
         data_aggregated_by_time = _aggregate_data_by_time(data, buy_time, sell_time)
 
         for cut_off in range(5, 30, 2):

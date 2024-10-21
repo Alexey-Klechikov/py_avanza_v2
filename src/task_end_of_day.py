@@ -1,6 +1,7 @@
 import platform
 import warnings
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
@@ -11,12 +12,11 @@ from apis.investing.operators import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
-from backtest import backtest_hold_interday, backtest_hold_intraday
+from backtest import backtest_hold_interday_statistics, backtest_hold_intraday_statistics
 from backtest import backtest_strategies as _backtest_strategies
 from config import SETTINGS_HOLD_OMX_DT, SETTINGS_TRADE_OMX
-from services.hold.models import Direction, Scope
-from services.hold.operators import Backlog
-from services.storage import Storage
+from services import BacklogHoldStatistics, Storage
+from services.hold_statistics.models import Direction, Scope
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
 
@@ -24,6 +24,17 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 set_handlers("end_of_day")
 log = get_logger()
+
+
+def _get_data(period_days: int, settings, resolution: Optional[str] = None):
+    data = Storage(settings, resolution).read()
+    data = data.loc[
+        (data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days))
+        & (data.index < datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
+    ]
+    data.index = pd.to_datetime(data.index)
+
+    return data
 
 
 def cache_history(settings):
@@ -61,13 +72,8 @@ def cache_history(settings):
 def backtest_strategies(settings, period_days: int):
     log.warning(f"TASK: Backtest strategies on {settings.NAME} | {settings.RESOLUTION} | {period_days} days")
 
-    data = Storage(settings).read()
-    data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
-    ]
-
     _backtest_strategies(
-        data,
+        _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
         old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",
@@ -76,28 +82,17 @@ def backtest_strategies(settings, period_days: int):
     )
 
 
-def generate_hold_rules_intraday(settings, period_days: int, slice_duration: int) -> None:
+def generate_hold_rules_intraday_statistics(settings, period_days: int, slice_duration: int) -> None:
     log.warning(
         f"Generating INTRADAY hold rules using period {period_days} days "
         + f"using slice_duration {slice_duration} mins.",
     )
 
-    times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
-    buy_time_sell_time_combinations = [
-        (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
-    ]
-
-    data = Storage(settings).read()
-    data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
-    ]
-    data.index = pd.to_datetime(data.index)
-
-    backlog = Backlog()
+    backlog = BacklogHoldStatistics()
     for direction in [Direction.BULL, Direction.BEAR]:
-        hold_rules_per_direction = backtest_hold_intraday(
-            data,
-            buy_time_sell_time_combinations,
+        hold_rules_per_direction = backtest_hold_intraday_statistics(
+            _get_data(period_days, settings),
+            slice_duration,
             direction,
             settings.REF_PRICE,
         )
@@ -107,40 +102,45 @@ def generate_hold_rules_intraday(settings, period_days: int, slice_duration: int
     for hold_rule in backlog.rules:
         log.info(f"Hold Rule: {hold_rule.dump_dict()}")
 
-    backlog.write_rules(settings, Scope.INTRADAY)
+    backlog.write_rules(Scope.INTRADAY)
 
 
-def generate_hold_rules_interday(settings, period_days: int, slice_duration: int) -> None:
-    direction = Direction.BULL
-
+def generate_hold_rules_interday_statistics(
+    settings,
+    period_days: int,
+    slice_duration: int,
+    direction: Direction,
+) -> None:
     log.warning(
         f"Generating INTERDAY hold rules using period {period_days} days "
         + f"for direction {direction.value} using slice_duration {slice_duration} mins.",
     )
 
-    eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
-    close_times = [i.time() for i in pd.date_range(start="09:02", end="09:58", freq=f"{slice_duration}min")]
-
-    data = Storage(settings).read()
-    data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
-    ]
-
-    hold_rule = backtest_hold_interday(data, eod_times, close_times, direction, settings.REF_PRICE)
+    hold_rule = backtest_hold_interday_statistics(
+        _get_data(period_days, settings),
+        slice_duration,
+        direction,
+        settings.REF_PRICE,
+    )
 
     log.info(f"Hold Rule: {hold_rule.dump_dict()}")
 
-    backlog = Backlog()
+    backlog = BacklogHoldStatistics()
     backlog.rules.append(hold_rule)
-    backlog.write_rules(settings, Scope.INTERDAY)
+    backlog.write_rules(Scope.INTERDAY)
 
 
 if __name__ == "__main__":
     try:
         cache_history(SETTINGS_TRADE_OMX)
         backtest_strategies(SETTINGS_TRADE_OMX, period_days=40)
-        generate_hold_rules_intraday(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=4)
-        generate_hold_rules_interday(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=2)
+        generate_hold_rules_intraday_statistics(SETTINGS_HOLD_OMX_DT, period_days=40, slice_duration=4)
+        generate_hold_rules_interday_statistics(
+            SETTINGS_HOLD_OMX_DT,
+            period_days=40,
+            slice_duration=2,
+            direction=Direction.BULL,
+        )
 
     except Exception as e:
         telegram = Telegram()

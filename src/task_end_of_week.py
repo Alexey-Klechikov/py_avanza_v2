@@ -1,10 +1,13 @@
 import warnings
 from datetime import datetime, timedelta
+from typing import Optional
+
+import pandas as pd
 
 from apis.telegram.operators import Telegram
 from backtest import backtest_strategies
 from config import SETTINGS_TRADE_OMX
-from services.storage import Storage
+from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from utils.logger import get_logger, set_handlers
 
@@ -15,15 +18,21 @@ set_handlers("end_of_week")
 log = get_logger()
 
 
-def generate_strategies(settings, period_days: int) -> None:
-    data = Storage(settings).read()
+def _get_data(period_days: int, settings, resolution: Optional[str] = None):
+    data = Storage(settings, resolution).read()
     data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days + 20)
+        (data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days))
+        & (data.index < datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
     ]
+    data.index = pd.to_datetime(data.index)
 
+    return data
+
+
+def generate_strategies(settings, period_days: int) -> None:
     log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
     backtest_strategies(
-        data,
+        _get_data(period_days + 20, settings),
         ComposeStrategiesListMethod.GENERATE,
         settings,
         old_strategies_file_name=None,
@@ -36,7 +45,7 @@ def generate_strategies(settings, period_days: int) -> None:
             f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)",
         )
         backtest_strategies(
-            data,
+            _get_data(period_days + 20, settings),
             ComposeStrategiesListMethod.EXTEND,
             settings,
             old_strategies_file_name=f"strategies_dev_{i}.json",
@@ -44,14 +53,9 @@ def generate_strategies(settings, period_days: int) -> None:
             plot=False,
         )
 
-    data = Storage(settings).read()
-    data = data.loc[
-        data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days)
-    ]
-
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
     backtest_strategies(
-        data,
+        _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
         old_strategies_file_name=f"strategies_dev_{settings.TRADING_STRATEGY_INDICATORS}.json",

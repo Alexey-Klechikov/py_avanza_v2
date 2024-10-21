@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-from services.hold.models import Action, Event, HoldRule, Scope
+from services.hold_statistics.models import Action, Event, HoldRule, Scope
 from utils.logger import get_logger
 
 log = get_logger()
@@ -14,19 +14,19 @@ class Backlog:
         self.rules: List[HoldRule] = []
         self.events: List[Event] = []
 
-    def _get_path(self, file_prefix: str, scope: Scope) -> str:
+    def _get_path(self, scope: Scope) -> str:
         project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
-        return f"{project_root_dir}/config/{file_prefix}_hold_rules_{scope.value.lower()}.json"
+        return f"{project_root_dir}/config/hold_rules_{scope.value.lower()}.json"
 
     def read_rules(self, settings) -> None:
         for scope in settings.SCOPES:
-            data_file_path = self._get_path(settings.FILE_PREFIX, scope)
+            data_file_path = self._get_path(scope)
 
             with open(data_file_path, "r") as file:
                 self.rules += [HoldRule(settings=settings, **i) for i in json.load(file)]
 
-    def write_rules(self, settings, scope: Scope) -> None:
-        data_file_path = self._get_path(settings.FILE_PREFIX, scope)
+    def write_rules(self, scope: Scope) -> None:
+        data_file_path = self._get_path(scope)
 
         with open(data_file_path, "w") as file:
             json.dump([i.dump_dict() for i in self.rules], file, indent=2)

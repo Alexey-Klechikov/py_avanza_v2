@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
-from services.hold.models import Direction, HoldRule
+from services.hold_statistics.models import Direction, HoldRule
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -140,15 +140,17 @@ def _get_hold_rule_from_candidate_rules(
 
 
 # MAIN
-def backtest_hold_interday(
+def backtest_hold_interday_statistics(
     data: pd.DataFrame,
-    end_of_day_times: List[time],
-    close_times: List[time],
+    slice_duration: int,
     direction: Direction,
     omx_reference_price: int,
 ) -> HoldRule:
+    eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
+    close_times = [i.time() for i in pd.date_range(start="09:02", end="09:58", freq=f"{slice_duration}min")]
+
     intervals: Dict[IntervalTime, List[CandidateRule]] = defaultdict(list)
-    for end_of_day in end_of_day_times:
+    for end_of_day in eod_times:
         for close_time in close_times:
             data_aggregated_by_time = _aggregate_data_by_time(data, end_of_day, close_time)
             gaps = _calculate_gaps(data_aggregated_by_time)
