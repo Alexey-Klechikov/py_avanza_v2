@@ -131,8 +131,8 @@ def generate_hold_rules_interday_statistics(
 
 def generate_hold_rules_intraday_correlation(settings, period_days: int, slice_duration: int):
     log.warning(
-        f"Generating INTRADAY correlation hold rules using period {period_days} days "
-        + f"using slice_duration {slice_duration} mins.",
+        f"TASK: GeneratE INTRADAY correlation hold rules using period {period_days} days "
+        + f"and slice_duration {slice_duration} mins.",
     )
 
     hold_rules = backtest_hold_intraday_correlation(
