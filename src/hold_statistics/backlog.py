@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-from services.hold_statistics.models import Action, Event, HoldRuleStatistics, Scope
+from hold_statistics.models import Action, Event, HoldRuleStatistics, Scope
 from utils.logger import get_logger
 
 log = get_logger()
@@ -15,7 +15,7 @@ class Backlog:
         self.events: List[Event] = []
 
     def _get_path(self, scope: Scope) -> str:
-        project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
+        project_root_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
         return f"{project_root_dir}/config/hold_{scope.value.lower()}_statistics_rules.json"
 
     def read_rules(self, settings) -> None:

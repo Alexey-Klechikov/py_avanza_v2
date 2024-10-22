@@ -4,18 +4,12 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from apis.avanza.trade.models import Direction
+
 
 class Action(Enum):
     BUY = "BUY"
     SELL = "SELL"
-
-    def __str__(self):
-        return self.value
-
-
-class Direction(Enum):
-    BULL = "BULL"
-    BEAR = "BEAR"
 
     def __str__(self):
         return self.value

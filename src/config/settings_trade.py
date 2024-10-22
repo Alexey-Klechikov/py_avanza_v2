@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-from config.settings_base import BaseOMX, BaseTrade
+from config.settings_base import BaseOMX, BaseTradeStrategies
 
 
 @dataclass
-class TradeStrategies(BaseOMX, BaseTrade):
+class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
     TRADING_DATA: str = "avanza"

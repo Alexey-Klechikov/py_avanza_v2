@@ -2,12 +2,17 @@ from dataclasses import dataclass
 
 
 @dataclass
-class BaseTrade:
+class BaseTradeStrategies:
     ACCOUNT_ID: str = "5554179"
 
 
 @dataclass
-class BaseHold:
+class BaseHoldStatistics:
+    ACCOUNT_ID: str = "9568450"
+
+
+@dataclass
+class BaseHoldCorrelation:
     ACCOUNT_ID: str = "9568450"
 
 

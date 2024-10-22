@@ -12,12 +12,13 @@ from apis.investing.operators import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
-from backtest import backtest_hold_interday_statistics, backtest_hold_intraday_statistics
-from backtest import backtest_trade_strategies as _backtest_trade_strategies
-from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
-from services import BacklogHoldStatistics, Storage
-from services.hold_statistics.models import Direction, Scope
+from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
+from hold_correlation import BacklogHoldCorrelation, backtest_hold_intraday_correlation
+from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statistics, backtest_hold_intraday_statistics
+from hold_statistics.models import Direction, Scope
+from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
+from trade_strategies import backtest_trade_strategies as _backtest_trade_strategies
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -82,7 +83,7 @@ def backtest_trade_strategies(settings, period_days: int):
 
 def generate_hold_rules_intraday_statistics(settings, period_days: int, slice_duration: int) -> None:
     log.warning(
-        f"Generating INTRADAY hold rules using period {period_days} days "
+        f"Generating INTRADAY statistics hold rules using period {period_days} days "
         + f"using slice_duration {slice_duration} mins.",
     )
 
@@ -110,7 +111,7 @@ def generate_hold_rules_interday_statistics(
     direction: Direction,
 ) -> None:
     log.warning(
-        f"Generating INTERDAY hold rules using period {period_days} days "
+        f"Generating INTERDAY statistics hold rules using period {period_days} days "
         + f"for direction {direction.value} using slice_duration {slice_duration} mins.",
     )
 
@@ -128,6 +129,25 @@ def generate_hold_rules_interday_statistics(
     backlog.write_rules(Scope.INTERDAY)
 
 
+def generate_hold_rules_intraday_correlation(settings, period_days: int, slice_duration: int):
+    log.warning(
+        f"Generating INTRADAY correlation hold rules using period {period_days} days "
+        + f"using slice_duration {slice_duration} mins.",
+    )
+
+    hold_rules = backtest_hold_intraday_correlation(
+        settings,
+        _get_data(period_days, settings, resolution="5m"),
+        slice_duration,
+    )
+    for i, hold_rule in enumerate(hold_rules):
+        log.info(f"Hold Rule {i+1}: {hold_rule.dump_dict()}")
+
+    backlog = BacklogHoldCorrelation()
+    backlog.rules = hold_rules
+    backlog.write_rules()
+
+
 if __name__ == "__main__":
     try:
         cache_history(SETTINGS_TRADE_STRATEGIES)
@@ -139,6 +159,7 @@ if __name__ == "__main__":
             slice_duration=2,
             direction=Direction.BULL,
         )
+        generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
 
     except Exception as e:
         telegram = Telegram()

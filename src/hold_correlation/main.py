@@ -1,0 +1,80 @@
+import warnings
+
+import pandas as pd
+
+from hold_correlation import BacklogHoldCorrelation
+from utils.logger import get_logger
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
+pd.options.mode.chained_assignment = None  # default='warn'
+
+log = get_logger()
+
+
+# def sleep_until_next_event(event: Event) -> None:
+#     if event is None:
+#         return
+
+#     sleep_time = (datetime.combine(datetime.today(), event.at) - datetime.now()).seconds
+#     hours, remainder = divmod(sleep_time, 3600)
+#     minutes, remainder = divmod(remainder, 60)
+
+#     if (datetime.now() - datetime.combine(datetime.today(), event.at)).seconds < 120:
+#         return
+
+#     log.info(f"Sleeping for {hours}:{minutes}:{remainder}")
+
+#     sleep(sleep_time)
+
+#     get_client.cache_clear()
+
+
+# MAIN
+def hold(dry_run: bool, settings) -> None:
+    log.info("Start holding" + (" | DRY_RUN" if dry_run else ""))
+
+    backlog = BacklogHoldCorrelation()
+    backlog.read_rules(settings)
+
+    times = [i.time() for i in pd.date_range(start="10:00", end="17:00", freq="10min")]
+
+    for i in times:
+        print("-----\nTESTED_TIME", i)
+
+        backlog.get_deciding_rules_for_time(i)
+
+    # backlog.extract_events_from_rules()
+
+    # while datetime.now().time() < time(18, 0):
+    #     event = backlog.pop_next_event()
+    #     if event is None:
+    #         return
+
+    #     sleep_until_next_event(event)
+
+    #     orders = Orders(
+    #         account_id=event.settings.ACCOUNT_ID,
+    #         filter_orderbook_name=event.settings.NAME,
+    #         filter_orderbook_direction=event.orderbook_direction.value,
+    #     )
+
+    #     portfolio = Portfolio(
+    #         account_id=event.settings.ACCOUNT_ID,
+    #         filter_orderbook_name=event.settings.NAME,
+    #         filter_orderbook_direction=event.orderbook_direction.value,
+    #     )
+
+    #     if event.action == Action.SELL:
+    #         Trade.sell(event.orderbook_direction, orders, portfolio, dry_run)
+
+    #     if event.action == Action.BUY:
+    #         portfolio.reload_balance()
+
+    #         if portfolio.buying_power < event.budget:
+    #             log.warning(f"Insufficient buying power: {portfolio.buying_power} < {event.budget}")
+    #             continue
+
+    #         watchlists = Watchlists(event.settings, "CERTIFICATE")
+
+    #         Trade.buy(event.orderbook_direction, orders, watchlists, portfolio, event.budget, dry_run)
+    #         Trade.take_profit(event.orderbook_direction, orders, portfolio, event.take_profit)

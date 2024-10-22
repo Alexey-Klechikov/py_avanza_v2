@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, time
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -33,6 +34,7 @@ class HoldRuleCorrelation(BaseModel):
     correlation: Correlation
     efficiency: float
     multiplier: float
+    settings: Any = None
 
     def __str__(self) -> str:
         return (

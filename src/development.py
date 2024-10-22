@@ -6,16 +6,13 @@ from typing import Optional
 
 import pandas as pd
 
-from backtest import (
-    backtest_hold_interday_statistics,
-    backtest_hold_intraday_correlation,
-    backtest_hold_intraday_statistics,
-    backtest_trade_strategies,
-)
-from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
-from services import BacklogHoldCorrelation, BacklogHoldStatistics, Storage
-from services.hold_statistics.models import Direction, Scope
+from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
+from hold_correlation import BacklogHoldCorrelation, backtest_hold_intraday_correlation
+from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statistics, backtest_hold_intraday_statistics
+from hold_statistics.models import Direction, Scope
+from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
+from trade_strategies import backtest_trade_strategies
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -157,6 +154,7 @@ def test_hold_intraday_statistics(settings, period_days: int, slice_duration: in
 def test_hold_intraday_correlation(settings, period_days: int, slice_duration: int):
     backlog = BacklogHoldCorrelation()
     hold_rules = backtest_hold_intraday_correlation(
+        settings,
         _get_data(period_days, settings, resolution="5m"),
         slice_duration,
     )
@@ -176,4 +174,6 @@ if __name__ == "__main__":
     settings = SETTINGS_HOLD_STATISTICS
     # test_hold_intraday_statistics(settings, period_days=40, slice_duration=4)
     # test_hold_interday_statistics(settings, period_days=40, slice_duration=2, direction=Direction.BULL)
+
+    settings = SETTINGS_HOLD_CORRELATION
     test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)

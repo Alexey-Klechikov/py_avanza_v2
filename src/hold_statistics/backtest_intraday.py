@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from services.hold_statistics.models import Direction, HoldRuleStatistics
+from hold_statistics.models import Direction, HoldRuleStatistics
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -174,7 +174,7 @@ def backtest_hold_intraday_statistics(
     direction: Direction,
     omx_reference_price: int,
 ) -> List[HoldRuleStatistics]:
-    log.warning(f"Backtesting intraday hold strategy for {direction}")
+    log.warning(f"Backtesting hold_statistics strategy for {direction}")
 
     times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
 

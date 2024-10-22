@@ -29,10 +29,11 @@ class UnpackedWatchlistName:
 
 
 class Watchlists:
-    def __init__(self, settings):
+    def __init__(self, settings, filter_orderbook_type: Optional[str] = None):
         self.settings = settings
         self.valid_instruments = ValidInstruments()
         self.preferred_instrument = PreferredInstrument()
+        self.filter_orderbook_type = filter_orderbook_type
 
     def _set_preferred_instrument(self):
         log.info("Set preferred instruments using watchlists")
@@ -128,7 +129,7 @@ class Watchlists:
 
                 get_client().add_to_watchlist(hit.order_book_id, watchlist.id)
 
-    def refresh_all(self, filter_orderbook_type: Optional[str] = None):
+    def refresh_all(self):
         log.debug("Refresh watchlists")
 
         self.valid_instruments = ValidInstruments()
@@ -138,7 +139,7 @@ class Watchlists:
             if (
                 unpacked_watchlist_name.trading_perspective != "DT"
                 or unpacked_watchlist_name.instrument != self.settings.NAME
-                or (filter_orderbook_type and filter_orderbook_type not in watchlist.name)
+                or (self.filter_orderbook_type and self.filter_orderbook_type not in watchlist.name)
             ):
                 continue
 

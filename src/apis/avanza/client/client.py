@@ -27,7 +27,6 @@ from apis.avanza.client.models import (
     SearchResult,
 )
 from apis.avanza.client.models.chart_data import ChartData
-from config import ACCOUNT_USERNAME
 from utils.logger import get_logger
 
 log = get_logger()
@@ -264,8 +263,13 @@ class Avanza(AvanzaBase):
 
 
 @lru_cache
-def get_client(user: str = ACCOUNT_USERNAME) -> Avanza:
+def get_client(user: Optional[str] = None) -> Avanza:
+    from config import ACCOUNT_USERNAME
+
     log.debug("Connect to Avanza")
+
+    if user is None:
+        user = ACCOUNT_USERNAME
 
     credentials = {
         "username": keyring.get_password(user, "un"),

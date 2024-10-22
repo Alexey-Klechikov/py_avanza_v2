@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
 
-from services.hold_correlation.models import Correlation, HoldRuleCorrelation, Interval
+from hold_correlation.models import Correlation, HoldRuleCorrelation, Interval
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -174,6 +174,7 @@ def backtest_intervals_correlation_quantitatively(
     resampled_data: pd.DataFrame,
     min_deciding_price_change: float,
     max_counter_cut_off: float,
+    max_cut_off_multiplier: int,
     min_efficiency: float,
 ) -> List[IntervalsCorrelationQuantitative]:
     log.info("Get intervals correlation efficiency (quantitative)")
@@ -203,7 +204,7 @@ def backtest_intervals_correlation_quantitatively(
             return
 
         stats_per_cut_off = []
-        for cut_off_multiplier in [i / 10 for i in range(10, 20)]:
+        for cut_off_multiplier in [i / 10 for i in range(10, max_cut_off_multiplier)]:
             counter_per_cut_off = IntervalsCorrelationQuantitative(
                 counter_profit=0,
                 counter_deals=len(stats),
@@ -288,7 +289,7 @@ def filter_intervals_correlations(
 
 
 # MAIN
-def backtest_hold_intraday_correlation(data: pd.DataFrame, slice_duration: int) -> List[HoldRuleCorrelation]:
+def backtest_hold_intraday_correlation(settings, data: pd.DataFrame, slice_duration: int) -> List[HoldRuleCorrelation]:
     resampled_data = aggregate_data_by_time(data, slice_duration)
     intervals = generate_intervals(
         slice_duration,
@@ -308,8 +309,9 @@ def backtest_hold_intraday_correlation(data: pd.DataFrame, slice_duration: int) 
     intervals_correlation_efficiency_quantitative = backtest_intervals_correlation_quantitatively(
         aggregated_intervals_correlation,
         resampled_data,
-        min_deciding_price_change=2.0,
+        min_deciding_price_change=settings.MIN_DECIDING_PRICE_CHANGE,
         max_counter_cut_off=10.0,
+        max_cut_off_multiplier=25,
         min_efficiency=0.70,
     )
     filtered_intervals_correlation = filter_intervals_correlations(intervals_correlation_efficiency_quantitative)

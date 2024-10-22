@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
-from services.hold_statistics.models import Direction, HoldRuleStatistics
+from hold_statistics.models import Direction, HoldRuleStatistics
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)

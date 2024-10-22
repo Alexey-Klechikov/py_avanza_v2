@@ -5,10 +5,10 @@ from typing import Optional
 import pandas as pd
 
 from apis.telegram.operators import Telegram
-from backtest import backtest_trade_strategies
 from config import SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
+from trade_strategies import backtest_trade_strategies
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
