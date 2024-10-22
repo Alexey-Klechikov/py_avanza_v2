@@ -30,5 +30,5 @@ class Backlog:
         with open(data_file_path, "w") as file:
             json.dump([i.dump_dict() for i in self.rules], file, indent=2)
 
-    def get_deciding_rules_for_time(self, time: time) -> List[HoldRuleCorrelation]:
+    def get_rules(self, time: time) -> List[HoldRuleCorrelation]:
         return list(filter(lambda rule: rule.action_interval.start <= time <= rule.action_interval.end, self.rules))
