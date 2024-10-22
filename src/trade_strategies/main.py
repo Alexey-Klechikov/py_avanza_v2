@@ -13,7 +13,6 @@ from apis.avanza.client import get_client
 from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
 from apis.avanza.trade import Trade
 from apis.avanza.trade.models import Direction
-from apis.telegram.operators import Telegram as TelegramBase
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from services import Storage
@@ -156,64 +155,6 @@ class Budget:
             log.info(f"Budget adjusted: {self.settings.BUDGET_MINIMUM} -> {self.value}")
 
 
-class Telegram(TelegramBase):
-    def __init__(self):
-        super().__init__()
-        self.messages = []
-
-        self.final_balance = 0
-        self.total_value = 0
-        self.deals = []
-
-    def log_final_balance(self, portfolio: Portfolio) -> None:
-        self.final_balance = portfolio.total_value
-
-    def log_deals(self, orders: Orders) -> None:
-        deals = orders.get_past()
-        if not deals:
-            return
-
-        deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
-        for _, group in deals_df.groupby("orderbook_id")[["amount", "time", "side"]]:
-            if len(group) == 1:
-                continue
-
-            group.sort_values("time", inplace=True)
-            group["amount"] = group.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
-
-            group_sum = 0
-            deal_time = None
-            for i, (_, row) in enumerate(group.iterrows()):
-                if i == 0 and row["side"] == "SELL":
-                    continue
-
-                if not deal_time:
-                    deal_time = row["time"].strftime("%Y-%m-%d %H:%M:%S")
-
-                group_sum += row["amount"]
-
-            self.deals.append((round(group_sum), deal_time))
-
-        self.deals.sort(key=lambda x: x[1])
-
-        if orders.active_order:
-            self.messages.append(f"Active order: {orders.active_order.orderbook.name}")
-
-    def send_message(self, budget: Budget, settings) -> None:
-        performance = 0
-        if self.deals:
-            performance = round(sum([i[0] for i in self.deals]))
-
-        self.messages = [
-            f"Finished trading {settings.NAME} with budget: {budget.value}",
-            f"Performance: {performance} SEK [{round(100 * (performance)/budget.value)} %]",
-            f"Total value: {round(self.final_balance)}",
-            f"Deals: {len(self.deals)} st. " + (f"{[i[0] for i in self.deals]}" if self.deals else ""),
-        ] + self.messages
-
-        super().send_message()
-
-
 class FlowAction(Enum):
     TRADE = "TRADE"
     DO_NOTHING = "DO_NOTHING"
@@ -333,8 +274,6 @@ def trade(dry_run: bool, settings) -> None:
     budget = Budget(settings)
     budget.adjust(orders, portfolio)
 
-    telegram = Telegram()
-
     watchlists = Watchlists(settings, "WARRANT")
     watchlists.update_all()
 
@@ -359,9 +298,3 @@ def trade(dry_run: bool, settings) -> None:
         for direction in flow.directions_buy:
             Trade.buy(direction, orders, watchlists, portfolio, budget.value, dry_run)
             Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
-
-    portfolio.reload_balance()
-
-    telegram.log_final_balance(portfolio)
-    telegram.log_deals(orders)
-    telegram.send_message(budget, settings)

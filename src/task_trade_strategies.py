@@ -25,7 +25,7 @@ if __name__ == "__main__":
         log.exception(str(e))
 
         telegram = TelegramBase()
-        telegram.messages = ["Error in task_trade.py"]
+        telegram.messages = ["Error in task_trade_strategies"]
         telegram.send_message()
 
         raise e

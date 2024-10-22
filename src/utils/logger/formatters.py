@@ -12,7 +12,7 @@ class OneLineFormatter(logging.Formatter):
         self.displacements = {
             0: {"type": "time", "size": 8},
             1: {"type": "logger", "size": 9},
-            2: {"type": "message", "size": 33},
+            2: {"type": "message", "size": 35},
         }
 
     def format(self, record) -> str:

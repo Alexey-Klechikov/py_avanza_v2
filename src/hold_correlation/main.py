@@ -1,15 +1,21 @@
 import warnings
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, time
+from enum import Enum
+from http.client import RemoteDisconnected
+from time import sleep
 from typing import List, Optional
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
+from requests.exceptions import ConnectionError
 
-from apis.avanza.operators import Chart
+from apis.avanza.client import get_client
+from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
+from apis.avanza.trade import Trade
 from apis.avanza.trade.models import Direction
 from hold_correlation import BacklogHoldCorrelation
-from hold_correlation.models import Correlation, HoldRuleCorrelation, Interval
+from hold_correlation.models import Correlation, HoldRuleCorrelation
 from services import Storage
 from utils.logger import get_logger
 
@@ -17,24 +23,6 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
-
-
-# def sleep_until_next_event(event: Event) -> None:
-#     if event is None:
-#         return
-
-#     sleep_time = (datetime.combine(datetime.today(), event.at) - datetime.now()).seconds
-#     hours, remainder = divmod(sleep_time, 3600)
-#     minutes, remainder = divmod(remainder, 60)
-
-#     if (datetime.now() - datetime.combine(datetime.today(), event.at)).seconds < 120:
-#         return
-
-#     log.info(f"Sleeping for {hours}:{minutes}:{remainder}")
-
-#     sleep(sleep_time)
-
-#     get_client.cache_clear()
 
 
 class Data:
@@ -63,55 +51,126 @@ class Data:
 
 @dataclass
 class Action:
-    multiplier: float
+    base_price: float
+    latest_price: float
     price_difference: float
+    multiplier: float
     efficiency: float
     direction: Direction
 
+    @property
+    def price_has_passed(self) -> bool:
+        return self.latest_price > self.base_price + (self.price_difference * self.multiplier)
 
-def get_interval_price_difference(
-    interval: Interval,
-    data: pd.DataFrame,
-) -> float:
-    tested_interval_rows = data.between_time(interval.start, interval.end)
-    return tested_interval_rows["Close"].iloc[-2] - tested_interval_rows["Open"].iloc[0]
+    @property
+    def opposite_direction(self) -> Direction:
+        return Direction("BULL" if self.direction == Direction.BEAR else "BEAR")
 
 
-def get_deciding_rule(
-    settings,
-    hold_rules: List[HoldRuleCorrelation],
-    data: Data,
-) -> Optional[Action]:
-    actions: List[Action] = []
-    total_efficiency_coefficient = 0
+class FlowAction(Enum):
+    TRADE = "TRADE"
+    DO_NOTHING = "DO_NOTHING"
+    EXIT_TRADING = "EXIT_TRADING"
 
-    for hold_rule in hold_rules:
-        price_difference = get_interval_price_difference(hold_rule.deciding_interval, data.data)
-        if abs(price_difference) < settings.MIN_DECIDING_PRICE_CHANGE:
-            continue
 
-        direction_coefficient = (1 if hold_rule.correlation == Correlation.SAME else -1) * (
-            1 if price_difference > 0 else -1
-        )
-        total_efficiency_coefficient += direction_coefficient * hold_rule.efficiency
-        actions.append(
-            Action(
-                multiplier=hold_rule.multiplier,
-                price_difference=abs(round(price_difference, 2)),
-                efficiency=hold_rule.efficiency,
-                direction=Direction("BULL" if direction_coefficient > 0 else "BEAR"),
-            ),
-        )
+class Flow:
+    def __init__(self, settings):
+        self.settings = settings
 
-    action_direction = Direction("BULL" if total_efficiency_coefficient > 0 else "BEAR")
+        self.directions_sell: List[Direction] = []
+        self.directions_buy: List[Direction] = []
 
-    actions = [i for i in actions if i.direction == action_direction]
-    if not actions:
-        return
+    def _get_deciding_rule(
+        self,
+        settings,
+        hold_rules: List[HoldRuleCorrelation],
+        data: Data,
+    ) -> Optional[Action]:
+        if not hold_rules:
+            return
 
-    log.info(f"Total efficiency coefficient: {total_efficiency_coefficient} -> {action_direction}")
+        actions: List[Action] = []
+        total_efficiency_coefficient = 0
 
-    return max(actions, key=lambda x: (x.efficiency, x.price_difference))
+        for hold_rule in hold_rules:
+            tested_interval_rows = data.data.between_time(
+                hold_rule.deciding_interval.start,
+                hold_rule.deciding_interval.end,
+            )
+            price_difference = tested_interval_rows["Close"].iloc[-2] - tested_interval_rows["Open"].iloc[0]
+
+            if abs(price_difference) < settings.MIN_DECIDING_PRICE_CHANGE:
+                continue
+
+            direction_coefficient = (1 if hold_rule.correlation == Correlation.SAME else -1) * (
+                1 if price_difference > 0 else -1
+            )
+            total_efficiency_coefficient += direction_coefficient * hold_rule.efficiency
+            actions.append(
+                Action(
+                    base_price=data.data.between_time(hold_rule.action_interval.start, hold_rule.action_interval.end)[
+                        "Open"
+                    ].iloc[0],
+                    latest_price=data.data["Close"].iloc[-1],
+                    price_difference=abs(round(price_difference, 2)),
+                    multiplier=hold_rule.multiplier,
+                    efficiency=hold_rule.efficiency,
+                    direction=Direction("BULL" if direction_coefficient > 0 else "BEAR"),
+                ),
+            )
+
+        action_direction = Direction("BULL" if total_efficiency_coefficient > 0 else "BEAR")
+
+        actions = [i for i in actions if i.direction == action_direction]
+        if not actions:
+            return
+
+        log.info(f"Total efficiency coefficient: {round(total_efficiency_coefficient, 2)} -> {action_direction}")
+
+        return max(actions, key=lambda x: (x.efficiency, x.price_difference))
+
+    def get_action(self, data: Data, backlog: BacklogHoldCorrelation, portfolio: Portfolio) -> FlowAction:
+        self.directions_sell = []
+        self.directions_buy = []
+
+        portfolio.reload_positions(caller="get_action")
+
+        # End of day
+        if datetime.now().time() >= self.settings.TRADING_END:
+            if not portfolio.positions:
+                return FlowAction.EXIT_TRADING
+
+            self.directions_sell = [Direction.BULL, Direction.BEAR]
+            return FlowAction.TRADE
+
+        sleep(600 - ((datetime.now().minute * 60 + datetime.now().second) % 600) + 6)
+
+        data.get()
+
+        # No action
+        hold_rules = backlog.get_rules(datetime.now().time())
+        action = self._get_deciding_rule(self.settings, hold_rules, data)
+        if action is None:
+            if not portfolio.positions:
+                return FlowAction.DO_NOTHING
+
+            self.directions_sell = [Direction.BULL, Direction.BEAR]
+            return FlowAction.TRADE
+
+        # Current price has passed the reference price with target profit
+        if action.price_has_passed:
+            if not portfolio.positions:
+                log.info("Price has passed. No action is taken.")
+                return FlowAction.DO_NOTHING
+
+            log.info("Price has passed. Sell all.")
+            self.directions_sell = [Direction.BULL, Direction.BEAR]
+            return FlowAction.TRADE
+
+        # Action
+        self.directions_buy = [action.direction]
+        self.directions_sell = [action.opposite_direction]
+        return FlowAction.TRADE
 
 
 # MAIN
@@ -119,20 +178,44 @@ def hold(dry_run: bool, settings) -> None:
     log.info("Start holding" + (" | DRY_RUN" if dry_run else ""))
 
     data = Data(settings)
-    data.get()
+
+    orders = Orders(
+        account_id=settings.ACCOUNT_ID,
+        filter_orderbook_name=settings.NAME,
+        dry_run=dry_run,
+    )
+
+    portfolio = Portfolio(
+        account_id=settings.ACCOUNT_ID,
+        filter_orderbook_name=settings.NAME,
+    )
+    portfolio.reload_positions()
+    portfolio.reload_balance()
+
+    watchlists = Watchlists(settings, "CERTIFICATE")
+    watchlists.update_all()
 
     backlog = BacklogHoldCorrelation()
     backlog.read_rules(settings)
 
-    times = [i.time() for i in pd.date_range(start="10:00", end="17:00", freq="10min")]
+    flow = Flow(settings)
 
-    for i in times:
-        hold_rules = backlog.get_rules(i)
+    while datetime.now().time() < time(17, 15):
+        try:
+            action = flow.get_action(data, backlog, portfolio)
+        except (ConnectionError, RemoteDisconnected):
+            get_client.cache_clear()
 
-        print("-----\nTESTED_TIME", i)
-
-        if not hold_rules:
+        if action == FlowAction.DO_NOTHING:
             continue
+        if action == FlowAction.EXIT_TRADING:
+            break
+        elif action == FlowAction.TRADE:
+            pass
 
-        action = get_deciding_rule(settings, hold_rules, data)
-        print("ACTION", action)
+        for direction in flow.directions_sell:
+            Trade.sell(direction, orders, portfolio, dry_run)
+
+        for direction in flow.directions_buy:
+            Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
+            Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)

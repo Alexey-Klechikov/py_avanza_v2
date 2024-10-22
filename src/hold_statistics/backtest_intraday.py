@@ -174,8 +174,6 @@ def backtest_hold_intraday_statistics(
     direction: Direction,
     omx_reference_price: int,
 ) -> List[HoldRuleStatistics]:
-    log.warning(f"Backtesting hold_statistics strategy for {direction}")
-
     times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
 
     intervals: Dict[IntervalTime, List[CutOffResult]] = defaultdict(list)

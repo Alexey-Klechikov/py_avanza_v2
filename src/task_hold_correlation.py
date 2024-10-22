@@ -25,7 +25,7 @@ if __name__ == "__main__":
         log.exception(str(e))
 
         telegram = TelegramBase()
-        telegram.messages = ["Error in task_hold.py"]
+        telegram.messages = ["Error in task_hold_correlation"]
         telegram.send_message()
 
         raise e

@@ -83,8 +83,8 @@ def backtest_trade_strategies(settings, period_days: int):
 
 def generate_hold_rules_intraday_statistics(settings, period_days: int, slice_duration: int) -> None:
     log.warning(
-        f"Generating INTRADAY statistics hold rules using period {period_days} days "
-        + f"using slice_duration {slice_duration} mins.",
+        f"TASK: Generate INTRADAY statistics hold rules using period {period_days} days "
+        + f"and slice_duration {slice_duration} mins.",
     )
 
     backlog = BacklogHoldStatistics()
@@ -111,8 +111,8 @@ def generate_hold_rules_interday_statistics(
     direction: Direction,
 ) -> None:
     log.warning(
-        f"Generating INTERDAY statistics hold rules using period {period_days} days "
-        + f"for direction {direction.value} using slice_duration {slice_duration} mins.",
+        f"TASK: Generate INTERDAY statistics hold rules for direction {direction.value} "
+        + f"using period {period_days} days and slice_duration {slice_duration} mins.",
     )
 
     hold_rule = backtest_hold_interday_statistics(

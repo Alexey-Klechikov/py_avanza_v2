@@ -82,7 +82,7 @@ def backtest_intervals_correlation_qualitatively(
     data: pd.DataFrame,
     max_interval_duration: int,
 ) -> List[Dict[Tuple[Interval, Interval], Dict[Correlation, int]]]:
-    log.info("Get intervals correlation efficiency (qualitative)")
+    log.debug("Get intervals correlation efficiency (qualitative)")
 
     def _backtest_deciding_interval(kwargs: dict) -> Dict[Tuple[Interval, Interval], Dict[Correlation, int]]:
         data: pd.DataFrame = kwargs["data"]
@@ -146,7 +146,7 @@ def aggregate_intervals_correlations(
     intervals_correlation: List[Dict[Tuple[Interval, Interval], Dict[Correlation, int]]],
     min_efficiency: float,
 ) -> List[IntervalsCorrelationQualitative]:
-    log.info("Aggregate intervals correlation results")
+    log.debug("Aggregate intervals correlation results")
 
     correlated_intervals = []
     for results_per_deciding_interval in intervals_correlation:
@@ -177,7 +177,7 @@ def backtest_intervals_correlation_quantitatively(
     max_cut_off_multiplier: int,
     min_efficiency: float,
 ) -> List[IntervalsCorrelationQuantitative]:
-    log.info("Get intervals correlation efficiency (quantitative)")
+    log.debug("Get intervals correlation efficiency (quantitative)")
 
     def _backtest_intervals_correlation(kwargs: dict) -> Optional[IntervalsCorrelationQuantitative]:
         deciding_interval: Interval = kwargs["deciding_interval"]
@@ -264,7 +264,7 @@ def backtest_intervals_correlation_quantitatively(
 def filter_intervals_correlations(
     intervals_correlation_efficiency_quantitative: List[IntervalsCorrelationQuantitative],
 ) -> List[IntervalsCorrelationQuantitative]:
-    log.info("Filter intervals correlation results")
+    log.debug("Filter intervals correlation results")
 
     reshaped_intervals_correlation = defaultdict(list)
     for interval_correlation in intervals_correlation_efficiency_quantitative:
