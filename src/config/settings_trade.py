@@ -10,12 +10,11 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_END: time = time(16, 58)
     TRADING_DATA: str = "avanza"
 
-    BUDGET_MINIMUM: int = 2000
-    BUDGET_PERCENT: float = 0.6
+    BUDGET: int = 2000
 
     TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.13
+    TRADING_TAKE_PROFIT: float = 0.08
+    TRADING_STOP_LOSS: float = 0.06
 
     INDICATORS: dict = field(
         default_factory=lambda: {

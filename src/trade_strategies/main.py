@@ -126,35 +126,6 @@ class Data:
             return signal
 
 
-class Budget:
-    def __init__(self, settings):
-        self.value = settings.BUDGET_MINIMUM
-        self.settings = settings
-
-    def adjust(self, orders: Orders, portfolio: Portfolio) -> None:
-        if datetime.now().time() < time(10, 0):
-            starting_balance = portfolio.total_value
-
-        else:
-            starting_balance = portfolio.buying_power
-
-            deals = orders.get_past()
-            if deals:
-                deals_df = pd.DataFrame([deal.__dict__ for deal in deals])
-                deals_df.sort_values("time", inplace=True)
-                deals_df = deals_df[deals_df["time"].dt.time >= self.settings.TRADING_START]
-                deals_df["amount"] = deals_df.apply(lambda x: x["amount"] * (-1 if x["side"] == "BUY" else 1), axis=1)
-
-                starting_balance -= deals_df["amount"].sum()
-
-            if portfolio.positions:
-                starting_balance += sum([position.value for position in portfolio.positions])
-
-        self.value = int(max([starting_balance * self.settings.BUDGET_PERCENT, self.settings.BUDGET_MINIMUM]))
-        if self.value > self.settings.BUDGET_MINIMUM:
-            log.info(f"Budget adjusted: {self.settings.BUDGET_MINIMUM} -> {self.value}")
-
-
 class FlowAction(Enum):
     TRADE = "TRADE"
     DO_NOTHING = "DO_NOTHING"
@@ -163,6 +134,7 @@ class FlowAction(Enum):
 
 class Flow:
     def __init__(self, settings, dry_run=False):
+        self.budget = settings.BUDGET
         self.trading_ends: time = settings.TRADING_END
         self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
@@ -175,6 +147,12 @@ class Flow:
         self.directions_buy = []
 
         portfolio.reload_positions(caller="get_action")
+        portfolio.reload_balance()
+
+        # Not enough funds on the account
+        if portfolio.buying_power < self.budget and not portfolio.positions:
+            log.info("Not enough funds on the account. No action is taken.")
+            return FlowAction.EXIT_TRADING
 
         # Stop loss
         if portfolio.positions:
@@ -271,9 +249,6 @@ def trade(dry_run: bool, settings) -> None:
     portfolio.reload_positions()
     portfolio.reload_balance()
 
-    budget = Budget(settings)
-    budget.adjust(orders, portfolio)
-
     watchlists = Watchlists(settings, "WARRANT")
     watchlists.update_all()
 
@@ -296,5 +271,5 @@ def trade(dry_run: bool, settings) -> None:
             Trade.sell(direction, orders, portfolio, dry_run)
 
         for direction in flow.directions_buy:
-            Trade.buy(direction, orders, watchlists, portfolio, budget.value, dry_run)
+            Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
             Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)

@@ -134,6 +134,12 @@ class Flow:
         self.directions_buy = []
 
         portfolio.reload_positions(caller="get_action")
+        portfolio.reload_balance()
+
+        # Not enough funds on the account
+        if portfolio.buying_power < self.settings.BUDGET and not portfolio.positions:
+            log.info("Not enough funds on the account. No action is taken.")
+            return FlowAction.EXIT_TRADING
 
         # End of day
         if datetime.now().time() >= self.settings.TRADING_END:

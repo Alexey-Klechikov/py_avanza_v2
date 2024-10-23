@@ -29,7 +29,7 @@ class Trade:
             portfolio.reload_positions(caller="sell")
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
-                return
+                break
 
             orders.place(
                 order_book_id=acquired_instrument.instrument.id,
@@ -44,7 +44,7 @@ class Trade:
             )
 
             if dry_run:
-                return
+                break
 
         if trade_result:
             log.warning(trade_result)
@@ -65,7 +65,7 @@ class Trade:
             portfolio.reload_positions(caller="buy")
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
             if acquired_instrument:
-                return
+                break
 
             watchlists.refresh_all()
             preferred_instrument = watchlists.preferred_instrument.get(direction.value)

@@ -91,7 +91,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
     target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
     stop_loss = settings.TRADING_STOP_LOSS / settings.MULTIPLIER
 
-    for i, row in data[["Close", "LONG", "SHORT", "EXIT", "High", "Low"]].iterrows():
+    for i, row in data[["Close", "LONG", "SHORT", "EXIT"]].iterrows():
         profit = None
         timestamp: datetime = i.to_pydatetime()  # type: ignore
 
@@ -142,8 +142,8 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 wallet.set(tested_direction, None)
 
             # Take profit
-            if (tested_direction == "LONG" and row["High"] > tested_instrument.take_profit_price) or (
-                tested_direction == "SHORT" and row["Low"] < tested_instrument.take_profit_price
+            if (tested_direction == "LONG" and close_price > tested_instrument.take_profit_price) or (
+                tested_direction == "SHORT" and close_price < tested_instrument.take_profit_price
             ):
                 sell_price = tested_instrument.take_profit_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
