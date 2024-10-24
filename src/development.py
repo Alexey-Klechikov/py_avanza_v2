@@ -1,18 +1,22 @@
 import json
 import os
 import warnings
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import timedelta
 
 import pandas as pd
 
 from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
-from hold_correlation import BacklogHoldCorrelation, backtest_hold_intraday_correlation
+from hold_correlation import (
+    BacklogHoldCorrelation,
+    backtest_hold_interday_correlation,
+    backtest_hold_intraday_correlation,
+)
 from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statistics, backtest_hold_intraday_statistics
 from hold_statistics.models import Direction, Scope
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from trade_strategies import backtest_trade_strategies
+from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -22,18 +26,15 @@ set_handlers("development")
 log = get_logger()
 
 
-def _get_data(period_days: int, settings, resolution: Optional[str] = None):
+def _get_data(period_days: int, settings, resolution: str | None = None):
     data = Storage(settings, resolution).read()
-    data = data.loc[
-        (data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days))
-        & (data.index < datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
-    ]
+    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
 
 
-def run_strategies_generation(settings, period_days: int, full: bool, comment: Optional[str] = None):
+def run_strategies_generation(settings, period_days: int, full: bool, comment: str | None = None):
     if full:
         log.warning("Generating strategies")
         backtest_trade_strategies(
@@ -162,7 +163,21 @@ def test_hold_intraday_correlation(settings, period_days: int, slice_duration: i
         log.info(f"Hold Rule {i+1}: {hold_rule.dump_dict()}")
 
     backlog.rules = hold_rules
-    backlog.write_rules()
+    backlog.write_rules(scope=Scope.INTRADAY)  # type: ignore
+
+
+def test_hold_interday_correlation(settings, period_days: int, slice_duration: int):
+    backlog = BacklogHoldCorrelation()
+    hold_rules = backtest_hold_interday_correlation(
+        settings,
+        _get_data(period_days, settings, resolution="5m"),
+        slice_duration,
+    )
+    for i, hold_rule in enumerate(hold_rules):
+        log.info(f"Hold Rule {i+1}: {hold_rule.dump_dict()}")
+
+    backlog.rules = hold_rules
+    backlog.write_rules(scope=Scope.INTERDAY)  # type: ignore
 
 
 if __name__ == "__main__":
@@ -176,4 +191,5 @@ if __name__ == "__main__":
     # test_hold_interday_statistics(settings, period_days=40, slice_duration=2, direction=Direction.BULL)
 
     settings = SETTINGS_HOLD_CORRELATION
-    test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)
+    # test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)
+    test_hold_interday_correlation(settings, period_days=40, slice_duration=10)

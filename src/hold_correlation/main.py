@@ -1,6 +1,6 @@
 import warnings
 from dataclasses import dataclass
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
@@ -16,6 +16,7 @@ from apis.avanza.trade.models import Direction
 from hold_correlation import BacklogHoldCorrelation
 from hold_correlation.models import Correlation, HoldRuleCorrelation
 from services import Storage
+from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -35,7 +36,7 @@ class Data:
         storage.write(Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.FIVE_MINUTES))
         data = storage.read()
 
-        self.data = data.loc[data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)]
+        self.data = data.loc[data.index >= TODAY_MIDNIGHT - timedelta(days=1)]
 
         resampled_data = self.data.resample(f"{self.slice_duration}min")
         self.data = pd.DataFrame(
@@ -79,7 +80,7 @@ class Flow:
         self.directions_sell: list[Direction] = []
         self.directions_buy: list[Direction] = []
 
-    def _get_deciding_rule(
+    def _get_action(
         self,
         settings,
         hold_rules: list[HoldRuleCorrelation],
@@ -92,29 +93,41 @@ class Flow:
         total_efficiency_coefficient = 0
 
         for hold_rule in hold_rules:
-            tested_interval_rows = data.data.between_time(
-                hold_rule.deciding_interval.start,
-                hold_rule.deciding_interval.end,
-            )
-            price_difference = tested_interval_rows["Close"].iloc[-2] - tested_interval_rows["Open"].iloc[0]
+            deciding_interval_rows = (
+                data.data.loc[
+                    (
+                        (data.data.index < TODAY_MIDNIGHT)
+                        if hold_rule.deciding_interval.start > hold_rule.action_interval.start
+                        else (data.data.index > TODAY_MIDNIGHT)
+                    )
+                ]
+            ).between_time(hold_rule.deciding_interval.start, hold_rule.deciding_interval.end)
 
-            if abs(price_difference) < settings.MIN_DECIDING_PRICE_CHANGE:
+            deciding_interval_price_difference = (
+                deciding_interval_rows["Close"].iloc[-2] - deciding_interval_rows["Open"].iloc[0]
+            )
+
+            if abs(deciding_interval_price_difference) < settings.MIN_DECIDING_PRICE_CHANGE:
                 continue
 
-            direction_coefficient = (1 if hold_rule.correlation == Correlation.SAME else -1) * (
-                1 if price_difference > 0 else -1
+            deciding_interval_direction_coefficient = (1 if hold_rule.correlation == Correlation.SAME else -1) * (
+                1 if deciding_interval_price_difference > 0 else -1
             )
-            total_efficiency_coefficient += direction_coefficient * hold_rule.efficiency
+            total_efficiency_coefficient += deciding_interval_direction_coefficient * hold_rule.efficiency
+
+            action_interval_rows = data.data.loc[data.data.index > TODAY_MIDNIGHT].between_time(
+                hold_rule.action_interval.start,
+                hold_rule.action_interval.end,
+            )
+
             actions.append(
                 Action(
-                    base_price=data.data.between_time(hold_rule.action_interval.start, hold_rule.action_interval.end)[
-                        "Open"
-                    ].iloc[0],
+                    base_price=action_interval_rows["Open"].iloc[0],
                     latest_price=data.data["Close"].iloc[-1],
-                    price_difference=abs(round(price_difference, 2)),
+                    price_difference=abs(round(deciding_interval_price_difference, 2)),
                     multiplier=hold_rule.multiplier,
                     efficiency=hold_rule.efficiency,
-                    direction=Direction("BULL" if direction_coefficient > 0 else "BEAR"),
+                    direction=Direction("BULL" if deciding_interval_direction_coefficient > 0 else "BEAR"),
                 ),
             )
 
@@ -148,7 +161,7 @@ class Flow:
 
         # No action
         hold_rules = backlog.get_rules(datetime.now().time())
-        action = self._get_deciding_rule(self.settings, hold_rules, data)
+        action = self._get_action(self.settings, hold_rules, data)
         if action is None:
             if not portfolio.positions:
                 return FlowAction.DO_NOTHING

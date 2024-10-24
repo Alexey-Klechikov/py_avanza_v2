@@ -23,7 +23,7 @@ class Backlog:
             with open(data_file_path) as file:
                 self.rules += [HoldRuleCorrelation(settings=settings, **i) for i in json.load(file)]
 
-    def write_rules(self, scope: Scope = Scope.INTRADAY) -> None:
+    def write_rules(self, scope: Scope) -> None:
         data_file_path = self._get_path(scope)
 
         with open(data_file_path, "w") as file:

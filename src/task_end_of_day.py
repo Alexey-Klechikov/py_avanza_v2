@@ -1,6 +1,6 @@
 import platform
 import warnings
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
@@ -12,12 +12,17 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
-from hold_correlation import BacklogHoldCorrelation, backtest_hold_intraday_correlation
+from hold_correlation import (
+    BacklogHoldCorrelation,
+    backtest_hold_interday_correlation,
+    backtest_hold_intraday_correlation,
+)
 from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statistics, backtest_hold_intraday_statistics
 from hold_statistics.models import Direction, Scope
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from trade_strategies import backtest_trade_strategies as _backtest_trade_strategies
+from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -28,10 +33,7 @@ log = get_logger()
 
 def _get_data(period_days: int, settings, resolution: str | None = None):
     data = Storage(settings, resolution).read()
-    data = data.loc[
-        (data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days))
-        & (data.index < datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
-    ]
+    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
@@ -144,7 +146,26 @@ def generate_hold_rules_intraday_correlation(settings, period_days: int, slice_d
 
     backlog = BacklogHoldCorrelation()
     backlog.rules = hold_rules
-    backlog.write_rules()
+    backlog.write_rules(scope=Scope.INTRADAY)  # type: ignore
+
+
+def generate_hold_rules_interday_correlation(settings, period_days: int, slice_duration: int):
+    log.warning(
+        f"TASK: Generate INTERDAY correlation hold rules using period {period_days} days "
+        + f"and slice_duration {slice_duration} mins.",
+    )
+
+    hold_rules = backtest_hold_interday_correlation(
+        settings,
+        _get_data(period_days, settings, resolution="5m"),
+        slice_duration,
+    )
+    for i, hold_rule in enumerate(hold_rules):
+        log.info(f"Hold Rule {i+1}: {hold_rule.dump_dict()}")
+
+    backlog = BacklogHoldCorrelation()
+    backlog.rules = hold_rules
+    backlog.write_rules(scope=Scope.INTERDAY)  # type: ignore
 
 
 if __name__ == "__main__":
@@ -159,6 +180,7 @@ if __name__ == "__main__":
             direction=Direction.BULL,
         )
         generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
 
     except Exception as e:
         telegram = Telegram()

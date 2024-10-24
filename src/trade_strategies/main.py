@@ -17,6 +17,7 @@ from apis.yahoo.operators import Ticker
 from services import Storage
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
+from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -57,9 +58,7 @@ class Data:
         data = storage.read()
         data_size_after = data.shape[0]
 
-        self.data = data.loc[
-            data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
-        ]
+        self.data = data.loc[data.index >= TODAY_MIDNIGHT - timedelta(days=4)]
 
         self.too_old = ((datetime.now() - self.data.index[-1]).seconds // 60) > 15
         self.is_new = data_size_before != data_size_after

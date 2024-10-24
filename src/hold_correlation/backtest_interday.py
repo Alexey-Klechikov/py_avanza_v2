@@ -1,6 +1,7 @@
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import timedelta
 
 import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -67,6 +68,7 @@ def generate_intervals(
     times = [i.time() for i in pd.date_range(start=start, end=end, freq=f"{slice_duration}min")]
     intervals = [Interval(buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time]
     intervals = [i for i in intervals if i.duration_min() <= max_interval_duration and i.duration_min() >= 10]
+
     return intervals
 
 
@@ -79,7 +81,8 @@ def _get_interval_price_diff(
 
 
 def backtest_intervals_correlation_qualitatively(
-    intervals: list[Interval],
+    deciding_intervals: list[Interval],
+    action_intervals: list[Interval],
     data: pd.DataFrame,
 ) -> list[dict[tuple[Interval, Interval], dict[Correlation, int]]]:
     log.debug("Get intervals correlation efficiency (qualitative)")
@@ -87,22 +90,20 @@ def backtest_intervals_correlation_qualitatively(
     def _backtest_deciding_interval(kwargs: dict) -> dict[tuple[Interval, Interval], dict[Correlation, int]]:
         data: pd.DataFrame = kwargs["data"]
         deciding_interval: Interval = kwargs["deciding_interval"]
-        intervals: list[Interval] = kwargs["intervals"]
+        action_intervals: list[Interval] = kwargs["action_intervals"]
 
         deciding_interval_correlations = defaultdict(lambda: {Correlation.SAME: 0, Correlation.OPPOSITE: 0})
-        for tested_interval in intervals:
-            if any(
-                [
-                    deciding_interval.start >= tested_interval.start,
-                    deciding_interval.start <= tested_interval.start and tested_interval.start <= deciding_interval.end,
-                    deciding_interval.start <= tested_interval.end and tested_interval.end <= deciding_interval.end,
-                ],
-            ):
-                continue
-
-            for _, day_data in data.groupby(data.index.date):  # type: ignore
+        for tested_interval in action_intervals:
+            for date, day_data in data.groupby(data.index.date):  # type: ignore
                 try:
-                    deciding_interval_price_difference = _get_interval_price_diff(deciding_interval, day_data)
+                    # Get the previous day's data
+                    previous_working_day = date - timedelta(days=1)
+                    previous_day_data = data.loc[data.index.date == previous_working_day]  # type: ignore
+
+                    if previous_day_data.empty:
+                        continue
+
+                    deciding_interval_price_difference = _get_interval_price_diff(deciding_interval, previous_day_data)
                     tested_interval_price_difference = _get_interval_price_diff(tested_interval, day_data)
                 except IndexError:
                     continue
@@ -130,9 +131,9 @@ def backtest_intervals_correlation_qualitatively(
                     {
                         "data": data,
                         "deciding_interval": deciding_interval,
-                        "intervals": intervals,
+                        "action_intervals": action_intervals,
                     }
-                    for deciding_interval in intervals
+                    for deciding_interval in deciding_intervals
                 ],
             ),
         )
@@ -183,10 +184,16 @@ def backtest_intervals_correlation_quantitatively(
         correlation: Correlation = kwargs["correlation"]
 
         stats = []
-        for _, day_data in resampled_data.groupby(resampled_data.index.date):  # type: ignore
+        for date, day_data in resampled_data.groupby(resampled_data.index.date):  # type: ignore
             try:
+                previous_working_day = date - timedelta(days=1)
+                previous_day_data = resampled_data.loc[resampled_data.index.date == previous_working_day]  # type: ignore
+
+                if previous_day_data.empty:
+                    continue
+
                 stat = (
-                    _get_interval_price_diff(deciding_interval, day_data),
+                    _get_interval_price_diff(deciding_interval, previous_day_data),
                     _get_interval_price_diff(action_interval, day_data)
                     * (-1 if correlation == Correlation.OPPOSITE else 1),
                 )
@@ -287,23 +294,32 @@ def filter_intervals_correlations(
 
 
 # MAIN
-def backtest_hold_intraday_correlation(settings, data: pd.DataFrame, slice_duration: int) -> list[HoldRuleCorrelation]:
+def backtest_hold_interday_correlation(settings, data: pd.DataFrame, slice_duration: int) -> list[HoldRuleCorrelation]:
     resampled_data = aggregate_data_by_time(data, slice_duration)
-    intervals = generate_intervals(
+    deciding_intervals = generate_intervals(
+        slice_duration,
+        start="15:00",
+        end="17:25",
+        max_interval_duration=60 * 2,
+    )
+    action_intervals = generate_intervals(
         slice_duration,
         start="09:00",
-        end="17:00",
+        end="12:00",
         max_interval_duration=60 * 2,
     )
 
     intervals_correlation_efficiency_qualitative = backtest_intervals_correlation_qualitatively(
-        intervals,
+        deciding_intervals,
+        action_intervals,
         resampled_data,
     )
+
     aggregated_intervals_correlation = aggregate_intervals_correlations(
         intervals_correlation_efficiency_qualitative,
         min_efficiency=0.75,
     )
+
     intervals_correlation_efficiency_quantitative = backtest_intervals_correlation_quantitatively(
         aggregated_intervals_correlation,
         resampled_data,

@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pandas as pd
 
@@ -8,6 +8,7 @@ from config import SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from trade_strategies import backtest_trade_strategies
+from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -19,10 +20,7 @@ log = get_logger()
 
 def _get_data(period_days: int, settings, resolution: str | None = None):
     data = Storage(settings, resolution).read()
-    data = data.loc[
-        (data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days))
-        & (data.index < datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
-    ]
+    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
