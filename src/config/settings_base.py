@@ -8,7 +8,7 @@ class BaseTradeStrategies:
 
 @dataclass
 class BaseHoldStatistics:
-    ACCOUNT_ID: str = "7143979"
+    ACCOUNT_ID: str = "9568450"
 
 
 @dataclass
