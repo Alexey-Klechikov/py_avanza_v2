@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Dict, List, Tuple
 
 from pydantic import BaseModel
 
@@ -24,13 +23,13 @@ class Counter(BaseModel):
 class Strategy:
     def __init__(
         self,
-        indicators_mapping: Dict[str, Dict[str, Indicator]],
-        selected_indicators: List[Tuple[str, str]],
+        indicators_mapping: dict[str, dict[str, Indicator]],
+        selected_indicators: list[tuple[str, str]],
         original: bool = False,
     ):
         self.counter = Counter()
         self.selected_indicators = selected_indicators
-        self.indicators_logic: List[Indicator] = []
+        self.indicators_logic: list[Indicator] = []
 
         components = []
         for category, name in selected_indicators:

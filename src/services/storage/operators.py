@@ -1,6 +1,5 @@
 import os
 import pickle
-from typing import Optional
 
 import pandas as pd
 
@@ -10,7 +9,7 @@ log = get_logger()
 
 
 class Storage:
-    def __init__(self, settings, resolution: Optional[str] = None) -> None:
+    def __init__(self, settings, resolution: str | None = None) -> None:
         self.resolution = resolution if resolution else settings.RESOLUTION
 
         self.path = self._get_path()

@@ -26,6 +26,7 @@ black = "*"
 pytest = "*"
 pre-commit = "*"
 flake8-pyproject = "*"
+pyupgrade = "*"
 
 [requires]
 python_version = "3.11"

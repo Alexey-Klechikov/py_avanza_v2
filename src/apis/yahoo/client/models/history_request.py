@@ -1,6 +1,5 @@
 from datetime import date
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -89,21 +88,21 @@ class Interval(Enum):
 
 
 class HistoryRequest(BaseModel):
-    period: Optional[Period] = Field(default=None)  # Either Use period parameter or use start and end
+    period: Period | None = Field(default=None)  # Either Use period parameter or use start and end
     interval: Interval = Interval.ONE_MINUTE  # Default is 1 minute
-    start: Optional[date] = Field(default=None)  # Default is 99 years ago
-    end: Optional[date] = Field(default=None)  # Default is now
-    prepost: Optional[bool] = Field(default=None)  # Include Pre and Post market data in results
-    auto_adjust: Optional[bool] = Field(default=None)  # Adjust all OHLC automatically? Default is True
-    back_adjust: Optional[bool] = Field(default=None)  # Back-adjusted data to mimic true historical prices
-    repair: Optional[bool] = Field(default=None)  # Detect currency unit 100x mixups and attempt repair.
-    keepna: Optional[bool] = Field(default=None)  # Keep NaN rows returned by Yahoo
-    proxy: Optional[str] = Field(default=None)  # Optional. Proxy server URL scheme. Default is None
-    rounding: Optional[bool] = Field(default=None)  # Round values to 2 decimal places
-    timeout: Optional[float] = Field(
+    start: date | None = Field(default=None)  # Default is 99 years ago
+    end: date | None = Field(default=None)  # Default is now
+    prepost: bool | None = Field(default=None)  # Include Pre and Post market data in results
+    auto_adjust: bool | None = Field(default=None)  # Adjust all OHLC automatically? Default is True
+    back_adjust: bool | None = Field(default=None)  # Back-adjusted data to mimic true historical prices
+    repair: bool | None = Field(default=None)  # Detect currency unit 100x mixups and attempt repair.
+    keepna: bool | None = Field(default=None)  # Keep NaN rows returned by Yahoo
+    proxy: str | None = Field(default=None)  # Optional. Proxy server URL scheme. Default is None
+    rounding: bool | None = Field(default=None)  # Round values to 2 decimal places
+    timeout: float | None = Field(
         default=None,
     )  # If not None stops waiting for a response after given number of seconds
-    raise_errors: Optional[bool] = Field(default=None)  # If True, then raise errors as Exceptions instead of logging
+    raise_errors: bool | None = Field(default=None)  # If True, then raise errors as Exceptions instead of logging
 
     def model_dump(self, **kwargs):
         request = super().model_dump(exclude_none=True, **kwargs)

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -45,7 +44,7 @@ class Order(BaseModel):
 class FundOrder(BaseModel):
     account: Account
     order_id: str = Field(alias="orderId")
-    volume: Optional[float] = None
+    volume: float | None = None
     amount: float
     orderbook_id: str = Field(alias="orderbookId")
     side: str
@@ -64,5 +63,5 @@ class FundOrder(BaseModel):
 
 
 class Orders(BaseModel):
-    orders: List[Order]
-    fund_orders: List[FundOrder] = Field(alias="fundOrders")
+    orders: list[Order]
+    fund_orders: list[FundOrder] = Field(alias="fundOrders")

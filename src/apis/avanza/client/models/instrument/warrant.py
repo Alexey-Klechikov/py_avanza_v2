@@ -1,17 +1,16 @@
 from datetime import date, datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
-def convert_timestamp_to_datetime(v: Optional[int]):
+def convert_timestamp_to_datetime(v: int | None):
     return datetime.fromtimestamp(v / 1000) if v is not None else None
 
 
 class HistoricalClosingPrices(BaseModel):
-    one_day: Optional[float] = Field(alias="oneDay", default=None)
-    one_week: Optional[float] = Field(alias="oneWeek", default=None)
-    one_month: Optional[float] = Field(alias="oneMonth", default=None)
+    one_day: float | None = Field(alias="oneDay", default=None)
+    one_week: float | None = Field(alias="oneWeek", default=None)
+    one_month: float | None = Field(alias="oneMonth", default=None)
     start: float
     start_date: date = Field(alias="startDate")
 
@@ -42,8 +41,8 @@ class Quote(BaseModel):
     buy: float = Field(default=None)
     sell: float = Field(default=None)
     last: float
-    highest: Optional[float] = Field(default=None)
-    lowest: Optional[float] = Field(default=None)
+    highest: float | None = Field(default=None)
+    lowest: float | None = Field(default=None)
     change: float
     change_percent: float = Field(alias="changePercent")
     spread: float = Field(default=None)
@@ -87,12 +86,12 @@ class OrderDepthLevel(BaseModel):
 
 class OrderDepth(BaseModel):
     received_time: int = Field(alias="receivedTime")
-    levels: List[OrderDepthLevel]
-    market_maker_level_in_bid: Optional[int] = Field(
+    levels: list[OrderDepthLevel]
+    market_maker_level_in_bid: int | None = Field(
         alias="marketMakerLevelInBid",
         default=None,
     )
-    market_maker_level_in_ask: Optional[int] = Field(
+    market_maker_level_in_ask: int | None = Field(
         alias="marketMakerLevelInAsk",
         default=None,
     )
@@ -143,10 +142,10 @@ class InstrumentWarrant(BaseModel):
     issuer: str
     documents: Documents
     order_depth: OrderDepth = Field(alias="orderDepth")
-    broker_trade_summaries: List[BrokerTradeSummary] = Field(
+    broker_trade_summaries: list[BrokerTradeSummary] = Field(
         alias="brokerTradeSummaries",
     )
     fee: Fee
-    trades: List[Trade]
+    trades: list[Trade]
     trading_unit: int = Field(alias="tradingUnit")
     collateral_value: float = Field(alias="collateralValue")

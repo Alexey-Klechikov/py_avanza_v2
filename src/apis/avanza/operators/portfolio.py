@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from avanza.constants import InstrumentType
 
 from apis.avanza.client import get_client
@@ -11,10 +9,10 @@ log = get_logger()
 
 class AcquiredInstrument:
     def __init__(self):
-        self.BULL: Optional[Position] = None
-        self.BEAR: Optional[Position] = None
+        self.BULL: Position | None = None
+        self.BEAR: Position | None = None
 
-    def get(self, direction: str) -> Optional[Position]:
+    def get(self, direction: str) -> Position | None:
         if direction == "BULL":
             return self.BULL
         elif direction == "BEAR":
@@ -27,13 +25,13 @@ class Portfolio:
     def __init__(
         self,
         account_id: str,
-        filter_orderbook_name: Optional[str] = None,
-        filter_orderbook_direction: Optional[str] = None,
+        filter_orderbook_name: str | None = None,
+        filter_orderbook_direction: str | None = None,
     ):
         self.acquired_instrument: AcquiredInstrument = AcquiredInstrument()
         self.total_value = 0
         self.buying_power = 0
-        self.positions: List[Position] = []
+        self.positions: list[Position] = []
 
         self.account_id = account_id
         self.filter_orderbook_name = filter_orderbook_name

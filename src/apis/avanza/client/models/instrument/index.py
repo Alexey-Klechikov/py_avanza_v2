@@ -1,10 +1,9 @@
 from datetime import date, datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
-def convert_timestamp_to_datetime(v: Optional[int]):
+def convert_timestamp_to_datetime(v: int | None):
     return datetime.fromtimestamp(v / 1000) if v is not None else None
 
 
@@ -69,7 +68,7 @@ class Company(BaseModel):
 
 
 class CompanyOwners(BaseModel):
-    owners: List[str]
+    owners: list[str]
 
 
 class BrokerTradeSummary(BaseModel):
@@ -81,8 +80,8 @@ class BrokerTradeSummary(BaseModel):
 
 
 class Dividends(BaseModel):
-    events: List[str]
-    past_events: List[str] = Field(alias="pastEvents")
+    events: list[str]
+    past_events: list[str] = Field(alias="pastEvents")
 
 
 class TradingTerms(BaseModel):
@@ -112,7 +111,7 @@ class InstrumentIndex(BaseModel):
     name: str
     isin: str
     instrument_id: int = Field(alias="instrumentId")
-    sectors: List[str]
+    sectors: list[str]
     tradable: str
     listing: Listing
     historical_closing_prices: HistoricalClosingPrices = Field(
@@ -124,9 +123,9 @@ class InstrumentIndex(BaseModel):
     stock: Stock
     company: Company
     company_owners: CompanyOwners = Field(alias="companyOwners")
-    broker_trade_summaries: List[BrokerTradeSummary] = Field(
+    broker_trade_summaries: list[BrokerTradeSummary] = Field(
         alias="brokerTradeSummaries",
     )
     dividends: Dividends
     trading_terms: TradingTerms = Field(alias="tradingTerms")
-    trades: List[Trade]
+    trades: list[Trade]

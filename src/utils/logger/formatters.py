@@ -16,7 +16,7 @@ class OneLineFormatter(logging.Formatter):
         }
 
     def format(self, record) -> str:
-        s = super(OneLineFormatter, self).format(record)
+        s = super().format(record)
         s = (
             s.replace("\n", " >>>")
             .replace("main.", "")

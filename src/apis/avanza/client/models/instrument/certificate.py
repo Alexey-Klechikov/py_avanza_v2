@@ -1,10 +1,9 @@
 from datetime import date, datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
-def convert_timestamp_to_datetime(v: Optional[int]):
+def convert_timestamp_to_datetime(v: int | None):
     return datetime.fromtimestamp(v / 1000) if v is not None else None
 
 
@@ -20,11 +19,11 @@ class Listing(BaseModel):
 
 
 class HistoricalClosingPrices(BaseModel):
-    one_day: Optional[float] = Field(alias="oneDay", default=None)
-    one_week: Optional[float] = Field(alias="oneWeek", default=None)
-    one_month: Optional[float] = Field(alias="oneMonth", default=None)
-    three_months: Optional[float] = Field(alias="threeMonths", default=None)
-    start_of_year: Optional[float] = Field(alias="startOfYear", default=None)
+    one_day: float | None = Field(alias="oneDay", default=None)
+    one_week: float | None = Field(alias="oneWeek", default=None)
+    one_month: float | None = Field(alias="oneMonth", default=None)
+    three_months: float | None = Field(alias="threeMonths", default=None)
+    start_of_year: float | None = Field(alias="startOfYear", default=None)
     one_year: float = Field(alias="oneYear", default=None)
     start: float
     start_date: date = Field(alias="startDate")
@@ -41,8 +40,8 @@ class Quote(BaseModel):
     buy: float = Field(default=None)
     sell: float = Field(default=None)
     last: float
-    highest: Optional[float] = Field(default=None)
-    lowest: Optional[float] = Field(default=None)
+    highest: float | None = Field(default=None)
+    lowest: float | None = Field(default=None)
     change: float
     change_percent: float = Field(alias="changePercent")
     spread: float = Field(default=None)
@@ -95,7 +94,7 @@ class OrderDepthLevel(BaseModel):
 
 class OrderDepth(BaseModel):
     received_time: datetime = Field(alias="receivedTime")
-    levels: List[OrderDepthLevel]
+    levels: list[OrderDepthLevel]
 
     @field_validator("received_time", mode="before")
     @classmethod
@@ -142,9 +141,9 @@ class InstrumentCertificate(BaseModel):
     leverage: float
     documents: Documents
     fee: Fee
-    trades: List[Trade]
+    trades: list[Trade]
     order_depth: OrderDepth = Field(alias="orderDepth")
-    broker_trade_summaries: List[BrokerTradeSummaries] = Field(
+    broker_trade_summaries: list[BrokerTradeSummaries] = Field(
         alias="brokerTradeSummaries",
     )
     collateral_value: float = Field(alias="collateralValue")

@@ -1,7 +1,6 @@
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -63,7 +62,7 @@ def generate_intervals(
     slice_duration: int,
     start: str,
     end: str,
-) -> List[Interval]:
+) -> list[Interval]:
     times = [i.time() for i in pd.date_range(start=start, end=end, freq=f"{slice_duration}min")]
     intervals = [Interval(buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time]
     return intervals
@@ -78,16 +77,16 @@ def _get_interval_price_diff(
 
 
 def backtest_intervals_correlation_qualitatively(
-    intervals: List[Interval],
+    intervals: list[Interval],
     data: pd.DataFrame,
     max_interval_duration: int,
-) -> List[Dict[Tuple[Interval, Interval], Dict[Correlation, int]]]:
+) -> list[dict[tuple[Interval, Interval], dict[Correlation, int]]]:
     log.debug("Get intervals correlation efficiency (qualitative)")
 
-    def _backtest_deciding_interval(kwargs: dict) -> Dict[Tuple[Interval, Interval], Dict[Correlation, int]]:
+    def _backtest_deciding_interval(kwargs: dict) -> dict[tuple[Interval, Interval], dict[Correlation, int]]:
         data: pd.DataFrame = kwargs["data"]
         deciding_interval: Interval = kwargs["deciding_interval"]
-        intervals: List[Interval] = kwargs["intervals"]
+        intervals: list[Interval] = kwargs["intervals"]
 
         deciding_interval_correlations = defaultdict(lambda: {Correlation.SAME: 0, Correlation.OPPOSITE: 0})
         for tested_interval in intervals:
@@ -143,9 +142,9 @@ def backtest_intervals_correlation_qualitatively(
 
 
 def aggregate_intervals_correlations(
-    intervals_correlation: List[Dict[Tuple[Interval, Interval], Dict[Correlation, int]]],
+    intervals_correlation: list[dict[tuple[Interval, Interval], dict[Correlation, int]]],
     min_efficiency: float,
-) -> List[IntervalsCorrelationQualitative]:
+) -> list[IntervalsCorrelationQualitative]:
     log.debug("Aggregate intervals correlation results")
 
     correlated_intervals = []
@@ -170,16 +169,16 @@ def aggregate_intervals_correlations(
 
 
 def backtest_intervals_correlation_quantitatively(
-    aggregated_intervals_correlation: List[IntervalsCorrelationQualitative],
+    aggregated_intervals_correlation: list[IntervalsCorrelationQualitative],
     resampled_data: pd.DataFrame,
     min_deciding_price_change: float,
     max_counter_cut_off: float,
     max_cut_off_multiplier: int,
     min_efficiency: float,
-) -> List[IntervalsCorrelationQuantitative]:
+) -> list[IntervalsCorrelationQuantitative]:
     log.debug("Get intervals correlation efficiency (quantitative)")
 
-    def _backtest_intervals_correlation(kwargs: dict) -> Optional[IntervalsCorrelationQuantitative]:
+    def _backtest_intervals_correlation(kwargs: dict) -> IntervalsCorrelationQuantitative | None:
         deciding_interval: Interval = kwargs["deciding_interval"]
         action_interval: Interval = kwargs["action_interval"]
         correlation: Correlation = kwargs["correlation"]
@@ -262,15 +261,15 @@ def backtest_intervals_correlation_quantitatively(
 
 
 def filter_intervals_correlations(
-    intervals_correlation_efficiency_quantitative: List[IntervalsCorrelationQuantitative],
-) -> List[IntervalsCorrelationQuantitative]:
+    intervals_correlation_efficiency_quantitative: list[IntervalsCorrelationQuantitative],
+) -> list[IntervalsCorrelationQuantitative]:
     log.debug("Filter intervals correlation results")
 
     reshaped_intervals_correlation = defaultdict(list)
     for interval_correlation in intervals_correlation_efficiency_quantitative:
         reshaped_intervals_correlation[interval_correlation.deciding_interval].append(interval_correlation)
 
-    filtered_intervals_correlation: List[IntervalsCorrelationQuantitative] = []
+    filtered_intervals_correlation: list[IntervalsCorrelationQuantitative] = []
     for interval_correlations in reshaped_intervals_correlation.values():
         max_efficiency_interval_correlation = max(interval_correlations, key=lambda x: x.counter_profit * x.efficiency)
         top_efficiency_interval_correlations = [
@@ -289,7 +288,7 @@ def filter_intervals_correlations(
 
 
 # MAIN
-def backtest_hold_intraday_correlation(settings, data: pd.DataFrame, slice_duration: int) -> List[HoldRuleCorrelation]:
+def backtest_hold_intraday_correlation(settings, data: pd.DataFrame, slice_duration: int) -> list[HoldRuleCorrelation]:
     resampled_data = aggregate_data_by_time(data, slice_duration)
     intervals = generate_intervals(
         slice_duration,

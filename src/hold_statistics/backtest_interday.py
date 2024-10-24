@@ -2,7 +2,6 @@ import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
-from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -30,8 +29,8 @@ class CandidateRule:
     efficiency: float
     total: float
 
-    end_of_day: Optional[time] = None
-    close_time: Optional[time] = None
+    end_of_day: time | None = None
+    close_time: time | None = None
 
     def __str__(self) -> str:
         return f"Total: {self.total}. Take profit: {self.take_profit}. Efficiency: {self.efficiency}."
@@ -105,10 +104,10 @@ def _calculate_candidate_rule(gaps: dict, direction: Direction, cut_off: int, om
 
 
 def _get_hold_rule_from_candidate_rules(
-    intervals: Dict[IntervalTime, List[CandidateRule]],
+    intervals: dict[IntervalTime, list[CandidateRule]],
     direction: Direction,
 ) -> HoldRuleStatistics:
-    final_candidate_rule: Optional[CandidateRule] = None
+    final_candidate_rule: CandidateRule | None = None
     for interval, candidate_rules in intervals.items():
         top_total = max([i.total for i in candidate_rules])
         filtered_candidate_rules = [i for i in candidate_rules if i.total >= top_total * 0.8]
@@ -149,7 +148,7 @@ def backtest_hold_interday_statistics(
     eod_times = [i.time() for i in pd.date_range(start="16:50", end="17:16", freq=f"{slice_duration}min")]
     close_times = [i.time() for i in pd.date_range(start="09:02", end="09:58", freq=f"{slice_duration}min")]
 
-    intervals: Dict[IntervalTime, List[CandidateRule]] = defaultdict(list)
+    intervals: dict[IntervalTime, list[CandidateRule]] = defaultdict(list)
     for end_of_day in eod_times:
         for close_time in close_times:
             data_aggregated_by_time = _aggregate_data_by_time(data, end_of_day, close_time)

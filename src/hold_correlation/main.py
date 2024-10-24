@@ -4,7 +4,6 @@ from datetime import datetime, time
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
-from typing import List, Optional
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
@@ -77,19 +76,19 @@ class Flow:
     def __init__(self, settings):
         self.settings = settings
 
-        self.directions_sell: List[Direction] = []
-        self.directions_buy: List[Direction] = []
+        self.directions_sell: list[Direction] = []
+        self.directions_buy: list[Direction] = []
 
     def _get_deciding_rule(
         self,
         settings,
-        hold_rules: List[HoldRuleCorrelation],
+        hold_rules: list[HoldRuleCorrelation],
         data: Data,
-    ) -> Optional[Action]:
+    ) -> Action | None:
         if not hold_rules:
             return
 
-        actions: List[Action] = []
+        actions: list[Action] = []
         total_efficiency_coefficient = 0
 
         for hold_rule in hold_rules:
@@ -134,12 +133,6 @@ class Flow:
         self.directions_buy = []
 
         portfolio.reload_positions(caller="get_action")
-        portfolio.reload_balance()
-
-        # Not enough funds on the account
-        if portfolio.buying_power < self.settings.BUDGET and not portfolio.positions:
-            log.info("Not enough funds on the account. No action is taken.")
-            return FlowAction.EXIT_TRADING
 
         # End of day
         if datetime.now().time() >= self.settings.TRADING_END:
@@ -172,6 +165,12 @@ class Flow:
             log.info("Price has passed. Sell all.")
             self.directions_sell = [Direction.BULL, Direction.BEAR]
             return FlowAction.TRADE
+
+        # Not enough funds on the account
+        portfolio.reload_balance()
+        if portfolio.buying_power < self.settings.BUDGET and not portfolio.positions:
+            log.info("Not enough funds on the account. No action is taken.")
+            return FlowAction.EXIT_TRADING
 
         # Action
         self.directions_buy = [action.direction]

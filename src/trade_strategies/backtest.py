@@ -1,6 +1,6 @@
 import warnings
 from datetime import datetime, time
-from typing import Any, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -27,8 +27,8 @@ class Order(BaseModel):
 
     signal_confirmation_time: datetime
 
-    sell_price: Optional[float] = None
-    sell_datetime: Optional[Any] = None
+    sell_price: float | None = None
+    sell_datetime: Any | None = None
 
     def sell(self, sell_price: float, sell_datetime: datetime, instrument_type: str) -> float:
         self.sell_price = sell_price
@@ -45,13 +45,13 @@ class Order(BaseModel):
 
 
 class Wallet(BaseModel):
-    LONG: Optional[Order] = None
-    SHORT: Optional[Order] = None
+    LONG: Order | None = None
+    SHORT: Order | None = None
 
-    def get(self, direction: str) -> Optional[Order]:
+    def get(self, direction: str) -> Order | None:
         return self.LONG if direction == "LONG" else self.SHORT
 
-    def set(self, direction: str, order: Optional[Order]) -> None:
+    def set(self, direction: str, order: Order | None) -> None:
         if direction == "LONG":
             self.LONG = order
         else:
@@ -176,7 +176,7 @@ def process_strategy(kwargs: dict) -> Strategy:
     data: pd.DataFrame = kwargs["data"]
     strategy: Strategy = kwargs["strategy"]
     settings = kwargs["settings"]
-    strategy_rank: Optional[str] = kwargs.get("strategy_rank")
+    strategy_rank: str | None = kwargs.get("strategy_rank")
 
     data["LONG"] = data["High"]
     data["SHORT"] = data["Low"]
@@ -192,7 +192,7 @@ def process_strategy(kwargs: dict) -> Strategy:
     return strategy
 
 
-def print_strategies_performance(strategies: List[Strategy]) -> None:
+def print_strategies_performance(strategies: list[Strategy]) -> None:
     for strategy in strategies:
         if strategy.counter.total_profit <= 0:
             break
@@ -229,9 +229,9 @@ def backtest_trade_strategies(
     data: pd.DataFrame,
     compose_strategies_list_method: ComposeStrategiesListMethod,
     settings,
-    indicators_filter: Optional[List[str]] = None,
-    old_strategies_file_name: Optional[str] = None,
-    new_strategies_file_name: Optional[str] = None,
+    indicators_filter: list[str] | None = None,
+    old_strategies_file_name: str | None = None,
+    new_strategies_file_name: str | None = None,
     plot: bool = False,
     **kwargs,
 ) -> None:

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,35 +19,35 @@ class Value(BaseModel):
 
 
 class Quote(BaseModel):
-    highest: Optional[Value]
-    lowest: Optional[Value]
-    buy: Optional[Value]
-    sell: Optional[Value]
+    highest: Value | None
+    lowest: Value | None
+    buy: Value | None
+    sell: Value | None
     latest: Value
     change: Value
     change_percent: Value = Field(alias="changePercent")
-    updated: Optional[datetime]
+    updated: datetime | None
 
 
 class Turnover(BaseModel):
-    volume: Optional[Value]
-    value: Optional[Value]
+    volume: Value | None
+    value: Value | None
 
 
 class LastDeal(BaseModel):
     date: datetime
-    time: Optional[datetime]
+    time: datetime | None
 
 
 class Orderbook(BaseModel):
     id: str
-    flag_code: Optional[str] = Field(alias="flagCode")
+    flag_code: str | None = Field(alias="flagCode")
     name: str
     type: str
     trade_status: str = Field(alias="tradeStatus")
     quote: Quote
     turnover: Turnover
-    last_deal: Optional[dict] = Field(alias="lastDeal")
+    last_deal: dict | None = Field(alias="lastDeal")
 
 
 class Instrument(BaseModel):
@@ -76,7 +75,7 @@ class WithOrderbookPosition(BaseModel):
         alias="averageAcquiredPriceInstrumentCurrency",
     )
     acquired_value: Value = Field(alias="acquiredValue")
-    last_trading_day_performance: Optional[LastTradingDayPerformance] = Field(
+    last_trading_day_performance: LastTradingDayPerformance | None = Field(
         alias="lastTradingDayPerformance",
     )
     collateral_factor: Value = Field(alias="collateralFactor")
@@ -91,7 +90,7 @@ class CashPosition(BaseModel):
 
 
 class AccountsPositions(BaseModel):
-    with_orderbook: List[WithOrderbookPosition] = Field(alias="withOrderbook")
+    with_orderbook: list[WithOrderbookPosition] = Field(alias="withOrderbook")
     without_orderbook: list = Field(alias="withoutOrderbook")
-    cash_positions: List[CashPosition] = Field(alias="cashPositions")
+    cash_positions: list[CashPosition] = Field(alias="cashPositions")
     with_credit_account: bool = Field(alias="withCreditAccount")

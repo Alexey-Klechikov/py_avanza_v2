@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
 from services.ta.strategies import compose_strategies_list, get_top_strategies
@@ -9,7 +7,7 @@ from utils.logger import get_logger
 log = get_logger()
 
 
-def get_indicators(data, settings, **kwargs) -> Dict[str, Dict[str, Indicator]]:
+def get_indicators(data, settings, **kwargs) -> dict[str, dict[str, Indicator]]:
     indicators_mapping = dict()
 
     trend = Trend(data)
@@ -59,9 +57,9 @@ def get_indicators(data, settings, **kwargs) -> Dict[str, Dict[str, Indicator]]:
 
 def get_strategies(
     compose_strategies_list_method: ComposeStrategiesListMethod,
-    indicators_mapping: Dict[str, Dict[str, Indicator]],
-    old_strategies_file_name: Optional[str] = None,
-) -> List[Strategy]:
+    indicators_mapping: dict[str, dict[str, Indicator]],
+    old_strategies_file_name: str | None = None,
+) -> list[Strategy]:
     return compose_strategies_list(
         compose_strategies_list_method,
         indicators_mapping,
@@ -70,7 +68,7 @@ def get_strategies(
 
 
 def read_top_strategies(
-    indicators_mapping: Dict[str, Dict[str, Indicator]],
-    strategies_file_name: Optional[str] = None,
-) -> List[Strategy]:
+    indicators_mapping: dict[str, dict[str, Indicator]],
+    strategies_file_name: str | None = None,
+) -> list[Strategy]:
     return get_top_strategies(indicators_mapping, strategies_file_name)

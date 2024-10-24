@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -23,7 +22,7 @@ class OHLC(BaseModel):
 
 class Resolution(BaseModel):
     chart_resolution: str = Field(alias="chartResolution")
-    available_resolutions: List[str] = Field(alias="availableResolutions")
+    available_resolutions: list[str] = Field(alias="availableResolutions")
 
 
 class Metadata(BaseModel):
@@ -31,6 +30,6 @@ class Metadata(BaseModel):
 
 
 class ChartData(BaseModel):
-    ohlc: List[OHLC]
+    ohlc: list[OHLC]
     metadata: Metadata
     previous_closing_price: float = Field(alias="previousClosingPrice")

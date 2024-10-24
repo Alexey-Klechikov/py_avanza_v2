@@ -1,5 +1,3 @@
-from typing import Optional
-
 from avanza.constants import InstrumentType
 from pydantic import BaseModel
 
@@ -11,8 +9,8 @@ class Instrument(BaseModel):
 
 
 class Quote(BaseModel):
-    buy: Optional[float]
-    sell: Optional[float]
+    buy: float | None
+    sell: float | None
 
 
 class Performance(BaseModel):

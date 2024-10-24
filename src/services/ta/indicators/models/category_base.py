@@ -1,5 +1,3 @@
-from typing import Dict
-
 import pandas as pd
 
 from services.ta.indicators.models import Indicator
@@ -11,4 +9,4 @@ log = get_logger()
 class IndicatorsCategoryBase:
     def __init__(self, data: pd.DataFrame) -> None:
         self.data = data
-        self.indicators: Dict[str, Indicator] = {}
+        self.indicators: dict[str, Indicator] = {}

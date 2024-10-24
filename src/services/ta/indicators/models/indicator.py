@@ -1,18 +1,18 @@
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, List, Optional
 
 from pydantic import BaseModel
 
 
 class Plot(BaseModel):
-    columns: List[str]
+    columns: list[str]
 
-    color: Optional[str] = None
-    type: Optional[str] = None
-    markersize: Optional[int] = None
-    ylim: Optional[List[float]] = None
-    secondary_y: Optional[bool] = None
-    ylabel: Optional[str] = None
+    color: str | None = None
+    type: str | None = None
+    markersize: int | None = None
+    ylim: list[float] | None = None
+    secondary_y: bool | None = None
+    ylabel: str | None = None
 
     def get_kwargs(self):
         return {
@@ -41,14 +41,14 @@ class Panel(str, Enum):
 
 class Plots(BaseModel):
     panel: Panel
-    list: List[Plot]
-    horizontal_lines: List[HorizontalLine] = []
+    list: list[Plot]
+    horizontal_lines: list[HorizontalLine] = []
 
 
 class Signal(BaseModel):
-    LONG: Optional[Callable] = None
-    SHORT: Optional[Callable] = None
-    EXIT: Optional[Callable] = None
+    LONG: Callable | None = None
+    SHORT: Callable | None = None
+    EXIT: Callable | None = None
 
 
 class Indicator(BaseModel):

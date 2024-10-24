@@ -3,7 +3,6 @@ from datetime import datetime, time, timedelta
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
-from typing import List, Optional
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
@@ -103,7 +102,7 @@ class Data:
             ):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
 
-    def get_signal(self) -> Optional[Signal]:
+    def get_signal(self) -> Signal | None:
         signal = None
 
         for i, strategy in enumerate(self.strategies):
@@ -139,20 +138,14 @@ class Flow:
         self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
 
-        self.directions_sell: List[Direction] = []
-        self.directions_buy: List[Direction] = []
+        self.directions_sell: list[Direction] = []
+        self.directions_buy: list[Direction] = []
 
     def get_action(self, data: Data, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.directions_buy = []
 
         portfolio.reload_positions(caller="get_action")
-        portfolio.reload_balance()
-
-        # Not enough funds on the account
-        if portfolio.buying_power < self.budget and not portfolio.positions:
-            log.info("Not enough funds on the account. No action is taken.")
-            return FlowAction.EXIT_TRADING
 
         # Stop loss
         if portfolio.positions:
@@ -202,6 +195,13 @@ class Flow:
             data.is_new = False
             data.get_strategies()
             signal = data.get_signal()
+
+            if signal:
+                # Not enough funds on the account
+                portfolio.reload_balance()
+                if portfolio.buying_power < self.budget and not portfolio.positions:
+                    log.info("Not enough funds on the account. No action is taken.")
+                    return FlowAction.EXIT_TRADING
 
             if signal == Signal.LONG:
                 self.directions_sell = [Direction.BEAR]

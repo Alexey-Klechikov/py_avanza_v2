@@ -1,10 +1,9 @@
 from datetime import date, datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
-def convert_timestamp_to_datetime(v: Optional[int]):
+def convert_timestamp_to_datetime(v: int | None):
     return datetime.fromtimestamp(v / 1000) if v is not None else None
 
 
@@ -29,7 +28,7 @@ class HistoricalClosingPrices(BaseModel):
     one_week: float = Field(alias="oneWeek")
     one_month: float = Field(alias="oneMonth")
     three_months: float = Field(alias="threeMonths")
-    start_of_year: Optional[float] = Field(alias="startOfYear")
+    start_of_year: float | None = Field(alias="startOfYear")
     one_year: float = Field(alias="oneYear")
     start: float
     start_date: date = Field(alias="startDate")
@@ -82,14 +81,14 @@ class KeyIndicators(BaseModel):
 
 
 class Quote(BaseModel):
-    buy: Optional[float] = Field(default=None)
-    sell: Optional[float] = Field(default=None)
+    buy: float | None = Field(default=None)
+    sell: float | None = Field(default=None)
     last: float
     highest: float
     lowest: float
     change: float
     change_percent: float = Field(alias="changePercent")
-    spread: Optional[float] = Field(default=None)
+    spread: float | None = Field(default=None)
     time_of_last: datetime = Field(alias="timeOfLast")
     total_value_traded: float = Field(alias="totalValueTraded")
     total_volume_traded: int = Field(alias="totalVolumeTraded")
@@ -123,7 +122,7 @@ class CompanyEvent(BaseModel):
 
 
 class CompanyEvents(BaseModel):
-    events: List[CompanyEvent]
+    events: list[CompanyEvent]
 
 
 class CompanyOwner(BaseModel):
@@ -133,7 +132,7 @@ class CompanyOwner(BaseModel):
 
 
 class CompanyOwners(BaseModel):
-    owners: List[CompanyOwner]
+    owners: list[CompanyOwner]
     updated: date
 
 
@@ -156,8 +155,8 @@ class DividendEvent(BaseModel):
 
 
 class Dividends(BaseModel):
-    events: List[DividendEvent]
-    past_events: List[DividendEvent] = Field(alias="pastEvents")
+    events: list[DividendEvent]
+    past_events: list[DividendEvent] = Field(alias="pastEvents")
 
 
 class TradingTerms(BaseModel):
@@ -204,7 +203,7 @@ class OrderDepthLevel(BaseModel):
 
 class OrderDepth(BaseModel):
     received_time: datetime = Field(alias="receivedTime")
-    levels: List[OrderDepthLevel]
+    levels: list[OrderDepthLevel]
 
     @field_validator("received_time", mode="before")
     @classmethod
@@ -217,7 +216,7 @@ class InstrumentStock(BaseModel):
     name: str
     isin: str
     instrument_id: int = Field(alias="instrumentId")
-    sectors: List[Sector]
+    sectors: list[Sector]
     tradable: str
     listing: Listing
     historical_closing_prices: HistoricalClosingPrices = Field(
@@ -230,11 +229,11 @@ class InstrumentStock(BaseModel):
     company: Company
     company_events: CompanyEvents = Field(alias="companyEvents")
     company_owners: CompanyOwners = Field(alias="companyOwners")
-    broker_trade_summaries: List[BrokerTradeSummary] = Field(
+    broker_trade_summaries: list[BrokerTradeSummary] = Field(
         alias="brokerTradeSummaries",
     )
     dividends: Dividends
     trading_terms: TradingTerms = Field(alias="tradingTerms")
-    fund_exposures: List[FundExposure] = Field(alias="fundExposures")
-    trades: List[Trade]
+    fund_exposures: list[FundExposure] = Field(alias="fundExposures")
+    trades: list[Trade]
     order_depth: OrderDepth = Field(alias="orderDepth")

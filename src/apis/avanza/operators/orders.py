@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 from time import sleep
-from typing import List, Optional
 
 from avanza.constants import OrderType
 
@@ -15,11 +14,11 @@ class Orders:
     def __init__(
         self,
         account_id: str,
-        filter_orderbook_direction: Optional[str] = None,
-        filter_orderbook_name: Optional[str] = None,
+        filter_orderbook_direction: str | None = None,
+        filter_orderbook_name: str | None = None,
         dry_run: bool = False,
     ):
-        self.active_order: Optional[Order] = None
+        self.active_order: Order | None = None
 
         self.account_id = account_id
         self.filter_orderbook_direction = filter_orderbook_direction
@@ -27,7 +26,7 @@ class Orders:
 
         self.dry_run = dry_run
 
-    def _list(self) -> List[Order]:
+    def _list(self) -> list[Order]:
         orders = get_client().list_orders().orders
 
         if self.account_id:
@@ -44,10 +43,10 @@ class Orders:
         order_book_id: str,
         instrument_name: str,
         order_type: OrderType,
-        price: Optional[float],
+        price: float | None,
         volume: int,
         valid_until: date = date.today() + timedelta(days=7),
-    ) -> Optional[str]:
+    ) -> str | None:
         if self.dry_run:
             log.warning(f"Dry run: {order_type.value} order not placed")
 
@@ -71,7 +70,7 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-    def delete(self, order: Order) -> Optional[str]:
+    def delete(self, order: Order) -> str | None:
         if self.dry_run:
             log.warning("Dry run: DELETE order not placed")
             return
@@ -83,7 +82,7 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-    def get_past(self) -> List[Deal]:
+    def get_past(self) -> list[Deal]:
         past_orders = get_client().get_past_orders().deals
         past_orders = [i for i in past_orders if i.account.account_id == self.account_id]
 

@@ -1,7 +1,6 @@
 import platform
 import warnings
 from datetime import datetime, timedelta
-from typing import Optional
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
@@ -27,7 +26,7 @@ set_handlers("end_of_day")
 log = get_logger()
 
 
-def _get_data(period_days: int, settings, resolution: Optional[str] = None):
+def _get_data(period_days: int, settings, resolution: str | None = None):
     data = Storage(settings, resolution).read()
     data = data.loc[
         (data.index >= datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=period_days))

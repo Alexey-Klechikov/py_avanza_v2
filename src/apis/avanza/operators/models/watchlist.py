@@ -1,5 +1,4 @@
 from datetime import date
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -8,18 +7,18 @@ class Orderbook(BaseModel):
     id: str
     type: str
     name: str
-    spread: Optional[float]
-    buy: Optional[float]
-    sell: Optional[float]
+    spread: float | None
+    buy: float | None
+    sell: float | None
     leverage: float
     start_date: date
 
 
 class ValidInstruments(BaseModel):
-    BULL: List[Orderbook] = Field(default_factory=list)
-    BEAR: List[Orderbook] = Field(default_factory=list)
+    BULL: list[Orderbook] = Field(default_factory=list)
+    BEAR: list[Orderbook] = Field(default_factory=list)
 
-    def get(self, direction: str) -> List[Orderbook]:
+    def get(self, direction: str) -> list[Orderbook]:
         if direction == "BULL":
             return self.BULL
         elif direction == "BEAR":
@@ -27,7 +26,7 @@ class ValidInstruments(BaseModel):
         else:
             raise ValueError(f"Unknown direction: {direction}")
 
-    def set(self, direction: str, value: List[Orderbook]) -> None:
+    def set(self, direction: str, value: list[Orderbook]) -> None:
         if direction == "BULL":
             self.BULL = value
         elif direction == "BEAR":
@@ -45,10 +44,10 @@ class ValidInstruments(BaseModel):
 
 
 class PreferredInstrument(BaseModel):
-    BULL: Optional[Orderbook] = Field(default=None)
-    BEAR: Optional[Orderbook] = Field(default=None)
+    BULL: Orderbook | None = Field(default=None)
+    BEAR: Orderbook | None = Field(default=None)
 
-    def get(self, direction: str) -> Optional[Orderbook]:
+    def get(self, direction: str) -> Orderbook | None:
         if direction == "BULL":
             return self.BULL
         elif direction == "BEAR":
@@ -56,7 +55,7 @@ class PreferredInstrument(BaseModel):
         else:
             raise ValueError(f"Unknown direction: {direction}")
 
-    def set(self, direction: str, value: Optional[Orderbook]) -> None:
+    def set(self, direction: str, value: Orderbook | None) -> None:
         if direction == "BULL":
             self.BULL = value
         elif direction == "BEAR":

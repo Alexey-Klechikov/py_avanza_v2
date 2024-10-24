@@ -2,7 +2,6 @@ import json
 import time
 from datetime import date
 from functools import lru_cache
-from typing import List, Optional, Union
 
 import keyring
 from avanza import Avanza as AvanzaBase
@@ -37,7 +36,7 @@ class Avanza(AvanzaBase):
         self,
         path: str,
         http_method: str = "GET",
-        options: Optional[Union[dict, list]] = None,
+        options: dict | list | None = None,
     ) -> dict:
         request = CallRequest(
             path=path,
@@ -62,8 +61,8 @@ class Avanza(AvanzaBase):
         self,
         order_book_id: str,
         period: TimePeriod,
-        resolution: Optional[Resolution] = None,
-    ) -> Optional[ChartData]:
+        resolution: Resolution | None = None,
+    ) -> ChartData | None:
         options = {"timePeriod": period.value.lower()}
         if resolution is not None:
             options["resolution"] = resolution.value.lower()
@@ -133,7 +132,7 @@ class Avanza(AvanzaBase):
 
         return AccountOverview(**data)
 
-    def get_watchlists(self) -> List[WatchList]:
+    def get_watchlists(self) -> list[WatchList]:
         data = super().get_watchlists()
 
         return [WatchList(**i) for i in data]  # type: ignore
@@ -141,7 +140,7 @@ class Avanza(AvanzaBase):
     def search_instrument(
         self,
         search_string: str,
-        types: List[Union[InstrumentType, str]],
+        types: list[InstrumentType | str],
     ) -> SearchResult:
         data = self._retry_call(
             path="/_api/search/filtered-search",
@@ -192,7 +191,7 @@ class Avanza(AvanzaBase):
         price: float,
         valid_until: date,
         volume: int,
-    ) -> Optional[str]:
+    ) -> str | None:
         response = super().place_order(
             account_id=account_id,
             order_book_id=order_book_id,
@@ -247,7 +246,7 @@ class Avanza(AvanzaBase):
 
         return parsed_response.order_id
 
-    def delete_order(self, account_id, order_id: str) -> Optional[str]:
+    def delete_order(self, account_id, order_id: str) -> str | None:
         response = super().delete_order(account_id, order_id)
 
         if not response:
@@ -263,7 +262,7 @@ class Avanza(AvanzaBase):
 
 
 @lru_cache
-def get_client(user: Optional[str] = None) -> Avanza:
+def get_client(user: str | None = None) -> Avanza:
     from config import ACCOUNT_USERNAME
 
     log.debug("Connect to Avanza")

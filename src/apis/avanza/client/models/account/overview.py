@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
 
@@ -23,7 +21,7 @@ class TotalValue(BaseModel):
     accrued_credit_interest: Value = Field(alias="accruedCreditInterest")
     accrued_debit_interest: Value = Field(alias="accruedDebitInterest")
     forward_balance: Value = Field(alias="forwardBalance")
-    currency_balances: List[CurrencyBalance] = Field(alias="currencyBalances")
+    currency_balances: list[CurrencyBalance] = Field(alias="currencyBalances")
 
 
 class Development(BaseModel):
@@ -52,7 +50,7 @@ class BuyingPower(BaseModel):
     gross_exposure_limit: Value = Field(alias="grossExposureLimit")
     gross_exposure: Value = Field(alias="grossExposure")
     negative_accrued_interest: Value = Field(alias="negativeAccruedInterest")
-    currency_balances: List[CurrencyBalance] = Field(alias="currencyBalances")
+    currency_balances: list[CurrencyBalance] = Field(alias="currencyBalances")
 
 
 class Info(BaseModel):
@@ -76,4 +74,4 @@ class AccountOverview(BaseModel):
     total_development: TotalDevelopment = Field(alias="totalDevelopment")
     buying_power: BuyingPower = Field(alias="buyingPower")
     has_credit: bool = Field(alias="hasCredit")
-    accounts: List[Account]
+    accounts: list[Account]

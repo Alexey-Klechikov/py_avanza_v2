@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -36,4 +35,4 @@ class Deal(BaseModel):
 
 
 class Deals(BaseModel):
-    deals: List[Deal]
+    deals: list[Deal]

@@ -8,12 +8,12 @@ class BaseTradeStrategies:
 
 @dataclass
 class BaseHoldStatistics:
-    ACCOUNT_ID: str = "9568450"
+    ACCOUNT_ID: str = "7143979"
 
 
 @dataclass
 class BaseHoldCorrelation:
-    ACCOUNT_ID: str = "9568450"
+    ACCOUNT_ID: str = "7144096"
 
 
 @dataclass

@@ -2,7 +2,6 @@ import json
 import os
 import warnings
 from copy import deepcopy
-from typing import Dict, List, Optional
 
 from services.ta.indicators.models import Indicator
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
@@ -14,15 +13,15 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 log = get_logger()
 
 
-def _get_file_path(filename: Optional[str]) -> str:
+def _get_file_path(filename: str | None) -> str:
     filename = f"trade_strategies_{filename}.json" if filename else "trade_strategies.json"
     current_file_path = os.path.abspath(__file__)
     root_dir = "/src" if "/src" in current_file_path else "/pyAvanza"
     return current_file_path.split(root_dir)[0] + f"{root_dir}/config/{filename}"
 
 
-def _generate_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]]) -> List[Strategy]:
-    strategies: List[Strategy] = []
+def _generate_strategies(indicators_mapping: dict[str, dict[str, Indicator]]) -> list[Strategy]:
+    strategies: list[Strategy] = []
 
     indicators = [
         (category, indicator) for category, indicators in indicators_mapping.items() for indicator in indicators.keys()
@@ -64,10 +63,10 @@ def _generate_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]]) ->
 
 
 def _extend_strategies(
-    indicators_mapping: Dict[str, Dict[str, Indicator]],
+    indicators_mapping: dict[str, dict[str, Indicator]],
     old_strategies_file_path: str,
-) -> List[Strategy]:
-    extended_strategies: List[Strategy] = []
+) -> list[Strategy]:
+    extended_strategies: list[Strategy] = []
 
     indicators = [
         (category, indicator) for category, indicators in indicators_mapping.items() for indicator in indicators.keys()
@@ -77,7 +76,7 @@ def _extend_strategies(
         if "Original" in strategy["name"]:
             continue
 
-        strategy_indicators = set(tuple(indicator.split("-")) for indicator in strategy["name"].split(" | "))
+        strategy_indicators = {tuple(indicator.split("-")) for indicator in strategy["name"].split(" | ")}
 
         extended_strategies.append(
             deepcopy(
@@ -110,8 +109,8 @@ def _extend_strategies(
     return extended_strategies
 
 
-def _read_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], old_strategies_file_path: str):
-    old_strategies: List[Strategy] = []
+def _read_strategies(indicators_mapping: dict[str, dict[str, Indicator]], old_strategies_file_path: str):
+    old_strategies: list[Strategy] = []
     for strategy in json.load(open(old_strategies_file_path)):
         if "Original" in strategy["name"]:
             continue
@@ -129,9 +128,9 @@ def _read_strategies(indicators_mapping: Dict[str, Dict[str, Indicator]], old_st
 
 def compose_strategies_list(
     method: ComposeStrategiesListMethod,
-    indicators_mapping: Dict[str, Dict[str, Indicator]],
-    old_strategies_file_name: Optional[str] = None,
-) -> List[Strategy]:
+    indicators_mapping: dict[str, dict[str, Indicator]],
+    old_strategies_file_name: str | None = None,
+) -> list[Strategy]:
     if method == ComposeStrategiesListMethod.GENERATE:
         strategies = _generate_strategies(indicators_mapping)
 
@@ -147,7 +146,7 @@ def compose_strategies_list(
     return strategies
 
 
-def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name: Optional[str]):
+def dump_strategies_in_file(strategies: list[Strategy], new_strategies_file_name: str | None):
     rank = 1
     last_strategy_stats = ""
     strategies_for_file = []
@@ -189,9 +188,9 @@ def dump_strategies_in_file(strategies: List[Strategy], new_strategies_file_name
 
 
 def get_top_strategies(
-    indicators_mapping: Dict[str, Dict[str, Indicator]],
-    strategies_file_name: Optional[str],
-) -> List[Strategy]:
+    indicators_mapping: dict[str, dict[str, Indicator]],
+    strategies_file_name: str | None,
+) -> list[Strategy]:
     top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:5]
 
     return [

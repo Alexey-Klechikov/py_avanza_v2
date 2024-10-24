@@ -1,5 +1,3 @@
-from typing import Optional
-
 from avanza.models import WatchList
 
 from apis.avanza.client import get_client
@@ -29,7 +27,7 @@ class UnpackedWatchlistName:
 
 
 class Watchlists:
-    def __init__(self, settings, filter_orderbook_type: Optional[str] = None):
+    def __init__(self, settings, filter_orderbook_type: str | None = None):
         self.settings = settings
         self.valid_instruments = ValidInstruments()
         self.preferred_instrument = PreferredInstrument()

@@ -1,21 +1,19 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, Field, field_validator
 
 
 class Price(BaseModel):
-    last: Optional[float]
+    last: float | None
     currency: str
-    today_change_percent: Optional[float] = Field(alias="todayChangePercent")
-    today_change_value: Optional[float] = Field(alias="todayChangeValue")
-    today_change_direction: Optional[float] = Field(alias="todayChangeDirection")
-    three_months_ago_change_percent: Optional[float] = Field(
+    today_change_percent: float | None = Field(alias="todayChangePercent")
+    today_change_value: float | None = Field(alias="todayChangeValue")
+    today_change_direction: float | None = Field(alias="todayChangeDirection")
+    three_months_ago_change_percent: float | None = Field(
         alias="threeMonthsAgoChangePercent",
     )
-    three_months_ago_change_direction: Optional[float] = Field(
+    three_months_ago_change_direction: float | None = Field(
         alias="threeMonthsAgoChangeDirection",
     )
-    spread: Optional[float]
+    spread: float | None
 
     @field_validator(
         "today_change_percent",
@@ -43,14 +41,14 @@ class StockSector(BaseModel):
     level: int
     name: str
     english_name: str = Field(alias="englishName")
-    highlighted_name: Optional[str] = Field(alias="highlightedName")
+    highlighted_name: str | None = Field(alias="highlightedName")
 
 
 class Hit(BaseModel):
     type: str
     title: str
     description: str
-    path: Optional[str]
+    path: str | None
     flag_code: str = Field(alias="flagCode")
     order_book_id: str = Field(alias="orderBookId")
     url_slug_name: str = Field(alias="urlSlugName")
@@ -58,10 +56,10 @@ class Hit(BaseModel):
     sellable: bool
     buyable: bool
     price: Price
-    stock_sectors: List[StockSector] = Field(alias="stockSectors")
-    fund_tags: List[dict] = Field(alias="fundTags")
+    stock_sectors: list[StockSector] = Field(alias="stockSectors")
+    fund_tags: list[dict] = Field(alias="fundTags")
     market_place_name: str = Field(alias="marketPlaceName")
-    sub_type: Optional[str] = Field(alias="subType")
+    sub_type: str | None = Field(alias="subType")
 
 
 class Pagination(BaseModel):
@@ -70,7 +68,7 @@ class Pagination(BaseModel):
 
 
 class SearchFilter(BaseModel):
-    types: List[str]
+    types: list[str]
 
 
 class Facet(BaseModel):
@@ -79,12 +77,12 @@ class Facet(BaseModel):
 
 
 class Facets(BaseModel):
-    types: List[Facet]
+    types: list[Facet]
 
 
 class SearchResult(BaseModel):
     total_number_of_hits: int = Field(alias="totalNumberOfHits")
-    hits: List[Hit]
+    hits: list[Hit]
     search_query: str = Field(alias="searchQuery")
     pagination: Pagination
     search_filter: SearchFilter = Field(alias="searchFilter")

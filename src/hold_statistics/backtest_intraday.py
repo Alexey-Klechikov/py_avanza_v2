@@ -2,7 +2,6 @@ import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
-from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -74,7 +73,7 @@ def _calculate_result(
     direction: Direction,
     cut_off: int,
     omx_reference_price: int,
-) -> Optional[CutOffResult]:
+) -> CutOffResult | None:
     counter_profitable_trade = 0
     total = 0
     for _, row in data.iterrows():
@@ -103,8 +102,8 @@ def _calculate_result(
 
 
 def _sort_intervals(
-    intervals: Dict[IntervalTime, List[CutOffResult]],
-) -> List[Tuple[IntervalTime, CutOffResult]]:
+    intervals: dict[IntervalTime, list[CutOffResult]],
+) -> list[tuple[IntervalTime, CutOffResult]]:
     return [
         (interval, sorted(cut_off_result, key=lambda x: x.total * x.efficiency, reverse=True)[0])
         for interval, cut_off_result in intervals.items()
@@ -113,9 +112,9 @@ def _sort_intervals(
 
 
 def _generate_rules(
-    sorted_intervals: List[Tuple[IntervalTime, CutOffResult]],
+    sorted_intervals: list[tuple[IntervalTime, CutOffResult]],
     direction: Direction,
-) -> List[HoldRuleStatistics]:
+) -> list[HoldRuleStatistics]:
     rules = []
 
     while sorted_intervals:
@@ -173,10 +172,10 @@ def backtest_hold_intraday_statistics(
     slice_duration: int,
     direction: Direction,
     omx_reference_price: int,
-) -> List[HoldRuleStatistics]:
+) -> list[HoldRuleStatistics]:
     times = [i.time() for i in pd.date_range(start="09:58", end="16:58", freq=f"{slice_duration}min")]
 
-    intervals: Dict[IntervalTime, List[CutOffResult]] = defaultdict(list)
+    intervals: dict[IntervalTime, list[CutOffResult]] = defaultdict(list)
     for buy_time, sell_time in [
         (buy_time, sell_time) for buy_time in times for sell_time in times if buy_time < sell_time
     ]:
