@@ -31,9 +31,15 @@ class Data:
         self.data: pd.DataFrame = pd.DataFrame()
         self.slice_duration = 10
 
-    def get(self):
+    def update(self) -> bool:
         storage = Storage(self.settings)
-        storage.write(Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.FIVE_MINUTES))
+        storage.write(Chart.get_chart_data(self.settings, TimePeriod.ONE_WEEK, Resolution.TEN_MINUTES))
+        try:
+            data = storage.read()
+        except EOFError as e:
+            log.error(f"Error reading data: {e}")
+            return False
+
         data = storage.read()
 
         self.data = data.loc[data.index >= TODAY_MIDNIGHT - timedelta(days=1)]
@@ -47,6 +53,8 @@ class Data:
                 "Low": resampled_data["Close"].min(),
             },
         ).dropna()
+
+        return True
 
 
 @dataclass
@@ -163,7 +171,9 @@ class Flow:
             self.directions_sell = [Direction.BULL, Direction.BEAR]
             return FlowAction.TRADE
 
-        data.get()
+        if not data.update():
+            return FlowAction.DO_NOTHING
+
         hold_rules = backlog.get_rules(datetime.now().time())
         action = self._get_action(self.settings, hold_rules, data)
 
