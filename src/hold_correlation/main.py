@@ -148,7 +148,7 @@ class Flow:
         action_direction = Direction("BULL" if total_efficiency_coefficient > 0 else "BEAR")
 
         actions = [i for i in actions if i.direction == action_direction]
-        if not actions:
+        if not actions or total_efficiency_coefficient == 0:
             return
 
         log.info(f"Total efficiency coefficient: {round(total_efficiency_coefficient, 2)} -> {action_direction}")
