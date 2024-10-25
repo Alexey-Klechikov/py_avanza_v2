@@ -60,7 +60,13 @@ class Action:
 
     @property
     def price_has_passed(self) -> bool:
-        return self.latest_price > self.base_price + (self.price_difference * self.multiplier)
+        if self.direction == Direction.BULL:
+            return self.latest_price > self.base_price + (self.price_difference * self.multiplier)
+
+        elif self.direction == Direction.BEAR:
+            return self.latest_price < self.base_price - (self.price_difference * self.multiplier)
+
+        return True
 
     @property
     def opposite_direction(self) -> Direction:
@@ -145,6 +151,8 @@ class Flow:
         self.directions_sell = []
         self.directions_buy = []
 
+        sleep(600 - ((datetime.now().minute * 60 + datetime.now().second) % 600) + 6)
+
         portfolio.reload_positions(caller="get_action")
 
         # End of day
@@ -155,13 +163,11 @@ class Flow:
             self.directions_sell = [Direction.BULL, Direction.BEAR]
             return FlowAction.TRADE
 
-        sleep(600 - ((datetime.now().minute * 60 + datetime.now().second) % 600) + 6)
-
         data.get()
-
-        # No action
         hold_rules = backlog.get_rules(datetime.now().time())
         action = self._get_action(self.settings, hold_rules, data)
+
+        # No action
         if action is None:
             if not portfolio.positions:
                 return FlowAction.DO_NOTHING
