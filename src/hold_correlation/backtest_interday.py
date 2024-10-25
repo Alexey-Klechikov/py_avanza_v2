@@ -326,7 +326,7 @@ def backtest_hold_interday_correlation(settings, data: pd.DataFrame, slice_durat
         min_deciding_price_change=settings.MIN_DECIDING_PRICE_CHANGE,
         max_counter_cut_off=10.0,
         max_cut_off_multiplier=25,
-        min_efficiency=0.70,
+        min_efficiency=0.75,
     )
     filtered_intervals_correlation = filter_intervals_correlations(intervals_correlation_efficiency_quantitative)
 
