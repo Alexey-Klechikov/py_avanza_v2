@@ -16,16 +16,16 @@ log = get_logger()
 
 
 if __name__ == "__main__":
+    dry_run = platform.system() == "Darwin"
     try:
-        dry_run = platform.system() == "Darwin"
-
         hold(dry_run, SETTINGS_HOLD_STATISTICS)
 
     except Exception as e:
         log.exception(str(e))
 
-        telegram = TelegramBase()
-        telegram.messages = ["Error in task_hold_statistics"]
-        telegram.send_message()
+        if not dry_run:
+            telegram = TelegramBase()
+            telegram.messages = ["Error in task_hold_statistics"]
+            telegram.send_message()
 
         raise e

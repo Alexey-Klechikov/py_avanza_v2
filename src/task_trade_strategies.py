@@ -16,16 +16,16 @@ log = get_logger()
 
 
 if __name__ == "__main__":
+    dry_run = platform.system() == "Darwin"
     try:
-        dry_run = platform.system() == "Darwin"
-
         trade(dry_run, SETTINGS_TRADE_STRATEGIES)
 
     except Exception as e:
         log.exception(str(e))
 
-        telegram = TelegramBase()
-        telegram.messages = ["Error in task_trade_strategies"]
-        telegram.send_message()
+        if not dry_run:
+            telegram = TelegramBase()
+            telegram.messages = ["Error in task_trade_strategies"]
+            telegram.send_message()
 
         raise e

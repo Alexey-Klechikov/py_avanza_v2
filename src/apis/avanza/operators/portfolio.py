@@ -64,12 +64,12 @@ class Portfolio:
                 raise ValueError(f"Unknown instrument direction for {position.instrument.name}")
 
     def reload_balance(self) -> None:
-        log.debug("Reload account balance")
-
         account_overview = get_client().get_accounts_overview(self._account_url_parameter)  # type: ignore
 
-        self.total_value = account_overview.total_value.total_value.value
-        self.buying_power = account_overview.buying_power.total.value
+        self.total_value = round(account_overview.total_value.total_value.value)
+        self.buying_power = round(account_overview.buying_power.total.value)
+
+        log.debug(f"Reload account balance: total value {self.total_value}, buying power {self.buying_power}")
 
     def reload_positions(self, caller: str = "") -> None:
         self.positions = [
