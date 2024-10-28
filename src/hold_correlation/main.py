@@ -117,6 +117,9 @@ class Flow:
                 ]
             ).between_time(hold_rule.deciding_interval.start, hold_rule.deciding_interval.end)
 
+            if deciding_interval_rows.empty:
+                continue
+
             deciding_interval_price_difference = (
                 deciding_interval_rows["Close"].iloc[-2] - deciding_interval_rows["Open"].iloc[0]
             )
