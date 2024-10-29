@@ -70,6 +70,7 @@ class Trade:
             watchlists.refresh_all()
             preferred_instrument = watchlists.preferred_instrument.get(direction.value)
             if not preferred_instrument or not preferred_instrument.sell:
+                watchlists.update_all()
                 continue
 
             orders.place(
