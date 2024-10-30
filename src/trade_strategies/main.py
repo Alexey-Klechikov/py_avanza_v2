@@ -172,17 +172,15 @@ class Flow:
 
         # End of day
         if datetime.now().time() >= self.trading_ends:
-            if not portfolio.positions:
-                return FlowAction.EXIT_TRADING
-
             # Edge case: Sell at the end of the day is last signal was more than 90 mins ago
             orders.reload_active()
-            if not orders.active_order or (
-                orders.active_order and (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
+            if portfolio.positions and (
+                not orders.active_order or (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
             ):
                 self.directions_sell = [Direction.BULL, Direction.BEAR]
+                return FlowAction.TRADE
 
-            return FlowAction.TRADE
+            return FlowAction.EXIT_TRADING
 
         # No new data
         elif data.too_old:
