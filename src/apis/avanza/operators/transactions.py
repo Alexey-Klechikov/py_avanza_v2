@@ -42,8 +42,8 @@ class Transactions:
 
         return sorted([i for i in log if i.account.id == self.account_id], key=lambda x: x.date, reverse=True)
 
-    def log_deals(self):
-        log.info("Group transactions into deals")
+    def log_deals(self, log_header: str = ""):
+        log.info(f"Group transactions into deals for script '{log_header}'")
 
         log_per_instrument = defaultdict(list)
         for i in self._reload_log():

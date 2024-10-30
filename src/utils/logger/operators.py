@@ -72,6 +72,20 @@ def set_handlers(
     log.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
 
 
+def add_extra_file_handler(
+    file_prefix: str,
+):
+    log = logging.getLogger("main")
+    log_file_name = _get_log_file_name(file_prefix)
+
+    _create_file_handler(
+        log,
+        file_name=f"{log_file_name}.log",
+        log_levels=("INFO", "WARNING"),
+        write_mode="a",
+    )
+
+
 def get_logger() -> Logger:
     caller_frame = inspect.stack()[1]
     root_dir = "/src/" if "/src/" in caller_frame.filename else "pyAvanza/"
