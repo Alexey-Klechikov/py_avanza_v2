@@ -4,7 +4,7 @@ from time import sleep
 from avanza.constants import OrderType
 
 from apis.avanza.client import get_client
-from apis.avanza.client.models import Deal, Order, OrderException
+from apis.avanza.client.models import Order, OrderException
 from utils.logger import get_logger
 
 log = get_logger()
@@ -81,12 +81,6 @@ class Orders:
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
-
-    def get_past(self) -> list[Deal]:
-        past_orders = get_client().get_past_orders().deals
-        past_orders = [i for i in past_orders if i.account.account_id == self.account_id]
-
-        return sorted(past_orders, key=lambda x: x.time)
 
     def reload_active(self):
         self.active_order = None

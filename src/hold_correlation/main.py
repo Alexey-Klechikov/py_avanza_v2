@@ -10,7 +10,7 @@ from avanza.constants import Resolution, TimePeriod
 from requests.exceptions import ConnectionError
 
 from apis.avanza.client import get_client
-from apis.avanza.operators import Chart, Orders, Portfolio, Watchlists
+from apis.avanza.operators import Chart, Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from apis.avanza.trade.models import Direction
 from hold_correlation import BacklogHoldCorrelation
@@ -256,3 +256,5 @@ def hold(dry_run: bool, settings) -> None:
         for direction in flow.directions_buy:
             Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
             Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
+
+    Transactions(account_id=settings.ACCOUNT_ID).log_deals()

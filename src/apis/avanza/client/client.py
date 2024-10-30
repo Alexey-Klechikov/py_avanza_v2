@@ -1,11 +1,13 @@
 import json
 import time
+from collections.abc import Sequence
 from datetime import date
 from functools import lru_cache
 
 import keyring
 from avanza import Avanza as AvanzaBase
 from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
+from avanza.constants import TransactionsDetailsType
 from avanza.models import WatchList
 from requests.exceptions import HTTPError
 
@@ -13,7 +15,6 @@ from apis.avanza.client.models import (
     AccountOverview,
     AccountsPositions,
     CallRequest,
-    Deals,
     DeleteOrderResponse,
     EditOrderResponse,
     InstrumentCertificate,
@@ -24,6 +25,7 @@ from apis.avanza.client.models import (
     Orders,
     PlaceOrderResponse,
     SearchResult,
+    TransactionsDetails,
 )
 from apis.avanza.client.models.chart_data import ChartData
 from utils.logger import get_logger
@@ -166,10 +168,23 @@ class Avanza(AvanzaBase):
 
         return Orders(**data)
 
-    def get_past_orders(self) -> Deals:
-        data = super().get_deals()
+    def get_transactions(
+        self,
+        transaction_details_types: Sequence[TransactionsDetailsType],
+        transactions_from: date,
+        transactions_to: date | None = None,
+        isin: str | None = None,
+        max_elements: int | None = 1000,
+    ) -> TransactionsDetails:
+        data = super().get_transactions_details(
+            transaction_details_types,
+            transactions_from,
+            transactions_to,
+            isin,
+            max_elements,
+        )
 
-        return Deals(**data)  # type: ignore
+        return TransactionsDetails(**data)  # type: ignore
 
     def remove_from_watchlist(self, instrument_id: str, watchlist_id: str):
         self._retry_call(

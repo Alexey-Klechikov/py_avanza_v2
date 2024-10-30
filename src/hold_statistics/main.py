@@ -5,7 +5,7 @@ from time import sleep
 import pandas as pd
 
 from apis.avanza.client import get_client
-from apis.avanza.operators import Orders, Portfolio, Watchlists
+from apis.avanza.operators import Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from hold_statistics import BacklogHoldStatistics
 from hold_statistics.models import Action, Event
@@ -82,3 +82,5 @@ def hold(dry_run: bool, settings) -> None:
 
             Trade.buy(event.orderbook_direction, orders, watchlists, portfolio, event.budget, dry_run)
             Trade.take_profit(event.orderbook_direction, orders, portfolio, event.take_profit)
+
+    Transactions(account_id=settings.ACCOUNT_ID).log_deals()
