@@ -17,4 +17,4 @@ class HoldCorrelation(BaseOMX, BaseHoldCorrelation):
     SCOPES: list[Scope] = field(default_factory=lambda: [Scope.INTERDAY, Scope.INTRADAY])
     MIN_DECIDING_PRICE_CHANGE: float = 2.0
     TRADING_END: time = time(17, 5)
-    TRADING_TAKE_PROFIT: float = 0.1
+    TRADING_TAKE_PROFIT: float = 0.05
