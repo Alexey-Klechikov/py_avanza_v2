@@ -67,16 +67,6 @@ class Action:
     direction: Direction
 
     @property
-    def price_has_passed(self) -> bool:
-        if self.direction == Direction.BULL:
-            return self.latest_price > self.base_price + (self.price_difference * self.multiplier)
-
-        elif self.direction == Direction.BEAR:
-            return self.latest_price < self.base_price - (self.price_difference * self.multiplier)
-
-        return True
-
-    @property
     def opposite_direction(self) -> Direction:
         return Direction("BULL" if self.direction == Direction.BEAR else "BEAR")
 
@@ -188,16 +178,6 @@ class Flow:
             if not portfolio.positions:
                 return FlowAction.DO_NOTHING
 
-            self.directions_sell = [Direction.BULL, Direction.BEAR]
-            return FlowAction.TRADE
-
-        # Current price has passed the reference price with target profit
-        if action.price_has_passed:
-            if not portfolio.positions:
-                log.info("Price has passed. No action is taken.")
-                return FlowAction.DO_NOTHING
-
-            log.info("Price has passed. Sell all.")
             self.directions_sell = [Direction.BULL, Direction.BEAR]
             return FlowAction.TRADE
 
