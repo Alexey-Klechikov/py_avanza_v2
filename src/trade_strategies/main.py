@@ -226,7 +226,7 @@ class Flow:
 
 # MAIN
 def trade(dry_run: bool, settings) -> None:
-    log.warning(
+    log.info(
         f"Start trading strategies on {settings.NAME} | {settings.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""),
     )
 
