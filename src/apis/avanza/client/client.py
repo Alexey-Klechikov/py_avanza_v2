@@ -159,7 +159,7 @@ class Avanza(AvanzaBase):
         return SearchResult(**data)
 
     def get_accounts_positions(self) -> AccountsPositions:
-        data = super().get_accounts_positions()
+        data = self._retry_call("/_api/position-data/positions")
 
         return AccountsPositions(**data)  # type: ignore
 
