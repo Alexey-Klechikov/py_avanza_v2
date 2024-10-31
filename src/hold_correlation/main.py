@@ -137,6 +137,9 @@ class Flow:
                 hold_rule.action_interval.end,
             )
 
+            if action_interval_rows.empty:
+                continue
+
             actions.append(
                 Action(
                     base_price=action_interval_rows["Open"].iloc[0],
