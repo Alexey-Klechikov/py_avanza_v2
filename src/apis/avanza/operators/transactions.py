@@ -61,22 +61,22 @@ class Transactions:
                 elif transaction.type == TransactionsDetailsType.BUY and deal.sell:
                     deal.buy = transaction
                 else:
-                    log.warning(f"Found not closed transaction for instrument: {instrument_name}")
+                    log.warning(f"> Found not closed transaction for instrument: {instrument_name}")
 
                 if deal.buy and deal.sell:
                     if deal.buy.volume.value + deal.sell.volume.value != 0:
-                        log.warning(f"Not complete deal for instrument: {instrument_name}")
+                        log.warning(f"> Not complete deal for instrument: {instrument_name}")
 
                     deals_per_instrument[instrument_name].append(deal)
                     deal = Deal()
 
         for instrument_name, deals in deals_per_instrument.items():
-            log.info(f"Found {len(deals)} deal(s) for '{instrument_name}'")
+            log.info(f"> Found {len(deals)} deal(s) for '{instrument_name}'")
 
             for deal in deals:
                 # format datetime to trim down to minutes
                 log.info(
-                    f"> Buy: {deal.buy.date.strftime('%Y-%m-%d %H:%M')},"
+                    f">> Buy: {deal.buy.date.strftime('%Y-%m-%d %H:%M')},"
                     + f" Sell: {deal.sell.date.strftime('%Y-%m-%d %H:%M')}"
                     + f" -> {round(sum([i.amount.value for i in [deal.buy, deal.sell]]))}",
                 )
