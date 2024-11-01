@@ -15,6 +15,7 @@ from apis.avanza.trade.models import Direction
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from services import Storage
+from services.calendar import get_market_close_time, get_market_is_close
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
 from utils.constants import TODAY_MIDNIGHT
@@ -133,7 +134,7 @@ class FlowAction(Enum):
 class Flow:
     def __init__(self, settings, dry_run=False):
         self.budget = settings.BUDGET
-        self.trading_ends: time = settings.TRADING_END
+        self.trading_ends: time = min(get_market_close_time(), settings.TRADING_END)
         self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
 
@@ -174,8 +175,12 @@ class Flow:
         if datetime.now().time() >= self.trading_ends:
             # Edge case: Sell at the end of the day is last signal was more than 90 mins ago
             orders.reload_active()
-            if portfolio.positions and (
-                not orders.active_order or (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
+            if (
+                portfolio.positions
+                and not get_market_is_close()
+                and (
+                    not orders.active_order or (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
+                )
             ):
                 self.directions_sell = [Direction.BULL, Direction.BEAR]
                 return FlowAction.TRADE

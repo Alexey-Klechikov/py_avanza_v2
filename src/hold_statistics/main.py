@@ -9,6 +9,7 @@ from apis.avanza.operators import Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from hold_statistics import BacklogHoldStatistics
 from hold_statistics.models import Action, Event
+from services.calendar import get_market_is_close
 from utils.logger import add_extra_file_handler, get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -49,6 +50,9 @@ def hold(dry_run: bool, settings) -> None:
             break
 
         sleep_until_next_event(event)
+
+        if get_market_is_close():
+            break
 
         orders = Orders(
             account_id=event.settings.ACCOUNT_ID,

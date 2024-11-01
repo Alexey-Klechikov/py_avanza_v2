@@ -16,6 +16,7 @@ from apis.avanza.trade.models import Direction
 from hold_correlation import BacklogHoldCorrelation
 from hold_correlation.models import Correlation, HoldRuleCorrelation
 from services import Storage
+from services.calendar import get_market_close_time, get_market_is_close
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import add_extra_file_handler, get_logger
 
@@ -79,14 +80,15 @@ class FlowAction(Enum):
 
 class Flow:
     def __init__(self, settings):
-        self.settings = settings
+        self.budget = settings.BUDGET
+        self.trading_ends = min(get_market_close_time(), settings.TRADING_END)
+        self.min_deciding_price_change = settings.MIN_DECIDING_PRICE_CHANGE
 
         self.directions_sell: list[Direction] = []
         self.directions_buy: list[Direction] = []
 
     def _get_action(
         self,
-        settings,
         hold_rules: list[HoldRuleCorrelation],
         data: Data,
     ) -> Action | None:
@@ -114,7 +116,7 @@ class Flow:
                 deciding_interval_rows["Close"].iloc[-2] - deciding_interval_rows["Open"].iloc[0]
             )
 
-            if abs(deciding_interval_price_difference) < settings.MIN_DECIDING_PRICE_CHANGE:
+            if abs(deciding_interval_price_difference) < self.min_deciding_price_change:
                 continue
 
             deciding_interval_direction_coefficient = (1 if hold_rule.correlation == Correlation.SAME else -1) * (
@@ -160,8 +162,8 @@ class Flow:
         portfolio.reload_positions(caller="get_action")
 
         # End of day
-        if datetime.now().time() >= self.settings.TRADING_END:
-            if not portfolio.positions:
+        if datetime.now().time() >= self.trading_ends:
+            if not portfolio.positions or get_market_is_close():
                 return FlowAction.EXIT_TRADING
 
             self.directions_sell = [Direction.BULL, Direction.BEAR]
@@ -171,7 +173,7 @@ class Flow:
             return FlowAction.DO_NOTHING
 
         hold_rules = backlog.get_rules(datetime.now().time())
-        action = self._get_action(self.settings, hold_rules, data)
+        action = self._get_action(hold_rules, data)
 
         # No action
         if action is None:
@@ -183,7 +185,7 @@ class Flow:
 
         # Not enough funds on the account
         portfolio.reload_balance()
-        if portfolio.buying_power < self.settings.BUDGET and not portfolio.positions:
+        if portfolio.buying_power < self.budget and not portfolio.positions:
             log.info("Not enough funds on the account. No action is taken.")
             return FlowAction.EXIT_TRADING
 
