@@ -43,7 +43,7 @@ def hold(dry_run: bool, settings) -> None:
     backlog.read_rules(settings)
     backlog.extract_events_from_rules()
 
-    while datetime.now().time() < time(18, 0):
+    while datetime.now().time() < time(17, 20):
         event = backlog.pop_next_event()
         if event is None:
             return
