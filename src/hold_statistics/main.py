@@ -10,7 +10,7 @@ from apis.avanza.trade import Trade
 from hold_statistics import BacklogHoldStatistics
 from hold_statistics.models import Action, Event
 from services.calendar import get_market_is_close
-from utils.logger import add_extra_file_handler, get_logger
+from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -87,5 +87,4 @@ def hold(dry_run: bool, settings) -> None:
             Trade.buy(event.orderbook_direction, orders, watchlists, portfolio, event.budget, dry_run)
             Trade.take_profit(event.orderbook_direction, orders, portfolio, event.take_profit)
 
-    add_extra_file_handler("deals")
-    Transactions(account_id=settings.ACCOUNT_ID).log_deals(log_header="hold_statistics")
+    Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)

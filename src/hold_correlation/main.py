@@ -18,7 +18,7 @@ from hold_correlation.models import Correlation, HoldRuleCorrelation
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger import add_extra_file_handler, get_logger
+from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -242,5 +242,4 @@ def hold(dry_run: bool, settings) -> None:
             Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
             Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
-    add_extra_file_handler("deals")
-    Transactions(account_id=settings.ACCOUNT_ID).log_deals(log_header="hold_correlation")
+    Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)

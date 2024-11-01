@@ -24,7 +24,7 @@ class Transactions:
 
     def _reload_log(
         self,
-        date_from: date = (datetime.today() - timedelta(days=7)).date(),
+        date_from: date,
         date_to: date | None = None,
     ) -> list[Transaction]:
         log = (
@@ -42,18 +42,23 @@ class Transactions:
 
         return sorted([i for i in log if i.account.id == self.account_id], key=lambda x: x.date, reverse=True)
 
-    def log_deals(self, log_header: str = ""):
-        log.info(f"Group transactions into deals for script '{log_header}'")
+    def log_deals(
+        self,
+        log_header: str | None = None,
+        date_from: date = (datetime.today() - timedelta(days=6)).date(),
+        only_today: bool = False,
+    ) -> dict:
+        log.info("Group transactions into deals" + ("" if not log_header else f" for script '{log_header}'"))
 
         log_per_instrument = defaultdict(list)
-        for i in self._reload_log():
+        for i in self._reload_log(date_from):
             log_per_instrument[i.instrument_name].append(i)
 
         deals_per_instrument = defaultdict(list)
         for instrument_name, transactions in log_per_instrument.items():
             deal = Deal()
             for i, transaction in enumerate(transactions):
-                if not deal.buy and not deal.sell and transaction.date.date() != datetime.today().date():
+                if only_today and not deal.buy and not deal.sell and transaction.date.date() != datetime.today().date():
                     break
 
                 if transaction.type == TransactionsDetailsType.SELL and not deal.buy:
@@ -71,7 +76,7 @@ class Transactions:
                     deal = Deal()
 
         for instrument_name, deals in deals_per_instrument.items():
-            log.info(f"> Found {len(deals)} deal(s) for '{instrument_name}'")
+            log.info(f"> Found {len(deals)} deal(s) + for '{instrument_name}'")
 
             for deal in deals:
                 # format datetime to trim down to minutes

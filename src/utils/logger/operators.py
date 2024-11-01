@@ -38,6 +38,13 @@ def _create_file_handler(
     log.addHandler(fh)
 
 
+def _remove_handlers(log: Logger, handler_type: type) -> None:
+    handlers_to_remove = [h for h in log.handlers if isinstance(h, handler_type)]
+    for handler in handlers_to_remove:
+        log.removeHandler(handler)
+        handler.close()
+
+
 def set_handlers(
     file_prefix: str,
     console_log_levels: tuple = ("DEBUG", "WARNING"),
@@ -72,11 +79,13 @@ def set_handlers(
     log.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
 
 
-def add_extra_file_handler(
+def reset_file_handlers(
     file_prefix: str,
 ):
     log = logging.getLogger("main")
     log_file_name = _get_log_file_name(file_prefix)
+
+    _remove_handlers(log, logging.FileHandler)
 
     _create_file_handler(
         log,

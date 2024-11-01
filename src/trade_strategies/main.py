@@ -19,7 +19,7 @@ from services.calendar import get_market_close_time, get_market_is_close
 from services.ta import get_indicators, read_top_strategies
 from services.ta.strategies.models import Strategy
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger import add_extra_file_handler, get_logger
+from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -276,5 +276,4 @@ def trade(dry_run: bool, settings) -> None:
             Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
             Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
-    add_extra_file_handler("deals")
-    Transactions(account_id=settings.ACCOUNT_ID).log_deals(log_header="trade_strategies")
+    Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)
