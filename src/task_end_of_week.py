@@ -59,7 +59,7 @@ def generate_strategies(settings, period_days: int) -> None:
 
 if __name__ == "__main__":
     try:
-        # generate_strategies(SETTINGS_TRADE_STRATEGIES, period_days=40)
+        generate_strategies(SETTINGS_TRADE_STRATEGIES, period_days=40)
 
         reset_file_handlers("deals")
         for task_name, account_id in [

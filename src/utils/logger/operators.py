@@ -94,6 +94,8 @@ def reset_file_handlers(
         write_mode="a",
     )
 
+    log.warning("#########################################################")
+
 
 def get_logger() -> Logger:
     caller_frame = inspect.stack()[1]
