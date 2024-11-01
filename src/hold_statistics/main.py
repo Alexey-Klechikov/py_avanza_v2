@@ -46,7 +46,7 @@ def hold(dry_run: bool, settings) -> None:
     while datetime.now().time() < time(17, 20):
         event = backlog.pop_next_event()
         if event is None:
-            return
+            break
 
         sleep_until_next_event(event)
 
