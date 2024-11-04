@@ -76,13 +76,15 @@ class Transactions:
                     deal = Deal()
 
         for instrument_name, deals in deals_per_instrument.items():
-            log.info(f"> Found {len(deals)} deal(s) + for '{instrument_name}'")
+            log.info(f"> Found {len(deals)} deal(s) for '{instrument_name}'")
 
             for deal in deals:
-                # format datetime to trim down to minutes
+                buy_date = deal.buy.date.strftime("%Y-%m-%d")
+                sell_date = deal.sell.date.strftime("%Y-%m-%d")
+
                 log.info(
-                    f">> Buy: {deal.buy.date.strftime('%Y-%m-%d %H:%M')},"
-                    + f" Sell: {deal.sell.date.strftime('%Y-%m-%d %H:%M')}"
+                    f">> {buy_date}"
+                    + ("" if buy_date == sell_date else f" -> {sell_date}")
                     + f" -> {round(sum([i.amount.value for i in [deal.buy, deal.sell]]))}",
                 )
 

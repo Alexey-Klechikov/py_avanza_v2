@@ -53,7 +53,7 @@ class Transaction(BaseModel):
     price_in_account_currency: Amount = Field(alias="priceInAccountCurrency")
     price_in_traded_currency: Amount = Field(alias="priceInTradedCurrency")
     price_in_transaction_currency: Amount = Field(alias="priceInTransactionCurrency")
-    result: Any
+    result: Amount | None
     settlement_date: datetime | None = Field(alias="settlementDate")
     trade_date: datetime | None = Field(alias="tradeDate")
     type: TransactionsDetailsType
