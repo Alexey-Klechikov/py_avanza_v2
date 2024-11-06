@@ -146,10 +146,13 @@ class Flow:
         action_direction = Direction("BULL" if total_efficiency_coefficient > 0 else "BEAR")
 
         actions = [i for i in actions if i.direction == action_direction]
-        if not actions or total_efficiency_coefficient == 0:
+        if not actions or round(total_efficiency_coefficient, 2) == 0:
             return
 
-        log.info(f"Total efficiency coefficient: {round(total_efficiency_coefficient, 2)} -> {action_direction}")
+        log.info(
+            f"Total efficiency coefficient: {round(total_efficiency_coefficient, 2)} "
+            + f"Signal: Signal.{'LONG' if total_efficiency_coefficient > 0 else 'SHORT'}",
+        )
 
         return max(actions, key=lambda x: (x.efficiency, x.price_difference))
 

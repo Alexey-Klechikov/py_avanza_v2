@@ -76,6 +76,8 @@ def hold(dry_run: bool, settings) -> None:
             Trade.sell(event.orderbook_direction, orders, portfolio, dry_run)
 
         if event.action == Action.BUY:
+            log.info(f"Signal: Signal.{'LONG' if event.orderbook_direction.value == 'BULL' else 'SHORT'}")
+
             portfolio.reload_balance()
 
             if portfolio.buying_power < event.budget:
