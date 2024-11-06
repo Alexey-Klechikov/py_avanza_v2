@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from avanza.constants import TransactionsDetailsType
 
@@ -79,13 +79,22 @@ class Transactions:
             log.info(f"> Found {len(deals)} deal(s) for '{instrument_name}'")
 
             for deal in deals:
-                buy_date = deal.buy.date.strftime("%Y-%m-%d")
-                sell_date = deal.sell.date.strftime("%Y-%m-%d")
+                deal_datetime = ""
+                if deal.buy.date.date() == deal.sell.date.date():
+                    if deal.buy.date.time() == time(0, 0):
+                        deal_datetime = deal.buy.date.strftime("%Y-%m-%d")
+                    else:
+                        deal_datetime = (
+                            f"{deal.buy.date.strftime('%Y-%m-%d %H:%M')} -> {deal.sell.date.strftime('%H:%M')}"
+                        )
+                else:
+                    datetime_pattern = "%Y-%m-%d %H:%M" if deal.buy.date.time() != time(0, 0) else "%Y-%m-%d"
+                    deal_datetime = (
+                        f"{deal.buy.date.strftime(datetime_pattern)} -> {deal.sell.date.strftime(datetime_pattern)}"
+                    )
 
                 log.info(
-                    f">> {buy_date}"
-                    + ("" if buy_date == sell_date else f" -> {sell_date}")
-                    + f" -> {round(sum([i.amount.value for i in [deal.buy, deal.sell]]))}",
+                    f">> {deal_datetime} -> {round(sum([i.amount.value for i in [deal.buy, deal.sell]]))}",
                 )
 
         return deals_per_instrument
