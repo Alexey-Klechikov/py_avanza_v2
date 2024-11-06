@@ -253,6 +253,16 @@ def trade(dry_run: bool, settings) -> None:
 
     watchlists = Watchlists(settings, "WARRANT")
     watchlists.update_all()
+    if any(
+        [
+            not watchlists.preferred_instrument.BULL,
+            not watchlists.preferred_instrument.BEAR,
+            len(watchlists.valid_instruments.BULL) < 3,
+            len(watchlists.valid_instruments.BEAR) < 3,
+        ],
+    ):
+        watchlists = Watchlists(settings, "CERTIFICATE")
+        watchlists.refresh_all()
 
     flow = Flow(settings, dry_run)
 
