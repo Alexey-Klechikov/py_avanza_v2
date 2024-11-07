@@ -1,4 +1,5 @@
 import warnings
+from time import sleep
 
 import pandas as pd
 from avanza.constants import OrderType
@@ -100,21 +101,27 @@ class Trade:
     ) -> None:
         caller = "take_profit"
 
-        orders.delete_all(caller)
+        for _ in range(5):
+            portfolio.reload_positions(caller)
+            acquired_instrument = portfolio.acquired_instrument.get(direction.value)
+            if not (acquired_instrument and acquired_instrument.quote.buy):
+                sleep(3)
+                continue
 
-        portfolio.reload_positions(caller)
-        acquired_instrument = portfolio.acquired_instrument.get(direction.value)
-        if not acquired_instrument or not acquired_instrument.quote.sell:
-            return
+            orders.delete_all(caller)
 
-        orders.place(
-            order_book_id=acquired_instrument.instrument.id,
-            instrument_name=acquired_instrument.instrument.name,
-            order_type=OrderType.SELL,
-            price=round(
-                (acquired_instrument.quote.buy or acquired_instrument.acquired_price) * (1 + take_profit),
-                2,
-            ),
-            volume=int(acquired_instrument.volume),
-            caller=caller,
-        )
+            orders.place(
+                order_book_id=acquired_instrument.instrument.id,
+                instrument_name=acquired_instrument.instrument.name,
+                order_type=OrderType.SELL,
+                price=round(
+                    max(acquired_instrument.quote.buy, acquired_instrument.acquired_price) * (1 + take_profit),
+                    2,
+                ),
+                volume=int(acquired_instrument.volume),
+                caller=caller,
+            )
+
+            orders.reload_active()
+            if orders.active_order:
+                break
