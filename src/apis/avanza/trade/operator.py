@@ -33,7 +33,6 @@ class Trade:
                 break
 
             orders.delete_all(caller)
-
             orders.place(
                 order_book_id=acquired_instrument.instrument.id,
                 instrument_name=acquired_instrument.instrument.name,
@@ -71,14 +70,13 @@ class Trade:
             if acquired_instrument:
                 break
 
-            orders.delete_all(caller)
-
             watchlists.refresh_all()
             preferred_instrument = watchlists.preferred_instrument.get(direction.value)
             if not preferred_instrument or not preferred_instrument.sell:
                 watchlists.update_all()
                 continue
 
+            orders.delete_all(caller)
             orders.place(
                 order_book_id=preferred_instrument.id,
                 instrument_name=preferred_instrument.name,
@@ -104,12 +102,13 @@ class Trade:
         for _ in range(5):
             portfolio.reload_positions(caller)
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
-            if not (acquired_instrument and acquired_instrument.quote.buy):
+            if not acquired_instrument:
+                break
+            if not acquired_instrument.quote.buy:
                 sleep(3)
                 continue
 
             orders.delete_all(caller)
-
             orders.place(
                 order_book_id=acquired_instrument.instrument.id,
                 instrument_name=acquired_instrument.instrument.name,
@@ -121,7 +120,6 @@ class Trade:
                 volume=int(acquired_instrument.volume),
                 caller=caller,
             )
-
             orders.reload_active()
             if orders.active_order:
                 break
