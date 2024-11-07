@@ -22,14 +22,16 @@ class Trade:
         portfolio: Portfolio,
         dry_run: bool,
     ) -> None:
+        caller = "sell"
+
         trade_result = None
         for _ in range(5):
-            orders.delete_all()
-
-            portfolio.reload_positions(caller="sell")
+            portfolio.reload_positions(caller)
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
                 break
+
+            orders.delete_all(caller)
 
             orders.place(
                 order_book_id=acquired_instrument.instrument.id,
@@ -37,6 +39,7 @@ class Trade:
                 order_type=OrderType.SELL,
                 price=acquired_instrument.quote.buy,
                 volume=int(acquired_instrument.volume),
+                caller=caller,
             )
 
             trade_result = (
@@ -59,13 +62,15 @@ class Trade:
         budget: int,
         dry_run: bool,
     ) -> None:
-        for _ in range(5):
-            orders.delete_all()
+        caller = "buy"
 
-            portfolio.reload_positions(caller="buy")
+        for _ in range(5):
+            portfolio.reload_positions(caller)
             acquired_instrument = portfolio.acquired_instrument.get(direction.value)
             if acquired_instrument:
                 break
+
+            orders.delete_all(caller)
 
             watchlists.refresh_all()
             preferred_instrument = watchlists.preferred_instrument.get(direction.value)
@@ -79,6 +84,7 @@ class Trade:
                 order_type=OrderType.BUY,
                 price=preferred_instrument.sell,
                 volume=round(budget // preferred_instrument.sell),
+                caller=caller,
             )
 
             if dry_run:
@@ -92,9 +98,11 @@ class Trade:
         portfolio: Portfolio,
         take_profit: float,
     ) -> None:
-        orders.delete_all(caller="take_profit")
+        caller = "take_profit"
 
-        portfolio.reload_positions(caller="take_profit")
+        orders.delete_all(caller)
+
+        portfolio.reload_positions(caller)
         acquired_instrument = portfolio.acquired_instrument.get(direction.value)
         if not acquired_instrument or not acquired_instrument.quote.sell:
             return
@@ -108,5 +116,5 @@ class Trade:
                 2,
             ),
             volume=int(acquired_instrument.volume),
-            caller="take_profit",
+            caller=caller,
         )
