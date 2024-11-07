@@ -46,6 +46,7 @@ class Orders:
         price: float | None,
         volume: int,
         valid_until: date = date.today() + timedelta(days=7),
+        caller: str = "",
     ) -> str | None:
         if self.dry_run:
             log.warning(f"Dry run: {order_type.value} order not placed")
@@ -63,21 +64,28 @@ class Orders:
                 volume=volume,
                 valid_until=valid_until,
             )
-            log.info(f"Order placed: {order_type.value} {instrument_name} {price}")
+            log.info((f"[{caller}] " if caller else "") + f"Order placed: {order_type.value} {instrument_name} {price}")
 
             sleep(3)
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-    def delete(self, order: Order) -> str | None:
+    def delete(
+        self,
+        order: Order,
+        caller: str = "",
+    ) -> str | None:
         if self.dry_run:
             log.warning("Dry run: DELETE order not placed")
             return
 
         try:
             get_client().delete_order(account_id=self.account_id, order_id=order.order_id)
-            log.info(f"Order deleted: {order.side} {order.orderbook.name} {order.price} [{order.state}]")
+            log.info(
+                (f"[{caller}] " if caller else "")
+                + f"Order deleted: {order.side} {order.orderbook.name} {order.price} [{order.state}]",
+            )
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
@@ -123,6 +131,9 @@ class Orders:
         except OrderException as exc:
             log.error(f"Exception: {exc}")
 
-    def delete_all(self):
+    def delete_all(
+        self,
+        caller: str = "",
+    ):
         for order in self._list():
-            self.delete(order)
+            self.delete(order, caller)

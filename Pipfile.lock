@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1d1f2735548eb8a1a3fec3e62f0d9ef08ad5f376e06fcdc7cc88502ed8499d9f"
+            "sha256": "b1223158bf9441219345a3560d22cc0c63e5ed9b5b3a3ccb013d892c37d90c1e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1336,6 +1336,13 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==2.6"
+        },
+        "ta-lib": {
+            "hashes": [
+                "sha256:fb74c323217bead847a045c97aa17bfd147aef17e20a75857ea0f8f7ee7cdaa0"
+            ],
+            "index": "pypi",
+            "version": "==0.4.32"
         },
         "telegram-send": {
             "hashes": [

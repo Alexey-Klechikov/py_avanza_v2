@@ -10,7 +10,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_END: time = time(16, 58)
     TRADING_DATA: str = "avanza"
 
-    BUDGET: int = 2000
+    BUDGET: int = 2500
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.08

@@ -150,7 +150,7 @@ class Flow:
             return
 
         log.info(
-            f"Total efficiency coefficient: {round(total_efficiency_coefficient, 2)} "
+            f"Total efficiency coefficient: {round(total_efficiency_coefficient, 2)}. "
             + f"Signal: Signal.{'LONG' if total_efficiency_coefficient > 0 else 'SHORT'}",
         )
 

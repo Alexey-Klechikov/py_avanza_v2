@@ -92,7 +92,7 @@ class Trade:
         portfolio: Portfolio,
         take_profit: float,
     ) -> None:
-        orders.delete_all()
+        orders.delete_all(caller="take_profit")
 
         portfolio.reload_positions(caller="take_profit")
         acquired_instrument = portfolio.acquired_instrument.get(direction.value)
@@ -108,4 +108,5 @@ class Trade:
                 2,
             ),
             volume=int(acquired_instrument.volume),
+            caller="take_profit",
         )
