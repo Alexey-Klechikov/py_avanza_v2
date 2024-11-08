@@ -95,6 +95,14 @@ class OrderDepthLevel(BaseModel):
 class OrderDepth(BaseModel):
     received_time: datetime = Field(alias="receivedTime")
     levels: list[OrderDepthLevel]
+    market_maker_level_in_bid: int | None = Field(
+        alias="marketMakerLevelInBid",
+        default=None,
+    )
+    market_maker_level_in_ask: int | None = Field(
+        alias="marketMakerLevelInAsk",
+        default=None,
+    )
 
     @field_validator("received_time", mode="before")
     @classmethod
