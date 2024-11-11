@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pandas as pd
 
-from apis.avanza.operators import Transactions
+from apis.avanza.operators import Portfolio, Transactions
 from apis.telegram.operators import Telegram
 from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
 from services import Storage
@@ -68,6 +68,11 @@ if __name__ == "__main__":
             ("trade_strategies", SETTINGS_TRADE_STRATEGIES.ACCOUNT_ID),
         ]:
             Transactions(account_id).log_deals(log_header=task_name)
+
+            portfolio = Portfolio(account_id)
+            portfolio.reload_balance()
+            log.info(f"Portfolio balance: {portfolio.total_value}")
+            log.info("------------")
 
     except Exception as e:
         telegram = Telegram()

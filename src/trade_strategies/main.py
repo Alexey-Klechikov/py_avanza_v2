@@ -236,7 +236,6 @@ def trade(dry_run: bool, settings) -> None:
     )
 
     data = Data(settings)
-    data.get()
 
     orders = Orders(
         account_id=settings.ACCOUNT_ID,
