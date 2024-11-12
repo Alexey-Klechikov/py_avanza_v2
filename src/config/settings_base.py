@@ -17,6 +17,11 @@ class BaseHoldCorrelation:
 
 
 @dataclass
+class BaseTradeCandlesticks:
+    ACCOUNT_ID: str = "7143979"  # HERE
+
+
+@dataclass
 class BaseOMX:
     NAME: str = "OMX"
 

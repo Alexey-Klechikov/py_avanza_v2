@@ -5,7 +5,12 @@ from datetime import timedelta
 
 import pandas as pd
 
-from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
+from config import (
+    SETTINGS_HOLD_CORRELATION,
+    SETTINGS_HOLD_STATISTICS,
+    SETTINGS_TRADE_CANDLESTICKS,
+    SETTINGS_TRADE_STRATEGIES,
+)
 from hold_correlation import (
     BacklogHoldCorrelation,
     backtest_hold_interday_correlation,
@@ -15,6 +20,7 @@ from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statis
 from hold_statistics.models import Direction, Scope
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
+from trade_candlesticks import BacklogTradeCandlesticks, backtest_trade_candlesticks
 from trade_strategies import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
@@ -32,6 +38,9 @@ def _get_data(period_days: int, settings, resolution: str | None = None):
     data.index = pd.to_datetime(data.index)
 
     return data
+
+
+# Trade strategies
 
 
 def run_strategies_generation(settings, period_days: int, full: bool, comment: str | None = None):
@@ -119,7 +128,23 @@ def run_test_for_selected_indicators(settings, period_days: int):
         log.info("> " + " | ".join([str(i) for i in s]))
 
 
-def test_hold_interday_statistics(settings, period_days: int, slice_duration: int, direction: Direction):
+# Trade candlesticks
+
+
+def run_trade_candlesticks_rules_generation(settings, period_days: int):
+    data = _get_data(period_days, settings)
+
+    candlestick_patterns = backtest_trade_candlesticks(data)
+
+    backlog = BacklogTradeCandlesticks()
+    backlog.rules = candlestick_patterns
+    backlog.write_rules(settings.REF_PRICE)
+
+
+# Hold statistics
+
+
+def run_hold_interday_statistics_rules_generation(settings, period_days: int, slice_duration: int, direction: Direction):
     hold_rule = backtest_hold_interday_statistics(
         _get_data(period_days, settings),
         slice_duration,
@@ -134,7 +159,7 @@ def test_hold_interday_statistics(settings, period_days: int, slice_duration: in
     backlog.write_rules(Scope.INTERDAY)
 
 
-def test_hold_intraday_statistics(settings, period_days: int, slice_duration: int):
+def run_hold_intraday_statistics_rules_generation(settings, period_days: int, slice_duration: int):
     backlog = BacklogHoldStatistics()
     for direction in [Direction.BULL, Direction.BEAR]:
         hold_rules_per_direction = backtest_hold_intraday_statistics(
@@ -152,7 +177,10 @@ def test_hold_intraday_statistics(settings, period_days: int, slice_duration: in
     backlog.write_rules(Scope.INTRADAY)
 
 
-def test_hold_intraday_correlation(settings, period_days: int, slice_duration: int):
+# Hold correlation
+
+
+def run_hold_intraday_correlation_rules_generation(settings, period_days: int, slice_duration: int):
     backlog = BacklogHoldCorrelation()
     hold_rules = backtest_hold_intraday_correlation(
         settings,
@@ -166,7 +194,7 @@ def test_hold_intraday_correlation(settings, period_days: int, slice_duration: i
     backlog.write_rules(scope=Scope.INTRADAY)  # type: ignore
 
 
-def test_hold_interday_correlation(settings, period_days: int, slice_duration: int):
+def run_hold_interday_correlation_rules_generation(settings, period_days: int, slice_duration: int):
     backlog = BacklogHoldCorrelation()
     hold_rules = backtest_hold_interday_correlation(
         settings,
@@ -187,9 +215,12 @@ if __name__ == "__main__":
     # run_plotting_for_active_strategies(settings, period_days=5)
 
     settings = SETTINGS_HOLD_STATISTICS
-    # test_hold_intraday_statistics(settings, period_days=40, slice_duration=4)
-    # test_hold_interday_statistics(settings, period_days=40, slice_duration=2, direction=Direction.BULL)
+    # run_hold_intraday_statistics_rules_generation(settings, period_days=40, slice_duration=4)
+    # run_hold_interday_statistics_rules_generation(settings, period_days=40, slice_duration=2, direction=Direction.BULL)
 
     settings = SETTINGS_HOLD_CORRELATION
-    # test_hold_intraday_correlation(settings, period_days=40, slice_duration=10)
-    test_hold_interday_correlation(settings, period_days=40, slice_duration=10)
+    # run_hold_intraday_correlation_rules_generation(settings, period_days=40, slice_duration=10)
+    # run_hold_interday_correlation_rules_generation(settings, period_days=40, slice_duration=10)
+
+    settings = SETTINGS_TRADE_CANDLESTICKS
+    run_trade_candlesticks_rules_generation(settings, period_days=40)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-from config.settings_base import BaseOMX, BaseTradeStrategies
+from config.settings_base import BaseOMX, BaseTradeCandlesticks, BaseTradeStrategies
 
 
 @dataclass
@@ -53,3 +53,8 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
             },
         },
     )
+
+
+@dataclass
+class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
+    BUDGET: float = 2000
