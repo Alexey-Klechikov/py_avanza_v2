@@ -1,1 +1,1 @@
-from trade_candlesticks.models.candlestick_pattern import CandlestickPatternRule, Deal
+from src.trade_candlesticks.models.rule import CandlestickPatternRule, Deal
