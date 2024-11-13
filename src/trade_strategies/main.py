@@ -137,7 +137,7 @@ class FlowAction(Enum):
 
 
 class Flow:
-    def __init__(self, settings, dry_run=False):
+    def __init__(self, settings, data: Data, dry_run=False):
         self.budget = settings.BUDGET
         self.trading_ends: time = min(get_market_close_time(), settings.TRADING_END)
         self.stop_loss: float = settings.TRADING_STOP_LOSS
@@ -146,7 +146,9 @@ class Flow:
         self.directions_sell: list[Direction] = []
         self.directions_buy: list[Direction] = []
 
-    def get_action(self, data: Data, portfolio: Portfolio, orders: Orders) -> FlowAction:
+        self.data = data
+
+    def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.directions_buy = []
 
@@ -177,15 +179,15 @@ class Flow:
             return FlowAction.EXIT_TRADING
 
         # No new data
-        elif data.too_old:
+        elif self.data.too_old:
             self.directions_sell = [Direction.BEAR, Direction.BULL]
             return FlowAction.TRADE
 
         # Trade
-        elif data.is_new:
-            data.is_new = False
-            data.get_strategies()
-            signal = data.get_signal()
+        elif self.data.is_new:
+            self.data.is_new = False
+            self.data.get_strategies()
+            signal = self.data.get_signal()
 
             if signal:
                 # Not enough funds on the account
@@ -206,16 +208,16 @@ class Flow:
             if signal:
                 return FlowAction.TRADE
 
-        # Wait for new data
-        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
-        data.get()
-
-        if not data.is_new:
-            sleep(20)
-            data.get()
-            log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {data.is_new}")
-
         return FlowAction.DO_NOTHING
+
+    def wait_for_data(self):
+        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
+        self.data.get()
+
+        if not self.data.is_new:
+            sleep(20)
+            self.data.get()
+            log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.data.is_new}")
 
 
 # MAIN
@@ -252,18 +254,17 @@ def trade(dry_run: bool, settings) -> None:
         take_profit_percent=settings.TRADING_TAKE_PROFIT,
     )
 
-    flow = Flow(settings, dry_run)
+    flow = Flow(settings, data, dry_run)
 
     while datetime.now().time() < time(17, 4):
         try:
-            action = flow.get_action(data, portfolio, orders)
+            action = flow.get_action(portfolio, orders)
         except (ConnectionError, RemoteDisconnected):
             get_client.cache_clear()
 
         if action == FlowAction.DO_NOTHING:
             for direction in [Direction.BULL, Direction.BEAR]:
                 trade.stop_loss(direction)
-            continue
 
         elif action == FlowAction.TRADE:
             for direction in flow.directions_sell:
@@ -275,5 +276,7 @@ def trade(dry_run: bool, settings) -> None:
 
         elif action == FlowAction.EXIT_TRADING:
             break
+
+        flow.wait_for_data()
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)

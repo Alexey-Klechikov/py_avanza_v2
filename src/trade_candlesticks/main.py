@@ -99,7 +99,7 @@ class FlowAction(Enum):
 
 
 class Flow:
-    def __init__(self, settings, dry_run: bool):
+    def __init__(self, settings, data: Data, dry_run: bool):
         self.budget = settings.BUDGET
         self.trading_ends = min(get_market_close_time(), settings.TRADING_END)
 
@@ -114,7 +114,9 @@ class Flow:
 
         self.triggered_rule: CandlestickPatternRule | None = None
 
-    def get_action(self, data: Data, portfolio: Portfolio, orders: Orders) -> FlowAction:
+        self.data = data
+
+    def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.directions_buy = []
         latest_triggered_rule = None
@@ -140,15 +142,15 @@ class Flow:
             return FlowAction.EXIT_TRADING
 
         # No new data
-        elif data.too_old:
+        elif self.data.too_old:
             self.directions_sell = [Direction.BEAR, Direction.BULL]
             return FlowAction.TRADE
 
         # Trade
-        elif data.is_new:
-            data.is_new = False
-            data.append_candlestick_patterns()
-            latest_triggered_rule = data.get_latest_triggered_rule()
+        elif self.data.is_new:
+            self.data.is_new = False
+            self.data.append_candlestick_patterns()
+            latest_triggered_rule = self.data.get_latest_triggered_rule()
 
         if (
             latest_triggered_rule
@@ -177,16 +179,16 @@ class Flow:
 
             return FlowAction.TRADE
 
-        # Wait for new data
-        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 16)
-        data.get()
-
-        if not data.is_new:
-            sleep(20)
-            data.get()
-            log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {data.is_new}")
-
         return FlowAction.DO_NOTHING
+
+    def wait_for_data(self):
+        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 16)
+        self.data.get()
+
+        if not self.data.is_new:
+            sleep(20)
+            self.data.get()
+            log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.data.is_new}")
 
 
 # MAIN
@@ -217,18 +219,17 @@ def trade(dry_run: bool, settings) -> None:
     watchlists.update_all()
 
     trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists, dry_run=dry_run, budget=settings.BUDGET)
-    flow = Flow(settings, dry_run)
+    flow = Flow(settings, data, dry_run)
 
     while datetime.now().time() < time(17, 15):
         try:
-            action = flow.get_action(data, portfolio, orders)
+            action = flow.get_action(portfolio, orders)
         except (ConnectionError, RemoteDisconnected):
             get_client.cache_clear()
 
         if action == FlowAction.DO_NOTHING:
             for direction in [Direction.BULL, Direction.BEAR]:
                 trade.stop_loss(direction)
-            continue
 
         elif action == FlowAction.TRADE:
             for direction in flow.directions_sell:
@@ -247,5 +248,7 @@ def trade(dry_run: bool, settings) -> None:
 
         elif action == FlowAction.EXIT_TRADING:
             break
+
+        flow.wait_for_data()
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)
