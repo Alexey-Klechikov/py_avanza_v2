@@ -13,12 +13,12 @@ class BaseHoldStatistics:
 
 @dataclass
 class BaseHoldCorrelation:
-    ACCOUNT_ID: str = "7144096"
+    ACCOUNT_ID: str = "7144096"  # -> BaseTradeCandlesticks
 
 
 @dataclass
 class BaseTradeCandlesticks:
-    ACCOUNT_ID: str = "7143979"  # HERE
+    ACCOUNT_ID: str = "7144096"
 
 
 @dataclass

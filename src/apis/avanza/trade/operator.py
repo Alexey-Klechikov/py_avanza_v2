@@ -25,6 +25,9 @@ class Trade:
     ) -> None:
         caller = "sell"
 
+        if dry_run:
+            return
+
         trade_result = None
         for _ in range(5):
             portfolio.reload_positions(caller)
@@ -46,9 +49,6 @@ class Trade:
                 f"Trade result: {round(acquired_instrument.acquired_value)} -> {round(acquired_instrument.value)}"
             )
 
-            if dry_run:
-                break
-
         if trade_result:
             log.warning(trade_result)
 
@@ -63,6 +63,9 @@ class Trade:
         dry_run: bool,
     ) -> None:
         caller = "buy"
+
+        if dry_run:
+            return
 
         for _ in range(5):
             portfolio.reload_positions(caller)
@@ -90,9 +93,6 @@ class Trade:
                 volume=round(budget // price),
                 caller=caller,
             )
-
-            if dry_run:
-                break
 
     @classmethod
     def take_profit(

@@ -11,7 +11,7 @@ from apis.investing.operators import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
-from config import SETTINGS_HOLD_CORRELATION, SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
+from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_STRATEGIES
 from hold_correlation import (
     BacklogHoldCorrelation,
     backtest_hold_interday_correlation,
@@ -179,8 +179,8 @@ if __name__ == "__main__":
             slice_duration=2,
             direction=Direction.BULL,
         )
-        generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
-        generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        # generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        # generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
 
     except Exception as e:
         telegram = Telegram()

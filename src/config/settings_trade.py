@@ -57,4 +57,8 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
 
 @dataclass
 class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
+    TRADING_START: time = time(9, 10)
+    TRADING_END: time = time(17, 10)
+    TRADING_DATA: str = "avanza"
+
     BUDGET: float = 2000

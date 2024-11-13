@@ -1,10 +1,11 @@
 import warnings
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
 
 import pandas as pd
+import talib
 from avanza.constants import Resolution, TimePeriod
 from requests.exceptions import ConnectionError
 
@@ -16,8 +17,8 @@ from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
-from services.ta import get_indicators, read_top_strategies
-from services.ta.strategies.models import Strategy
+from trade_candlesticks import BacklogTradeCandlesticks
+from trade_candlesticks.models import CandlestickPatternRule
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger
 
@@ -30,21 +31,23 @@ log = get_logger()
 class Signal(Enum):
     LONG = "LONG"
     SHORT = "SHORT"
-    EXIT = "EXIT"
 
 
 class Data:
-    def __init__(self, settings):
+    def __init__(self, settings, candlestick_rules: list[CandlestickPatternRule]):
         self.settings = settings
-        self.data: pd.DataFrame = pd.DataFrame()
+        self.candlestick_rules = candlestick_rules
+        self.data = pd.DataFrame()
         self.is_new = False
         self.too_old = False
-        self.strategies = []
+        self.triggered_pattern = None
 
     def get(self):
         storage = Storage(self.settings)
 
         data = storage.read()
+
+        self.data = data.loc[data.index >= TODAY_MIDNIGHT]
 
         if ((datetime.now() - data.index[-1]).seconds // 60) < 3:  # type: ignore
             self.too_old = False
@@ -67,67 +70,26 @@ class Data:
             self.too_old = ((datetime.now() - data.index[-1]).seconds // 60) > 15
             self.is_new = data_size_before != data_size_after
 
-        self.data = data.loc[data.index >= TODAY_MIDNIGHT - timedelta(days=4)]
+        self.data = data.loc[data.index >= TODAY_MIDNIGHT]
 
-    def get_strategies(self):
-        indicators_mapping = get_indicators(self.data, self.settings)
-        strategies = read_top_strategies(indicators_mapping)
-        if not self.strategies or self.strategies[0].name != strategies[0].name:
-            for i, strategy in enumerate(strategies):
-                log.info(f"Strategy {i+1}: {strategy.name}")
+    def append_candlestick_patterns(self):
+        for pattern_column_name in list({i.column for i in self.candlestick_rules}):
 
-        self.strategies = strategies
+            pattern_method = getattr(talib, pattern_column_name)
+            pattern_column = pattern_method(self.data["Open"], self.data["High"], self.data["Low"], self.data["Close"])
 
-    def add_signals(self, strategy: Strategy) -> None:
-        self.data["LONG"] = False
-        self.data["SHORT"] = False
-        self.data["EXIT"] = False
+            value_statistics = pattern_column.value_counts().to_dict()
+            value_statistics = {i: value_statistics[i] for i in value_statistics if i not in [0, -200, 200]}
 
-        for column in ["LONG", "SHORT", "EXIT"]:
-            combination_condition = all if column in ["LONG", "SHORT"] else any
+            self.data[pattern_column_name] = pattern_column
 
-            signal_methods = [
-                indicator.signal.__getattribute__(column)
-                for indicator in strategy.indicators_logic  # type: ignore
-                if indicator.signal.__getattribute__(column) is not None
-            ]
-
-            for i, row in self.data.iterrows():
-                self.data.at[i, column] = (
-                    False
-                    if not signal_methods
-                    or not combination_condition(signal_method(row) for signal_method in signal_methods)
-                    else True
-                )
-
-        for column in ["LONG", "SHORT", "EXIT"]:
-            for non_trading_time in (
-                ["09:00", self.settings.TRADING_START.strftime("%H:%M")],
-                [self.settings.TRADING_END.strftime("%H:%M"), "22:30"],
-            ):
-                self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
-
-    def get_signal(self) -> Signal | None:
-        signal = None
-
-        for i, strategy in enumerate(self.strategies):
-            self.add_signals(strategy)
-
-            last_complete_candle = self.data.iloc[-2]
-            if last_complete_candle["EXIT"]:
-                signal = Signal.EXIT
-
-            if last_complete_candle["LONG"] and not last_complete_candle["SHORT"]:
-                signal = Signal.LONG
-
-            elif last_complete_candle["SHORT"] and not last_complete_candle["LONG"]:
-                signal = Signal.SHORT
-
-            if not signal:
-                continue
-
-            log.info(f"Signal: {signal}. Strategy {i+1}. Latest price: {round(self.data.iloc[-1]['Close'], 2)}")
-            return signal
+    def get_latest_triggered_rule(self) -> CandlestickPatternRule | None:
+        for i in range(len(self.data) - 1, len(self.data) - 3, -1):
+            for candlestick_rule in self.candlestick_rules:
+                if (self.data[candlestick_rule.column][i] == 100 and candlestick_rule.direction == Direction.BULL) or (
+                    self.data[candlestick_rule.column][i] == -100 and candlestick_rule.direction == Direction.BEAR
+                ):
+                    return candlestick_rule
 
 
 class FlowAction(Enum):
@@ -137,20 +99,29 @@ class FlowAction(Enum):
 
 
 class Flow:
-    def __init__(self, settings, dry_run=False):
+    def __init__(self, settings, dry_run: bool):
         self.budget = settings.BUDGET
+        self.trading_ends = min(get_market_close_time(), settings.TRADING_END)
+
+        self.directions_sell: list[Direction] = []
+        self.directions_buy: list[Direction] = []
+
         self.trading_ends: time = min(get_market_close_time(), settings.TRADING_END)
-        self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
 
         self.directions_sell: list[Direction] = []
         self.directions_buy: list[Direction] = []
 
+        self.triggered_rule: CandlestickPatternRule | None = None
+
     def get_action(self, data: Data, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.directions_buy = []
+        latest_triggered_rule = None
 
         portfolio.reload_positions(caller="get_action")
+        if not portfolio.positions:
+            self.triggered_rule = None
 
         # Stop loss
         if portfolio.positions:
@@ -162,18 +133,12 @@ class Flow:
                 if (
                     acquired_instrument
                     and acquired_instrument.quote.sell
-                    and acquired_instrument.quote.sell < acquired_instrument.acquired_price * (1 - self.stop_loss)
+                    and self.triggered_rule
+                    and acquired_instrument.quote.sell
+                    < acquired_instrument.acquired_price * (1 - self.triggered_rule.stop_loss)
                 ):
                     log.info(f"Stop loss triggered for {direction.value}")
                     self.directions_sell = [direction]
-                    return FlowAction.TRADE
-
-        # Edge case: Sell BEAR at 14:24 if last signal was more than 90 mins ago
-        if datetime.now().time() == time(14, 26) and portfolio.acquired_instrument.BEAR:
-            orders.reload_active()
-            if orders.active_order:
-                if (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60):
-                    self.directions_sell = [Direction.BEAR]
                     return FlowAction.TRADE
 
         # End of day
@@ -200,30 +165,38 @@ class Flow:
         # Trade
         elif data.is_new:
             data.is_new = False
-            data.get_strategies()
-            signal = data.get_signal()
+            data.append_candlestick_patterns()
+            latest_triggered_rule = data.get_latest_triggered_rule()
 
-            if signal:
-                # Not enough funds on the account
-                portfolio.reload_balance()
-                if portfolio.buying_power < self.budget and not portfolio.positions:
-                    log.info("Not enough funds on the account. No action is taken.")
-                    return FlowAction.EXIT_TRADING
+        if (
+            latest_triggered_rule
+            and latest_triggered_rule != self.triggered_rule
+            and (not self.triggered_rule or latest_triggered_rule.efficiency > self.triggered_rule.efficiency)
+        ):
+            log.info(
+                f"New signal: {Signal('LONG' if latest_triggered_rule.direction == Direction.BULL else 'SHORT')}. "
+                + f"Pattern: {latest_triggered_rule.column} [eff. {latest_triggered_rule.efficiency}]",
+            )
 
-            if signal == Signal.LONG:
+            self.triggered_rule = latest_triggered_rule
+
+            # Not enough funds on the account
+            portfolio.reload_balance()
+            if portfolio.buying_power < self.budget and not portfolio.positions:
+                log.info("Not enough funds on the account. No action is taken.")
+                return FlowAction.EXIT_TRADING
+
+            if self.triggered_rule.direction == Direction.BULL:
                 self.directions_sell = [Direction.BEAR]
                 self.directions_buy = [Direction.BULL]
-            elif signal == Signal.SHORT:
+            elif self.triggered_rule.direction == Direction.BEAR:
                 self.directions_sell = [Direction.BULL]
                 self.directions_buy = [Direction.BEAR]
-            elif signal == Signal.EXIT:
-                self.directions_sell = [Direction.BEAR, Direction.BULL]
 
-            if signal:
-                return FlowAction.TRADE
+            return FlowAction.TRADE
 
         # Wait for new data
-        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
+        sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 16)
         data.get()
 
         if not data.is_new:
@@ -237,10 +210,13 @@ class Flow:
 # MAIN
 def trade(dry_run: bool, settings) -> None:
     log.info(
-        f"Start trading strategies on {settings.NAME} | {settings.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""),
+        f"Start trading candlesticks on {settings.NAME} | {settings.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""),
     )
 
-    data = Data(settings)
+    backlog = BacklogTradeCandlesticks()
+    backlog.read_rules()
+
+    data = Data(settings, backlog.rules)
 
     orders = Orders(
         account_id=settings.ACCOUNT_ID,
@@ -260,7 +236,7 @@ def trade(dry_run: bool, settings) -> None:
 
     flow = Flow(settings, dry_run)
 
-    while datetime.now().time() < time(17, 4):
+    while datetime.now().time() < time(17, 15):
         try:
             action = flow.get_action(data, portfolio, orders)
         except (ConnectionError, RemoteDisconnected):
@@ -278,6 +254,10 @@ def trade(dry_run: bool, settings) -> None:
 
         for direction in flow.directions_buy:
             Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
-            Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
+
+            if not flow.triggered_rule:
+                continue
+
+            Trade.take_profit(direction, orders, portfolio, flow.triggered_rule.take_profit)
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)
