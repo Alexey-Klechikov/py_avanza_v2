@@ -152,22 +152,6 @@ class Flow:
 
         portfolio.reload_positions(caller="get_action")
 
-        # Stop loss
-        if portfolio.positions:
-            for direction in [Direction.BULL, Direction.BEAR]:
-                acquired_instrument = portfolio.acquired_instrument.get(direction.value)
-                if not acquired_instrument:
-                    continue
-
-                if (
-                    acquired_instrument
-                    and acquired_instrument.quote.sell
-                    and acquired_instrument.quote.sell < acquired_instrument.acquired_price * (1 - self.stop_loss)
-                ):
-                    log.info(f"Stop loss triggered for {direction.value}")
-                    self.directions_sell = [direction]
-                    return FlowAction.TRADE
-
         # Edge case: Sell BEAR at 14:24 if last signal was more than 90 mins ago
         if datetime.now().time() == time(14, 26) and portfolio.acquired_instrument.BEAR:
             orders.reload_active()
@@ -258,6 +242,16 @@ def trade(dry_run: bool, settings) -> None:
     watchlists = Watchlists(settings)
     watchlists.update_all()
 
+    trade = Trade(
+        orders=orders,
+        portfolio=portfolio,
+        watchlists=watchlists,
+        dry_run=dry_run,
+        budget=settings.BUDGET,
+        stop_loss_percent=settings.TRADING_STOP_LOSS,
+        take_profit_percent=settings.TRADING_TAKE_PROFIT,
+    )
+
     flow = Flow(settings, dry_run)
 
     while datetime.now().time() < time(17, 4):
@@ -267,17 +261,19 @@ def trade(dry_run: bool, settings) -> None:
             get_client.cache_clear()
 
         if action == FlowAction.DO_NOTHING:
+            for direction in [Direction.BULL, Direction.BEAR]:
+                trade.stop_loss(direction)
             continue
+
+        elif action == FlowAction.TRADE:
+            for direction in flow.directions_sell:
+                trade.sell(direction)
+
+            for direction in flow.directions_buy:
+                trade.buy(direction)
+                trade.take_profit(direction)
+
         elif action == FlowAction.EXIT_TRADING:
             break
-        elif action == FlowAction.TRADE:
-            pass
-
-        for direction in flow.directions_sell:
-            Trade.sell(direction, orders, portfolio, dry_run)
-
-        for direction in flow.directions_buy:
-            Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
-            Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)

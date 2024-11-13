@@ -223,6 +223,15 @@ def hold(dry_run: bool, settings) -> None:
     backlog = BacklogHoldCorrelation()
     backlog.read_rules(settings)
 
+    trade = Trade(
+        orders=orders,
+        portfolio=portfolio,
+        watchlists=watchlists,
+        dry_run=dry_run,
+        budget=settings.BUDGET,
+        take_profit_percent=settings.TRADING_TAKE_PROFIT,
+    )
+
     flow = Flow(settings)
 
     while datetime.now().time() < time(17, 15):
@@ -233,16 +242,16 @@ def hold(dry_run: bool, settings) -> None:
 
         if action == FlowAction.DO_NOTHING:
             continue
-        if action == FlowAction.EXIT_TRADING:
+
+        elif action == FlowAction.EXIT_TRADING:
             break
+
         elif action == FlowAction.TRADE:
-            pass
+            for direction in flow.directions_sell:
+                trade.sell(direction)
 
-        for direction in flow.directions_sell:
-            Trade.sell(direction, orders, portfolio, dry_run)
-
-        for direction in flow.directions_buy:
-            Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
-            Trade.take_profit(direction, orders, portfolio, settings.TRADING_TAKE_PROFIT)
+            for direction in flow.directions_buy:
+                trade.buy(direction)
+                trade.take_profit(direction)
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)

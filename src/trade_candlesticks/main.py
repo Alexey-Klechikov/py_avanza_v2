@@ -123,24 +123,6 @@ class Flow:
         if not portfolio.positions:
             self.triggered_rule = None
 
-        # Stop loss
-        if portfolio.positions:
-            for direction in [Direction.BULL, Direction.BEAR]:
-                acquired_instrument = portfolio.acquired_instrument.get(direction.value)
-                if not acquired_instrument:
-                    continue
-
-                if (
-                    acquired_instrument
-                    and acquired_instrument.quote.sell
-                    and self.triggered_rule
-                    and acquired_instrument.quote.sell
-                    < acquired_instrument.acquired_price * (1 - self.triggered_rule.stop_loss)
-                ):
-                    log.info(f"Stop loss triggered for {direction.value}")
-                    self.directions_sell = [direction]
-                    return FlowAction.TRADE
-
         # End of day
         if datetime.now().time() >= self.trading_ends:
             # Edge case: Sell at the end of the day is last signal was more than 90 mins ago
@@ -234,6 +216,7 @@ def trade(dry_run: bool, settings) -> None:
     watchlists = Watchlists(settings)
     watchlists.update_all()
 
+    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists, dry_run=dry_run, budget=settings.BUDGET)
     flow = Flow(settings, dry_run)
 
     while datetime.now().time() < time(17, 15):
@@ -243,21 +226,26 @@ def trade(dry_run: bool, settings) -> None:
             get_client.cache_clear()
 
         if action == FlowAction.DO_NOTHING:
+            for direction in [Direction.BULL, Direction.BEAR]:
+                trade.stop_loss(direction)
             continue
+
+        elif action == FlowAction.TRADE:
+            for direction in flow.directions_sell:
+                trade.sell(direction)
+
+            for direction in flow.directions_buy:
+                trade.buy(direction)
+
+                if not flow.triggered_rule:
+                    continue
+
+                trade.stop_loss_percent = flow.triggered_rule.stop_loss
+                trade.take_profit_percent = flow.triggered_rule.take_profit
+
+                trade.take_profit(direction)
+
         elif action == FlowAction.EXIT_TRADING:
             break
-        elif action == FlowAction.TRADE:
-            pass
-
-        for direction in flow.directions_sell:
-            Trade.sell(direction, orders, portfolio, dry_run)
-
-        for direction in flow.directions_buy:
-            Trade.buy(direction, orders, watchlists, portfolio, settings.BUDGET, dry_run)
-
-            if not flow.triggered_rule:
-                continue
-
-            Trade.take_profit(direction, orders, portfolio, flow.triggered_rule.take_profit)
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)

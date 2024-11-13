@@ -66,6 +66,16 @@ def hold(dry_run: bool, settings) -> None:
             filter_orderbook_direction=event.orderbook_direction.value,
         )
 
+        watchlists = Watchlists(event.settings, "CERTIFICATE")
+
+        trade = Trade(
+            orders=orders,
+            portfolio=portfolio,
+            watchlists=watchlists,
+            dry_run=dry_run,
+            budget=settings.BUDGET,
+        )
+
         if event.action == Action.SELL:
             portfolio.reload_positions(caller="hold")
 
@@ -73,7 +83,7 @@ def hold(dry_run: bool, settings) -> None:
                 log.warning("No positions to sell. Possibly sold at take profit price")
                 continue
 
-            Trade.sell(event.orderbook_direction, orders, portfolio, dry_run)
+            trade.sell(event.orderbook_direction)
 
         if event.action == Action.BUY:
             log.info(f"Signal: Signal.{'LONG' if event.orderbook_direction.value == 'BULL' else 'SHORT'}")
@@ -84,9 +94,10 @@ def hold(dry_run: bool, settings) -> None:
                 log.warning(f"Insufficient buying power: {portfolio.buying_power} < {event.budget}")
                 continue
 
-            watchlists = Watchlists(event.settings, "CERTIFICATE")
+            trade.buy(event.orderbook_direction)
 
-            Trade.buy(event.orderbook_direction, orders, watchlists, portfolio, event.budget, dry_run)
-            Trade.take_profit(event.orderbook_direction, orders, portfolio, event.take_profit)
+            trade.take_profit_percent = event.take_profit
+
+            trade.take_profit(event.orderbook_direction)
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)
