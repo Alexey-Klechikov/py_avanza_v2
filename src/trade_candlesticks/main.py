@@ -49,7 +49,7 @@ class Data:
 
         self.data = data.loc[data.index >= TODAY_MIDNIGHT]
 
-        if ((datetime.now() - data.index[-1]).seconds // 60) < 3:  # type: ignore
+        if ((datetime.now() - data.index[-1]).seconds) < 2 * 60:  # type: ignore
             self.too_old = False
             self.is_new = True
 

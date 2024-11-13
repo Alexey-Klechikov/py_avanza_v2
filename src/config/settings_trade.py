@@ -10,7 +10,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_END: time = time(16, 58)
     TRADING_DATA: str = "avanza"
 
-    BUDGET: int = 2500
+    BUDGET: int = 2700
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.08
@@ -61,4 +61,4 @@ class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
     TRADING_END: time = time(17, 10)
     TRADING_DATA: str = "avanza"
 
-    BUDGET: float = 2000
+    BUDGET: float = 1800
