@@ -4,7 +4,7 @@ from copy import deepcopy
 import pandas as pd
 
 from apis.avanza.trade.models import Direction
-from services.candlesticks.operators import append_patternpy_candlestick_patterns
+from services.candlesticks.operators import append_patternpy_candlestick_patterns, append_talib_candlestick_patterns
 from trade_candlesticks.models import CandlestickPatternRule, Deal
 from utils.logger import get_logger
 
@@ -45,8 +45,8 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
             take_profit=i,
             stop_loss=j,
         )
-        for i in range(3, 10)
-        for j in range(3, 8)
+        for i in range(4, 10)
+        for j in range(4, 8)
         if i >= j
     ]
     for pattern_variant in pattern_variants:
@@ -62,7 +62,7 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
                     deal.buy_price = row["Close"]
                     continue
 
-                if not deal.buy_price:
+                if not deal.buy_price or round((row.name - deal.buy_time).total_seconds() / 60) == 2:
                     continue
 
                 current_price_change = (row["Close"] - deal.buy_price) * (
@@ -90,7 +90,7 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
         pattern_variant.aggregate_values_from_deals()
 
     top_pattern_variant = max(pattern_variants, key=lambda x: x.profit * x.efficiency)
-    if not top_pattern_variant or top_pattern_variant.profit <= 10 or top_pattern_variant.efficiency <= 0.52:
+    if not top_pattern_variant or top_pattern_variant.profit <= 20 or top_pattern_variant.efficiency <= 0.55:
         return
 
     return top_pattern_variant
@@ -98,8 +98,8 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
 
 # MAIN
 def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRule]:
-    # data = append_talib_candlestick_patterns(data)
     data = append_patternpy_candlestick_patterns(data)
+    data = append_talib_candlestick_patterns(data)
 
     patterns_rules = []
     for kwargs in [
@@ -109,7 +109,7 @@ def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRu
             "direction": direction,
         }
         for pattern_column in data.columns
-        if pattern_column.startswith("CDL")
+        if pattern_column.startswith("CDL") or pattern_column.startswith("PTN")
         for direction in ["BULL", "BEAR"]
     ]:
         pattern_rule = backtest_candlestick_pattern(kwargs)
