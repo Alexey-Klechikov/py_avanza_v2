@@ -108,7 +108,7 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
         pattern_variant.aggregate_values_from_deals()
 
     top_pattern_variant = max(pattern_variants, key=lambda x: x.profit * x.efficiency)
-    if not top_pattern_variant or top_pattern_variant.profit <= 0 or top_pattern_variant.efficiency <= 0.5:
+    if not top_pattern_variant or top_pattern_variant.profit <= 10 or top_pattern_variant.efficiency <= 0.52:
         return
 
     return top_pattern_variant
@@ -131,7 +131,7 @@ def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRu
     ]:
         pattern_rule = backtest_candlestick_pattern(kwargs)
 
-        if pattern_rule and pattern_rule.profit and pattern_rule.profit > 0:
+        if pattern_rule:
             log.debug(pattern_rule)
             patterns_rules.append(pattern_rule)
 
