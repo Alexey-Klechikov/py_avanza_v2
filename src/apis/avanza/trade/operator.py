@@ -18,7 +18,7 @@ log = get_logger()
 @dataclass
 class DirectionPrice:
     buy: float = 0
-    volume: int = 0
+    volume: float = 0
     signal: float | None = None
     take_profit: float | None = None
     sell: float | None = None
@@ -32,17 +32,12 @@ class PriceState:
     def update(
         self,
         direction: Direction,
-        signal: float | None = None,
-        take_profit: float | None = None,
-        sell: float | None = None,
+        **kwargs,
     ) -> None:
         direction_price = getattr(self, direction.value)
-        if signal:
-            direction_price.signal = signal
-        if take_profit:
-            direction_price.take_profit = take_profit
-        if sell:
-            direction_price.sell = sell
+
+        for key, value in kwargs.items():
+            setattr(direction_price, key, value)
 
         setattr(self, direction.value, direction_price)
 
@@ -60,7 +55,7 @@ class PriceState:
         self,
         direction: Direction,
         buy: float,
-        volume: int,
+        volume: float,
     ) -> None:
         setattr(
             self,
@@ -134,7 +129,12 @@ class Trade:
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if acquired_instrument:
-                self.price_state.update(direction, signal=acquired_instrument.quote.sell)
+                self.price_state.update(
+                    direction,
+                    buy=acquired_instrument.acquired_price,
+                    volume=acquired_instrument.volume,
+                    signal=acquired_instrument.quote.sell,
+                )
                 break
 
             self.watchlists.refresh_all()
@@ -158,7 +158,7 @@ class Trade:
                 caller=caller,
             )
 
-            self.price_state.set(direction, buy=price, volume=round(self.budget // price))
+            self.price_state.set(direction, buy=price, volume=self.budget // price)
 
     def take_profit(self, direction: Direction) -> None:
         caller = "take_profit"
