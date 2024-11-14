@@ -7,34 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-def append_head_and_shoulders(data: pd.DataFrame, length: int = 3):
-    column_name = f"PTNHEADANDSHOULDERS_{length}"
-
-    data["high_roll_max"] = data["High"].rolling(window=length).max()
-    data["low_roll_min"] = data["Low"].rolling(window=length).min()
-
-    mask_head_shoulder = (
-        (data["high_roll_max"] > data["High"].shift(1))
-        & (data["high_roll_max"] > data["High"].shift(-1))
-        & (data["High"] < data["High"].shift(1))
-        & (data["High"] < data["High"].shift(-1))
-    )
-    mask_inv_head_shoulder = (
-        (data["low_roll_min"] < data["Low"].shift(1))
-        & (data["low_roll_min"] < data["Low"].shift(-1))
-        & (data["Low"] > data["Low"].shift(1))
-        & (data["Low"] > data["Low"].shift(-1))
-    )
-
-    data[column_name] = 0
-    data.loc[mask_head_shoulder, column_name] = 100
-    data.loc[mask_inv_head_shoulder, column_name] = -100
-
-    data.drop(["high_roll_max", "low_roll_min"], axis=1, inplace=True)
-
-    return data
-
-
+# TODO: refactor - suspiciously good results
 def append_triangle_pattern(data: pd.DataFrame, length: int = 3):
     column_name = f"PTNTRIANGLE_{length}"
 
@@ -137,6 +110,35 @@ def append_channel(data: pd.DataFrame, length: int = 3, channel_range: float = 0
     return data
 
 
+# TODO: refactor - it looks into the future
+def append_head_and_shoulders(data: pd.DataFrame, length: int = 3):
+    column_name = f"PTNHEADANDSHOULDERS_{length}"
+
+    data["high_roll_max"] = data["High"].rolling(window=length).max()
+    data["low_roll_min"] = data["Low"].rolling(window=length).min()
+
+    mask_head_shoulder = (
+        (data["high_roll_max"] > data["High"].shift(1))
+        & (data["high_roll_max"] > data["High"].shift(-1))
+        & (data["High"] < data["High"].shift(1))
+        & (data["High"] < data["High"].shift(-1))
+    )
+    mask_inv_head_shoulder = (
+        (data["low_roll_min"] < data["Low"].shift(1))
+        & (data["low_roll_min"] < data["Low"].shift(-1))
+        & (data["Low"] > data["Low"].shift(1))
+        & (data["Low"] > data["Low"].shift(-1))
+    )
+
+    data[column_name] = 0
+    data.loc[mask_head_shoulder, column_name] = 100
+    data.loc[mask_inv_head_shoulder, column_name] = -100
+
+    data.drop(["high_roll_max", "low_roll_min"], axis=1, inplace=True)
+
+    return data
+
+
 def append_double_top_bottom(data: pd.DataFrame, length: int = 3, threshold: float = 0.05):
     column_name = f"PTNDOUBLETOPBOTTOM_{length}"
 
@@ -181,7 +183,7 @@ def append_double_top_bottom(data: pd.DataFrame, length: int = 3, threshold: flo
     return data
 
 
-# TODO: deal with this
+# TODO: research this
 def append_calculate_support_resistance(data: pd.DataFrame, length: int = 3, std_dev: int = 2):
     column_name = f"PTNSUPPORTRESISTANCE_{length}"
 

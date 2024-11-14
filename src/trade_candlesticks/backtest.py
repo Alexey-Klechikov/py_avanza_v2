@@ -90,7 +90,7 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
         pattern_variant.aggregate_values_from_deals()
 
     top_pattern_variant = max(pattern_variants, key=lambda x: x.profit * x.efficiency)
-    if not top_pattern_variant or top_pattern_variant.profit <= 20 or top_pattern_variant.efficiency <= 0.55:
+    if not top_pattern_variant or top_pattern_variant.profit <= 10 or top_pattern_variant.efficiency <= 0.54:
         return
 
     return top_pattern_variant
