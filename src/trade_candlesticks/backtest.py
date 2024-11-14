@@ -137,6 +137,6 @@ def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRu
 
     return sorted(
         patterns_rules,
-        key=lambda x: x.profit * x.efficiency,
+        key=lambda x: x.efficiency,
         reverse=True,
     )

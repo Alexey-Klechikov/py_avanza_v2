@@ -1,5 +1,5 @@
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from time import sleep
 
 import pandas as pd
@@ -26,8 +26,8 @@ class DirectionPrice:
 
 @dataclass
 class PriceState:
-    BULL: DirectionPrice = DirectionPrice()
-    BEAR: DirectionPrice = DirectionPrice()
+    BULL: DirectionPrice = field(default_factory=DirectionPrice)
+    BEAR: DirectionPrice = field(default_factory=DirectionPrice)
 
     def update(
         self,
