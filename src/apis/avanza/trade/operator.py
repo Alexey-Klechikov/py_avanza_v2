@@ -117,7 +117,12 @@ class Trade:
                 caller=caller,
             )
 
-            self.price_state.update(direction, sell=acquired_instrument.quote.buy)
+            self.price_state.update(
+                direction,
+                buy=acquired_instrument.acquired_price,
+                volume=acquired_instrument.volume,
+                sell=acquired_instrument.quote.buy,
+            )
 
     def buy(self, direction: Direction) -> None:
         caller = "buy"
@@ -158,8 +163,6 @@ class Trade:
                 caller=caller,
             )
 
-            self.price_state.set(direction, buy=price, volume=self.budget // price)
-
     def take_profit(self, direction: Direction) -> None:
         caller = "take_profit"
 
@@ -191,8 +194,14 @@ class Trade:
                 caller=caller,
             )
             self.orders.reload_active()
+
             if self.orders.active_order:
-                self.price_state.update(direction, take_profit=self.orders.active_order.price)
+                self.price_state.update(
+                    direction,
+                    buy=acquired_instrument.acquired_price,
+                    volume=acquired_instrument.volume,
+                    take_profit=self.orders.active_order.price,
+                )
                 break
 
     def stop_loss(self, direction: Direction) -> None:
@@ -232,4 +241,9 @@ class Trade:
             )
             self.orders.reload_active()
 
-            self.price_state.update(direction, sell=price)
+            self.price_state.update(
+                direction,
+                buy=acquired_instrument.acquired_price,
+                volume=acquired_instrument.volume,
+                sell=price,
+            )
