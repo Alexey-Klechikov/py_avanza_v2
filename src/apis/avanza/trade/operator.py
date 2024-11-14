@@ -159,6 +159,7 @@ class Trade:
         if not self.stop_loss_percent:
             return
 
+        trade_result = None
         for _ in range(5):
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
@@ -189,5 +190,8 @@ class Trade:
                 caller=caller,
             )
             self.orders.reload_active()
-            if self.orders.active_order:
-                break
+
+            trade_result = f"Trade result: {round(acquired_instrument.acquired_value)} -> {round(price)}"
+
+        if trade_result:
+            log.warning(trade_result)
