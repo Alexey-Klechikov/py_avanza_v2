@@ -16,18 +16,63 @@ log = get_logger()
 
 
 @dataclass
-class SignalPrice:
-    BULL: float | None = None
-    BEAR: float | None = None
+class DirectionPrice:
+    buy: float = 0
+    volume: int = 0
+    signal: float | None = None
+    take_profit: float | None = None
+    sell: float | None = None
 
-    def update(self, direction: Direction, price: float | None) -> None:
-        if price:
-            setattr(self, direction.value, price)
+
+@dataclass
+class PriceState:
+    BULL: DirectionPrice = DirectionPrice()
+    BEAR: DirectionPrice = DirectionPrice()
+
+    def update(
+        self,
+        direction: Direction,
+        signal: float | None = None,
+        take_profit: float | None = None,
+        sell: float | None = None,
+    ) -> None:
+        direction_price = getattr(self, direction.value)
+        if signal:
+            direction_price.signal = signal
+        if take_profit:
+            direction_price.take_profit = take_profit
+        if sell:
+            direction_price.sell = sell
+
+        setattr(self, direction.value, direction_price)
 
     def reset(self, direction: Direction) -> None:
-        setattr(self, direction.value, None)
+        direction_price = getattr(self, direction.value)
+        if direction_price.signal and (direction_price.sell or direction_price.take_profit):
+            log.warning(
+                f"Trade result: {round(direction_price.buy * direction_price.volume)} "
+                f"-> {round((direction_price.sell or direction_price.take_profit) * direction_price.volume)} ",
+            )
 
-    def get(self, direction: Direction) -> float | None:
+        setattr(self, direction.value, DirectionPrice())
+
+    def set(
+        self,
+        direction: Direction,
+        buy: float,
+        volume: int,
+    ) -> None:
+        setattr(
+            self,
+            direction.value,
+            DirectionPrice(
+                signal=buy,
+                buy=buy,
+                volume=volume,
+            ),
+        )
+
+    def get(self, direction: Direction) -> DirectionPrice:
         return getattr(self, direction.value)
 
 
@@ -52,7 +97,7 @@ class Trade:
         self.stop_loss_percent = stop_loss_percent
         self.take_profit_percent = take_profit_percent
 
-        self.signal_price: SignalPrice = SignalPrice()
+        self.price_state: PriceState = PriceState()
 
     def sell(self, direction: Direction) -> None:
         caller = "sell"
@@ -60,12 +105,11 @@ class Trade:
         if self.dry_run:
             return
 
-        trade_result = None
         for _ in range(5):
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
-                self.signal_price.reset(direction)
+                self.price_state.reset(direction)
                 break
 
             self.orders.delete_all(caller)
@@ -78,12 +122,7 @@ class Trade:
                 caller=caller,
             )
 
-            trade_result = (
-                f"Trade result: {round(acquired_instrument.acquired_value)} -> {round(acquired_instrument.value)}"
-            )
-
-        if trade_result:
-            log.warning(trade_result)
+            self.price_state.update(direction, sell=acquired_instrument.quote.buy)
 
     def buy(self, direction: Direction) -> None:
         caller = "buy"
@@ -95,7 +134,7 @@ class Trade:
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if acquired_instrument:
-                self.signal_price.update(direction, acquired_instrument.quote.sell)
+                self.price_state.update(direction, signal=acquired_instrument.quote.sell)
                 break
 
             self.watchlists.refresh_all()
@@ -119,6 +158,8 @@ class Trade:
                 caller=caller,
             )
 
+            self.price_state.set(direction, buy=price, volume=round(self.budget // price))
+
     def take_profit(self, direction: Direction) -> None:
         caller = "take_profit"
 
@@ -129,7 +170,7 @@ class Trade:
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
-                self.signal_price.reset(direction)
+                self.price_state.reset(direction)
                 break
 
             price = Instrument(
@@ -151,6 +192,7 @@ class Trade:
             )
             self.orders.reload_active()
             if self.orders.active_order:
+                self.price_state.update(direction, take_profit=self.orders.active_order.price)
                 break
 
     def stop_loss(self, direction: Direction) -> None:
@@ -159,12 +201,11 @@ class Trade:
         if not self.stop_loss_percent:
             return
 
-        trade_result = None
         for _ in range(5):
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
-                self.signal_price.reset(direction)
+                self.price_state.reset(direction)
                 break
 
             price = Instrument(
@@ -175,7 +216,7 @@ class Trade:
                 sleep(3)
                 continue
 
-            if price > (self.signal_price.get(direction) or acquired_instrument.acquired_price) * (
+            if price > (self.price_state.get(direction).signal or acquired_instrument.acquired_price) * (
                 1 - self.stop_loss_percent
             ):
                 return
@@ -191,7 +232,4 @@ class Trade:
             )
             self.orders.reload_active()
 
-            trade_result = f"Trade result: {round(acquired_instrument.acquired_value)} -> {round(price)}"
-
-        if trade_result:
-            log.warning(trade_result)
+            self.price_state.update(direction, sell=price)
