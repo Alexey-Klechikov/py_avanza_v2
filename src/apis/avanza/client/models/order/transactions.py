@@ -50,7 +50,6 @@ class Transaction(BaseModel):
     note_id: str | None = Field(alias="noteId")
     on_credit_account: bool = Field(alias="onCreditAccount")
     orderbook: Orderbook | None
-    price_in_account_currency: Amount = Field(alias="priceInAccountCurrency")
     price_in_traded_currency: Amount = Field(alias="priceInTradedCurrency")
     price_in_transaction_currency: Amount = Field(alias="priceInTransactionCurrency")
     result: Amount | None

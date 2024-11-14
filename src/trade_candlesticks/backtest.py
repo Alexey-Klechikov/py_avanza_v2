@@ -2,9 +2,9 @@ import warnings
 from copy import deepcopy
 
 import pandas as pd
-import talib
 
 from apis.avanza.trade.models import Direction
+from services.candlesticks.operators import append_patternpy_candlestick_patterns
 from trade_candlesticks.models import CandlestickPatternRule, Deal
 from utils.logger import get_logger
 
@@ -12,24 +12,6 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
-
-
-def extend_data_with_candlestick_pattern_column(data: pd.DataFrame):
-    log.info("Extending data with candlestick patterns columns")
-
-    for pattern_name in talib.get_function_groups()["Pattern Recognition"]:
-        pattern_method = getattr(talib, pattern_name)
-        pattern_column = pattern_method(data["Open"], data["High"], data["Low"], data["Close"])
-
-        value_statistics = pattern_column.value_counts().to_dict()
-        value_statistics = {i: value_statistics[i] for i in value_statistics if i not in [0, -200, 200]}
-
-        if value_statistics and sum(value_statistics.values()) > 4:
-            log.debug(f"Pattern: {pattern_name} | Stats: {value_statistics}")
-            data[pattern_name] = pattern_column
-
-        else:
-            log.debug(f"[Not enough data] Pattern: {pattern_name} | Stats: {value_statistics}")
 
 
 def _filter_data(data: pd.DataFrame, column: str, direction: Direction) -> tuple[pd.DataFrame, int]:
@@ -116,7 +98,8 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
 
 # MAIN
 def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRule]:
-    extend_data_with_candlestick_pattern_column(data)
+    # data = append_talib_candlestick_patterns(data)
+    data = append_patternpy_candlestick_patterns(data)
 
     patterns_rules = []
     for kwargs in [

@@ -5,7 +5,6 @@ from http.client import RemoteDisconnected
 from time import sleep
 
 import pandas as pd
-import talib
 from avanza.constants import Resolution, TimePeriod
 from requests.exceptions import ConnectionError
 
@@ -17,6 +16,7 @@ from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
+from services.candlesticks.operators import append_talib_candlestick_patterns
 from trade_candlesticks import BacklogTradeCandlesticks
 from trade_candlesticks.models import CandlestickPatternRule
 from utils.constants import TODAY_MIDNIGHT
@@ -72,18 +72,9 @@ class Data:
 
         self.data = data.loc[data.index >= TODAY_MIDNIGHT]
 
-    def append_candlestick_patterns(self):
-        for pattern_column_name in list({i.column for i in self.candlestick_rules}):
-
-            pattern_method = getattr(talib, pattern_column_name)
-            pattern_column = pattern_method(self.data["Open"], self.data["High"], self.data["Low"], self.data["Close"])
-
-            value_statistics = pattern_column.value_counts().to_dict()
-            value_statistics = {i: value_statistics[i] for i in value_statistics if i not in [0, -200, 200]}
-
-            self.data[pattern_column_name] = pattern_column
-
     def get_latest_triggered_rule(self) -> CandlestickPatternRule | None:
+        self.data = append_talib_candlestick_patterns(self.data, list({i.column for i in self.candlestick_rules}))
+
         for i in range(len(self.data) - 1, len(self.data) - 3, -1):
             for candlestick_rule in self.candlestick_rules:
                 if (self.data[candlestick_rule.column][i] == 100 and candlestick_rule.direction == Direction.BULL) or (
@@ -149,7 +140,6 @@ class Flow:
         # Trade
         elif self.data.is_new:
             self.data.is_new = False
-            self.data.append_candlestick_patterns()
             latest_triggered_rule = self.data.get_latest_triggered_rule()
 
         if (

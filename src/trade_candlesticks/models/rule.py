@@ -31,7 +31,7 @@ class CandlestickPatternRule(BaseModel):
         return (
             f"{self.column} & {self.direction} ---> "
             + f"profit {self.profit}, eff. {self.efficiency}, durat. {self.average_duration}, "
-            + f"TP {self.take_profit}, SL {self.stop_loss}"
+            + f"deals {self.count_deals}, TP {self.take_profit}, SL {self.stop_loss}"
         )
 
     def aggregate_values_from_deals(self) -> None:
