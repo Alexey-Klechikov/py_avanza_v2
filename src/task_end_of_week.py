@@ -5,12 +5,7 @@ import pandas as pd
 
 from apis.avanza.operators import Portfolio, Transactions
 from apis.telegram.operators import Telegram
-from config import (
-    SETTINGS_HOLD_CORRELATION,
-    SETTINGS_HOLD_STATISTICS,
-    SETTINGS_TRADE_CANDLESTICKS,
-    SETTINGS_TRADE_STRATEGIES,
-)
+from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_CANDLESTICKS, SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from trade_candlesticks import backtest_trade_candlesticks
@@ -76,7 +71,7 @@ if __name__ == "__main__":
         reset_file_handlers("deals")
         for task_name, account_id in [
             ("hold_statistics", SETTINGS_HOLD_STATISTICS.ACCOUNT_ID),
-            ("hold_correlation", SETTINGS_HOLD_CORRELATION.ACCOUNT_ID),
+            ("trade_candlesticks", SETTINGS_TRADE_CANDLESTICKS.ACCOUNT_ID),
             ("trade_strategies", SETTINGS_TRADE_STRATEGIES.ACCOUNT_ID),
         ]:
             Transactions(account_id).log_deals(log_header=task_name)
