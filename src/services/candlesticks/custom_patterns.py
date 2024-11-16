@@ -1,9 +1,6 @@
 """
 This code is forked from
 https://medium.com/automation-generation/algorithmically-detecting-and-trading-technical-chart-patterns-with-python-c577b3a396ed
-
-[WIP - TODO: need work]
-
 """
 
 import numpy as np
@@ -20,7 +17,7 @@ class CustomCandlestickPatterns:
         self._peaks: pd.DataFrame = pd.DataFrame()
 
     def calculate_peaks(self):
-        data_smooth = self.data["Close"].rolling(window=self.smoothing).mean()
+        data_smooth = self.data["Close"].rolling(window=self.smoothing, center=False).mean()
 
         price_local_max_index = []
         for i in argrelextrema(data_smooth.values, np.greater)[0]:
@@ -63,46 +60,43 @@ class CustomCandlestickPatterns:
             a, b, c, d, e = (float(i) for i in window.iloc[0:5]["Close"])
 
             # Inverse Head and Shoulders
-            #    b        d
-            #    /\      /\            /
-            #   /  \    /  \          /
-            #  /    \  /    \   ->   /
-            # a      \/      e
-            #         c
+            #   b        d
+            #   /\      /\            /
+            #  /  \    /  \          /
+            # /    \  /    \   ->   /
+            # a     \/      e
+            #        c
 
             if all(
                 [
                     a < b,
                     c < min(a, b, d, e),
                     e < d,
-                    abs(b - d) <= np.mean([b, d]) * necklines_diff,
+                    abs(b - d) / min(b, d) <= necklines_diff,
                 ],
             ):
-                for i, row in self.data.loc[window.index[-1] :].iterrows():
-                    if row["Close"] > d:
-                        self._append_signal(column_name, i, 100)  # type: ignore
-                        break
+                print(window)
+                print(b, d)
+                self._append_signal(column_name, window.index[-1], 100)
 
             # Head and Shoulders
-            #         c
-            # a      /\      e
-            #  \    /  \    /      \
-            #   \  /    \  /   ->   \
-            #    \/      \/          \
-            #     b       d
+            #        c
+            # a     /\      e
+            # \    /  \    /      \
+            #  \  /    \  /   ->   \
+            #   \/      \/          \
+            #    b       d
 
             if all(
                 [
                     a > b,
                     c > max(a, b, d, e),
                     e > d,
-                    abs(b - d) <= np.mean([b, d]) * necklines_diff,
+                    abs(b - d) / min(b, d) <= necklines_diff,
                 ],
             ):
-                for i, row in self.data.loc[window.index[-1] :].iterrows():
-                    if row["Close"] < d:
-                        self._append_signal(column_name, i, -100)  # type: ignore
-                        break
+                print(window)
+                self._append_signal(column_name, window.index[-1], -100)
 
     def append_double_top_bottom(self, peaks_diff: float = 0.03):
         column_name = "PTNDOUBLETOPBOTTOM"

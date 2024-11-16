@@ -223,4 +223,4 @@ if __name__ == "__main__":
     # run_hold_interday_correlation_rules_generation(settings, period_days=40, slice_duration=10)
 
     settings = SETTINGS_TRADE_CANDLESTICKS
-    run_trade_candlesticks_rules_generation(settings, period_days=50)
+    run_trade_candlesticks_rules_generation(settings, period_days=3)
