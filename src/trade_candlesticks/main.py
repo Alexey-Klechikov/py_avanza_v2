@@ -16,7 +16,7 @@ from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
-from services.candlesticks.operators import append_patternpy_candlestick_patterns, append_talib_candlestick_patterns
+from services.candlesticks.operators import append_talib_candlestick_patterns
 from trade_candlesticks import BacklogTradeCandlesticks
 from trade_candlesticks.models import CandlestickPatternRule
 from utils.constants import TODAY_MIDNIGHT
@@ -74,7 +74,6 @@ class Data:
 
     def get_latest_triggered_rule(self) -> CandlestickPatternRule | None:
         self.data = append_talib_candlestick_patterns(self.data, list({i.column for i in self.candlestick_rules}))
-        self.data = append_patternpy_candlestick_patterns(self.data)
 
         for i in range(len(self.data) - 1, len(self.data) - 3, -1):
             for candlestick_rule in self.candlestick_rules:
@@ -121,13 +120,7 @@ class Flow:
         if datetime.now().time() >= self.trading_ends:
             # Edge case: Sell at the end of the day is last signal was more than 90 mins ago
             orders.reload_active()
-            if (
-                portfolio.positions
-                and not get_market_is_close()
-                and (
-                    not orders.active_order or (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
-                )
-            ):
+            if portfolio.positions and not get_market_is_close():
                 self.directions_sell = [Direction.BULL, Direction.BEAR]
                 return FlowAction.TRADE
 

@@ -3,6 +3,7 @@ import warnings
 import pandas as pd
 import talib
 
+from services.candlesticks.custom_patterns import CustomCandlestickPatterns
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -23,6 +24,16 @@ def append_talib_candlestick_patterns(data: pd.DataFrame, candlestick_rules: lis
     return data
 
 
-def append_patternpy_candlestick_patterns(data: pd.DataFrame) -> pd.DataFrame:
+def append_custom_candlestick_patterns(data: pd.DataFrame) -> pd.DataFrame:
+    custom_candlesticks_patterns = CustomCandlestickPatterns(
+        data=data,
+        smoothing=2,
+        max_window_time_min=120,
+    )
+    custom_candlesticks_patterns.calculate_peaks()
+
+    custom_candlesticks_patterns.append_head_and_shoulders(necklines_diff=0.02)
+    custom_candlesticks_patterns.append_double_top_bottom(peaks_diff=0.03)
+    custom_candlesticks_patterns.append_triangle(peaks_diff=0.03)
 
     return data
