@@ -93,7 +93,6 @@ class Quote(BaseModel):
     total_value_traded: float = Field(alias="totalValueTraded")
     total_volume_traded: int = Field(alias="totalVolumeTraded")
     updated: datetime
-    volume_weighted_average_price: float = Field(alias="volumeWeightedAveragePrice")
 
     @field_validator("time_of_last", "updated", mode="before")
     @classmethod
