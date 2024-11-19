@@ -4,7 +4,7 @@ from copy import deepcopy
 import pandas as pd
 
 from apis.avanza.trade.models import Direction
-from services.candlesticks.operators import append_talib_candlestick_patterns
+from services.candlesticks.operators import append_custom_candlestick_patterns, append_talib_candlestick_patterns
 from trade_candlesticks.models import CandlestickPatternRule, Deal
 from utils.logger import get_logger
 
@@ -98,7 +98,7 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
 
 # MAIN
 def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRule]:
-    # data = append_custom_candlestick_patterns(data)
+    data = append_custom_candlestick_patterns(data)
     data = append_talib_candlestick_patterns(data)
 
     patterns_rules = []

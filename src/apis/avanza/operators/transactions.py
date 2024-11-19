@@ -75,6 +75,7 @@ class Transactions:
                     deals_per_instrument[instrument_name].append(deal)
                     deal = Deal()
 
+        total_deal_value = 0
         for instrument_name, deals in deals_per_instrument.items():
             log.info(f"> Found {len(deals)} deal(s) for '{instrument_name}'")
 
@@ -93,8 +94,12 @@ class Transactions:
                         f"{deal.buy.date.strftime(datetime_pattern)} -> {deal.sell.date.strftime(datetime_pattern)}"
                     )
 
-                log.info(
-                    f">> {deal_datetime} -> {round(sum([i.amount.value for i in [deal.buy, deal.sell]]))}",
-                )
+                deal_value = round(sum([i.amount.value for i in [deal.buy, deal.sell]]))
+
+                total_deal_value += deal_value
+
+                log.info(f">> {deal_datetime} -> {deal_value}")
+
+        log.info(f"Total deals value: {total_deal_value}")
 
         return deals_per_instrument
