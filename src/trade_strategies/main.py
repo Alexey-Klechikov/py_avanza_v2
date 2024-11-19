@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
@@ -140,6 +140,7 @@ class Flow:
     def __init__(self, settings, data: Data, dry_run=False):
         self.budget = settings.BUDGET
         self.trading_ends: time = min(get_market_close_time(), settings.TRADING_END)
+        self.trading_starts: time = settings.TRADING_START
         self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
 
@@ -161,6 +162,19 @@ class Flow:
                 if (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60):
                     self.directions_sell = [Direction.BEAR]
                     return FlowAction.TRADE
+
+        # Start of the day
+        if datetime.now().time() <= self.trading_starts:
+            if orders.active_order or not portfolio.positions:
+                sleep((datetime.combine(date.today(), self.trading_starts) - datetime.now()).seconds)
+                return FlowAction.DO_NOTHING
+
+            for direction in [Direction.BULL, Direction.BEAR]:
+                if not portfolio.acquired_instrument.get(direction.value):
+                    continue
+
+                self.directions_buy.append(direction)
+                return FlowAction.TRADE
 
         # End of day
         if datetime.now().time() >= self.trading_ends:
@@ -233,6 +247,7 @@ def trade(dry_run: bool, settings) -> None:
         filter_orderbook_name=settings.NAME,
         dry_run=dry_run,
     )
+    orders.reload_active()
 
     portfolio = Portfolio(
         account_id=settings.ACCOUNT_ID,
