@@ -16,7 +16,7 @@ from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
-from services.candlesticks.operators import append_talib_candlestick_patterns
+from services.candlesticks.operators import append_custom_candlestick_patterns, append_talib_candlestick_patterns
 from trade_candlesticks import BacklogTradeCandlesticks
 from trade_candlesticks.models import CandlestickPatternRule
 from utils.constants import TODAY_MIDNIGHT
@@ -73,7 +73,9 @@ class Data:
         self.data = data.loc[data.index >= TODAY_MIDNIGHT]
 
     def get_latest_triggered_rule(self) -> CandlestickPatternRule | None:
-        self.data = append_talib_candlestick_patterns(self.data, list({i.column for i in self.candlestick_rules}))
+        candlestick_rules = list({i.column for i in self.candlestick_rules})
+        self.data = append_talib_candlestick_patterns(self.data, candlestick_rules)
+        self.data = append_custom_candlestick_patterns(self.data, candlestick_rules)
 
         for i in range(len(self.data) - 1, len(self.data) - 3, -1):
             for candlestick_rule in self.candlestick_rules:

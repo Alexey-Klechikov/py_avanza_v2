@@ -151,9 +151,10 @@ def _tweezer(data):
 
 # MAIN
 def append_talib_candlestick_patterns(data: pd.DataFrame, candlestick_rules: list[str] | None = None) -> pd.DataFrame:
-    pattern_names = candlestick_rules or talib.get_function_groups()["Pattern Recognition"]
+    for pattern_name in talib.get_function_groups()["Pattern Recognition"]:
+        if candlestick_rules and pattern_name not in candlestick_rules:
+            continue
 
-    for pattern_name in pattern_names:
         pattern_method = getattr(talib, pattern_name)
         pattern_column = pattern_method(data["Open"], data["High"], data["Low"], data["Close"])
 
@@ -162,10 +163,16 @@ def append_talib_candlestick_patterns(data: pd.DataFrame, candlestick_rules: lis
     return data
 
 
-def append_custom_candlestick_patterns(data: pd.DataFrame) -> pd.DataFrame:
-    data["CDLHOOKREVERSAL"] = _hook_reversal(data)
-    data["CDLTHREEGAPS"] = _three_gaps(data)
-    data["CDLKICKER"] = _kicker(data)
-    data["CDLTWEEZER"] = _tweezer(data)
+def append_custom_candlestick_patterns(data: pd.DataFrame, candlestick_rules: list[str] | None = None) -> pd.DataFrame:
+    for pattern_name, method in [
+        ("CDLHOOKREVERSAL", _hook_reversal),
+        ("CDLTHREEGAPS", _three_gaps),
+        ("CDLKICKER", _kicker),
+        ("CDLTWEEZER", _tweezer),
+    ]:
+        if candlestick_rules and pattern_name not in candlestick_rules:
+            continue
+
+        data[pattern_name] = method(data)
 
     return data
