@@ -241,10 +241,10 @@ def append_peak_based_candlestick_patterns(
     data = _calculate_peaks(data, window_smoothing=5, window_peak=3)
 
     for pattern_name, method in [
-        ("CDLHEADANDSHOULDERS", head_and_shoulders),
-        ("CDLTRIANGLE", triangle),
-        ("CDLDOUBLEPEAK", double_peak),
-        ("CDLTRIPLEPEAK", triple_peak),
+        ("CDL_PEAK_HEADANDSHOULDERS", head_and_shoulders),
+        ("CDL_PEAK_TRIANGLE", triangle),
+        ("CDL_PEAK_DOUBLEPEAK", double_peak),
+        ("CDL_PEAK_TRIPLEPEAK", triple_peak),
     ]:
         if candlestick_rules and pattern_name not in candlestick_rules:
             continue

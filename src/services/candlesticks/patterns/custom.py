@@ -180,11 +180,11 @@ def engulfing_three(data: pd.DataFrame) -> list[int]:
 # MAIN
 def append_custom_candlestick_patterns(data: pd.DataFrame, candlestick_rules: list[str] | None = None) -> pd.DataFrame:
     for pattern_name, method in [
-        ("CDLHOOKREVERSAL", hook_reversal),
-        ("CDLTHREEGAPS", three_gaps),
-        ("CDLKICKER", kicker),
-        ("CDLTWEEZER", tweezer),
-        ("CDLENGULFINGTHREE", engulfing_three),
+        ("CDL_CUSTOM_HOOKREVERSAL", hook_reversal),
+        ("CDL_CUSTOM_THREEGAPS", three_gaps),
+        ("CDL_CUSTOM_KICKER", kicker),
+        ("CDL_CUSTOM_TWEEZER", tweezer),
+        ("CDL_CUSTOM_ENGULFINGTHREE", engulfing_three),
     ]:
         if candlestick_rules and pattern_name not in candlestick_rules:
             continue
