@@ -26,6 +26,7 @@ from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
+pd.set_option("display.max_rows", None)
 
 
 set_handlers("development")
@@ -210,7 +211,7 @@ def run_hold_interday_correlation_rules_generation(settings, period_days: int, s
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_STRATEGIES
-    # run_strategies_generation(settings, period_days=40, full=True)
+    # run_strategies_generation(settings, period_days=40, full=False)
     # run_test_for_selected_indicators(settings, period_days=60)
     # run_plotting_for_active_strategies(settings, period_days=5)
 

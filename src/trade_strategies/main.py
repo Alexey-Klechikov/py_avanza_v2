@@ -1,5 +1,5 @@
 import warnings
-from datetime import date, datetime, time, timedelta
+from datetime import datetime, time, timedelta
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
@@ -166,7 +166,6 @@ class Flow:
         # Start of the day
         if datetime.now().time() <= self.trading_starts:
             if orders.active_order or not portfolio.positions:
-                sleep((datetime.combine(date.today(), self.trading_starts) - datetime.now()).seconds)
                 return FlowAction.DO_NOTHING
 
             for direction in [Direction.BULL, Direction.BEAR]:

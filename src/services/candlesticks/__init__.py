@@ -1,0 +1,1 @@
+from services.candlesticks.operators import append_candlestick_patterns
