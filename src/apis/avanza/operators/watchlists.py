@@ -34,7 +34,7 @@ class Watchlists:
         self.filter_orderbook_type = filter_orderbook_type
 
     def _set_preferred_instrument(self):
-        log.info("Set preferred instruments using watchlists")
+        log.debug("Set preferred instruments using watchlists")
         for instrument_direction in INSTRUMENT_DIRECTIONS.values():
             if not self.valid_instruments.get(instrument_direction):
                 continue
@@ -46,7 +46,7 @@ class Watchlists:
 
             if preferred_instrument:
                 self.preferred_instrument.set(instrument_direction, preferred_instrument)
-                log.info(f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]")
+                log.debug(f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]")
 
     def _refresh_one(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
         for orderbook_id in watchlist.orderbooks:
