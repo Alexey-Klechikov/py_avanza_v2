@@ -145,7 +145,7 @@ class Flow:
         ):
             log.info(
                 f"New signal: {Signal('LONG' if latest_triggered_rule.direction == Direction.BULL else 'SHORT')}. "
-                + f"Pattern: {latest_triggered_rule.column} [eff. {latest_triggered_rule.efficiency}]."
+                + f"Pattern: {latest_triggered_rule.column} [eff. {latest_triggered_rule.efficiency}]. "
                 + f"Latest price: {round(self.data.data.iloc[-1]['Close'], 2)}",
             )
 
