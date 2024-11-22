@@ -207,7 +207,7 @@ def triple_peak(data: pd.DataFrame, window_duration_min: int = 75) -> list[int]:
             and round(window.iloc[5]["Close"], 1)
             < min([round(window.iloc[1]["Close"], 1), round(window.iloc[3]["Close"], 1)])  # (6) < min[(2), (4)]
         ):
-            signal = 100
+            signal = -100
 
         elif (
             window.iloc[0]["Peak"] == -1  # (1) first bottom
@@ -219,9 +219,62 @@ def triple_peak(data: pd.DataFrame, window_duration_min: int = 75) -> list[int]:
             and _same_peaks(window, (0, 2))  # (1) == (3)
             and _same_peaks(window, (2, 4))  # (3) == (5)
             and round(window.iloc[5]["Close"], 1)
-            > min([round(window.iloc[1]["Close"], 1), max(window.iloc[3]["Close"], 1)])  # (6) > max[(2), (4)]
+            > max([round(window.iloc[1]["Close"], 1), round(window.iloc[3]["Close"], 1)])  # (6) > max[(2), (4)]
+        ):
+            signal = 100
+
+        if signal:
+            signal_time_with_shift = window.iloc[-1].name + pd.Timedelta(minutes=4)  # type: ignore
+            data.loc[signal_time_with_shift, "_signal"] = signal  # type: ignore
+
+    pattern_column = data["_signal"].values.tolist()
+    data.drop(columns=["_signal"], inplace=True)
+
+    return pattern_column
+
+
+def wedge(data: pd.DataFrame, window_duration_min: int = 75) -> list[int]:
+    # This pattern is reversed compared to the one in the .png file
+
+    data_filtered = data[data["Peak"] != 0][["Close", "Peak"]].copy()
+    data["_signal"] = 0
+
+    for i in range(len(data_filtered)):
+        if i < 4:
+            continue
+
+        window = data_filtered.iloc[i - 4 : i + 1]
+
+        if (window.iloc[-1].name - window.iloc[0].name).seconds >= window_duration_min * 60:  # type: ignore
+            continue
+
+        signal = 0
+
+        if (
+            window.iloc[0]["Peak"] == 1  # (1) first top
+            and window.iloc[1]["Peak"] == -1  # (2) first bottom
+            and window.iloc[2]["Peak"] == 1  # (3) second top
+            and window.iloc[3]["Peak"] == -1  # (4) second bottom
+            and window.iloc[4]["Peak"] == 1  # (5) third top
+            and round(window.iloc[0]["Close"], 1)
+            >= round(window.iloc[2]["Close"], 1)
+            >= round(window.iloc[4]["Close"], 1)  # (1) > (3) > (5)
+            and round(window.iloc[1]["Close"], 1) >= round(window.iloc[4]["Close"], 1)  # (2) > (5)
         ):
             signal = -100
+
+        elif (
+            window.iloc[0]["Peak"] == -1  # (1) first bottom
+            and window.iloc[1]["Peak"] == 1  # (2) first top
+            and window.iloc[2]["Peak"] == -1  # (3) second bottom
+            and window.iloc[3]["Peak"] == 1  # (4) second top
+            and window.iloc[4]["Peak"] == -1  # (5) third bottom
+            and round(window.iloc[0]["Close"], 1)
+            <= round(window.iloc[2]["Close"], 1)
+            <= round(window.iloc[4]["Close"], 1)  # (1) < (3) < (5)
+            and round(window.iloc[1]["Close"], 1) <= round(window.iloc[4]["Close"], 1)  # (2) < (5)
+        ):
+            signal = 100
 
         if signal:
             signal_time_with_shift = window.iloc[-1].name + pd.Timedelta(minutes=4)  # type: ignore
@@ -245,6 +298,7 @@ def append_peak_based_candlestick_patterns(
         ("CDL_PEAK_TRIANGLE", triangle),
         ("CDL_PEAK_DOUBLEPEAK", double_peak),
         ("CDL_PEAK_TRIPLEPEAK", triple_peak),
+        ("CDL_PEAK_WEDGE", wedge),
     ]:
         if candlestick_rules and pattern_name not in candlestick_rules:
             continue
