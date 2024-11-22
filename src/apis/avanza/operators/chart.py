@@ -20,6 +20,9 @@ class Chart:
     ) -> pd.DataFrame:
         log.debug(f"Fetch chart data [{period.name} - {resolution.name}]")
 
+        empty_dataframe = pd.DataFrame(columns=["Datetime", "Open", "High", "Low", "Close", "Volume"]).set_index(
+            "Datetime",
+        )
         available_period = period
         if resolution in [Resolution.MINUTE, Resolution.TWO_MINUTES, Resolution.FIVE_MINUTES]:
             available_period = TimePeriod.TODAY
@@ -39,8 +42,8 @@ class Chart:
 
         if not chart_data:
             log.warning(f"No chart data found for {settings.AVA}")
-            return pd.DataFrame(columns=["Datetime", "Open", "High", "Low", "Close", "Volume"]).set_index("Datetime")
+            return empty_dataframe
 
         ohlc_data = [i.model_dump() for i in chart_data.ohlc]
 
-        return pd.DataFrame(ohlc_data).set_index("Datetime")
+        return empty_dataframe if not chart_data else pd.DataFrame(ohlc_data).set_index("Datetime")
