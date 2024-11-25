@@ -8,7 +8,6 @@ from apis.telegram.operators import Telegram
 from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_CANDLESTICKS, SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
-from trade_candlesticks import backtest_trade_candlesticks
 from trade_strategies import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, reset_file_handlers, set_handlers
@@ -58,15 +57,9 @@ def generate_strategies(settings, period_days: int) -> None:
     )
 
 
-def generate_candlestick_patterns_rules(settings, period_days: int) -> None:
-    log.warning(f"Generating candlesticks rules for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    backtest_trade_candlesticks(_get_data(period_days, settings))
-
-
 if __name__ == "__main__":
     try:
         generate_strategies(SETTINGS_TRADE_STRATEGIES, period_days=40)
-        generate_candlestick_patterns_rules(SETTINGS_TRADE_CANDLESTICKS, period_days=60)
 
         reset_file_handlers("deals")
         for task_name, account_id in [
