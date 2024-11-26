@@ -21,7 +21,7 @@ from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statis
 from hold_statistics.models import Direction, Scope
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
-from trade_candlesticks import backtest_trade_candlesticks
+from trade_candlesticks import BacklogTradeCandlesticks, backtest_trade_candlesticks
 from trade_strategies import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
@@ -171,7 +171,12 @@ def generate_hold_rules_interday_correlation(settings, period_days: int, slice_d
 
 def generate_candlestick_patterns_rules(settings, period_days: int) -> None:
     log.warning(f"Generating candlesticks rules for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
-    backtest_trade_candlesticks(_get_data(period_days, settings))
+
+    candlestick_patterns = backtest_trade_candlesticks(_get_data(period_days, settings))
+
+    backlog = BacklogTradeCandlesticks()
+    backlog.rules = candlestick_patterns
+    backlog.write_rules(settings.REF_PRICE)
 
 
 if __name__ == "__main__":
