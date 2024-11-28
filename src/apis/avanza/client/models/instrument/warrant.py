@@ -8,7 +8,7 @@ def convert_timestamp_to_datetime(v: int | None):
 
 
 class HistoricalClosingPrices(BaseModel):
-    start_date: date = Field(alias="startDate")
+    start_date: date = Field(alias="startDate", default=date.today())
 
 
 class Listing(BaseModel):
