@@ -1,18 +1,10 @@
-from datetime import date, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
 
 def convert_timestamp_to_datetime(v: int | None):
     return datetime.fromtimestamp(v / 1000) if v is not None else None
-
-
-class HistoricalClosingPrices(BaseModel):
-    one_day: float | None = Field(alias="oneDay", default=None)
-    one_week: float | None = Field(alias="oneWeek", default=None)
-    one_month: float | None = Field(alias="oneMonth", default=None)
-    start: float
-    start_date: date = Field(alias="startDate")
 
 
 class Listing(BaseModel):
@@ -132,9 +124,6 @@ class InstrumentWarrant(BaseModel):
     isin: str
     tradable: str
     listing: Listing
-    historical_closing_prices: HistoricalClosingPrices = Field(
-        alias="historicalClosingPrices",
-    )
     key_indicators: KeyIndicators = Field(alias="keyIndicators")
     quote: Quote
     type: str
