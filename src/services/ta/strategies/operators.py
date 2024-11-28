@@ -191,7 +191,11 @@ def get_top_strategies(
     indicators_mapping: dict[str, dict[str, Indicator]],
     strategies_file_name: str | None,
 ) -> list[Strategy]:
-    top_strategies = json.load(open(_get_file_path(strategies_file_name)))[:5]
+    top_strategies = sorted(
+        json.load(open(_get_file_path(strategies_file_name)))[:10],
+        key=lambda x: x["profitable_trades_share"],
+        reverse=True,
+    )[:5]
 
     return [
         Strategy(
