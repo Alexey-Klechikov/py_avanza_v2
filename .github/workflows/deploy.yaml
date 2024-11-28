@@ -47,7 +47,7 @@ jobs:
           "task_end_of_week 0 9 * * 6"
           "task_hold_statistics 50 8 * * 1-5"
           "task_trade_candlesticks 10 9 * * 1-5"
-          "task_trade_strategies 0 9 * * 1-5"
+          "task_trade_strategies 1 9 * * 1-5"
         )
 
         # Fetch existing crontab
