@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime, time
+from datetime import datetime
 from typing import Any
 
 import numpy as np
@@ -157,11 +157,8 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
-            # Edge cases
-            if ((timestamp - tested_instrument.signal_confirmation_time).total_seconds() > 90 * 60) and (
-                (tested_direction == "SHORT" and timestamp.time() == time(14, 24))
-                or timestamp.time() >= settings.TRADING_END
-            ):
+            # End of day
+            if timestamp.time() >= settings.TRADING_END:
                 sell_price = close_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)

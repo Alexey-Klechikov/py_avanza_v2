@@ -155,14 +155,6 @@ class Flow:
 
         portfolio.reload_positions(caller="get_action")
 
-        # Edge case: Sell BEAR at 14:24 if last signal was more than 90 mins ago
-        if datetime.now().time() == time(14, 26) and portfolio.acquired_instrument.BEAR:
-            orders.reload_active()
-            if orders.active_order:
-                if (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60):
-                    self.directions_sell = [Direction.BEAR]
-                    return FlowAction.TRADE
-
         # Start of the day
         if datetime.now().time() <= self.trading_starts:
             if orders.active_order or not portfolio.positions:
@@ -177,15 +169,8 @@ class Flow:
 
         # End of day
         if datetime.now().time() >= self.trading_ends:
-            # Edge case: Sell at the end of the day is last signal was more than 90 mins ago
             orders.reload_active()
-            if (
-                portfolio.positions
-                and not get_market_is_close()
-                and (
-                    not orders.active_order or (datetime.now() - orders.active_order.created).total_seconds() > (90 * 60)
-                )
-            ):
+            if portfolio.positions and not get_market_is_close():
                 self.directions_sell = [Direction.BULL, Direction.BEAR]
                 return FlowAction.TRADE
 
