@@ -79,7 +79,7 @@ class Trade:
         portfolio: Portfolio,
         watchlists: Watchlists,
         dry_run: bool,
-        budget: int,
+        budget_percent: int,
         stop_loss_percent: float | None = None,
         take_profit_percent: float | None = None,
     ) -> None:
@@ -89,7 +89,7 @@ class Trade:
 
         self.dry_run = dry_run
 
-        self.budget = budget
+        self.budget_percent = budget_percent
         self.stop_loss_percent = stop_loss_percent
         self.take_profit_percent = take_profit_percent
 
@@ -127,6 +127,7 @@ class Trade:
 
     def buy(self, direction: Direction) -> None:
         caller = "buy"
+        budget = None
 
         if self.dry_run:
             return
@@ -154,13 +155,21 @@ class Trade:
                 sleep(3)
                 continue
 
+            if not budget:
+                self.portfolio.reload_balance()
+                budget = round(self.portfolio.total_value * self.budget_percent)
+
+                if budget < 1200:
+                    log.warning(f"Budget is too low: {budget}")
+                    return
+
             self.orders.delete_all(caller)
             self.orders.place(
                 order_book_id=preferred_instrument.id,
                 instrument_name=preferred_instrument.name,
                 order_type=OrderType.BUY,
                 price=price,
-                volume=round(self.budget // price),
+                volume=round(budget // price),
                 caller=caller,
             )
 

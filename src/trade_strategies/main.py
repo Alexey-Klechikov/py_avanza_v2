@@ -248,7 +248,7 @@ def trade(dry_run: bool, settings) -> None:
         portfolio=portfolio,
         watchlists=watchlists,
         dry_run=dry_run,
-        budget=settings.BUDGET,
+        budget_percent=settings.BUDGET,
         stop_loss_percent=settings.TRADING_STOP_LOSS,
         take_profit_percent=settings.TRADING_TAKE_PROFIT,
     )

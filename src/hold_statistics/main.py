@@ -73,7 +73,7 @@ def hold(dry_run: bool, settings) -> None:
             portfolio=portfolio,
             watchlists=watchlists,
             dry_run=dry_run,
-            budget=settings.BUDGET,
+            budget_percent=settings.BUDGET,
         )
 
         if event.action == Action.SELL:

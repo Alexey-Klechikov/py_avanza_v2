@@ -205,7 +205,13 @@ def trade(dry_run: bool, settings) -> None:
     watchlists = Watchlists(settings)
     watchlists.update_all()
 
-    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists, dry_run=dry_run, budget=settings.BUDGET)
+    trade = Trade(
+        orders=orders,
+        portfolio=portfolio,
+        watchlists=watchlists,
+        dry_run=dry_run,
+        budget_percent=settings.BUDGET,
+    )
     flow = Flow(settings, data, dry_run)
 
     while datetime.now().time() < time(17, 15):

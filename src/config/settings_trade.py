@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-from config.settings_base import BaseOMX, BaseTradeCandlesticks, BaseTradeStrategies
+from config.settings_base import BaseOMX, BaseTradeCandlesticks, BaseTradeLevels, BaseTradeStrategies
 
 
 @dataclass
@@ -10,7 +10,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_END: time = time(16, 58)
     TRADING_DATA: str = "avanza"
 
-    BUDGET: int = 3000
+    BUDGET: float = 0.75
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.08
@@ -61,4 +61,16 @@ class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
     TRADING_END: time = time(17, 10)
     TRADING_DATA: str = "avanza"
 
-    BUDGET: float = 1500
+    BUDGET: float = 0.5
+
+
+@dataclass
+class TradeLevels(BaseOMX, BaseTradeLevels):
+    TRADING_START: time = time(9, 10)
+    TRADING_END: time = time(17, 10)
+    TRADING_DATA: str = "avanza"
+
+    BUDGET: float = 0.5
+
+    LOOKBACK_DAYS: int = 7
+    EMA_LENGTH: int = 5
