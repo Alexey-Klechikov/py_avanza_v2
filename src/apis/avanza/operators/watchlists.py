@@ -1,6 +1,5 @@
-from avanza.models import WatchList
-
 from apis.avanza.client import get_client
+from apis.avanza.client.models import Watchlist
 from apis.avanza.operators.models import Orderbook, PreferredInstrument, ValidInstruments
 from utils.logger import get_logger
 
@@ -48,8 +47,8 @@ class Watchlists:
                 self.preferred_instrument.set(instrument_direction, preferred_instrument)
                 log.debug(f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]")
 
-    def _refresh_one(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
-        for orderbook_id in watchlist.orderbooks:
+    def _refresh_one(self, watchlist: Watchlist, watchlist_name: UnpackedWatchlistName):
+        for orderbook_id in watchlist.orderbook_ids:
             if watchlist_name.instrument_type == "CERTIFICATE":
                 instrument_info = get_client().get_instrument_certificate(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.direction]
@@ -96,13 +95,13 @@ class Watchlists:
                 ),
             )
 
-    def _clear_one(self, watchlist: WatchList):
+    def _clear_one(self, watchlist: Watchlist):
         log.debug(f"Clear watchlist {watchlist.name}")
 
-        for instrument_id in watchlist.orderbooks:
-            get_client().remove_from_watchlist(instrument_id, watchlist.id)
+        for instrument_id in watchlist.orderbook_ids:
+            get_client().remove_from_watchlist(instrument_id, watchlist.watchList_id)
 
-    def _update_one(self, watchlist: WatchList, watchlist_name: UnpackedWatchlistName):
+    def _update_one(self, watchlist: Watchlist, watchlist_name: UnpackedWatchlistName):
         log.debug(f"Update watchlist {watchlist.name}")
 
         if watchlist_name.instrument_type == "CERTIFICATE":
@@ -132,7 +131,7 @@ class Watchlists:
             ):
                 log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
 
-                get_client().add_to_watchlist(hit.order_book_id, watchlist.id)
+                get_client().add_to_watchlist(hit.order_book_id, watchlist.watchList_id)
 
     def refresh_all(self):
         log.debug("Refresh watchlists")

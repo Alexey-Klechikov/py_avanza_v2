@@ -1,5 +1,6 @@
 from apis.avanza.client.models.account.overview import AccountOverview
 from apis.avanza.client.models.account.positions import AccountsPositions
+from apis.avanza.client.models.account.watchlists import Watchlist
 from apis.avanza.client.models.call_request import CallRequest
 from apis.avanza.client.models.chart_data import ChartData
 from apis.avanza.client.models.instrument.certificate import InstrumentCertificate

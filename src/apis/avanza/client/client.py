@@ -8,7 +8,6 @@ import keyring
 from avanza import Avanza as AvanzaBase
 from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
 from avanza.constants import TransactionsDetailsType
-from avanza.models import WatchList
 from requests.exceptions import HTTPError
 
 from apis.avanza.client.models import (
@@ -26,6 +25,7 @@ from apis.avanza.client.models import (
     PlaceOrderResponse,
     SearchResult,
     TransactionsDetails,
+    Watchlist,
 )
 from apis.avanza.client.models.chart_data import ChartData
 from utils.logger import get_logger
@@ -134,10 +134,13 @@ class Avanza(AvanzaBase):
 
         return AccountOverview(**data)
 
-    def get_watchlists(self) -> list[WatchList]:
-        data = super().get_watchlists()
+    def get_watchlists(self) -> list[Watchlist]:
+        data = self._retry_call(
+            "/_api/watchlist/watchlist",
+            http_method="GET",
+        )
 
-        return [WatchList(**i) for i in data]  # type: ignore
+        return [Watchlist(**i) for i in data]  # type: ignore
 
     def search_instrument(
         self,
