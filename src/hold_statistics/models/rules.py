@@ -36,5 +36,5 @@ class Event(BaseModel):
     orderbook_direction: Direction
     action: Action
     take_profit: float
-    budget: int
+    budget: float
     settings: Any
