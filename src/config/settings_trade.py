@@ -61,7 +61,7 @@ class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
     TRADING_END: time = time(17, 10)
     TRADING_DATA: str = "avanza"
 
-    BUDGET: float = 0.5
+    BUDGET: float = 0.75
 
 
 @dataclass

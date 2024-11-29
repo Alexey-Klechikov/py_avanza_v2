@@ -1,6 +1,5 @@
 import warnings
 from dataclasses import dataclass, field
-from datetime import datetime, time
 from time import sleep
 
 import pandas as pd
@@ -186,23 +185,12 @@ class Trade:
                 self.price_state.reset(direction)
                 break
 
-            if datetime.now().time() < time(9, 00):
-                price = acquired_instrument.acquired_price
-            else:
-                price = Instrument(
-                    acquired_instrument.instrument.id,
-                    acquired_instrument.instrument.type.name,
-                ).get_buy_price()
-                if not price:
-                    sleep(3)
-                    continue
-
             self.orders.delete_all(caller)
             self.orders.place(
                 order_book_id=acquired_instrument.instrument.id,
                 instrument_name=acquired_instrument.instrument.name,
                 order_type=OrderType.SELL,
-                price=round(price * (1 + self.take_profit_percent), 2),
+                price=round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2),
                 volume=int(acquired_instrument.volume),
                 caller=caller,
             )

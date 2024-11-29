@@ -128,13 +128,6 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
             if tested_instrument is None:
                 continue
 
-            # Buy signal with open positions
-            if tested_direction_price > 0:
-                tested_instrument.take_profit_price = tested_direction_price * (
-                    1 + (direction_correction * target_profit)
-                )
-                tested_instrument.signal_confirmation_time = timestamp
-
             # Exit signal
             if row["EXIT"] > 0:
                 sell_price = row["EXIT"]
