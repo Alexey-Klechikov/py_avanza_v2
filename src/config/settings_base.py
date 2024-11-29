@@ -22,6 +22,11 @@ class BaseTradeCandlesticks:
 
 
 @dataclass
+class BaseTradeLevels:
+    ACCOUNT_ID: str = "7143979"
+
+
+@dataclass
 class BaseOMX:
     NAME: str = "OMX"
 

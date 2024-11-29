@@ -1,5 +1,5 @@
 from config.settings_hold import HoldCorrelation, HoldStatistics
-from config.settings_trade import TradeCandlesticks, TradeStrategies
+from config.settings_trade import TradeCandlesticks, TradeLevels, TradeStrategies
 
 ACCOUNT_USERNAME: str = "ava_elbe"
 DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
@@ -11,3 +11,5 @@ SETTINGS_HOLD_STATISTICS = HoldStatistics()
 SETTINGS_HOLD_CORRELATION = HoldCorrelation()
 
 SETTINGS_TRADE_CANDLESTICKS = TradeCandlesticks()
+
+SETTINGS_TRADE_LEVELS = TradeLevels()
