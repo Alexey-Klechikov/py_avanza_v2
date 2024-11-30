@@ -185,25 +185,27 @@ class Trade:
                 self.price_state.reset(direction)
                 break
 
+            self.orders.reload_active()
+            if self.orders.active_order:
+                break
+
+            price = round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2)
             self.orders.delete_all(caller)
             self.orders.place(
                 order_book_id=acquired_instrument.instrument.id,
                 instrument_name=acquired_instrument.instrument.name,
                 order_type=OrderType.SELL,
-                price=round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2),
+                price=price,
                 volume=int(acquired_instrument.volume),
                 caller=caller,
             )
-            self.orders.reload_active()
 
-            if self.orders.active_order:
-                self.price_state.update(
-                    direction,
-                    buy=acquired_instrument.acquired_price,
-                    volume=acquired_instrument.volume,
-                    take_profit=self.orders.active_order.price,
-                )
-                break
+            self.price_state.update(
+                direction,
+                buy=acquired_instrument.acquired_price,
+                volume=acquired_instrument.volume,
+                take_profit=price,
+            )
 
     def stop_loss(self, direction: Direction) -> None:
         caller = "stop_loss"
