@@ -168,9 +168,8 @@ def process_strategy(kwargs: dict) -> Strategy:
     settings = kwargs["settings"]
     strategy_rank: str | None = kwargs.get("strategy_rank")
 
-    data["LONG"] = data["High"]
-    data["SHORT"] = data["Low"]
-    data["EXIT"] = (data["High"] + data["Low"]) / 2
+    for column in ["LONG", "SHORT", "EXIT"]:
+        data[column] = data["Close"]
 
     _consider_signals(data, strategy, settings)
     _consider_trading_logic(data, strategy, settings)

@@ -13,7 +13,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     BUDGET: float = 0.75
 
     TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.08
+    TRADING_TAKE_PROFIT: float = 0.09
     TRADING_STOP_LOSS: float = 0.06
 
     INDICATORS: dict = field(
