@@ -156,10 +156,10 @@ class Trade:
 
             if not budget:
                 self.portfolio.reload_balance()
-                budget = round(self.portfolio.total_value * self.budget_percent)
+                budget = max(1200, round(self.portfolio.total_value * self.budget_percent))
 
-                if budget < 1200:
-                    log.warning(f"Budget is too low: {budget}")
+                if self.portfolio.buying_power < budget:
+                    log.warning(f"Buying power is not enough for budget {budget}")
                     return
 
             self.orders.delete_all(caller)
