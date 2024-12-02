@@ -185,11 +185,12 @@ class Trade:
                 self.price_state.reset(direction)
                 break
 
+            price = round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2)
+
             self.orders.reload_active()
-            if self.orders.active_order:
+            if self.orders.active_order and self.orders.active_order.price == price:
                 break
 
-            price = round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2)
             self.orders.delete_all(caller)
             self.orders.place(
                 order_book_id=acquired_instrument.instrument.id,
