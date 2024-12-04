@@ -143,7 +143,7 @@ class Trade:
                 )
                 break
 
-            elif self.price_state.get(direction).sell:
+            else:
                 self.price_state.reset(direction)
 
             self.watchlists.refresh_all()
