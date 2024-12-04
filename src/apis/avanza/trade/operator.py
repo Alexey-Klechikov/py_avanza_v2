@@ -143,6 +143,9 @@ class Trade:
                 )
                 break
 
+            elif self.price_state.get(direction).sell:
+                self.price_state.reset(direction)
+
             self.watchlists.refresh_all()
             preferred_instrument = self.watchlists.preferred_instrument.get(direction.value)
             if not preferred_instrument or not preferred_instrument.sell:
