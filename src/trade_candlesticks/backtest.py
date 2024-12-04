@@ -55,14 +55,17 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
         for _, data_day in data.groupby(data.index.date):  # type: ignore
             deal = Deal()
             for _, row in data_day.iterrows():
-                if row[pattern_variant.column] == 1:
-                    if not deal.buy_price:
+                if not deal.buy_price:
+                    if row[pattern_variant.column] == 1:
                         deal.buy_time = row.name
+                        deal.buy_price = row["Close"]
 
-                    deal.buy_price = row["Close"]
                     continue
 
-                if not deal.buy_price or round((row.name - deal.buy_time).total_seconds() / 60) == 2:
+                if row[pattern_variant.column] == 1:
+                    signals_counter -= 1
+
+                if round((row.name - deal.buy_time).total_seconds() / 60) == 2:
                     continue
 
                 current_price_change = (row["Close"] - deal.buy_price) * (
@@ -89,15 +92,21 @@ def backtest_candlestick_pattern(kwargs: dict) -> CandlestickPatternRule | None:
 
         pattern_variant.aggregate_values_from_deals()
 
-    top_pattern_variant = max(pattern_variants, key=lambda x: x.profit * x.efficiency)
-    if not top_pattern_variant or top_pattern_variant.profit <= 10 or top_pattern_variant.efficiency <= 0.54:
+    filtered_pattern_variants = [
+        i for i in pattern_variants if i.profit > 10 and i.efficiency > 0.54 and len(i.deals) > 8
+    ]
+    if not filtered_pattern_variants:
         return
 
-    return top_pattern_variant
+    return max(
+        filtered_pattern_variants,
+        key=lambda x: x.profit * x.efficiency,
+    )
 
 
 # MAIN
 def backtest_trade_candlesticks(data: pd.DataFrame) -> list[CandlestickPatternRule]:
+    data = data.loc[data.index.time < pd.to_datetime("17:15").time()]  # type: ignore
     data = append_candlestick_patterns(data)
 
     patterns_rules = []

@@ -27,7 +27,7 @@ def hook_reversal(data: pd.DataFrame) -> list[int]:
             <= window.iloc[2]["Open"]
             <= window.iloc[1]["High"]  # first red is inside last green
         ):
-            signal = -100
+            signal = 100
 
         elif (
             window.iloc[0]["Close"] < window.iloc[0]["Open"]  # red
@@ -40,7 +40,7 @@ def hook_reversal(data: pd.DataFrame) -> list[int]:
             <= window.iloc[2]["Open"]
             <= window.iloc[1]["High"]  # first green is inside last red
         ):
-            signal = 100
+            signal = -100
 
         pattern_column.append(signal)
 
@@ -97,7 +97,7 @@ def kicker(data: pd.DataFrame) -> list[int]:
             and (window.iloc[1]["Close"] - window.iloc[1]["Open"]) / (window.iloc[0]["Open"] - window.iloc[0]["Close"])
             > 2  # green is at least 2x bigger than red
         ):
-            signal = -100
+            signal = 100
 
         elif (
             window.iloc[0]["Close"] > window.iloc[0]["Open"]  # green
@@ -106,7 +106,7 @@ def kicker(data: pd.DataFrame) -> list[int]:
             and (window.iloc[1]["Open"] - window.iloc[1]["Close"]) / (window.iloc[0]["Close"] - window.iloc[0]["Open"])
             > 2  # red is at least 2x bigger than green
         ):
-            signal = 100
+            signal = -100
 
         pattern_column.append(signal)
 
@@ -161,7 +161,7 @@ def engulfing_three(data: pd.DataFrame) -> list[int]:
             and window.iloc[2]["High"] >= window["High"].max()  # green is engulfing all previous
             and window.iloc[2]["Low"] <= window["Low"].min()  # green is engulfing all previous
         ):
-            signal = 100
+            signal = -100
 
         elif (
             window.iloc[0]["Close"] > window.iloc[0]["Open"]  # green
@@ -170,7 +170,7 @@ def engulfing_three(data: pd.DataFrame) -> list[int]:
             and window.iloc[2]["High"] >= window["High"].max()  # green is engulfing all previous
             and window.iloc[2]["Low"] <= window["Low"].max()  # green is engulfing all previous
         ):
-            signal = -100
+            signal = 100
 
         pattern_column.append(signal)
 

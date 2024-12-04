@@ -207,7 +207,7 @@ def triple_peak(data: pd.DataFrame, window_duration_min: int = 75) -> list[int]:
             and round(window.iloc[5]["Close"], 1)
             < min([round(window.iloc[1]["Close"], 1), round(window.iloc[3]["Close"], 1)])  # (6) < min[(2), (4)]
         ):
-            signal = -100
+            signal = 100
 
         elif (
             window.iloc[0]["Peak"] == -1  # (1) first bottom
@@ -221,7 +221,7 @@ def triple_peak(data: pd.DataFrame, window_duration_min: int = 75) -> list[int]:
             and round(window.iloc[5]["Close"], 1)
             > max([round(window.iloc[1]["Close"], 1), round(window.iloc[3]["Close"], 1)])  # (6) > max[(2), (4)]
         ):
-            signal = 100
+            signal = -100
 
         if signal:
             signal_time_with_shift = window.iloc[-1].name + pd.Timedelta(minutes=4)  # type: ignore
