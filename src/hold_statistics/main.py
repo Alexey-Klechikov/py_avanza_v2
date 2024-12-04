@@ -77,12 +77,6 @@ def hold(dry_run: bool, settings) -> None:
         )
 
         if event.action == Action.SELL:
-            portfolio.reload_positions(caller="hold")
-
-            if not portfolio.acquired_instrument.get(event.orderbook_direction.value):
-                log.warning("No positions to sell. Possibly sold at take profit price")
-                continue
-
             trade.sell(event.orderbook_direction)
 
         if event.action == Action.BUY:

@@ -38,3 +38,4 @@ class BaseOMX:
     RESOLUTION = "2m"
 
     REF_PRICE: float = 2600
+    TRADING_DATA: str = "avanza"

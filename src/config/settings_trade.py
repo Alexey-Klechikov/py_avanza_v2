@@ -8,7 +8,6 @@ from config.settings_base import BaseOMX, BaseTradeCandlesticks, BaseTradeLevels
 class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
-    TRADING_DATA: str = "avanza"
 
     BUDGET: float = 0.75
 
@@ -59,16 +58,14 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
 class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
     TRADING_START: time = time(9, 10)
     TRADING_END: time = time(17, 10)
-    TRADING_DATA: str = "avanza"
 
-    BUDGET: float = 0.75
+    BUDGET: float = 0.9
 
 
 @dataclass
 class TradeLevels(BaseOMX, BaseTradeLevels):
     TRADING_START: time = time(9, 10)
     TRADING_END: time = time(17, 10)
-    TRADING_DATA: str = "avanza"
 
     BUDGET: float = 0.5
 
