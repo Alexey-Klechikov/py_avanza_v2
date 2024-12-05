@@ -26,10 +26,12 @@ class Strategy:
         indicators_mapping: dict[str, dict[str, Indicator]],
         selected_indicators: list[tuple[str, str]],
         original: bool = False,
+        efficiency: float = 0,
     ):
         self.counter = Counter()
         self.selected_indicators = selected_indicators
         self.indicators_logic: list[Indicator] = []
+        self.efficiency = efficiency
 
         components = []
         for category, name in selected_indicators:

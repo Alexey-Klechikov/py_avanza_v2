@@ -74,7 +74,7 @@ class Data:
         strategies = read_top_strategies(indicators_mapping)
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
-                log.info(f"Strategy {i+1}: {strategy.name}")
+                log.info(f"Strategy {i+1} [{strategy.efficiency}]: {strategy.name}")
 
         self.strategies = strategies
 
@@ -107,10 +107,13 @@ class Data:
             ):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
 
-    def get_signal(self) -> Signal | None:
+    def get_signal(self, last_triggered_strategy: Strategy | None) -> tuple[Strategy | None, Signal | None]:
         signal = None
 
         for i, strategy in enumerate(self.strategies):
+            if last_triggered_strategy and strategy.efficiency < last_triggered_strategy.efficiency:
+                continue
+
             self.add_signals(strategy)
 
             last_complete_candle = self.data.iloc[-2]
@@ -126,8 +129,13 @@ class Data:
             if not signal:
                 continue
 
-            log.info(f"Signal: {signal}. Strategy {i+1}. Latest price: {round(self.data.iloc[-1]['Close'], 2)}")
-            return signal
+            log.info(
+                f"Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
+                f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}",
+            )
+            return (strategy, signal)
+
+        return (last_triggered_strategy, signal)
 
 
 class FlowAction(Enum):
@@ -149,11 +157,15 @@ class Flow:
 
         self.data = data
 
+        self.triggered_strategy: Strategy | None = None
+
     def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.directions_buy = []
 
         portfolio.reload_positions(caller="get_action")
+        if not portfolio.positions:
+            self.triggered_strategy = None
 
         # Start of the day
         if datetime.now().time() <= self.trading_starts:
@@ -185,7 +197,7 @@ class Flow:
         elif self.data.is_new:
             self.data.is_new = False
             self.data.get_strategies()
-            signal = self.data.get_signal()
+            self.triggered_strategy, signal = self.data.get_signal(self.triggered_strategy)
 
             if signal:
                 # Not enough funds on the account

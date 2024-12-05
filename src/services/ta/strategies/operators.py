@@ -201,6 +201,7 @@ def get_top_strategies(
         Strategy(
             selected_indicators=list(tuple(indicator.split("-")) for indicator in i["name"].split(" | ")),
             indicators_mapping=indicators_mapping,
+            efficiency=i["profitable_trades_share"],
         )
         for i in top_strategies
     ]
