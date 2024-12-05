@@ -43,10 +43,9 @@ class PriceState:
     def reset(self, direction: Direction) -> None:
         direction_price = getattr(self, direction.value)
         if direction_price.sell or direction_price.take_profit:
-            log.warning(
-                f"Trade result: {round(direction_price.buy * direction_price.volume)} "
-                f"-> {round((direction_price.sell or direction_price.take_profit) * direction_price.volume)} ",
-            )
+            value_buy = round(direction_price.buy * direction_price.volume)
+            value_sell = round((direction_price.sell or direction_price.take_profit) * direction_price.volume)
+            log.warning(f"Trade result: {value_buy} -> {value_sell} [{value_sell - value_buy}]")
 
         setattr(self, direction.value, DirectionPrice())
 
