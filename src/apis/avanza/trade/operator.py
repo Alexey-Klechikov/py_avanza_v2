@@ -19,7 +19,6 @@ log = get_logger()
 class DirectionPrice:
     buy: float = 0
     volume: float = 0
-    signal: float | None = None
     take_profit: float | None = None
     sell: float | None = None
 
@@ -43,7 +42,7 @@ class PriceState:
 
     def reset(self, direction: Direction) -> None:
         direction_price = getattr(self, direction.value)
-        if direction_price.signal and (direction_price.sell or direction_price.take_profit):
+        if direction_price.sell or direction_price.take_profit:
             log.warning(
                 f"Trade result: {round(direction_price.buy * direction_price.volume)} "
                 f"-> {round((direction_price.sell or direction_price.take_profit) * direction_price.volume)} ",
@@ -60,11 +59,7 @@ class PriceState:
         setattr(
             self,
             direction.value,
-            DirectionPrice(
-                signal=buy,
-                buy=buy,
-                volume=volume,
-            ),
+            DirectionPrice(buy=buy, volume=volume),
         )
 
     def get(self, direction: Direction) -> DirectionPrice:
@@ -107,6 +102,13 @@ class Trade:
                 self.price_state.reset(direction)
                 break
 
+            self.price_state.update(
+                direction,
+                buy=acquired_instrument.acquired_price,
+                volume=acquired_instrument.volume,
+                sell=acquired_instrument.quote.buy,
+            )
+
             self.orders.delete_all(caller)
             self.orders.place(
                 order_book_id=acquired_instrument.instrument.id,
@@ -115,13 +117,6 @@ class Trade:
                 price=acquired_instrument.quote.buy,
                 volume=int(acquired_instrument.volume),
                 caller=caller,
-            )
-
-            self.price_state.update(
-                direction,
-                buy=acquired_instrument.acquired_price,
-                volume=acquired_instrument.volume,
-                sell=acquired_instrument.quote.buy,
             )
 
     def buy(self, direction: Direction) -> None:
@@ -139,7 +134,6 @@ class Trade:
                     direction,
                     buy=acquired_instrument.acquired_price,
                     volume=acquired_instrument.volume,
-                    signal=acquired_instrument.quote.sell,
                 )
                 break
 
@@ -190,6 +184,13 @@ class Trade:
 
             price = round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2)
 
+            self.price_state.update(
+                direction,
+                buy=acquired_instrument.acquired_price,
+                volume=acquired_instrument.volume,
+                take_profit=price,
+            )
+
             self.orders.reload_active()
             if self.orders.active_order and self.orders.active_order.price == price:
                 break
@@ -202,13 +203,6 @@ class Trade:
                 price=price,
                 volume=int(acquired_instrument.volume),
                 caller=caller,
-            )
-
-            self.price_state.update(
-                direction,
-                buy=acquired_instrument.acquired_price,
-                volume=acquired_instrument.volume,
-                take_profit=price,
             )
 
     def stop_loss(self, direction: Direction) -> None:
@@ -232,10 +226,15 @@ class Trade:
                 sleep(3)
                 continue
 
-            if price > (self.price_state.get(direction).signal or acquired_instrument.acquired_price) * (
-                1 - self.stop_loss_percent
-            ):
+            if price > (acquired_instrument.acquired_price) * (1 - self.stop_loss_percent):
                 return
+
+            self.price_state.update(
+                direction,
+                buy=acquired_instrument.acquired_price,
+                volume=acquired_instrument.volume,
+                sell=price,
+            )
 
             self.orders.delete_all(caller)
             self.orders.place(
@@ -247,10 +246,3 @@ class Trade:
                 caller=caller,
             )
             self.orders.reload_active()
-
-            self.price_state.update(
-                direction,
-                buy=acquired_instrument.acquired_price,
-                volume=acquired_instrument.volume,
-                sell=price,
-            )

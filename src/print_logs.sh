@@ -17,3 +17,6 @@ while [ $SECONDS -lt $seconds_until_end ]; do
     tail -n 30 logs/trade_strategies_$current_date.log
     sleep 120  # Wait for 2 minutes
 done
+
+# Make the script executable
+# chmod +x print_logs.sh
