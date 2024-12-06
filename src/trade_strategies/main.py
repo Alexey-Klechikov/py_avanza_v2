@@ -111,9 +111,6 @@ class Data:
         signal = None
 
         for i, strategy in enumerate(self.strategies):
-            if last_triggered_strategy and strategy.efficiency < last_triggered_strategy.efficiency:
-                continue
-
             self.add_signals(strategy)
 
             last_complete_candle = self.data.iloc[-2]
@@ -128,6 +125,14 @@ class Data:
 
             if not signal:
                 continue
+
+            if last_triggered_strategy and strategy.efficiency < last_triggered_strategy.efficiency:
+                log.debug(
+                    f"[IGNORED] Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
+                    f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}",
+                )
+                signal = None
+                break
 
             log.info(
                 f"Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
