@@ -126,18 +126,16 @@ class Data:
             if not signal:
                 continue
 
+            message_signal_summary = (
+                f"Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
+                + f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}"
+            )
             if last_triggered_strategy and strategy.efficiency < last_triggered_strategy.efficiency:
-                log.debug(
-                    f"[IGNORED] Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
-                    f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}",
-                )
+                log.debug(f"[IGNORED] {message_signal_summary}")
                 signal = None
                 break
 
-            log.info(
-                f"Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
-                f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}",
-            )
+            log.info(message_signal_summary)
             return (strategy, signal)
 
         return (last_triggered_strategy, signal)
