@@ -19,9 +19,9 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
         default_factory=lambda: {
             "Trend": {
                 "ADX": {"length": 10, "lensig": 12, "mamode": "rma"},
-                "TII": {"length_sma": 22, "length_signal": 3},
+                "TII": {"length_sma": 32, "length_signal": 5},
                 "PSAR": {"acceleration": 0.02, "maximum": 0.2},
-                "CHOP": {"length": 14, "length_atr": 2, "scalar": 80.0},
+                "CHOP": {"length": 18, "length_atr": 4, "scalar": 80.0},
             },
             "Overlap": {
                 "LINREG": {"length": 12, "limit": 0.32},
@@ -30,25 +30,25 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
             },
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
-                "STC": {"tclength": 14, "fast": 23, "slow": 45, "factor": 0.55},
+                "STC": {"tclength": 14, "fast": 25, "slow": 45, "factor": 0.55},
                 "CCI": {"length": 14, "c": 0.015},
-                "RVGI": {"length": 14, "length_swma": 4, "length_divergence": 14},
-                "STOCH": {"k": 10, "d": 3, "smooth_k": 2, "mamode": "dema"},
+                "RVGI": {"length": 20, "length_swma": 4, "length_divergence": 20},
+                "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "ema"},
             },
             "Cycles": {
                 "EBSW": {"length": 40, "bars": 14},
             },
             "Volatility": {
-                "STARC": {"length_sma": 16, "length_atr": 14, "multiplier_atr": 2.0},
+                "STARC": {"length_sma": 22, "length_atr": 18, "multiplier_atr": 2.4},
                 "MASSI": {"fast": 9, "slow": 25},
-                "BBANDS": {"length": 12, "std": 2.0},
+                "BBANDS": {"length": 14, "std": 2.2},
                 "ACCBANDS": {"length": 14, "c": 1, "mamode": "dema"},
             },
             "Volume": {
                 "PVT": {"drift": 12, "length_sma": 30, "length_divergence": 24},
                 "ADOSC": {"fast": 6, "slow": 14, "length_divergence": 28},
                 "CMF": {"length": 24, "length_divergence": 24},
-                "KVO": {"fast": 11, "slow": 35, "signal": 18, "mamode": "ema", "length_divergence": 30},
+                "KVO": {"fast": 14, "slow": 30, "signal": 14, "mamode": "ema", "length_divergence": 28},
             },
         },
     )
