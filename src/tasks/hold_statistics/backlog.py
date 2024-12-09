@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-from hold_statistics.models import Action, Event, HoldRuleStatistics, Scope
+from tasks.hold_statistics.models import Action, Event, HoldRuleStatistics, Scope
 from utils.logger import get_logger
 
 log = get_logger()

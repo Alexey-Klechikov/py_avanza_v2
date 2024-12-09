@@ -12,17 +12,21 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
 from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_CANDLESTICKS, SETTINGS_TRADE_STRATEGIES
-from hold_correlation import (
+from services import Storage
+from services.ta.strategies.models import ComposeStrategiesListMethod
+from tasks.hold_correlation import (
     BacklogHoldCorrelation,
     backtest_hold_interday_correlation,
     backtest_hold_intraday_correlation,
 )
-from hold_statistics import BacklogHoldStatistics, backtest_hold_interday_statistics, backtest_hold_intraday_statistics
-from hold_statistics.models import Direction, Scope
-from services import Storage
-from services.ta.strategies.models import ComposeStrategiesListMethod
-from trade_candlesticks import BacklogTradeCandlesticks, backtest_trade_candlesticks
-from trade_strategies import backtest_trade_strategies as _backtest_trade_strategies
+from tasks.hold_statistics import (
+    BacklogHoldStatistics,
+    backtest_hold_interday_statistics,
+    backtest_hold_intraday_statistics,
+)
+from tasks.hold_statistics.models import Direction, Scope
+from tasks.trade_candlesticks import BacklogTradeCandlesticks, backtest_trade_candlesticks
+from tasks.trade_strategies import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 

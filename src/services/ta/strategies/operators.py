@@ -137,7 +137,7 @@ def compose_strategies_list(
     elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_name:
         strategies = _extend_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))
 
-    elif method == ComposeStrategiesListMethod.READ and old_strategies_file_name:
+    elif method == ComposeStrategiesListMethod.READ:
         strategies = _read_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))
 
     else:

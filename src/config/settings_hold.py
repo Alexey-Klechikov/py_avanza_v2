@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import time
 
 from config.settings_base import BaseHoldCorrelation, BaseHoldStatistics, BaseOMX
-from hold_statistics.models import Scope
+from tasks.hold_statistics.models import Scope
 
 
 @dataclass

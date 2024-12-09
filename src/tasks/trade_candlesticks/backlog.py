@@ -1,7 +1,7 @@
 import json
 import os
 
-from trade_candlesticks.models import CandlestickPatternRule
+from tasks.trade_candlesticks.models import CandlestickPatternRule
 from utils.logger import get_logger
 
 log = get_logger()

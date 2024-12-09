@@ -17,8 +17,8 @@ from apis.yahoo.operators import Ticker
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
 from services.candlesticks import append_candlestick_patterns
-from trade_candlesticks import BacklogTradeCandlesticks
-from trade_candlesticks.models import CandlestickPatternRule
+from tasks.trade_candlesticks import BacklogTradeCandlesticks
+from tasks.trade_candlesticks.models import CandlestickPatternRule
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger
 

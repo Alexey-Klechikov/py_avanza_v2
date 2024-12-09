@@ -5,7 +5,7 @@ import pandas as pd
 
 from apis.avanza.trade.models import Direction
 from services.candlesticks import append_candlestick_patterns
-from trade_candlesticks.models import CandlestickPatternRule, Deal
+from tasks.trade_candlesticks.models import CandlestickPatternRule, Deal
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)

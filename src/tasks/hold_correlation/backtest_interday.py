@@ -6,7 +6,7 @@ from datetime import timedelta
 import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
 
-from hold_correlation.models import Correlation, HoldRuleCorrelation, Interval
+from tasks.hold_correlation.models import Correlation, HoldRuleCorrelation, Interval
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)

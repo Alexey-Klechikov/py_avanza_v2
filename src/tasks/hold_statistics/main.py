@@ -7,9 +7,9 @@ import pandas as pd
 from apis.avanza.client import get_client
 from apis.avanza.operators import Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
-from hold_statistics import BacklogHoldStatistics
-from hold_statistics.models import Action, Event
 from services.calendar import get_market_is_close
+from tasks.hold_statistics import BacklogHoldStatistics
+from tasks.hold_statistics.models import Action, Event
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)

@@ -2,7 +2,7 @@ import json
 import os
 from datetime import time
 
-from hold_correlation.models import HoldRuleCorrelation, Scope
+from tasks.hold_correlation.models import HoldRuleCorrelation, Scope
 from utils.logger import get_logger
 
 log = get_logger()

@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta
 
 import pandas as pd
 
-from hold_statistics.models import Direction, HoldRuleStatistics
+from tasks.hold_statistics.models import Direction, HoldRuleStatistics
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)

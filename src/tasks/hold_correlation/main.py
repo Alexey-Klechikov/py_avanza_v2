@@ -13,10 +13,10 @@ from apis.avanza.client import get_client
 from apis.avanza.operators import Chart, Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from apis.avanza.trade.models import Direction
-from hold_correlation import BacklogHoldCorrelation
-from hold_correlation.models import Correlation, HoldRuleCorrelation
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
+from tasks.hold_correlation import BacklogHoldCorrelation
+from tasks.hold_correlation.models import Correlation, HoldRuleCorrelation
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger
 
