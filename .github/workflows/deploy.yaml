@@ -77,4 +77,4 @@ jobs:
         echo -e "$updated_crontab" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -"
 
         # Give permissions to print_logs.sh
-        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} chmod +x print_logs.sh
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "chmod +x print_logs.sh"
