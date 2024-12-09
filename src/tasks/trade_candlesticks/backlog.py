@@ -12,7 +12,7 @@ class Backlog:
         self.rules: list[CandlestickPatternRule] = []
 
     def _get_path(self) -> str:
-        project_root_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
+        project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
         return f"{project_root_dir}/config/trade_candlesticks.json"
 
     def read_rules(self) -> None:

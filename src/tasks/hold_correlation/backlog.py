@@ -13,7 +13,7 @@ class Backlog:
         self.rules: list[HoldRuleCorrelation] = []
 
     def _get_path(self, scope: Scope) -> str:
-        project_root_dir = os.path.abspath(os.path.join(__file__, "..", ".."))
+        project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
         return f"{project_root_dir}/config/hold_{scope.value.lower()}_correlation_rules.json"
 
     def read_rules(self, settings) -> None:
