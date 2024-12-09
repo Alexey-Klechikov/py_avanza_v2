@@ -75,3 +75,6 @@ jobs:
 
         # Update crontab on remote server
         echo -e "$updated_crontab" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -"
+
+        # Give permissions to print_logs.sh
+        chmod +x print_logs.sh
