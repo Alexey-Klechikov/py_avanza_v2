@@ -13,7 +13,7 @@ class HoldStatistics(BaseOMX, BaseHoldStatistics):
 
 @dataclass
 class HoldCorrelation(BaseOMX, BaseHoldCorrelation):
-    BUDGET: float = 0.5
+    BUDGET: float = 0.9
     SCOPES: list[Scope] = field(default_factory=lambda: [Scope.INTERDAY, Scope.INTRADAY])
     MIN_DECIDING_PRICE_CHANGE: float = 2.0
     TRADING_END: time = time(17, 5)

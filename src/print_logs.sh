@@ -10,7 +10,7 @@ seconds_until_end=$((end_time - current_time))
 
 while [ $SECONDS -lt $seconds_until_end ]; do
     clear
-    tail -n 20 logs/hold_statistics_$current_date.log
+    tail -n 20 logs/hold_correlation_$current_date.log
     echo "------------"
     tail -n 20 logs/trade_candlesticks_$current_date.log
     echo "------------"

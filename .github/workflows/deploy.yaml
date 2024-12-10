@@ -45,7 +45,7 @@ jobs:
         cronjobs=(
           "task_end_of_day 10 18 * * 1-5"
           "task_end_of_week 0 9 * * 6"
-          "task_hold_statistics 50 8 * * 1-5"
+          "task_hold_correlation 50 8 * * 1-5"
           "task_trade_candlesticks 10 9 * * 1-5"
           "task_trade_strategies 1 9 * * 1-5"
         )
