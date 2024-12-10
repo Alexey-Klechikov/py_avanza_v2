@@ -25,8 +25,7 @@ class HistoricalClosingPrices(BaseModel):
     three_months: float | None = Field(alias="threeMonths", default=None)
     start_of_year: float | None = Field(alias="startOfYear", default=None)
     one_year: float = Field(alias="oneYear", default=None)
-    start: float
-    start_date: date = Field(alias="startDate")
+    start_date: date = Field(alias="startDate", default=datetime.now().date())
 
 
 class KeyIndicators(BaseModel):
@@ -134,9 +133,7 @@ class InstrumentCertificate(BaseModel):
     isin: str
     tradable: str
     listing: Listing
-    historical_closing_prices: HistoricalClosingPrices = Field(
-        alias="historicalClosingPrices",
-    )
+    historical_closing_prices: HistoricalClosingPrices = Field(alias="historicalClosingPrices")
     key_indicators: KeyIndicators = Field(alias="keyIndicators")
     quote: Quote
     type: str

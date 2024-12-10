@@ -28,7 +28,6 @@ class HistoricalClosingPrices(BaseModel):
     three_years: float = Field(alias="threeYears")
     five_years: float = Field(alias="fiveYears")
     ten_years: float = Field(alias="tenYears")
-    start: float
     start_date: date = Field(alias="startDate")
 
 

@@ -30,7 +30,6 @@ class HistoricalClosingPrices(BaseModel):
     three_months: float = Field(alias="threeMonths")
     start_of_year: float | None = Field(alias="startOfYear")
     one_year: float = Field(alias="oneYear")
-    start: float
     start_date: date = Field(alias="startDate")
 
 
