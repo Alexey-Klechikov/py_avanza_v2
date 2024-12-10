@@ -11,7 +11,7 @@ from apis.investing.operators import Ticker as InvestingTicker
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
 from apis.yahoo.operators import Ticker as YahooTicker
-from config import SETTINGS_HOLD_STATISTICS, SETTINGS_TRADE_CANDLESTICKS, SETTINGS_TRADE_STRATEGIES
+from config import SETTINGS_HOLD_CORRELATION, SETTINGS_TRADE_CANDLESTICKS, SETTINGS_TRADE_STRATEGIES
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from tasks.hold_correlation import (
@@ -187,17 +187,16 @@ if __name__ == "__main__":
     try:
         cache_history(SETTINGS_TRADE_STRATEGIES)
         backtest_trade_strategies(SETTINGS_TRADE_STRATEGIES, period_days=40)
-        generate_hold_rules_intraday_statistics(SETTINGS_HOLD_STATISTICS, period_days=40, slice_duration=4)
-        generate_hold_rules_interday_statistics(
-            SETTINGS_HOLD_STATISTICS,
-            period_days=40,
-            slice_duration=2,
-            direction=Direction.BULL,
-        )
+        # generate_hold_rules_intraday_statistics(SETTINGS_HOLD_STATISTICS, period_days=40, slice_duration=4)
+        # generate_hold_rules_interday_statistics(
+        #     SETTINGS_HOLD_STATISTICS,
+        #     period_days=40,
+        #     slice_duration=2,
+        #     direction=Direction.BULL,
+        # )
         generate_candlestick_patterns_rules(SETTINGS_TRADE_CANDLESTICKS, period_days=60)
-
-        # generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
-        # generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
 
     except Exception as e:
         telegram = Telegram()
