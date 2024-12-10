@@ -35,6 +35,9 @@ class CandlestickPatternRule(BaseModel):
         )
 
     def aggregate_values_from_deals(self) -> None:
+        if not self.deals:
+            return
+
         self.average_duration = round(sum([i.duration for i in list(self.deals)]) / len(self.deals))
         self.profit = round(sum([i.profit for i in list(self.deals)]), 2)
         self.efficiency = round(len([i for i in list(self.deals) if i.profit > 0]) / len(self.deals), 2)
