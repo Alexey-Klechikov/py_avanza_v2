@@ -9,7 +9,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
 
-    BUDGET: float = 0.75
+    BUDGET: float = 0.6
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.09

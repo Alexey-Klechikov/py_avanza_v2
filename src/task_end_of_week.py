@@ -63,8 +63,8 @@ if __name__ == "__main__":
 
         reset_file_handlers("deals")
         for task_name, account_id in [
-            ("hold_statistics", SETTINGS_HOLD_STATISTICS.ACCOUNT_ID),
-            ("trade_candlesticks", SETTINGS_TRADE_CANDLESTICKS.ACCOUNT_ID),
+            # ("hold_statistics", SETTINGS_HOLD_STATISTICS.ACCOUNT_ID),
+            # ("trade_candlesticks", SETTINGS_TRADE_CANDLESTICKS.ACCOUNT_ID),
             ("trade_strategies", SETTINGS_TRADE_STRATEGIES.ACCOUNT_ID),
         ]:
             Transactions(account_id).log_deals(log_header=task_name)

@@ -194,9 +194,9 @@ if __name__ == "__main__":
         #     slice_duration=2,
         #     direction=Direction.BULL,
         # )
-        generate_candlestick_patterns_rules(SETTINGS_TRADE_CANDLESTICKS, period_days=60)
-        generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
-        generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        # generate_candlestick_patterns_rules(SETTINGS_TRADE_CANDLESTICKS, period_days=60)
+        # generate_hold_rules_intraday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
+        # generate_hold_rules_interday_correlation(SETTINGS_HOLD_CORRELATION, period_days=40, slice_duration=10)
 
     except Exception as e:
         telegram = Telegram()
