@@ -18,8 +18,12 @@ def get_market_close_time() -> time:
     today = datetime.today().strftime("%Y-%m-%d")
 
     sto = mcal.get_calendar("XSTO")
-    market_close_time = sto.schedule(start_date=today, end_date=today, tz="Europe/Berlin").iloc[
-        0
-    ].market_close - timedelta(minutes=11)
+    try:
+        market_close_time = sto.schedule(start_date=today, end_date=today, tz="Europe/Berlin").iloc[
+            0
+        ].market_close - timedelta(minutes=11)
 
-    return market_close_time.replace(tzinfo=None).time()
+        return market_close_time.replace(tzinfo=None).time()
+
+    except IndexError:
+        return datetime.now().time()

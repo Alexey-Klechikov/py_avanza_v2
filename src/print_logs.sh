@@ -9,11 +9,6 @@ current_time=$(date +%s)
 seconds_until_end=$((end_time - current_time))
 
 while [ $SECONDS -lt $seconds_until_end ]; do
-    clear
-    tail -n 20 logs/hold_correlation_$current_date.log
-    echo "------------"
-    tail -n 20 logs/trade_candlesticks_$current_date.log
-    echo "------------"
     tail -n 30 logs/trade_strategies_$current_date.log
     sleep 120  # Wait for 2 minutes
 done
