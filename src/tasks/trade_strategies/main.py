@@ -230,7 +230,7 @@ class Flow:
         if not self.data.is_new:
             sleep(20)
             self.data.get()
-            log.warning(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.data.is_new}")
+            log.debug(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.data.is_new}")
 
 
 # MAIN
