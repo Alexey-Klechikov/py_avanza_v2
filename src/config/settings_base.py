@@ -13,17 +13,17 @@ class BaseHoldStatistics:
 
 @dataclass
 class BaseHoldCorrelation:
-    ACCOUNT_ID: str = "7143979"
+    ACCOUNT_ID: str = ""
 
 
 @dataclass
 class BaseTradeCandlesticks:
-    ACCOUNT_ID: str = "7144096"
+    ACCOUNT_ID: str = ""
 
 
 @dataclass
 class BaseTradeLevels:
-    ACCOUNT_ID: str = "7143979"
+    ACCOUNT_ID: str = ""
 
 
 @dataclass
