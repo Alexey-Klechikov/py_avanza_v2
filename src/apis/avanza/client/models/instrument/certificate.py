@@ -138,9 +138,9 @@ class InstrumentCertificate(BaseModel):
     quote: Quote
     type: str
     underlying: Underlying
-    asset_category: str = Field(alias="assetCategory")
-    category: str
-    sub_category: str = Field(alias="subCategory")
+    asset_category: str | None = Field(alias="assetCategory", default=None)
+    category: str | None = Field(default=None)
+    sub_category: str | None = Field(alias="subCategory", default=None)
     issuer: str
     direction: str
     leverage: float
