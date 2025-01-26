@@ -18,10 +18,10 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     INDICATORS: dict = field(
         default_factory=lambda: {
             "Trend": {
-                "ADX": {"length": 10, "lensig": 12, "mamode": "rma"},
+                "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
                 "TII": {"length_sma": 32, "length_signal": 5},
                 "PSAR": {"acceleration": 0.02, "maximum": 0.2},
-                "CHOP": {"length": 18, "length_atr": 4, "scalar": 80.0},
+                "CHOP": {"length": 18, "length_atr": 11, "scalar": 80.0},
             },
             "Overlap": {
                 "LINREG": {"length": 12, "limit": 0.32},
@@ -31,7 +31,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
                 "STC": {"tclength": 14, "fast": 25, "slow": 45, "factor": 0.55},
-                "CCI": {"length": 14, "c": 0.015},
+                "CCI": {"length": 12, "c": 0.015},
                 "RVGI": {"length": 20, "length_swma": 4, "length_divergence": 20},
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "ema"},
             },
@@ -39,10 +39,10 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
                 "EBSW": {"length": 40, "bars": 14},
             },
             "Volatility": {
-                "STARC": {"length_sma": 22, "length_atr": 18, "multiplier_atr": 2.4},
-                "MASSI": {"fast": 9, "slow": 25},
-                "BBANDS": {"length": 14, "std": 2.2},
-                "ACCBANDS": {"length": 14, "c": 1, "mamode": "dema"},
+                "STARC": {"length_sma": 18, "length_atr": 20, "multiplier_atr": 2.4},
+                "MASSI": {"fast": 5, "slow": 23, "threshold": 23},
+                "BBANDS": {"length": 13, "std": 2.7},
+                "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
             },
             "Volume": {
                 "PVT": {"drift": 12, "length_sma": 30, "length_divergence": 24},

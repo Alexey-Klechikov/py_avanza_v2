@@ -43,7 +43,7 @@ class Volatility(IndicatorsCategoryBase):
             ),
         )
 
-    def add_mass_index(self, fast: int, slow: int) -> None:
+    def add_mass_index(self, fast: int, slow: int, threshold: int) -> None:
         """
         MASSI (Mass Index)
         https://chartschool.stockcharts.com/table-of-contents/technical-indicators-and-overlays/technical-indicators/mass-index#introduction
@@ -62,8 +62,8 @@ class Volatility(IndicatorsCategoryBase):
 
         self.indicators["MASSI"] = Indicator(
             signal=Signal(
-                LONG=lambda x: x[column_name] <= 26,
-                SHORT=lambda x: x[column_name] <= 26,
+                LONG=lambda x: x[column_name] <= threshold,
+                SHORT=lambda x: x[column_name] <= threshold,
             ),
             columns=[column_name],
             plots=Plots(
