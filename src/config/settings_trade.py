@@ -33,7 +33,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
                 "STC": {"tclength": 14, "fast": 25, "slow": 45, "factor": 0.55},
                 "CCI": {"length": 12, "c": 0.015},
                 "RVGI": {"length": 20, "length_swma": 4, "length_divergence": 20},
-                "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "ema"},
+                "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
             },
             "Cycles": {
                 "EBSW": {"length": 40, "bars": 14},
@@ -48,7 +48,7 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
                 "PVT": {"drift": 12, "length_sma": 30, "length_divergence": 24},
                 "ADOSC": {"fast": 6, "slow": 14, "length_divergence": 28},
                 "CMF": {"length": 24, "length_divergence": 24},
-                "KVO": {"fast": 14, "slow": 30, "signal": 14, "mamode": "ema", "length_divergence": 28},
+                "KVO": {"fast": 14, "slow": 30, "signal": 14, "mamode": "rma", "length_divergence": 28},
             },
         },
     )
