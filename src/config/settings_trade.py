@@ -12,8 +12,8 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
     BUDGET: float = 0.7
 
     TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.06
+    TRADING_TAKE_PROFIT: float = 0.075
+    TRADING_STOP_LOSS: float = 0.05
 
     INDICATORS: dict = field(
         default_factory=lambda: {
