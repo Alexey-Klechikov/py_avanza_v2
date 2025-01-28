@@ -60,7 +60,7 @@ def backtest_trade_strategies(settings, period_days: int):
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        strategies_file_name_suffix_old=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
     )
 
 

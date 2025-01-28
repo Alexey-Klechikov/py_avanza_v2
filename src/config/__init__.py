@@ -1,4 +1,5 @@
-from config.settings_trade import TradeStrategiesOMX, TradeStrategiesTESLA
+from config.OMX_settings import TradeStrategies as TradeStrategiesOMX
+from config.TESLA_settings import TradeStrategies as TradeStrategiesTESLA
 
 ACCOUNT_USERNAME: str = "ava_elbe"
 DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]

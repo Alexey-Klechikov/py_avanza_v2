@@ -35,7 +35,7 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
             _get_data(period_days + 20, settings),
             ComposeStrategiesListMethod.GENERATE,
             settings,
-            new_strategies_file_name="dev_3",
+            strategies_file_name_suffix_new="dev_3",
         )
 
         for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
@@ -44,8 +44,8 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
                 _get_data(period_days + 20, settings),
                 ComposeStrategiesListMethod.EXTEND,
                 settings,
-                old_strategies_file_name=f"dev_{i}",
-                new_strategies_file_name=f"dev_{i + 1}",
+                strategies_file_name_suffix_old=f"dev_{i}",
+                strategies_file_name_suffix_new=f"dev_{i + 1}",
             )
 
     log.warning("Backtesting strategies")
@@ -53,8 +53,8 @@ def run_strategies_generation(settings, period_days: int, full: bool, comment: s
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
-        new_strategies_file_name=comment,
+        strategies_file_name_suffix_old=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        strategies_file_name_suffix_new=comment,
     )
 
 
@@ -69,7 +69,7 @@ def run_plotting_for_active_strategies(settings, period_days: int):
 
 def run_test_for_selected_indicators(settings, period_days: int):
     indicator_to_test = ("Volume", "KVO")
-    new_strategies_file_name_suffix = f"dev_6_{'-'.join(indicator_to_test)}_"
+    strategies_file_name_suffix_new_suffix = f"dev_6_{'-'.join(indicator_to_test)}_"
 
     ma_list = [
         "sma",
@@ -100,8 +100,8 @@ def run_test_for_selected_indicators(settings, period_days: int):
                 _get_data(period_days, settings),
                 ComposeStrategiesListMethod.EXTEND,
                 settings,
-                old_strategies_file_name="dev_5",
-                new_strategies_file_name=new_strategies_file_name_suffix
+                strategies_file_name_suffix_old="dev_5",
+                strategies_file_name_suffix_new=strategies_file_name_suffix_new_suffix
                 + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}",
                 indicators_filter=[indicator_to_test[1]],
                 **kwargs,
@@ -109,7 +109,7 @@ def run_test_for_selected_indicators(settings, period_days: int):
 
     stats = []
     for file in os.listdir("src/config"):
-        if new_strategies_file_name_suffix not in file:
+        if strategies_file_name_suffix_new_suffix not in file:
             continue
 
         strategies = json.load(open(f"src/config/{file}"))
@@ -120,7 +120,7 @@ def run_test_for_selected_indicators(settings, period_days: int):
 
         stats.append(
             (
-                file.replace(new_strategies_file_name_suffix, "").replace(".json", ""),
+                file.replace(strategies_file_name_suffix_new_suffix, "").replace(".json", ""),
                 round(s["profitable_trades_share"] * s["total_profit"], 2),
                 s["profitable_trades_share"],
                 s["total_profit"],
@@ -136,6 +136,6 @@ def run_test_for_selected_indicators(settings, period_days: int):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_STRATEGIES_OMX
-    run_strategies_generation(settings, period_days=40, full=False)
+    run_strategies_generation(settings, period_days=40, full=True)
     # run_test_for_selected_indicators(settings, period_days=60)
     # run_plotting_for_active_strategies(settings, period_days=5)

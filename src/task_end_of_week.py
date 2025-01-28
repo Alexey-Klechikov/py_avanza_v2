@@ -33,7 +33,7 @@ def generate_strategies(settings, period_days: int) -> None:
         _get_data(period_days + 20, settings),
         ComposeStrategiesListMethod.GENERATE,
         settings,
-        new_strategies_file_name="dev_3",
+        strategies_file_name_suffix_new="dev_3",
     )
 
     for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
@@ -44,8 +44,8 @@ def generate_strategies(settings, period_days: int) -> None:
             _get_data(period_days + 20, settings),
             ComposeStrategiesListMethod.EXTEND,
             settings,
-            old_strategies_file_name=f"dev_{i}",
-            new_strategies_file_name=f"dev_{i + 1}",
+            strategies_file_name_suffix_old=f"dev_{i}",
+            strategies_file_name_suffix_new=f"dev_{i + 1}",
         )
 
     log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
@@ -53,7 +53,7 @@ def generate_strategies(settings, period_days: int) -> None:
         _get_data(period_days, settings),
         ComposeStrategiesListMethod.READ,
         settings,
-        old_strategies_file_name=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        strategies_file_name_suffix_old=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
     )
 
 

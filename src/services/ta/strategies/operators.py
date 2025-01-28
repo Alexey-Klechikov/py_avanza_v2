@@ -13,8 +13,12 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 log = get_logger()
 
 
-def _get_file_path(filename: str | None) -> str:
-    filename = f"trade_strategies_{filename}.json" if filename else "trade_strategies.json"
+def _get_file_path(strategies_file_name_prefix, strategies_file_name_suffix: str | None = None) -> str:
+    filename = (
+        f"{strategies_file_name_prefix}_trade_strategies"
+        + (f"_{strategies_file_name_suffix}" if strategies_file_name_suffix else "")
+        + ".json"
+    )
     current_file_path = os.path.abspath(__file__)
     root_dir = "/src" if "/src" in current_file_path else "/pyAvanza"
     return current_file_path.split(root_dir)[0] + f"{root_dir}/config/{filename}"
@@ -129,16 +133,23 @@ def _read_strategies(indicators_mapping: dict[str, dict[str, Indicator]], old_st
 def compose_strategies_list(
     method: ComposeStrategiesListMethod,
     indicators_mapping: dict[str, dict[str, Indicator]],
-    old_strategies_file_name: str | None = None,
+    strategies_file_name_prefix: str,
+    strategies_file_name_suffix_old: str | None = None,
 ) -> list[Strategy]:
     if method == ComposeStrategiesListMethod.GENERATE:
         strategies = _generate_strategies(indicators_mapping)
 
-    elif method == ComposeStrategiesListMethod.EXTEND and old_strategies_file_name:
-        strategies = _extend_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))
+    elif method == ComposeStrategiesListMethod.EXTEND and strategies_file_name_suffix_old:
+        strategies = _extend_strategies(
+            indicators_mapping,
+            _get_file_path(strategies_file_name_prefix, strategies_file_name_suffix_old),
+        )
 
     elif method == ComposeStrategiesListMethod.READ:
-        strategies = _read_strategies(indicators_mapping, _get_file_path(old_strategies_file_name))
+        strategies = _read_strategies(
+            indicators_mapping,
+            _get_file_path(strategies_file_name_prefix, strategies_file_name_suffix_old),
+        )
 
     else:
         raise ValueError("Can not compose list of strategies - invalid method or missing arguments.")
@@ -146,7 +157,11 @@ def compose_strategies_list(
     return strategies
 
 
-def dump_strategies_in_file(strategies: list[Strategy], new_strategies_file_name: str | None):
+def dump_strategies_in_file(
+    strategies: list[Strategy],
+    strategies_file_name_prefix: str,
+    strategies_file_name_suffix_new: str | None,
+):
     rank = 1
     last_strategy_stats = ""
     strategies_for_file = []
@@ -184,15 +199,20 @@ def dump_strategies_in_file(strategies: list[Strategy], new_strategies_file_name
 
         rank += 1
 
-    json.dump(strategies_for_file, open(_get_file_path(new_strategies_file_name), "w"), indent=2, sort_keys=True)
+    json.dump(
+        strategies_for_file,
+        open(_get_file_path(strategies_file_name_prefix, strategies_file_name_suffix_new), "w"),
+        indent=2,
+        sort_keys=True,
+    )
 
 
 def get_top_strategies(
     indicators_mapping: dict[str, dict[str, Indicator]],
-    strategies_file_name: str | None,
+    strategies_file_name_prefix: str,
 ) -> list[Strategy]:
     top_strategies = sorted(
-        json.load(open(_get_file_path(strategies_file_name)))[:10],
+        json.load(open(_get_file_path(strategies_file_name_prefix)))[:10],
         key=lambda x: x["profitable_trades_share"],
         reverse=True,
     )[:5]

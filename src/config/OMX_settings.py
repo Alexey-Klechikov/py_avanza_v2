@@ -1,16 +1,11 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-
-@dataclass
-class BaseTradeStrategies:
-    ACCOUNT_ID: str = "5554179"
-    TRADING_DATA: str = "avanza"
-    RESOLUTION = "2m"
+from config.base_settings import BaseSettings
 
 
 @dataclass
-class TradeStrategiesOMX(BaseTradeStrategies):
+class TradeStrategies(BaseSettings):
     NAME: str = "OMX"
 
     AVA: str = "19002"
@@ -64,16 +59,3 @@ class TradeStrategiesOMX(BaseTradeStrategies):
             },
         },
     )
-
-
-@dataclass
-class TradeStrategiesTESLA(BaseTradeStrategies):
-    NAME: str = "TESLA"
-
-    AVA: str = "238449"
-    YAHOO: str = "TSLA"
-
-    MULTIPLIER: int = 10
-
-    TRADING_START: time = time(17, 15)
-    TRADING_END: time = time(21, 45)

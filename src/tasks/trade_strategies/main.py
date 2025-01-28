@@ -71,7 +71,7 @@ class Data:
 
     def get_strategies(self):
         indicators_mapping = get_indicators(self.data, self.settings)
-        strategies = read_top_strategies(indicators_mapping)
+        strategies = read_top_strategies(indicators_mapping, self.settings.NAME)
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
                 log.info(f"Strategy {i+1} [{strategy.efficiency}]: {strategy.name}")
@@ -149,6 +149,7 @@ class FlowAction(Enum):
 
 class Flow:
     def __init__(self, settings, data: Data, dry_run=False):
+        self.instrument_name = settings.NAME
         self.budget = settings.BUDGET
         self.trading_ends: time = min(get_market_close_time(), settings.TRADING_END)
         self.trading_starts: time = settings.TRADING_START

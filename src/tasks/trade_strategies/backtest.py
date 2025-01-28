@@ -219,14 +219,21 @@ def backtest_trade_strategies(
     compose_strategies_list_method: ComposeStrategiesListMethod,
     settings,
     indicators_filter: list[str] | None = None,
-    old_strategies_file_name: str | None = None,
-    new_strategies_file_name: str | None = None,
+    strategies_file_name_suffix_old: str | None = None,
+    strategies_file_name_suffix_new: str | None = None,
     plot: bool = False,
     **kwargs,
 ) -> None:
+    strategies_file_name_prefix = settings.NAME
+
     indicators_mapping = get_indicators(data, settings, **kwargs)
 
-    strategies = get_strategies(compose_strategies_list_method, indicators_mapping, old_strategies_file_name)
+    strategies = get_strategies(
+        compose_strategies_list_method,
+        indicators_mapping,
+        strategies_file_name_prefix,
+        strategies_file_name_suffix_old,
+    )
 
     if indicators_filter:
         strategies = [
@@ -262,4 +269,4 @@ def backtest_trade_strategies(
 
     print_strategies_performance(strategies)
 
-    dump_strategies_in_file(strategies, new_strategies_file_name)
+    dump_strategies_in_file(strategies, strategies_file_name_prefix, strategies_file_name_suffix_new)

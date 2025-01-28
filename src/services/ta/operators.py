@@ -58,17 +58,19 @@ def get_indicators(data, settings, **kwargs) -> dict[str, dict[str, Indicator]]:
 def get_strategies(
     compose_strategies_list_method: ComposeStrategiesListMethod,
     indicators_mapping: dict[str, dict[str, Indicator]],
-    old_strategies_file_name: str | None = None,
+    strategies_file_name_prefix: str,
+    strategies_file_name_suffix_old: str | None = None,
 ) -> list[Strategy]:
     return compose_strategies_list(
         compose_strategies_list_method,
         indicators_mapping,
-        old_strategies_file_name,
+        strategies_file_name_prefix,
+        strategies_file_name_suffix_old,
     )
 
 
 def read_top_strategies(
     indicators_mapping: dict[str, dict[str, Indicator]],
-    strategies_file_name: str | None = None,
+    strategies_file_name_prefix: str,
 ) -> list[Strategy]:
-    return get_top_strategies(indicators_mapping, strategies_file_name)
+    return get_top_strategies(indicators_mapping, strategies_file_name_prefix)
