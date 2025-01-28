@@ -10,6 +10,7 @@ log = get_logger()
 
 class Storage:
     def __init__(self, settings, resolution: str | None = None) -> None:
+        self.prefix = settings.NAME
         self.resolution = resolution if resolution else settings.RESOLUTION
 
         self.path = self._get_path()
@@ -17,7 +18,7 @@ class Storage:
     def _get_path(self) -> str:
         project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 
-        return f"{project_root_dir}/data/{self.resolution}.pickle"
+        return f"{project_root_dir}/data/{self.prefix}_{self.resolution}.pickle"
 
     def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):

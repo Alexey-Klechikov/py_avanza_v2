@@ -1,11 +1,23 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-from config.settings_base import BaseOMX, BaseTradeCandlesticks, BaseTradeLevels, BaseTradeStrategies
+
+@dataclass
+class BaseTradeStrategies:
+    ACCOUNT_ID: str = "5554179"
+    TRADING_DATA: str = "avanza"
+    RESOLUTION = "2m"
 
 
 @dataclass
-class TradeStrategies(BaseOMX, BaseTradeStrategies):
+class TradeStrategiesOMX(BaseTradeStrategies):
+    NAME: str = "OMX"
+
+    AVA: str = "19002"
+    YAHOO: str = "^OMX"
+
+    MULTIPLIER: int = 20
+
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
 
@@ -55,19 +67,13 @@ class TradeStrategies(BaseOMX, BaseTradeStrategies):
 
 
 @dataclass
-class TradeCandlesticks(BaseOMX, BaseTradeCandlesticks):
-    TRADING_START: time = time(9, 10)
-    TRADING_END: time = time(17, 10)
+class TradeStrategiesTESLA(BaseTradeStrategies):
+    NAME: str = "TESLA"
 
-    BUDGET: float = 0.9
+    AVA: str = "238449"
+    YAHOO: str = "TSLA"
 
+    MULTIPLIER: int = 10
 
-@dataclass
-class TradeLevels(BaseOMX, BaseTradeLevels):
-    TRADING_START: time = time(9, 10)
-    TRADING_END: time = time(17, 10)
-
-    BUDGET: float = 0.5
-
-    LOOKBACK_DAYS: int = 7
-    EMA_LENGTH: int = 5
+    TRADING_START: time = time(17, 15)
+    TRADING_END: time = time(21, 45)
