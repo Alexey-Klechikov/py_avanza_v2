@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pandas as pd
 
-from config import SETTINGS_TRADE_STRATEGIES_OMX
+from config import SETTINGS_TRADE_STRATEGIES_GULD, SETTINGS_TRADE_STRATEGIES_OMX
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from tasks.trade_strategies import backtest_trade_strategies
@@ -68,44 +68,44 @@ def run_plotting_for_active_strategies(settings, period_days: int):
 
 
 def run_test_for_selected_indicators(settings, period_days: int):
-    indicator_to_test = ("Volume", "KVO")
+    indicator_to_test = ("Trend", "Trend")
     strategies_file_name_suffix_new_suffix = f"dev_6_{'-'.join(indicator_to_test)}_"
 
-    ma_list = [
-        "sma",
-        "ema",
-        "dema",
-        "fwma",
-        # "hma",
-        "linreg",
-        "midpoint",
-        "pwma",
-        "rma",
-        "sinwma",
-        "swma",
-        "t3",
-        "tema",
-        "trima",
-        "vidya",
-        "wma",
-        "zlma",
-    ]
-    for ma in ma_list:
-        for length in [i for i in range(7, 12, 1)]:
-            kwargs = {"fast": 14, "slow": 30, "signal": 14, "mamode": ma, "length_divergence": 28}
-            settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
+    # ma_list = [
+    #     "sma",
+    #     "ema",
+    #     "dema",
+    #     "fwma",
+    #     # "hma",
+    #     "linreg",
+    #     "midpoint",
+    #     "pwma",
+    #     "rma",
+    #     "sinwma",
+    #     "swma",
+    #     "t3",
+    #     "tema",
+    #     "trima",
+    #     "vidya",
+    #     "wma",
+    #     "zlma",
+    # ]
+    # for ma in ma_list:
+    for length in [i for i in range(7, 12, 1)]:
+        kwargs = {"length": length, "lensig": 16, "mamode": "hma"}
+        settings.INDICATORS[indicator_to_test[0]][indicator_to_test[1]] = kwargs
 
-            log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
-            backtest_trade_strategies(
-                _get_data(period_days, settings),
-                ComposeStrategiesListMethod.EXTEND,
-                settings,
-                strategies_file_name_suffix_old="dev_5",
-                strategies_file_name_suffix_new=strategies_file_name_suffix_new_suffix
-                + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}",
-                indicators_filter=[indicator_to_test[1]],
-                **kwargs,
-            )
+        log.warning(f"Testing for {indicator_to_test}_{list(kwargs.items())}")
+        backtest_trade_strategies(
+            _get_data(period_days, settings),
+            ComposeStrategiesListMethod.EXTEND,
+            settings,
+            strategies_file_name_suffix_old="dev_5",
+            strategies_file_name_suffix_new=strategies_file_name_suffix_new_suffix
+            + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}",
+            indicators_filter=[indicator_to_test[1]],
+            **kwargs,
+        )
 
     stats = []
     for file in os.listdir("src/config"):
@@ -136,6 +136,10 @@ def run_test_for_selected_indicators(settings, period_days: int):
 
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_STRATEGIES_OMX
-    run_strategies_generation(settings, period_days=40, full=True)
+    # run_strategies_generation(settings, period_days=40, full=True)
     # run_test_for_selected_indicators(settings, period_days=60)
     # run_plotting_for_active_strategies(settings, period_days=5)
+
+    settings = SETTINGS_TRADE_STRATEGIES_GULD
+    # run_strategies_generation(settings, period_days=40, full=True)
+    run_test_for_selected_indicators(settings, period_days=60)
