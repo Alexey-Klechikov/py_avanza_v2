@@ -5,7 +5,7 @@ import pandas as pd
 
 from apis.avanza.operators import Portfolio, Transactions
 from apis.telegram.operators import Telegram
-from config import SETTINGS_TRADE_STRATEGIES_GULD, SETTINGS_TRADE_STRATEGIES_OMX
+from config import SETTINGS_TRADE_STRATEGIES_GULD
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from tasks.trade_strategies import backtest_trade_strategies
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
         reset_file_handlers("deals")
         for task_name, account_id in [
-            ("trade_strategies", SETTINGS_TRADE_STRATEGIES_OMX.ACCOUNT_ID),
+            ("trade_strategies", SETTINGS_TRADE_STRATEGIES_GULD.ACCOUNT_ID),
         ]:
             Transactions(account_id).log_deals(log_header=task_name)
 
