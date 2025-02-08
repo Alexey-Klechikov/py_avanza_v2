@@ -5,7 +5,7 @@ import pandas as pd
 
 from apis.avanza.operators import Portfolio, Transactions
 from apis.telegram.operators import Telegram
-from config import SETTINGS_TRADE_STRATEGIES_OMX
+from config import SETTINGS_TRADE_STRATEGIES_GULD, SETTINGS_TRADE_STRATEGIES_OMX
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from tasks.trade_strategies import backtest_trade_strategies
@@ -28,7 +28,7 @@ def _get_data(period_days: int, settings, resolution: str | None = None):
 
 
 def generate_strategies(settings, period_days: int) -> None:
-    log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
+    log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days + 20} days)")
     backtest_trade_strategies(
         _get_data(period_days + 20, settings),
         ComposeStrategiesListMethod.GENERATE,
@@ -38,7 +38,7 @@ def generate_strategies(settings, period_days: int) -> None:
 
     for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
         log.warning(
-            f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)",
+            f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days + 20} days)",
         )
         backtest_trade_strategies(
             _get_data(period_days + 20, settings),
@@ -59,7 +59,7 @@ def generate_strategies(settings, period_days: int) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(SETTINGS_TRADE_STRATEGIES_OMX, period_days=40)
+        generate_strategies(SETTINGS_TRADE_STRATEGIES_GULD, period_days=40)
 
         reset_file_handlers("deals")
         for task_name, account_id in [
