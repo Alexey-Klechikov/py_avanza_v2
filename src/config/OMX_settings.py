@@ -11,6 +11,8 @@ class TradeStrategies(BaseSettings):
     AVA: str = "19002"
     YAHOO: str = "^OMX"
 
+    TRADING_DATA: str = "avanza"
+
     MULTIPLIER: int = 20
 
     TRADING_START: time = time(9, 45)

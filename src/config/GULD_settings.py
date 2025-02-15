@@ -11,10 +11,12 @@ class TradeStrategies(BaseSettings):
     AVA: str = "18986"
     YAHOO: str = "GC=F"
 
+    TRADING_DATA: str = "yahoo"
+
     MULTIPLIER: int = 20
 
-    TRADING_START: time = time(9, 45)
-    TRADING_END: time = time(16, 58)
+    TRADING_START: time = time(9, 5)
+    TRADING_END: time = time(21, 45)
 
     BUDGET: float = 0.7
 
@@ -26,13 +28,13 @@ class TradeStrategies(BaseSettings):
         default_factory=lambda: {
             "Trend": {
                 "ADX": {"length": 7, "lensig": 14, "mamode": "hma"},
-                "TII": {"length_sma": 32, "length_signal": 6},
+                "TII": {"length_sma": 28, "length_signal": 14},  # None
                 "PSAR": {"acceleration": 0.02, "maximum": 0.25},
                 "CHOP": {"length": 18, "length_atr": 8, "scalar": 74.0},
             },
             "Overlap": {
                 "LINREG": {"length": 8, "limit": 0.38},
-                "SLOPE": {"length": 12, "limit": 0},
+                "SLOPE": {"length": 14, "limit": 0.1},  # None
                 "SUPERTREND": {"length": 7, "multiplier": 4.0},
             },
             "Momentum": {

@@ -79,8 +79,8 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
 
     for column in ["LONG", "SHORT", "EXIT"]:
         for non_trading_time in (
-            ["09:00", settings.TRADING_START.strftime("%H:%M")],
-            [settings.TRADING_END.strftime("%H:%M"), "23:00"],
+            ["00:00", settings.TRADING_START.strftime("%H:%M")],
+            [settings.TRADING_END.strftime("%H:%M"), "23:59"],
         ):
             data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
 
