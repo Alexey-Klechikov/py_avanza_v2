@@ -15,7 +15,7 @@ class TradeStrategies(BaseSettings):
 
     MULTIPLIER: int = 20
 
-    TRADING_START: time = time(9, 5)
+    TRADING_START: time = time(9, 1)
     TRADING_END: time = time(21, 45)
 
     BUDGET: float = 0.7
