@@ -212,10 +212,19 @@ def get_top_strategies(
     strategies_file_name_prefix: str,
 ) -> list[Strategy]:
     top_strategies = sorted(
-        json.load(open(_get_file_path(strategies_file_name_prefix)))[:10],
+        json.load(open(_get_file_path(strategies_file_name_prefix))),
         key=lambda x: x["profitable_trades_share"],
         reverse=True,
-    )[:5]
+    )
+
+    top_strategies_with_volume = [i for i in top_strategies if "Volume" in i["name"]][:5]
+    top_strategies_without_volume = [i for i in top_strategies if "Volume" not in i["name"]][:5]
+
+    top_strategies = sorted(
+        top_strategies_with_volume + top_strategies_without_volume,
+        key=lambda x: x["profitable_trades_share"],
+        reverse=True,
+    )
 
     return [
         Strategy(

@@ -41,13 +41,17 @@ def cache_history(settings):
         storage = Storage(settings, resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
+        if settings.TRADING_DATA == "yahoo":
+            try:
+                data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+                storage.write(data_yahoo)
+            except Exception as e:
+                log.error(f"Error fetching Yahoo data: {e}")
+                settings.TRADING_DATA = "avanza"
+
         if settings.TRADING_DATA == "avanza":
             data_ava = Chart.get_chart_data(settings, TimePeriod.TODAY, resolution_ava)
             storage.write(data_ava)
-
-        elif settings.TRADING_DATA == "yahoo":
-            data_yahoo = YahooTicker(settings).get_history(period=Period.ONE_MONTH, interval=interval_yahoo)
-            storage.write(data_yahoo)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")

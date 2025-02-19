@@ -51,10 +51,15 @@ class Data:
             self.is_new = True
 
         else:
+            if self.settings.TRADING_DATA == "yahoo":
+                try:
+                    new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+                except Exception as e:
+                    log.error(f"Error fetching Yahoo data: {e}. Will use avanza data instead.")
+                    self.settings.TRADING_DATA = "avanza"
+
             if self.settings.TRADING_DATA == "avanza":
                 new_data = Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.TWO_MINUTES)
-            elif self.settings.TRADING_DATA == "yahoo":
-                new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
             else:
                 raise ValueError(f"Unknown data source {self.settings.TRADING_DATA}")
 
