@@ -51,6 +51,7 @@ class Data:
             self.is_new = True
 
         else:
+            new_data = None
             if self.settings.TRADING_DATA == "yahoo":
                 try:
                     new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
@@ -60,8 +61,9 @@ class Data:
 
             if self.settings.TRADING_DATA == "avanza":
                 new_data = Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.TWO_MINUTES)
-            else:
-                raise ValueError(f"Unknown data source {self.settings.TRADING_DATA}")
+
+            if new_data is None:
+                raise ValueError("No data fetched")
 
             storage.write(new_data)
 
