@@ -55,7 +55,7 @@ class Data:
                 try:
                     new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
                 except Exception as e:
-                    log.error(f"Error fetching Yahoo data: {e}. Will use avanza data instead.")
+                    log.warning(f"Error fetching Yahoo data: {e}. Will use avanza data instead.")
                     self.settings.TRADING_DATA = "avanza"
 
             if self.settings.TRADING_DATA == "avanza":
