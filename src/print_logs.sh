@@ -10,8 +10,10 @@ seconds_until_end=$((end_time - current_time))
 
 while [ $SECONDS -lt $seconds_until_end ]; do
     clear
-    tail -n 30 logs/trade_strategies_$current_date.log
-    sleep 120  # Wait for 2 minutes
+    echo ">>>>>> OMX <<<<<<"
+    tail -n 20 logs/trade_OMX_$current_date.log
+    echo ">>>>>> GULD <<<<<<"
+    tail -n 20 logs/trade_GULD_$current_date.log
 done
 
 # Make the script executable
