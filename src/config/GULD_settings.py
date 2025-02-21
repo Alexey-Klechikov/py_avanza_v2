@@ -22,8 +22,8 @@ class TradeStrategies(BaseSettings):
     BUDGET: float = 0.95
 
     TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.08
-    TRADING_STOP_LOSS: float = 0.04
+    TRADING_TAKE_PROFIT: float = 0.075
+    TRADING_STOP_LOSS: float = 0.05
 
     INDICATORS: dict = field(
         default_factory=lambda: {
