@@ -14,6 +14,7 @@ while [ $SECONDS -lt $seconds_until_end ]; do
     tail -n 20 logs/trade_OMX_$current_date.log
     echo ">>>>>> GULD <<<<<<"
     tail -n 20 logs/trade_GULD_$current_date.log
+    sleep 120  # Wait for 2 minutes
 done
 
 # Make the script executable
