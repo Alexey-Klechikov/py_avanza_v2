@@ -21,6 +21,8 @@ class TradeStrategies(BaseSettings):
 
     BUDGET: float = 0.95
 
+    TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.75
+    TRADING_STRATEGY_COUNT_MAX: int = 20
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.075
     TRADING_STOP_LOSS: float = 0.05

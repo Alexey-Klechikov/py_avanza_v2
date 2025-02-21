@@ -78,7 +78,12 @@ class Data:
 
     def get_strategies(self):
         indicators_mapping = get_indicators(self.data, self.settings)
-        strategies = read_top_strategies(indicators_mapping, self.settings.NAME)
+        strategies = read_top_strategies(
+            indicators_mapping,
+            self.settings.NAME,
+            filter_by_min_efficiency=self.settings.TRADING_STRATEGY_MIN_EFFICIENCY,
+            limit_count=self.settings.TRADING_STRATEGY_COUNT_MAX,
+        )
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
                 log.info(f"Strategy {i+1} [{strategy.efficiency}]: {strategy.name}")
@@ -158,7 +163,9 @@ class Flow:
     def __init__(self, settings, data: Data, dry_run=False):
         self.instrument_name = settings.NAME
         self.budget = settings.BUDGET
-        self.trading_ends: time = min(get_market_close_time(), settings.TRADING_END)
+        self.trading_ends: time = (
+            min(get_market_close_time(), settings.TRADING_END) if settings.NAME != "GULD" else settings.TRADING_END
+        )
         self.trading_starts: time = settings.TRADING_START
         self.stop_loss: float = settings.TRADING_STOP_LOSS
         self.dry_run: bool = dry_run
@@ -278,7 +285,7 @@ def trade(dry_run: bool, settings) -> None:
 
     flow = Flow(settings, data, dry_run)
 
-    while datetime.now().time() < time(17, 4):
+    while datetime.now() < datetime.combine(datetime.today(), settings.TRADING_END) + timedelta(minutes=15):
         try:
             action = flow.get_action(portfolio, orders)
         except (ConnectionError, RemoteDisconnected):
