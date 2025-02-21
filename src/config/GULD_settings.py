@@ -7,6 +7,7 @@ from config.base_settings import BaseSettings
 @dataclass
 class TradeStrategies(BaseSettings):
     NAME: str = "GULD"
+    ACCOUNT_ID: str = "5554179"
 
     AVA: str = "18986"
     YAHOO: str = "GC=F"
@@ -18,7 +19,7 @@ class TradeStrategies(BaseSettings):
     TRADING_START: time = time(9, 1)
     TRADING_END: time = time(21, 45)
 
-    BUDGET: float = 0.7
+    BUDGET: float = 0.95
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.08
@@ -28,13 +29,13 @@ class TradeStrategies(BaseSettings):
         default_factory=lambda: {
             "Trend": {
                 "ADX": {"length": 7, "lensig": 14, "mamode": "hma"},
-                "TII": {"length_sma": 28, "length_signal": 14},  # None
+                "TII": {"length_sma": 28, "length_signal": 14},
                 "PSAR": {"acceleration": 0.02, "maximum": 0.25},
                 "CHOP": {"length": 18, "length_atr": 8, "scalar": 74.0},
             },
             "Overlap": {
                 "LINREG": {"length": 8, "limit": 0.38},
-                "SLOPE": {"length": 14, "limit": 0.1},  # None
+                "SLOPE": {"length": 14, "limit": 0.1},
                 "SUPERTREND": {"length": 7, "multiplier": 4.0},
             },
             "Momentum": {

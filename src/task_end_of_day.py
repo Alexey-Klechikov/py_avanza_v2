@@ -73,6 +73,7 @@ if __name__ == "__main__":
         cache_history(SETTINGS_TRADE_STRATEGIES_GULD)
         cache_history(SETTINGS_TRADE_STRATEGIES_OMX)
         backtest_trade_strategies(SETTINGS_TRADE_STRATEGIES_GULD, period_days=40)
+        backtest_trade_strategies(SETTINGS_TRADE_STRATEGIES_OMX, period_days=40)
 
     except Exception as e:
         telegram = Telegram()

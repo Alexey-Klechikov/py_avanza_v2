@@ -7,6 +7,7 @@ from config.base_settings import BaseSettings
 @dataclass
 class TradeStrategies(BaseSettings):
     NAME: str = "OMX"
+    ACCOUNT_ID: str = "754762"
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"
@@ -18,7 +19,7 @@ class TradeStrategies(BaseSettings):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
 
-    BUDGET: float = 0.7
+    BUDGET: float = 0.95
 
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.075
@@ -28,7 +29,7 @@ class TradeStrategies(BaseSettings):
         default_factory=lambda: {
             "Trend": {
                 "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
-                "TII": {"length_sma": 32, "length_signal": 5},
+                "TII": {"length_sma": 14, "length_signal": 8},
                 "PSAR": {"acceleration": 0.02, "maximum": 0.2},
                 "CHOP": {"length": 18, "length_atr": 11, "scalar": 80.0},
             },
@@ -50,7 +51,7 @@ class TradeStrategies(BaseSettings):
             "Volatility": {
                 "STARC": {"length_sma": 18, "length_atr": 20, "multiplier_atr": 2.4},
                 "MASSI": {"fast": 5, "slow": 23, "threshold": 23},
-                "BBANDS": {"length": 13, "std": 2.7},
+                "BBANDS": {"length": 10, "std": 2.4},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
             },
             "Volume": {

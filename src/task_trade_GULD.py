@@ -11,7 +11,7 @@ from utils.logger import get_logger, set_handlers
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
-set_handlers("trade_strategies")
+set_handlers("trade_GULD")
 log = get_logger()
 
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
         if not dry_run:
             telegram = TelegramBase()
-            telegram.messages = ["Error in task_trade_strategies"]
+            telegram.messages = ["Error in task_trade_strategies GULD"]
             telegram.send_message()
 
         raise e
