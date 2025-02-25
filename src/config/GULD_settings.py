@@ -12,7 +12,7 @@ class TradeStrategies(BaseSettings):
     AVA: str = "18986"
     YAHOO: str = "GC=F"
 
-    TRADING_DATA: str = "yahoo"
+    TRADING_DATA: str = "avanza"
 
     MULTIPLIER: int = 20
 
@@ -21,7 +21,7 @@ class TradeStrategies(BaseSettings):
 
     BUDGET: float = 0.95
 
-    TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.75
+    TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.66
     TRADING_STRATEGY_COUNT_MAX: int = 20
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.075
@@ -56,11 +56,11 @@ class TradeStrategies(BaseSettings):
                 "BBANDS": {"length": 11, "std": 2.6},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "linreg"},
             },
-            "Volume": {
-                "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 22},
-                "ADOSC": {"fast": 6, "slow": 12, "length_divergence": 34},
-                "CMF": {"length": 24, "length_divergence": 16},
-                "KVO": {"fast": 8, "slow": 32, "signal": 10, "mamode": "rma", "length_divergence": 22},
-            },
+            # "Volume": {
+            #     "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 22},
+            #     "ADOSC": {"fast": 6, "slow": 12, "length_divergence": 34},
+            #     "CMF": {"length": 24, "length_divergence": 16},
+            #     "KVO": {"fast": 8, "slow": 32, "signal": 10, "mamode": "rma", "length_divergence": 22},
+            # },
         },
     )

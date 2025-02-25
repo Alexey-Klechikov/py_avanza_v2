@@ -38,10 +38,11 @@ def get_indicators(data, settings, **kwargs) -> dict[str, dict[str, Indicator]]:
     volatility.add_acceleration_bands(**settings.INDICATORS.get("Volatility", {}).get("ACCBANDS", {}))
 
     volume = Volume(data)
-    volume.add_price_volume_trend(**settings.INDICATORS.get("Volume", {}).get("PVT", {}))
-    volume.add_accumulation_distribution_oscillator(**settings.INDICATORS.get("Volume", {}).get("ADOSC", {}))
-    volume.add_chaikin_money_flow(**settings.INDICATORS.get("Volume", {}).get("CMF", {}))
-    volume.add_klinger_volume_oscillator(**settings.INDICATORS.get("Volume", {}).get("KVO", {}))
+    if settings.INDICATORS.get("Volume"):
+        volume.add_price_volume_trend(**settings.INDICATORS.get("Volume", {}).get("PVT", {}))
+        volume.add_accumulation_distribution_oscillator(**settings.INDICATORS.get("Volume", {}).get("ADOSC", {}))
+        volume.add_chaikin_money_flow(**settings.INDICATORS.get("Volume", {}).get("CMF", {}))
+        volume.add_klinger_volume_oscillator(**settings.INDICATORS.get("Volume", {}).get("KVO", {}))
 
     columns_keep = {"Open", "High", "Low", "Close", "Volume"}
     for category in [trend, volatility, volume, cycles, overlap, momentum]:
