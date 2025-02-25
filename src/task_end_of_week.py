@@ -5,7 +5,7 @@ import pandas as pd
 
 from apis.avanza.operators import Portfolio, Transactions
 from apis.telegram.operators import Telegram
-from config import SETTINGS_TRADE_STRATEGIES_GULD, SETTINGS_TRADE_STRATEGIES_OMX
+from config import SETTINGS_TRADE_STRATEGIES_OMX
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
 from tasks.trade_strategies import backtest_trade_strategies
@@ -59,20 +59,15 @@ def generate_strategies(settings, period_days: int) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(SETTINGS_TRADE_STRATEGIES_GULD, period_days=40)
         generate_strategies(SETTINGS_TRADE_STRATEGIES_OMX, period_days=40)
 
-        for instrument, account_id in [
-            ("GULD", SETTINGS_TRADE_STRATEGIES_GULD.ACCOUNT_ID),
-            ("OMX", SETTINGS_TRADE_STRATEGIES_OMX.ACCOUNT_ID),
-        ]:
-            reset_file_handlers(f"deals_{instrument}")
-            Transactions(account_id).log_deals(log_header=f"trade_{instrument}")
+        reset_file_handlers("deals_OMX")
+        Transactions(SETTINGS_TRADE_STRATEGIES_OMX.ACCOUNT_ID).log_deals(log_header="trade_OMX")
 
-            portfolio = Portfolio(account_id)
-            portfolio.reload_balance()
-            log.info(f"Portfolio balance: {portfolio.total_value}")
-            log.info("------------")
+        portfolio = Portfolio(SETTINGS_TRADE_STRATEGIES_OMX.ACCOUNT_ID)
+        portfolio.reload_balance()
+        log.info(f"Portfolio balance: {portfolio.total_value}")
+        log.info("------------")
 
     except Exception as e:
         telegram = Telegram()
