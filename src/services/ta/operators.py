@@ -79,7 +79,7 @@ def read_top_strategies(
     strategies = get_top_strategies(indicators_mapping, strategies_file_name_prefix)
 
     if filter_by_min_efficiency:
-        strategies = [strategy for strategy in strategies if strategy.efficiency > filter_by_min_efficiency]
+        strategies = [strategy for strategy in strategies if strategy.efficiency >= filter_by_min_efficiency]
 
     if limit_count:
         strategies = strategies[:limit_count]
