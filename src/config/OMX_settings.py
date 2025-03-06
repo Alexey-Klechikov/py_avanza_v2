@@ -24,8 +24,8 @@ class TradeStrategies(BaseSettings):
     TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.64
     TRADING_STRATEGY_COUNT_MAX: int = 20
     TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.075
-    TRADING_STOP_LOSS: float = 0.05
+    TRADING_TAKE_PROFIT: float = 0.09
+    TRADING_STOP_LOSS: float = 0.06
 
     INDICATORS: dict = field(
         default_factory=lambda: {
