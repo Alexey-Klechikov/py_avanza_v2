@@ -74,6 +74,7 @@ class Trade:
         dry_run: bool,
         budget_percent: int,
         stop_loss_percent: float | None = None,
+        stop_loss_confirmation_count_min: int = 1,
         take_profit_percent: float | None = None,
     ) -> None:
         self.orders = orders
@@ -84,6 +85,8 @@ class Trade:
 
         self.budget_percent = budget_percent
         self.stop_loss_percent = stop_loss_percent
+        self.stop_loss_confirmation_count_min = stop_loss_confirmation_count_min
+        self.stop_loss_confirmation_count_active = 0
         self.take_profit_percent = take_profit_percent
 
         self.price_state: PriceState = PriceState()
@@ -226,6 +229,11 @@ class Trade:
                 continue
 
             if price > (acquired_instrument.acquired_price) * (1 - self.stop_loss_percent):
+                self.stop_loss_confirmation_count_active = 0
+                return
+
+            self.stop_loss_confirmation_count_active += 1
+            if self.stop_loss_confirmation_count_active <= self.stop_loss_confirmation_count_min:
                 return
 
             self.price_state.update(

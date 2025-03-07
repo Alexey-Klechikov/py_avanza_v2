@@ -280,6 +280,7 @@ def trade(dry_run: bool, settings) -> None:
         dry_run=dry_run,
         budget_percent=settings.BUDGET,
         stop_loss_percent=settings.TRADING_STOP_LOSS,
+        stop_loss_confirmation_count_min=settings.TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN,
         take_profit_percent=settings.TRADING_TAKE_PROFIT,
     )
 

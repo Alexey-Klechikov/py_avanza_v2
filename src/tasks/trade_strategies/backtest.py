@@ -90,6 +90,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
 
     target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
     stop_loss = settings.TRADING_STOP_LOSS / settings.MULTIPLIER
+    stop_loss_confirmation_counter = 0
 
     for i, row in data[["Close", "LONG", "SHORT", "EXIT"]].iterrows():
         profit = None
@@ -146,9 +147,14 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
             if (tested_direction == "LONG" and close_price < tested_instrument.stop_loss_price) or (
                 tested_direction == "SHORT" and close_price > tested_instrument.stop_loss_price
             ):
-                sell_price = close_price
-                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
-                wallet.set(tested_direction, None)
+                stop_loss_confirmation_counter += 1
+
+                if stop_loss_confirmation_counter > settings.TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN:
+                    sell_price = close_price
+                    profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                    wallet.set(tested_direction, None)
+            else:
+                stop_loss_confirmation_counter = 0
 
             # End of day
             if timestamp.time() >= settings.TRADING_END:
