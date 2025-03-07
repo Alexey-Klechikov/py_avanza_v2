@@ -8,7 +8,6 @@ class Test_Watchlists(TestCase):
         mock_watchlists = [
             {
                 "watchListId": "12217703",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": ["1808634", "1835828", "1852223", "1856343"],
                 "created": "2024-08-27T13:08:38.000+02:00",
                 "modified": "2024-09-27T18:04:27.000+02:00",
@@ -17,7 +16,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "12217701",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": [
                     "1814785",
                     "1814805",
@@ -37,7 +35,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "11319278",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": ["1495786", "1759285", "1742269", "1858116"],
                 "created": "2023-03-23T03:11:01.000+01:00",
                 "modified": "2024-11-27T09:10:11.000+01:00",
@@ -46,7 +43,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "11319272",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": [
                     "1521080",
                     "1210275",
@@ -72,7 +68,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "12217704",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": ["1825184", "1835836", "1856344"],
                 "created": "2024-08-27T13:08:51.000+02:00",
                 "modified": "2024-09-27T18:04:32.000+02:00",
@@ -81,7 +76,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "12217702",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": ["1854691", "1855648", "1852332", "1853806", "1854690"],
                 "created": "2024-08-27T13:08:17.000+02:00",
                 "modified": "2024-09-27T18:04:34.000+02:00",
@@ -90,7 +84,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "11319279",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": [
                     "1835904",
                     "1665466",
@@ -109,7 +102,6 @@ class Test_Watchlists(TestCase):
             },
             {
                 "watchListId": "11319271",
-                "userId": {"customerId": {"id": 2814056}},
                 "orderbookIds": [
                     "1767463",
                     "1779801",
