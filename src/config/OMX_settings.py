@@ -25,7 +25,7 @@ class TradeStrategies(BaseSettings):
     TRADING_STRATEGY_COUNT_MAX: int = 20
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.06
+    TRADING_STOP_LOSS: float = 0.055
     TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN: int = 4
 
     INDICATORS: dict = field(
