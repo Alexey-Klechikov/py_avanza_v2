@@ -34,6 +34,10 @@ log = get_logger()
 
 
 class Avanza(AvanzaBase):
+    def __call(self, *args, **kwargs):
+        self._authentication_session = None
+        return super().__call(*args, **kwargs)
+
     def _retry_call(
         self,
         path: str,
@@ -51,7 +55,8 @@ class Avanza(AvanzaBase):
             try:
                 response = self.__call(**request, return_content=True)
 
-            except HTTPError:
+            except HTTPError as e:
+                log.debug(e)
                 time.sleep((i + 1) * 3)
 
             if response:
