@@ -34,9 +34,9 @@ log = get_logger()
 
 
 class Avanza(AvanzaBase):
-    def __call(self, *args, **kwargs):
+    def __init__(self, credentials: dict):
+        super().__init__(credentials)
         self._authentication_session = None
-        return super().__call(*args, **kwargs)
 
     def _retry_call(
         self,
