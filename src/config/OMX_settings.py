@@ -38,14 +38,14 @@ class TradeStrategies(BaseSettings):
             },
             "Overlap": {
                 "LINREG": {"length": 12, "limit": 0.32},
-                "SLOPE": {"length": 24, "limit": 0},
+                "SLOPE": {"length": 18, "limit": 0.1},
                 "SUPERTREND": {"length": 7, "multiplier": 3.0},
             },
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
                 "STC": {"tclength": 14, "fast": 25, "slow": 45, "factor": 0.55},
                 "CCI": {"length": 12, "c": 0.015},
-                "RVGI": {"length": 20, "length_swma": 4, "length_divergence": 20},
+                "RVGI": {"length": 24, "length_swma": 4, "length_divergence": 18},
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
             },
             "Cycles": {
@@ -53,7 +53,7 @@ class TradeStrategies(BaseSettings):
             },
             "Volatility": {
                 "STARC": {"length_sma": 18, "length_atr": 20, "multiplier_atr": 2.4},
-                "MASSI": {"fast": 5, "slow": 23, "threshold": 23},
+                "MASSI": {"fast": 8, "slow": 16, "threshold": 16},
                 "BBANDS": {"length": 10, "std": 2.4},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
             },

@@ -45,7 +45,7 @@ jobs:
         cronjobs=(
           "task_end_of_day 10 22 * * 1-5"
           "task_end_of_week 0 9 * * 6"
-          "task_trade_OMX 30 9 * * 1-5"
+          "task_trade_OMX 43 9 * * 1-5"
         )
 
         # Fetch existing crontab
