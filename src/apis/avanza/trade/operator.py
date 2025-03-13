@@ -91,10 +91,10 @@ class Trade:
 
         self.price_state: PriceState = PriceState()
 
-    def sell(self, direction: Direction) -> None:
+    def sell(self, direction: Direction | None) -> None:
         caller = "sell"
 
-        if self.dry_run:
+        if self.dry_run or not direction:
             return
 
         for _ in range(5):
@@ -121,11 +121,11 @@ class Trade:
                 caller=caller,
             )
 
-    def buy(self, direction: Direction) -> None:
+    def buy(self, direction: Direction | None) -> None:
         caller = "buy"
         budget = None
 
-        if self.dry_run:
+        if self.dry_run or not direction:
             return
 
         for _ in range(5):
@@ -171,10 +171,10 @@ class Trade:
                 caller=caller,
             )
 
-    def take_profit(self, direction: Direction) -> None:
+    def take_profit(self, direction: Direction | None) -> None:
         caller = "take_profit"
 
-        if not self.take_profit_percent:
+        if self.dry_run or not self.take_profit_percent or not direction:
             return
 
         for _ in range(5):
@@ -207,10 +207,10 @@ class Trade:
                 caller=caller,
             )
 
-    def stop_loss(self, direction: Direction) -> None:
+    def stop_loss(self, direction: Direction | None) -> None:
         caller = "stop_loss"
 
-        if not self.stop_loss_percent:
+        if self.dry_run or not self.stop_loss_percent or not direction:
             return
 
         for _ in range(5):

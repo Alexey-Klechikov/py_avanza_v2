@@ -171,7 +171,8 @@ class Flow:
         self.dry_run: bool = dry_run
 
         self.directions_sell: list[Direction] = []
-        self.directions_buy: list[Direction] = []
+        self.direction_buy: Direction | None = None
+        self.direction_in_stock: Direction | None = None
 
         self.data = data
 
@@ -179,7 +180,7 @@ class Flow:
 
     def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
-        self.directions_buy = []
+        self.direction_buy = None
 
         portfolio.reload_positions(caller="get_action")
         if not portfolio.positions:
@@ -194,7 +195,7 @@ class Flow:
                 if not portfolio.acquired_instrument.get(direction.value):
                     continue
 
-                self.directions_buy.append(direction)
+                self.direction_buy = direction
                 return FlowAction.TRADE
 
         # End of day
@@ -226,10 +227,10 @@ class Flow:
 
             if signal == Signal.LONG:
                 self.directions_sell = [Direction.BEAR]
-                self.directions_buy = [Direction.BULL]
+                self.direction_buy = Direction.BULL
             elif signal == Signal.SHORT:
                 self.directions_sell = [Direction.BULL]
-                self.directions_buy = [Direction.BEAR]
+                self.direction_buy = Direction.BEAR
             elif signal == Signal.EXIT:
                 self.directions_sell = [Direction.BEAR, Direction.BULL]
 
@@ -293,16 +294,13 @@ def trade(dry_run: bool, settings) -> None:
             get_client.cache_clear()
 
         if action == FlowAction.DO_NOTHING:
-            for direction in [Direction.BULL, Direction.BEAR]:
-                trade.stop_loss(direction)
+            trade.stop_loss(flow.direction_in_stock)
 
         elif action == FlowAction.TRADE:
-            for direction in flow.directions_sell:
-                trade.sell(direction)
-
-            for direction in flow.directions_buy:
-                trade.buy(direction)
-                trade.take_profit(direction)
+            [trade.sell(direction) for direction in flow.directions_sell]
+            trade.buy(flow.direction_buy)
+            trade.take_profit(flow.direction_buy)
+            flow.direction_in_stock = flow.direction_buy
 
         elif action == FlowAction.EXIT_TRADING:
             break

@@ -21,7 +21,7 @@ class TradeStrategies(BaseSettings):
 
     BUDGET: float = 0.95
 
-    TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.64
+    TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.6
     TRADING_STRATEGY_COUNT_MAX: int = 20
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.09
@@ -43,7 +43,7 @@ class TradeStrategies(BaseSettings):
             },
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
-                "STC": {"tclength": 14, "fast": 25, "slow": 45, "factor": 0.55},
+                "STC": {"tclength": 10, "fast": 15, "slow": 31, "factor": 0.63},
                 "CCI": {"length": 12, "c": 0.015},
                 "RVGI": {"length": 24, "length_swma": 4, "length_divergence": 18},
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
@@ -52,14 +52,14 @@ class TradeStrategies(BaseSettings):
                 "EBSW": {"length": 40, "bars": 14},
             },
             "Volatility": {
-                "STARC": {"length_sma": 18, "length_atr": 20, "multiplier_atr": 2.4},
-                "MASSI": {"fast": 8, "slow": 16, "threshold": 16},
+                "STARC": {"length_sma": 10, "length_atr": 14, "multiplier_atr": 2.2},
+                "MASSI": {"fast": 6, "slow": 8, "threshold": 8},
                 "BBANDS": {"length": 10, "std": 2.4},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
             },
             "Volume": {
-                "PVT": {"drift": 12, "length_sma": 30, "length_divergence": 24},
-                "ADOSC": {"fast": 6, "slow": 14, "length_divergence": 28},
+                "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
+                "ADOSC": {"fast": 6, "slow": 10, "length_divergence": 28},
                 "CMF": {"length": 24, "length_divergence": 24},
                 "KVO": {"fast": 14, "slow": 30, "signal": 14, "mamode": "rma", "length_divergence": 28},
             },
