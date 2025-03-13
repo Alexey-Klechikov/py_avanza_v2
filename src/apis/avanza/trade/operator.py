@@ -233,6 +233,13 @@ class Trade:
                 return
 
             self.stop_loss_confirmation_count_active += 1
+            log.warning(
+                "Stop loss confirmation count: {} / {}. Latest instrument price: {}".format(
+                    self.stop_loss_confirmation_count_active,
+                    self.stop_loss_confirmation_count_min,
+                    price,
+                ),
+            )
             if self.stop_loss_confirmation_count_active <= self.stop_loss_confirmation_count_min:
                 return
 
