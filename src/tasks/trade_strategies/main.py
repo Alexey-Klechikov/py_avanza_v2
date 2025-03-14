@@ -290,21 +290,22 @@ def trade(dry_run: bool, settings) -> None:
     while datetime.now() < datetime.combine(datetime.today(), settings.TRADING_END) + timedelta(minutes=15):
         try:
             action = flow.get_action(portfolio, orders)
+
+            if action == FlowAction.DO_NOTHING:
+                trade.stop_loss(flow.direction_in_stock)
+
+            elif action == FlowAction.TRADE:
+                [trade.sell(direction) for direction in flow.directions_sell]
+                trade.buy(flow.direction_buy)
+                trade.take_profit(flow.direction_buy)
+                flow.direction_in_stock = flow.direction_buy
+
+            elif action == FlowAction.EXIT_TRADING:
+                break
+
+            flow.wait_for_data()
+
         except (ConnectionError, RemoteDisconnected):
             get_client.cache_clear()
-
-        if action == FlowAction.DO_NOTHING:
-            trade.stop_loss(flow.direction_in_stock)
-
-        elif action == FlowAction.TRADE:
-            [trade.sell(direction) for direction in flow.directions_sell]
-            trade.buy(flow.direction_buy)
-            trade.take_profit(flow.direction_buy)
-            flow.direction_in_stock = flow.direction_buy
-
-        elif action == FlowAction.EXIT_TRADING:
-            break
-
-        flow.wait_for_data()
 
     Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)
