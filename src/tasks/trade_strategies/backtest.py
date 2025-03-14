@@ -36,10 +36,7 @@ class Order(BaseModel):
 
         profit = self.sell_price - self.buy_price
         profit = profit if instrument_type == "LONG" else -profit
-        profit -= self.buy_price * 0.01 * 0.02  # Spread
-
-        if profit > self.buy_price * 0.01:
-            profit = self.buy_price * 0.01
+        profit -= self.buy_price * 0.01 * 0.03  # Spread
 
         return profit
 
@@ -269,7 +266,7 @@ def backtest_trade_strategies(
 
     strategies = [strategy for strategy in strategies if strategy.counter.total_profit > 0]
     strategies.sort(
-        key=lambda x: x.counter.total_profit * x.counter.profitable_trades / x.counter.total_trades,
+        key=lambda x: (x.counter.total_profit / 2) * (x.counter.profitable_trades / x.counter.total_trades),
         reverse=True,
     )
 

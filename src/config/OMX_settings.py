@@ -25,7 +25,7 @@ class TradeStrategies(BaseSettings):
     TRADING_STRATEGY_COUNT_MAX: int = 20
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.055
+    TRADING_STOP_LOSS: float = 0.05
     TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN: int = 4
 
     INDICATORS: dict = field(
@@ -49,7 +49,7 @@ class TradeStrategies(BaseSettings):
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
             },
             "Cycles": {
-                "EBSW": {"length": 40, "bars": 14},
+                "EBSW": {"length": 40, "bars": 18},
             },
             "Volatility": {
                 "STARC": {"length_sma": 10, "length_atr": 14, "multiplier_atr": 2.2},
