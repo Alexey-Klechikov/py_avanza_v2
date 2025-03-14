@@ -171,7 +171,7 @@ def run_test_for_selected_indicators(settings, period_days: int):
 
     log.warning(f"Stats for {tested_kwargs.indicator_to_test}")
     for s in sorted(stats, key=lambda x: x[5], reverse=True):
-        log.info("> " + " | ".join([str(i) for i in s]))
+        log.info("> {}".format(" | ".join([str(i) for i in s])))
 
 
 def get_statistics_per_indicator():

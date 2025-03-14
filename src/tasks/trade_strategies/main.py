@@ -6,7 +6,6 @@ from time import sleep
 
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
-from requests.exceptions import ConnectionError
 
 from apis.avanza.client import get_client
 from apis.avanza.operators import Chart, Orders, Portfolio, Transactions, Watchlists
@@ -252,7 +251,11 @@ class Flow:
 # MAIN
 def trade(dry_run: bool, settings) -> None:
     log.info(
-        f"Start trading strategies on {settings.NAME} | {settings.RESOLUTION}" + (" | DRY_RUN" if dry_run else ""),
+        "Start trading strategies on {} | {}{}".format(
+            settings.NAME,
+            settings.RESOLUTION,
+            " | DRY_RUN" if dry_run else "",
+        ),
     )
 
     data = Data(settings)
