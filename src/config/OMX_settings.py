@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from datetime import time
 
-from config.base_settings import BaseSettings
-
 
 @dataclass
-class TradeStrategies(BaseSettings):
+class TradeStrategies:
     NAME: str = "OMX"
     ACCOUNT_ID: str = "754762"
+
+    RESOLUTION = "2m"
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"
@@ -19,7 +19,7 @@ class TradeStrategies(BaseSettings):
     TRADING_START: time = time(9, 45)
     TRADING_END: time = time(16, 58)
 
-    BUDGET: float = 0.95
+    BUDGET: float = 1.0
 
     TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.6
     TRADING_STRATEGY_COUNT_MAX: int = 20
@@ -52,7 +52,7 @@ class TradeStrategies(BaseSettings):
                 "EBSW": {"length": 40, "bars": 18},
             },
             "Volatility": {
-                "STARC": {"length_sma": 10, "length_atr": 14, "multiplier_atr": 2.2},
+                "STARC": {"length_ma": 12, "length_atr": 14, "multiplier_atr": 1.8, "mamode": "wma"},
                 "MASSI": {"fast": 6, "slow": 8, "threshold": 8},
                 "BBANDS": {"length": 10, "std": 2.4},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},

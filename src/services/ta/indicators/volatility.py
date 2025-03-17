@@ -1,4 +1,5 @@
 import pandas_ta as ta  # type: ignore
+from pandas_ta.overlap import ma as calculator_ma
 
 from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
@@ -8,28 +9,28 @@ log = get_logger()
 
 
 class Volatility(IndicatorsCategoryBase):
-    def add_starc_bands(self, length_sma: int, length_atr: int, multiplier_atr: float) -> None:
+    def add_starc_bands(self, length_ma: int, length_atr: int, multiplier_atr: float, mamode: str = "sma") -> None:
         """
         STARC (Stoller Average Range Channel)
         https://www.investopedia.com/terms/s/starc.asp
         https://www.viperreport.com/how-to-use-starc-bands-one-of-my-favorite-chart-tools-of-all-time/
 
-        defaults: length_sma = 6, length_atr = 15 , multiplier_atr = 2
+        defaults: length_ma = 6, length_atr = 15 , multiplier_atr = 2, mamode = "sma"
 
         During an overall uptrend, buying near the lower band and selling near the top band is favorable,
         for example. STARC bands can provide insight for both ranging and trending markets.
         """
 
         column_names = {
-            "STARC_B": f"STARC_B_{length_sma}_{length_atr}_{multiplier_atr}",
-            "STARC_U": f"STARC_U_{length_sma}_{length_atr}_{multiplier_atr}",
+            "STARC_B": f"STARC_B_{length_ma}_{length_atr}_{multiplier_atr}",
+            "STARC_U": f"STARC_U_{length_ma}_{length_atr}_{multiplier_atr}",
         }
 
-        sma = self.data.ta.sma(length=length_sma)
+        ma = calculator_ma(mamode, self.data["Close"], length=length_ma)
         atr = self.data.ta.atr(length=length_atr)
 
-        self.data[column_names["STARC_B"]] = sma - multiplier_atr * atr
-        self.data[column_names["STARC_U"]] = sma + multiplier_atr * atr
+        self.data[column_names["STARC_B"]] = ma - multiplier_atr * atr
+        self.data[column_names["STARC_U"]] = ma + multiplier_atr * atr
 
         self.indicators["STARC"] = Indicator(
             signal=Signal(
