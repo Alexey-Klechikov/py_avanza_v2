@@ -34,7 +34,7 @@ class TradeStrategies(BaseSettings):
                 "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
                 "TII": {"length_sma": 14, "length_signal": 8},
                 "PSAR": {"acceleration": 0.02, "maximum": 0.2},
-                "CHOP": {"length": 18, "length_atr": 11, "scalar": 80.0},
+                "CHOP": {"length": 6, "length_atr": 14, "scalar": 55.0},
             },
             "Overlap": {
                 "LINREG": {"length": 12, "limit": 0.32},
