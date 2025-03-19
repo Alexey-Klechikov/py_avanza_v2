@@ -1,14 +1,14 @@
 import json
 import os
+import pickle
 import warnings
 from dataclasses import dataclass
 from datetime import timedelta
 from pprint import pprint
 
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
 
+from apis.avanza.operators.search import get_all_swedish_stocks
 from config import SETTINGS
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -214,86 +214,67 @@ def get_statistics_per_indicator():
         )
 
 
-def parse_avanza_list():
-    url = "https://www.avanza.se/aktier/lista.html"
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        log.error(f"Error fetching URL: {e}")
-        return
+def get_all_stocks():
+    file = "src/data/avanza_stocks_list.pickle"
+    if not os.path.exists(file):
+        stocks_list = get_all_swedish_stocks()
+        df = pd.DataFrame([i.model_dump() for i in stocks_list])
+        pickle.dump(df, open(file, "wb"))
+    else:
+        df = pickle.load(open(file, "rb"))
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    title = soup.title.string if soup.title else "No title found"
-    log.info(f"Page title: {title}")
+    pprint(df.columns)
 
-    log.info(soup.prettify())
+    df.drop(columns=["country_code", "currency", "type"], inplace=True)
+    df = df[
+        (df["price_earnings_ratio"] > 0)
+        & (df["earnings_per_share"] > 0)
+        & (df["direct_yield"] > 0)
+        # & (df["dividends_per_year"] > 0)
+        & (df["five_years_change_percent"] > 0)
+        & (df["ten_years_change_percent"] > 0)
+        & (df["three_years_change_percent"] > 0)
+        # & (df["next_dividend"] > date.today())
+        & (df["sma20"] > 0)
+        & (df["sma50"] > 0)
+        & (df["sma200"] > 0)
+        & (df["market_capitalization"] > 10000)
+    ]
+    df["dividend_ratio"] = df["dividend_per_share"] / df["buy_price"]
+    # df = df[(df["dividend_ratio"] > 0.02)]
+    df = df.loc[df.groupby("next_dividend")["dividend_ratio"].idxmax()]
+    print(
+        df[
+            [
+                "name",
+                "return_on_equity",
+                "price_earnings_ratio",
+                "earnings_per_share",
+                "net_debt_ebitda_ratio",
+                "direct_yield",
+                "dividends_per_year",
+                "price_book_ratio",
+                "equity_per_share",
+                "ev_ebit_ratio",
+                "market_capitalization",
+                "beta",
+                "next_dividend",
+                "dividend_ratio",
+                "short_selling_ratio",
+                "buy_price",
+                "sma20",
+                "sma50",
+                "sma200",
+                "rsi14",
+            ]
+        ].reset_index(),
+    )
 
 
 if __name__ == "__main__":
-    run_strategies_generation(period_days=40, full=True)
-
+    # run_strategies_generation(period_days=40, full=True)
     # run_test_for_selected_indicators(period_days=60)
     # run_plotting_for_active_strategies(period_days=5)
-    get_statistics_per_indicator()
+    # get_statistics_per_indicator()
 
-    # from apis.avanza.operators.search import get_all_swedish_stocks
-    # from pprint import pprint
-    # from datetime import date
-    # import pickle
-
-    # file = "src/data/avanza_stocks_list.pickle"
-    # if not os.path.exists(file):
-    #     stocks_list = get_all_swedish_stocks()
-    #     df = pd.DataFrame([i.model_dump() for i in stocks_list])
-    #     pickle.dump(df, open(file, "wb"))
-
-    # else:
-    #     df = pickle.load(open(file, "rb"))
-
-    # pprint(df.columns)
-
-    # df.drop(columns=["country_code", "currency", "type"], inplace=True)
-    # df = df[
-    #     (df["price_earnings_ratio"] > 0)
-    #     & (df["earnings_per_share"] > 0)
-    #     & (df["direct_yield"] > 0)
-    #     # & (df["dividends_per_year"] > 0)
-    #     & (df["five_years_change_percent"] > 0)
-    #     & (df["ten_years_change_percent"] > 0)
-    #     & (df["three_years_change_percent"] > 0)
-    #     # & (df["next_dividend"] > date.today())
-    #     & (df["sma20"] > 0)
-    #     & (df["sma50"] > 0)
-    #     & (df["sma200"] > 0)
-    #     & (df["market_capitalization"] > 10000)
-    # ]
-    # df["dividend_ratio"] = df["dividend_per_share"] / df["buy_price"]
-    # # df = df[(df["dividend_ratio"] > 0.02)]
-    # df = df.loc[df.groupby("next_dividend")["dividend_ratio"].idxmax()]
-    # print(
-    #     df[
-    #         [
-    #             "name",
-    #             "return_on_equity",
-    #             "price_earnings_ratio",
-    #             "earnings_per_share",
-    #             "net_debt_ebitda_ratio",
-    #             "direct_yield",
-    #             "dividends_per_year",
-    #             "price_book_ratio",
-    #             "equity_per_share",
-    #             "ev_ebit_ratio",
-    #             "market_capitalization",
-    #             "beta",
-    #             "next_dividend",
-    #             "dividend_ratio",
-    #             "short_selling_ratio",
-    #             "buy_price",
-    #             "sma20",
-    #             "sma50",
-    #             "sma200",
-    #             "rsi14",
-    #         ]
-    #     ].reset_index()
-    # )
+    get_all_stocks()

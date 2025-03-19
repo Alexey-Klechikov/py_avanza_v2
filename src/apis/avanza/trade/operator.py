@@ -220,7 +220,7 @@ class Trade:
         return True
 
     def _hit_pullback(self, price: float, acquired_instrument: Position) -> bool:
-        min_price = acquired_instrument.acquired_price * (1 + 0.015)
+        min_price = acquired_instrument.acquired_price * (1 + 0.02)
 
         profit = (price - acquired_instrument.acquired_price) / acquired_instrument.acquired_price
         self.max_profit = max(self.max_profit, profit)
