@@ -1,3 +1,0 @@
-from tasks.trade_candlesticks.backlog import Backlog as BacklogTradeCandlesticks
-from tasks.trade_candlesticks.backtest import backtest_trade_candlesticks
-from tasks.trade_candlesticks.main import trade
