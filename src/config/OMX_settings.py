@@ -27,7 +27,7 @@ class TradeStrategies:
     TRADING_TAKE_PROFIT: float = 0.09
     TRADING_STOP_LOSS: float = 0.06
     TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN: int = 4
-    TRADING_PULLBACK: float = 0.5
+    TRADING_PULLBACK: float = 0.4
     TRADING_PULLBACK_CONFIRMATION_COUNT_MIN: int = 2
 
     INDICATORS: dict = field(
