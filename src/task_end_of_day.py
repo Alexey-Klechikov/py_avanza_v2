@@ -4,14 +4,14 @@ from datetime import timedelta
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
-from apis.avanza.operators import Chart
+from apis.avanza.operators.chart import Chart
 from apis.telegram.operators import Telegram
 from apis.yahoo.client.models import Interval, Period
-from apis.yahoo.operators import Ticker as YahooTicker
-from config import SETTINGS_TRADE_STRATEGIES_OMX
+from apis.yahoo.operators.ticker import Ticker as YahooTicker
+from config import SETTINGS
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
-from tasks.trade_strategies import backtest_trade_strategies as _backtest_trade_strategies
+from tasks.trade_strategies.backtest import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 
@@ -21,16 +21,16 @@ set_handlers("end_of_day")
 log = get_logger()
 
 
-def _get_data(period_days: int, settings, resolution: str | None = None):
-    data = Storage(settings, resolution).read()
+def _get_data(period_days: int):
+    data = Storage().read()
     data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
 
 
-def cache_history(settings):
-    log.warning(f"TASK: Cache {settings.NAME} data")
+def cache_history():
+    log.warning(f"TASK: Cache {SETTINGS.NAME} data")
 
     for resolution_ava, interval_yahoo in [
         (Resolution.MINUTE, Interval.ONE_MINUTE),
@@ -38,40 +38,39 @@ def cache_history(settings):
         (Resolution.FIVE_MINUTES, Interval.FIVE_MINUTES),
         (Resolution.HOUR, Interval.SIXTY_MINUTES),
     ]:
-        storage = Storage(settings, resolution=interval_yahoo.value.raw)
+        storage = Storage(resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
 
-        if settings.TRADING_DATA == "yahoo":
+        if SETTINGS.DATA_SOURCE == "yahoo":
             try:
-                data_yahoo = YahooTicker(settings).get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+                data_yahoo = YahooTicker().get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
                 storage.write(data_yahoo)
             except Exception as e:
                 log.error(f"Error fetching Yahoo data: {e}")
-                settings.TRADING_DATA = "avanza"
+                SETTINGS.DATA_SOURCE = "avanza"
 
-        if settings.TRADING_DATA == "avanza":
-            data_ava = Chart.get_chart_data(settings, TimePeriod.TODAY, resolution_ava)
+        if SETTINGS.DATA_SOURCE == "avanza":
+            data_ava = Chart.get_chart_data(TimePeriod.TODAY, resolution_ava)
             storage.write(data_ava)
 
         rows_after = storage.read().shape[0]
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def backtest_trade_strategies(settings, period_days: int):
-    log.warning(f"TASK: Backtest strategies on {settings.NAME} | {settings.RESOLUTION} | {period_days} days")
+def backtest_trade_strategies(period_days: int):
+    log.warning(f"TASK: Backtest strategies on {SETTINGS.NAME} | {SETTINGS.RESOLUTION} | {period_days} days")
 
     _backtest_trade_strategies(
-        _get_data(period_days, settings),
+        _get_data(period_days),
         ComposeStrategiesListMethod.READ,
-        settings,
-        strategies_file_name_suffix_old=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
 
 
 if __name__ == "__main__":
     try:
-        cache_history(SETTINGS_TRADE_STRATEGIES_OMX)
-        backtest_trade_strategies(SETTINGS_TRADE_STRATEGIES_OMX, period_days=40)
+        cache_history()
+        backtest_trade_strategies(period_days=40)
 
     except Exception as e:
         telegram = Telegram()

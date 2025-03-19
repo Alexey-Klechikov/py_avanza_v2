@@ -1,7 +1,8 @@
 from avanza.constants import InstrumentType
 
 from apis.avanza.client.client import get_client
-from apis.avanza.operators.models import Position
+from apis.avanza.operators.models.position import Position
+from config import SETTINGS
 from utils.logger import get_logger
 
 log = get_logger()
@@ -22,19 +23,12 @@ class AcquiredInstrument:
 
 
 class Portfolio:
-    def __init__(
-        self,
-        account_id: str,
-        filter_orderbook_name: str | None = None,
-        filter_orderbook_direction: str | None = None,
-    ):
+    def __init__(self, filter_orderbook_direction: str | None = None):
         self.acquired_instrument: AcquiredInstrument = AcquiredInstrument()
         self.total_value = 0
         self.buying_power = 0
         self.positions: list[Position] = []
 
-        self.account_id = account_id
-        self.filter_orderbook_name = filter_orderbook_name
         self.filter_orderbook_direction = filter_orderbook_direction
 
         self._account_url_parameter: str = self._get_account_url_parameter()
@@ -43,7 +37,7 @@ class Portfolio:
         return [
             i.account.url_parameter_id
             for i in get_client().get_accounts_positions().cash_positions
-            if i.account.id == self.account_id
+            if i.account.id == SETTINGS.ACCOUNT_ID
         ][0]
 
     def _detect_acquired_instruments(self) -> None:
@@ -101,8 +95,8 @@ class Portfolio:
                 },
             )
             for i in get_client().get_accounts_positions().with_orderbook
-            if i.account.id == self.account_id
-            and (not self.filter_orderbook_name or self.filter_orderbook_name in i.instrument.name)
+            if i.account.id == SETTINGS.ACCOUNT_ID
+            and (not SETTINGS.NAME or SETTINGS.NAME in i.instrument.name)
             and (not self.filter_orderbook_direction or self.filter_orderbook_direction in i.instrument.name)
         ]
 

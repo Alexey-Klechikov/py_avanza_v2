@@ -28,6 +28,7 @@ from apis.avanza.client.models.order.place import PlaceOrderResponse
 from apis.avanza.client.models.order.transactions import TransactionsDetails
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
 from apis.avanza.client.models.search.market_stocks_result import MarketStocksFilterResult
+from config import ACCOUNT_USERNAME
 from utils.logger import get_logger
 
 log = get_logger()
@@ -304,13 +305,8 @@ class Avanza(AvanzaBase):
 
 
 @lru_cache
-def get_client(user: str | None = None) -> Avanza:
-    from config import ACCOUNT_USERNAME
-
+def get_client(user: str = ACCOUNT_USERNAME) -> Avanza:
     log.debug("Connect to Avanza")
-
-    if user is None:
-        user = ACCOUNT_USERNAME
 
     credentials = {
         "username": keyring.get_password(user, "un"),

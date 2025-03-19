@@ -2,22 +2,15 @@ import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.client.client import get_client
+from config import SETTINGS
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Chart:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def get_chart_data(
-        cls,
-        settings,
-        period: TimePeriod,
-        resolution: Resolution,
-    ) -> pd.DataFrame:
+    @staticmethod
+    def get_chart_data(period: TimePeriod, resolution: Resolution) -> pd.DataFrame:
         log.debug(f"Fetch chart data [{period.name} - {resolution.name}]")
 
         empty_dataframe = pd.DataFrame(columns=["Datetime", "Open", "High", "Low", "Close", "Volume"]).set_index(
@@ -38,10 +31,10 @@ class Chart:
             )
             period = available_period
 
-        chart_data = get_client().get_chart_data(settings.AVA, period, resolution)
+        chart_data = get_client().get_chart_data(SETTINGS.AVA, period, resolution)
 
         if not chart_data:
-            log.warning(f"No chart data found for {settings.AVA}")
+            log.warning(f"No chart data found for {SETTINGS.AVA}")
             return empty_dataframe
 
         ohlc_data = [i.model_dump() for i in chart_data.ohlc]

@@ -2,16 +2,14 @@ import pandas as pd
 import yfinance as yf
 
 from apis.yahoo.client.models import HistoryRequest
+from config import SETTINGS
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Yahoo:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def get_history(self, ticker_yahoo: str, **kwargs) -> pd.DataFrame:
-        ticker = yf.Ticker(ticker_yahoo)
+    @staticmethod
+    def get_history(**kwargs) -> pd.DataFrame:
+        ticker = yf.Ticker(SETTINGS.YAHOO)
         return ticker.history(**HistoryRequest(**kwargs).model_dump())

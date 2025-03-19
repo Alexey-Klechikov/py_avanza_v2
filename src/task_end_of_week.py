@@ -3,12 +3,13 @@ from datetime import timedelta
 
 import pandas as pd
 
-from apis.avanza.operators import Portfolio, Transactions
+from apis.avanza.operators.portfolio import Portfolio
+from apis.avanza.operators.transactions import Transactions
 from apis.telegram.operators import Telegram
-from config import SETTINGS_TRADE_STRATEGIES_OMX
+from config import SETTINGS
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
-from tasks.trade_strategies import backtest_trade_strategies
+from tasks.trade_strategies.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, reset_file_handlers, set_handlers
 
@@ -19,52 +20,49 @@ set_handlers("end_of_week")
 log = get_logger()
 
 
-def _get_data(period_days: int, settings, resolution: str | None = None):
-    data = Storage(settings, resolution).read()
+def _get_data(period_days: int):
+    data = Storage().read()
     data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
 
 
-def generate_strategies(settings, period_days: int) -> None:
-    log.warning(f"Generating strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days + 20} days)")
+def generate_strategies(period_days: int) -> None:
+    log.warning(f"Generating strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days + 20} days)")
     backtest_trade_strategies(
-        _get_data(period_days + 20, settings),
+        _get_data(period_days + 20),
         ComposeStrategiesListMethod.GENERATE,
-        settings,
         strategies_file_name_suffix_new="dev_3",
     )
 
-    for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
+    for i in range(3, SETTINGS.STRATEGY.INDICATORS):
         log.warning(
-            f"Extending strategies ({i} -> {i + 1}) for {settings.NAME} ({settings.RESOLUTION}, {period_days + 20} days)",
+            f"Extending strategies ({i} -> {i + 1}) for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days + 20} days)",
         )
         backtest_trade_strategies(
-            _get_data(period_days + 20, settings),
+            _get_data(period_days + 20),
             ComposeStrategiesListMethod.EXTEND,
-            settings,
             strategies_file_name_suffix_old=f"dev_{i}",
             strategies_file_name_suffix_new=f"dev_{i + 1}",
         )
 
-    log.warning(f"Backtesting strategies for {settings.NAME} ({settings.RESOLUTION}, {period_days} days)")
+    log.warning(f"Backtesting strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days} days)")
     backtest_trade_strategies(
-        _get_data(period_days, settings),
+        _get_data(period_days),
         ComposeStrategiesListMethod.READ,
-        settings,
-        strategies_file_name_suffix_old=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
 
 
 if __name__ == "__main__":
     try:
-        generate_strategies(SETTINGS_TRADE_STRATEGIES_OMX, period_days=40)
+        generate_strategies(period_days=40)
 
         reset_file_handlers("deals_OMX")
-        Transactions(SETTINGS_TRADE_STRATEGIES_OMX.ACCOUNT_ID).log_deals(log_header="trade_OMX")
+        Transactions().log_deals(log_header="trade_OMX")
 
-        portfolio = Portfolio(SETTINGS_TRADE_STRATEGIES_OMX.ACCOUNT_ID)
+        portfolio = Portfolio()
         portfolio.reload_balance()
         log.info(f"Portfolio balance: {portfolio.total_value}")
         log.info("------------")

@@ -13,7 +13,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 log = get_logger()
 
 
-def _get_file_path(strategies_file_name_prefix, strategies_file_name_suffix: str | None = None) -> str:
+def _get_file_path(strategies_file_name_prefix: str, strategies_file_name_suffix: str | None = None) -> str:
     filename = (
         f"{strategies_file_name_prefix}_trade_strategies"
         + (f"_{strategies_file_name_suffix}" if strategies_file_name_suffix else "")

@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
@@ -8,11 +8,16 @@ import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.client.client import get_client
-from apis.avanza.operators import Chart, Orders, Portfolio, Transactions, Watchlists
-from apis.avanza.trade import Trade
-from apis.avanza.trade.models import Direction
-from apis.yahoo.client.models import Interval, Period
-from apis.yahoo.operators import Ticker
+from apis.avanza.operators.chart import Chart
+from apis.avanza.operators.orders import Orders
+from apis.avanza.operators.portfolio import Portfolio
+from apis.avanza.operators.transactions import Transactions
+from apis.avanza.operators.watchlists import Watchlists
+from apis.avanza.trade.models.direction import Direction
+from apis.avanza.trade.operator import Trade
+from apis.yahoo.client.models.history_request import Interval, Period
+from apis.yahoo.operators.ticker import Ticker
+from config import SETTINGS
 from services import Storage
 from services.calendar import get_market_close_time, get_market_is_close
 from services.ta import get_indicators, read_top_strategies
@@ -33,15 +38,14 @@ class Signal(Enum):
 
 
 class Data:
-    def __init__(self, settings):
-        self.settings = settings
+    def __init__(self):
         self.data: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.too_old = False
         self.strategies = []
 
     def get(self):
-        storage = Storage(self.settings)
+        storage = Storage()
 
         data = storage.read()
 
@@ -51,15 +55,15 @@ class Data:
 
         else:
             new_data = None
-            if self.settings.TRADING_DATA == "yahoo":
+            if SETTINGS.DATA_SOURCE == "yahoo":
                 try:
-                    new_data = Ticker(self.settings).get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+                    new_data = Ticker().get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
                 except Exception as e:
                     log.warning(f"Error fetching Yahoo data: {e}. Will use avanza data instead.")
-                    self.settings.TRADING_DATA = "avanza"
+                    SETTINGS.DATA_SOURCE = "avanza"
 
-            if self.settings.TRADING_DATA == "avanza":
-                new_data = Chart.get_chart_data(self.settings, TimePeriod.TODAY, Resolution.TWO_MINUTES)
+            if SETTINGS.DATA_SOURCE == "avanza":
+                new_data = Chart.get_chart_data(TimePeriod.TODAY, Resolution.TWO_MINUTES)
 
             if new_data is None:
                 raise ValueError("No data fetched")
@@ -76,12 +80,12 @@ class Data:
         self.data = data.loc[data.index >= TODAY_MIDNIGHT - timedelta(days=4)]
 
     def get_strategies(self):
-        indicators_mapping = get_indicators(self.data, self.settings)
+        indicators_mapping = get_indicators(self.data)
         strategies = read_top_strategies(
             indicators_mapping,
-            self.settings.NAME,
-            filter_by_min_efficiency=self.settings.TRADING_STRATEGY_MIN_EFFICIENCY,
-            limit_count=self.settings.TRADING_STRATEGY_COUNT_MAX,
+            SETTINGS.NAME,
+            filter_by_min_efficiency=SETTINGS.STRATEGY.MIN_EFFICIENCY,
+            limit_count=SETTINGS.STRATEGY.COUNT_MAX,
         )
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
@@ -113,8 +117,8 @@ class Data:
 
         for column in ["LONG", "SHORT", "EXIT"]:
             for non_trading_time in (
-                ["09:00", self.settings.TRADING_START.strftime("%H:%M")],
-                [self.settings.TRADING_END.strftime("%H:%M"), "22:30"],
+                ["09:00", SETTINGS.TIME.START.strftime("%H:%M")],
+                [SETTINGS.TIME.END.strftime("%H:%M"), "22:30"],
             ):
                 self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
 
@@ -159,16 +163,7 @@ class FlowAction(Enum):
 
 
 class Flow:
-    def __init__(self, settings, data: Data, dry_run=False):
-        self.instrument_name = settings.NAME
-        self.budget = settings.BUDGET
-        self.trading_ends: time = (
-            min(get_market_close_time(), settings.TRADING_END) if settings.NAME != "GULD" else settings.TRADING_END
-        )
-        self.trading_starts: time = settings.TRADING_START
-        self.stop_loss: float = settings.TRADING_STOP_LOSS
-        self.dry_run: bool = dry_run
-
+    def __init__(self, data: Data):
         self.directions_sell: list[Direction] = []
         self.direction_buy: Direction | None = None
         self.direction_in_stock: Direction | None = None
@@ -186,7 +181,7 @@ class Flow:
             self.triggered_strategy = None
 
         # Start of the day
-        if datetime.now().time() <= self.trading_starts:
+        if datetime.now().time() <= SETTINGS.TIME.START:
             if orders.active_order or not portfolio.positions:
                 return FlowAction.DO_NOTHING
 
@@ -198,7 +193,7 @@ class Flow:
                 return FlowAction.TRADE
 
         # End of day
-        if datetime.now().time() >= self.trading_ends:
+        if datetime.now().time() >= min(get_market_close_time(), SETTINGS.TIME.END):
             orders.reload_active()
             if portfolio.positions and not get_market_is_close():
                 self.directions_sell = [Direction.BULL, Direction.BEAR]
@@ -220,7 +215,7 @@ class Flow:
             if signal:
                 # Not enough funds on the account
                 portfolio.reload_balance()
-                if portfolio.buying_power < self.budget and not portfolio.positions:
+                if portfolio.buying_power < 1100 and not portfolio.positions:
                     log.info("Not enough funds on the account. No action is taken.")
                     return FlowAction.EXIT_TRADING
 
@@ -249,50 +244,32 @@ class Flow:
 
 
 # MAIN
-def trade(dry_run: bool, settings) -> None:
+def trade() -> None:
     log.info(
         "Start trading strategies on {} | {}{}".format(
-            settings.NAME,
-            settings.RESOLUTION,
-            " | DRY_RUN" if dry_run else "",
+            SETTINGS.NAME,
+            SETTINGS.RESOLUTION,
+            " | DRY_RUN" if SETTINGS.DRY_RUN else "",
         ),
     )
 
-    data = Data(settings)
+    data = Data()
 
-    orders = Orders(
-        account_id=settings.ACCOUNT_ID,
-        filter_orderbook_name=settings.NAME,
-        dry_run=dry_run,
-    )
+    orders = Orders()
     orders.reload_active()
 
-    portfolio = Portfolio(
-        account_id=settings.ACCOUNT_ID,
-        filter_orderbook_name=settings.NAME,
-    )
+    portfolio = Portfolio()
     portfolio.reload_positions()
     portfolio.reload_balance()
 
-    watchlists = Watchlists(settings)
+    watchlists = Watchlists()
     watchlists.update_all()
 
-    trade = Trade(
-        orders=orders,
-        portfolio=portfolio,
-        watchlists=watchlists,
-        dry_run=dry_run,
-        budget_percent=settings.BUDGET,
-        stop_loss_percent=settings.TRADING_STOP_LOSS,
-        stop_loss_confirmation_count_min=settings.TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN,
-        take_profit_percent=settings.TRADING_TAKE_PROFIT,
-        pullback_percent=settings.TRADING_PULLBACK,
-        pullback_confirmation_count_min=settings.TRADING_PULLBACK_CONFIRMATION_COUNT_MIN,
-    )
+    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists)
 
-    flow = Flow(settings, data, dry_run)
+    flow = Flow(data)
 
-    while datetime.now() < datetime.combine(datetime.today(), settings.TRADING_END) + timedelta(minutes=15):
+    while datetime.now() < datetime.combine(datetime.today(), SETTINGS.TIME.END) + timedelta(minutes=15):
         try:
             action = flow.get_action(portfolio, orders)
 
@@ -313,4 +290,4 @@ def trade(dry_run: bool, settings) -> None:
         except (ConnectionError, RemoteDisconnected):
             get_client.cache_clear()
 
-    Transactions(settings.ACCOUNT_ID).log_deals(only_today=True)
+    Transactions().log_deals(only_today=True)

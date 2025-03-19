@@ -1,3 +1,4 @@
+from config import SETTINGS
 from services.ta.indicators import Cycles, Momentum, Overlap, Trend, Volatility, Volume
 from services.ta.indicators.models import Indicator
 from services.ta.strategies import compose_strategies_list, get_top_strategies
@@ -7,42 +8,41 @@ from utils.logger import get_logger
 log = get_logger()
 
 
-def get_indicators(data, settings, **kwargs) -> dict[str, dict[str, Indicator]]:
+def get_indicators(data, **kwargs) -> dict[str, dict[str, Indicator]]:
     indicators_mapping = dict()
 
     trend = Trend(data)
-    trend.add_trend_intensity_index(**settings.INDICATORS.get("Trend", {}).get("TII", {}))
-    trend.add_average_directional_movement(**settings.INDICATORS.get("Trend", {}).get("ADX", {}))
-    trend.add_parabolic_stop_and_reverse(**settings.INDICATORS.get("Trend", {}).get("PSAR", {}))
-    trend.add_choppiness_index(**settings.INDICATORS.get("Trend", {}).get("CHOP", {}))
+    trend.add_trend_intensity_index(**SETTINGS.INDICATORS.get("Trend", {}).get("TII", {}))
+    trend.add_average_directional_movement(**SETTINGS.INDICATORS.get("Trend", {}).get("ADX", {}))
+    trend.add_parabolic_stop_and_reverse(**SETTINGS.INDICATORS.get("Trend", {}).get("PSAR", {}))
+    trend.add_choppiness_index(**SETTINGS.INDICATORS.get("Trend", {}).get("CHOP", {}))
 
     overlap = Overlap(data)
-    overlap.add_linear_regression(**settings.INDICATORS.get("Overlap", {}).get("LINREG", {}))
-    overlap.add_slope(**settings.INDICATORS.get("Overlap", {}).get("SLOPE", {}))
-    overlap.add_supertrend(**settings.INDICATORS.get("Overlap", {}).get("SUPERTREND", {}))
+    overlap.add_linear_regression(**SETTINGS.INDICATORS.get("Overlap", {}).get("LINREG", {}))
+    overlap.add_slope(**SETTINGS.INDICATORS.get("Overlap", {}).get("SLOPE", {}))
+    overlap.add_supertrend(**SETTINGS.INDICATORS.get("Overlap", {}).get("SUPERTREND", {}))
 
     momentum = Momentum(data)
-    momentum.add_macd_dema(**settings.INDICATORS.get("Momentum", {}).get("MACD_DEMA", {}))
-    momentum.add_schaff_trend_cycle(**settings.INDICATORS.get("Momentum", {}).get("STC", {}))
-    momentum.add_commodity_channel_index(**settings.INDICATORS.get("Momentum", {}).get("CCI", {}))
-    momentum.add_relative_vigor_index(**settings.INDICATORS.get("Momentum", {}).get("RVGI", {}))
-    momentum.add_stochastic_oscillator(**settings.INDICATORS.get("Momentum", {}).get("STOCH", {}))
+    momentum.add_macd_dema(**SETTINGS.INDICATORS.get("Momentum", {}).get("MACD_DEMA", {}))
+    momentum.add_schaff_trend_cycle(**SETTINGS.INDICATORS.get("Momentum", {}).get("STC", {}))
+    momentum.add_commodity_channel_index(**SETTINGS.INDICATORS.get("Momentum", {}).get("CCI", {}))
+    momentum.add_relative_vigor_index(**SETTINGS.INDICATORS.get("Momentum", {}).get("RVGI", {}))
+    momentum.add_stochastic_oscillator(**SETTINGS.INDICATORS.get("Momentum", {}).get("STOCH", {}))
 
     cycles = Cycles(data)
-    cycles.add_even_better_sinewave(**settings.INDICATORS.get("Cycles", {}).get("EBSW", {}))
+    cycles.add_even_better_sinewave(**SETTINGS.INDICATORS.get("Cycles", {}).get("EBSW", {}))
 
     volatility = Volatility(data)
-    volatility.add_starc_bands(**settings.INDICATORS.get("Volatility", {}).get("STARC", {}))
-    volatility.add_mass_index(**settings.INDICATORS.get("Volatility", {}).get("MASSI", {}))
-    volatility.add_bollinger_bands(**settings.INDICATORS.get("Volatility", {}).get("BBANDS", {}))
-    volatility.add_acceleration_bands(**settings.INDICATORS.get("Volatility", {}).get("ACCBANDS", {}))
+    volatility.add_starc_bands(**SETTINGS.INDICATORS.get("Volatility", {}).get("STARC", {}))
+    volatility.add_mass_index(**SETTINGS.INDICATORS.get("Volatility", {}).get("MASSI", {}))
+    volatility.add_bollinger_bands(**SETTINGS.INDICATORS.get("Volatility", {}).get("BBANDS", {}))
+    volatility.add_acceleration_bands(**SETTINGS.INDICATORS.get("Volatility", {}).get("ACCBANDS", {}))
 
     volume = Volume(data)
-    if settings.INDICATORS.get("Volume"):
-        volume.add_price_volume_trend(**settings.INDICATORS.get("Volume", {}).get("PVT", {}))
-        volume.add_accumulation_distribution_oscillator(**settings.INDICATORS.get("Volume", {}).get("ADOSC", {}))
-        volume.add_chaikin_money_flow(**settings.INDICATORS.get("Volume", {}).get("CMF", {}))
-        volume.add_klinger_volume_oscillator(**settings.INDICATORS.get("Volume", {}).get("KVO", {}))
+    volume.add_price_volume_trend(**SETTINGS.INDICATORS.get("Volume", {}).get("PVT", {}))
+    volume.add_accumulation_distribution_oscillator(**SETTINGS.INDICATORS.get("Volume", {}).get("ADOSC", {}))
+    volume.add_chaikin_money_flow(**SETTINGS.INDICATORS.get("Volume", {}).get("CMF", {}))
+    volume.add_klinger_volume_oscillator(**SETTINGS.INDICATORS.get("Volume", {}).get("KVO", {}))
 
     columns_keep = {"Open", "High", "Low", "Close", "Volume"}
     for category in [trend, volatility, volume, cycles, overlap, momentum]:

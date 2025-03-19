@@ -7,6 +7,7 @@ import pandas as pd
 from pathos.multiprocessing import ProcessingPool as Pool
 from pydantic import BaseModel
 
+from config import SETTINGS
 from services.ta import Figure, dump_strategies_in_file, get_indicators, get_strategies
 from services.ta.indicators.models import Panel, Plot, Plots
 from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
@@ -53,17 +54,18 @@ class Order(BaseModel):
 
         return close_price < self.take_profit_price
 
-    def is_pullback(self, close_price: float, instrument_type: str, pullback_limit: float) -> bool:
+    def is_pullback(self, close_price: float, instrument_type: str) -> bool:
         profit = close_price - self.buy_price
         profit = profit if instrument_type == "LONG" else -profit
-        profit -= self.buy_price * 0.01 * 0.03  # Spread
+        profit -= self.buy_price * 0.01 / SETTINGS.MULTIPLIER  # Spread 1%
 
+        min_profit = self.buy_price * 0.015 / SETTINGS.MULTIPLIER  # 1.5%
         self.max_profit = max(self.max_profit, profit)
 
-        if self.max_profit > 2 and profit < 0:
+        if self.max_profit > min_profit and profit < 0:
             return True
 
-        if self.max_profit > 2 and ((self.max_profit - profit) / self.max_profit) > pullback_limit:
+        if self.max_profit > min_profit and ((self.max_profit - profit) / self.max_profit) > SETTINGS.PULLBACK.VALUE:
             return True
 
         return False
@@ -83,7 +85,7 @@ class Wallet(BaseModel):
             self.SHORT = order
 
 
-def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
+def _consider_signals(data: pd.DataFrame, strategy: Strategy) -> None:
     for column in ["LONG", "SHORT", "EXIT"]:
         combination_condition = all if column in ["LONG", "SHORT"] else any
 
@@ -104,17 +106,17 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy, settings) -> None:
 
     for column in ["LONG", "SHORT", "EXIT"]:
         for non_trading_time in (
-            ["00:00", settings.TRADING_START.strftime("%H:%M")],
-            [settings.TRADING_END.strftime("%H:%M"), "23:59"],
+            ["00:00", SETTINGS.TIME.START.strftime("%H:%M")],
+            [SETTINGS.TIME.END.strftime("%H:%M"), "23:59"],
         ):
             data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
 
 
-def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) -> None:
+def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
     wallet = Wallet()
 
-    target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
-    stop_loss = settings.TRADING_STOP_LOSS / settings.MULTIPLIER
+    target_profit = SETTINGS.TAKE_PROFIT.VALUE / SETTINGS.MULTIPLIER
+    stop_loss = SETTINGS.STOP_LOSS.VALUE / SETTINGS.MULTIPLIER
     stop_loss_confirmation_counter = 0
     pullback_confirmation_counter = 0
 
@@ -171,7 +173,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
             if tested_instrument.hit_stop_loss(close_price, tested_direction):
                 stop_loss_confirmation_counter += 1
 
-                if stop_loss_confirmation_counter > settings.TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN:
+                if stop_loss_confirmation_counter > SETTINGS.STOP_LOSS.CONFIRMATION_COUNT:
                     sell_price = close_price
                     profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                     wallet.set(tested_direction, None)
@@ -179,14 +181,10 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 stop_loss_confirmation_counter = 0
 
             # Pullback
-            if tested_instrument.is_pullback(
-                close_price,
-                tested_direction,
-                settings.TRADING_PULLBACK,
-            ):
+            if tested_instrument.is_pullback(close_price, tested_direction):
                 pullback_confirmation_counter += 1
 
-                if pullback_confirmation_counter > settings.TRADING_PULLBACK_CONFIRMATION_COUNT_MIN:
+                if pullback_confirmation_counter > SETTINGS.PULLBACK.CONFIRMATION_COUNT:
                     sell_price = close_price
                     profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                     wallet.set(tested_direction, None)
@@ -194,7 +192,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 pullback_confirmation_counter = 0
 
             # End of day
-            if timestamp.time() >= settings.TRADING_END:
+            if timestamp.time() >= SETTINGS.TIME.END:
                 sell_price = close_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
@@ -208,14 +206,13 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
 def process_strategy(kwargs: dict) -> Strategy:
     data: pd.DataFrame = kwargs["data"]
     strategy: Strategy = kwargs["strategy"]
-    settings = kwargs["settings"]
     strategy_rank: str | None = kwargs.get("strategy_rank")
 
     for column in ["LONG", "SHORT", "EXIT"]:
         data[column] = data["Close"]
 
-    _consider_signals(data, strategy, settings)
-    _consider_trading_logic(data, strategy, settings)
+    _consider_signals(data, strategy)
+    _consider_trading_logic(data, strategy)
 
     log.debug(
         f"Strategy{strategy_rank if strategy_rank else ''}: {strategy.name} ({round(strategy.counter.total_profit)})",
@@ -260,21 +257,18 @@ def plot_indicators(data: pd.DataFrame, strategy: Strategy):
 def backtest_trade_strategies(
     data: pd.DataFrame,
     compose_strategies_list_method: ComposeStrategiesListMethod,
-    settings,
     indicators_filter: list[str] | None = None,
     strategies_file_name_suffix_old: str | None = None,
     strategies_file_name_suffix_new: str | None = None,
     plot: bool = False,
     **kwargs,
 ) -> None:
-    strategies_file_name_prefix = settings.NAME
-
-    indicators_mapping = get_indicators(data, settings, **kwargs)
+    indicators_mapping = get_indicators(data, **kwargs)
 
     strategies = get_strategies(
         compose_strategies_list_method,
         indicators_mapping,
-        strategies_file_name_prefix,
+        SETTINGS.NAME,
         strategies_file_name_suffix_old,
     )
 
@@ -291,7 +285,6 @@ def backtest_trade_strategies(
                     {
                         "data": data,
                         "strategy": strategy,
-                        "settings": settings,
                         "strategy_rank": f" {i+1} / {len(strategies)}",
                     }
                     for i, strategy in enumerate(strategies)
@@ -301,7 +294,7 @@ def backtest_trade_strategies(
 
     if plot:
         for strategy in strategies:
-            process_strategy({"data": data, "strategy": strategy, "settings": settings})
+            process_strategy({"data": data, "strategy": strategy})
             plot_indicators(data, strategy)
 
     strategies = [strategy for strategy in strategies if strategy.counter.total_profit > 0]
@@ -312,4 +305,4 @@ def backtest_trade_strategies(
 
     print_strategies_performance(strategies)
 
-    dump_strategies_in_file(strategies, strategies_file_name_prefix, strategies_file_name_suffix_new)
+    dump_strategies_in_file(strategies, SETTINGS.NAME, strategies_file_name_suffix_new)

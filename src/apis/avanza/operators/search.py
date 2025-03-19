@@ -6,13 +6,6 @@ log = get_logger()
 
 
 def get_all_swedish_stocks() -> list[Stock]:
-    """
-    Get all Swedish stocks from Avanza.
-
-    Returns:
-        MarketStocksFilterResult | None: List of stocks.
-    """
-
     stocks_results: list[Stock] = []
 
     try:

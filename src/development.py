@@ -9,10 +9,10 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from config import SETTINGS_TRADE_STRATEGIES_OMX
+from config import SETTINGS
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
-from tasks.trade_strategies import backtest_trade_strategies
+from tasks.trade_strategies.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger import get_logger, set_handlers
 
@@ -34,49 +34,45 @@ class TestedKwargs:
         return f"dev_6_{'-'.join(self.indicator_to_test)}_"
 
 
-def _get_data(period_days: int, settings, resolution: str | None = None):
-    data = Storage(settings, resolution).read()
+def _get_data(period_days: int):
+    data = Storage().read()
     data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
 
 
-def run_strategies_generation(settings, period_days: int, full: bool, comment: str | None = None):
+def run_strategies_generation(period_days: int, full: bool, comment: str | None = None):
     if full:
         log.warning("Generating strategies")
         backtest_trade_strategies(
-            _get_data(period_days + 20, settings),
+            _get_data(period_days + 20),
             ComposeStrategiesListMethod.GENERATE,
-            settings,
             strategies_file_name_suffix_new="dev_3",
         )
 
-        for i in range(3, settings.TRADING_STRATEGY_INDICATORS):
+        for i in range(3, SETTINGS.STRATEGY.INDICATORS):
             log.warning(f"Extending strategies ({i} -> {i + 1})")
             backtest_trade_strategies(
-                _get_data(period_days + 20, settings),
+                _get_data(period_days + 20),
                 ComposeStrategiesListMethod.EXTEND,
-                settings,
                 strategies_file_name_suffix_old=f"dev_{i}",
                 strategies_file_name_suffix_new=f"dev_{i + 1}",
             )
 
     log.warning("Backtesting strategies")
     backtest_trade_strategies(
-        _get_data(period_days, settings),
+        _get_data(period_days),
         ComposeStrategiesListMethod.READ,
-        settings,
-        strategies_file_name_suffix_old=f"dev_{settings.TRADING_STRATEGY_INDICATORS}",
+        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
         strategies_file_name_suffix_new=comment,
     )
 
 
-def run_plotting_for_active_strategies(settings, period_days: int):
+def run_plotting_for_active_strategies(period_days: int):
     backtest_trade_strategies(
-        _get_data(period_days, settings),
+        _get_data(period_days),
         ComposeStrategiesListMethod.READ,
-        settings,
         plot=True,
     )
 
@@ -131,17 +127,16 @@ def _generate_tested_kwargs() -> TestedKwargs:
     return tested_kwargs
 
 
-def run_test_for_selected_indicators(settings, period_days: int):
+def run_test_for_selected_indicators(period_days: int):
     tested_kwargs = _generate_tested_kwargs()
 
     for kwargs in tested_kwargs.kwargs:
-        settings.INDICATORS[tested_kwargs.indicator_to_test[0]][tested_kwargs.indicator_to_test[1]] = kwargs
+        SETTINGS.INDICATORS[tested_kwargs.indicator_to_test[0]][tested_kwargs.indicator_to_test[1]] = kwargs
 
         log.warning(f"Testing for {tested_kwargs.indicator_to_test}_{list(kwargs.items())}")
         backtest_trade_strategies(
-            _get_data(period_days, settings),
+            _get_data(period_days),
             ComposeStrategiesListMethod.EXTEND,
-            settings,
             strategies_file_name_suffix_old="dev_5",
             strategies_file_name_suffix_new=tested_kwargs.strategies_file_name_suffix_new_suffix
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}",
@@ -172,10 +167,6 @@ def run_test_for_selected_indicators(settings, period_days: int):
                 round(sum([round(i["profitable_trades_share"] * i["total_profit"], 2) for i in strategies]), 2),
             ),
         )
-
-    # log.warning(f"Stats for {tested_kwargs.indicator_to_test}")
-    # for s in sorted(stats, key=lambda x: x[5], reverse=True):
-    #     log.info("> {}".format(" | ".join([str(i) for i in s])))
 
     log.warning(f"Stats for {tested_kwargs.indicator_to_test}")
     log.info(
@@ -240,12 +231,11 @@ def parse_avanza_list():
 
 
 if __name__ == "__main__":
-    settings = SETTINGS_TRADE_STRATEGIES_OMX
-    run_strategies_generation(settings, period_days=40, full=True)
+    run_strategies_generation(period_days=40, full=True)
 
-    # run_test_for_selected_indicators(settings, period_days=60)
-    # run_plotting_for_active_strategies(settings, period_days=5)
-    # get_statistics_per_indicator()
+    # run_test_for_selected_indicators(period_days=60)
+    # run_plotting_for_active_strategies(period_days=5)
+    get_statistics_per_indicator()
 
     # from apis.avanza.operators.search import get_all_swedish_stocks
     # from pprint import pprint

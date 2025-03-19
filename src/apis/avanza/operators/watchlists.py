@@ -1,6 +1,7 @@
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.account.watchlists import Watchlist
-from apis.avanza.operators.models import Orderbook, PreferredInstrument, ValidInstruments
+from apis.avanza.operators.models.watchlist import Orderbook, PreferredInstrument, ValidInstruments
+from config import SETTINGS
 from utils.logger import get_logger
 
 log = get_logger()
@@ -26,8 +27,7 @@ class UnpackedWatchlistName:
 
 
 class Watchlists:
-    def __init__(self, settings, filter_orderbook_type: str | None = None):
-        self.settings = settings
+    def __init__(self, filter_orderbook_type: str | None = None):
         self.valid_instruments = ValidInstruments()
         self.preferred_instrument = PreferredInstrument()
         self.filter_orderbook_type = filter_orderbook_type
@@ -57,8 +57,8 @@ class Watchlists:
                 instrument_info = get_client().get_instrument_warrant(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.key_indicators.direction]
                 if (
-                    instrument_info.key_indicators.leverage < self.settings.MULTIPLIER * 0.75
-                    or instrument_info.key_indicators.leverage > self.settings.MULTIPLIER * 1.35
+                    instrument_info.key_indicators.leverage < SETTINGS.MULTIPLIER * 0.75
+                    or instrument_info.key_indicators.leverage > SETTINGS.MULTIPLIER * 1.35
                 ):
                     continue
             else:
@@ -105,9 +105,9 @@ class Watchlists:
         log.debug(f"Update watchlist {watchlist.name}")
 
         if watchlist_name.instrument_type == "CERTIFICATE":
-            search_string = f"{watchlist_name.direction} {self.settings.NAME} AVA X{self.settings.MULTIPLIER}"
+            search_string = f"{watchlist_name.direction} {SETTINGS.NAME} AVA X{SETTINGS.MULTIPLIER}"
         elif watchlist_name.instrument_type == "WARRANT":
-            search_string = f"{'L' if watchlist_name.direction == 'BULL' else 'S'} {self.settings.NAME} AVA"
+            search_string = f"{'L' if watchlist_name.direction == 'BULL' else 'S'} {SETTINGS.NAME} AVA"
         else:
             return
 
@@ -142,7 +142,7 @@ class Watchlists:
             unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
             if (
                 unpacked_watchlist_name.trading_perspective != "DT"
-                or unpacked_watchlist_name.instrument != self.settings.NAME
+                or unpacked_watchlist_name.instrument != SETTINGS.NAME
                 or (self.filter_orderbook_type and self.filter_orderbook_type not in watchlist.name)
             ):
                 continue
@@ -156,10 +156,7 @@ class Watchlists:
 
         for watchlist in get_client().get_watchlists():
             unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
-            if (
-                unpacked_watchlist_name.trading_perspective != "DT"
-                or unpacked_watchlist_name.instrument != self.settings.NAME
-            ):
+            if unpacked_watchlist_name.trading_perspective != "DT" or unpacked_watchlist_name.instrument != SETTINGS.NAME:
                 continue
 
             self._clear_one(watchlist)

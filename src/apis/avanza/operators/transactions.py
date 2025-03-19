@@ -6,6 +6,7 @@ from avanza.constants import TransactionsDetailsType
 
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.order.transactions import Transaction
+from config import SETTINGS
 from utils.logger import get_logger
 
 log = get_logger()
@@ -18,15 +19,10 @@ class Deal:
 
 
 class Transactions:
-    def __init__(self, account_id: str):
-        self.account_id = account_id
+    def __init__(self):
         self.log: list[Transaction] = []
 
-    def _reload_log(
-        self,
-        date_from: date,
-        date_to: date | None = None,
-    ) -> list[Transaction]:
+    def _reload_log(self, date_from: date, date_to: date | None = None) -> list[Transaction]:
         log = (
             get_client()
             .get_transactions(
@@ -40,7 +36,7 @@ class Transactions:
             .transactions
         )
 
-        return sorted([i for i in log if i.account.id == self.account_id], key=lambda x: x.date, reverse=True)
+        return sorted([i for i in log if i.account.id == SETTINGS.ACCOUNT_ID], key=lambda x: x.date, reverse=True)
 
     def log_deals(
         self,

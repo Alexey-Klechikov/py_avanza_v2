@@ -3,22 +3,22 @@ import pickle
 
 import pandas as pd
 
+from config import SETTINGS
 from utils.logger import get_logger
 
 log = get_logger()
 
 
 class Storage:
-    def __init__(self, settings, resolution: str | None = None) -> None:
-        self.prefix = settings.NAME
-        self.resolution = resolution if resolution else settings.RESOLUTION
+    def __init__(self, resolution: str = SETTINGS.RESOLUTION) -> None:
+        self.resolution = resolution
 
         self.path = self._get_path()
 
     def _get_path(self) -> str:
         project_root_dir = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 
-        return f"{project_root_dir}/data/{self.prefix}_{self.resolution}.pickle"
+        return f"{project_root_dir}/data/{SETTINGS.NAME}_{self.resolution}.pickle"
 
     def read(self) -> pd.DataFrame:
         if not os.path.exists(self.path):

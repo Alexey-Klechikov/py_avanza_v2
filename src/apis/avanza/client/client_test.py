@@ -13,7 +13,7 @@ from apis.avanza.client.models.instrument.stock import InstrumentStock
 from apis.avanza.client.models.order.exceptions import OrderException
 from apis.avanza.client.models.order.list import Orders
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
-from config import TradeStrategiesOMX
+from config import SETTINGS
 
 
 class Test_AvanzaClient(TestCase):
@@ -21,7 +21,7 @@ class Test_AvanzaClient(TestCase):
         self.client = get_client()
 
     def test_get_chart_data(self):
-        order_book_id = "19002"
+        order_book_id = SETTINGS.AVA
         period = TimePeriod.TODAY
         resolution = Resolution.MINUTE
 
@@ -51,7 +51,7 @@ class Test_AvanzaClient(TestCase):
         self.assertIsInstance(result, InstrumentIndex)
 
     def test_get_accounts_overview(self):
-        result = self.client.get_accounts_overview(account_url_parameter=TradeStrategiesOMX.ACCOUNT_ID)
+        result = self.client.get_accounts_overview(account_url_parameter=SETTINGS.ACCOUNT_ID)
 
         self.assertIsInstance(result, AccountOverview)
 
@@ -79,7 +79,7 @@ class Test_AvanzaClient(TestCase):
     def test_place_order(self):
         with self.assertRaises(OrderException):
             _ = self.client.place_order(
-                account_id=TradeStrategiesOMX.ACCOUNT_ID,
+                account_id=SETTINGS.ACCOUNT_ID,
                 order_book_id="1757509",
                 order_type=OrderType.BUY,
                 price=1,
@@ -89,7 +89,7 @@ class Test_AvanzaClient(TestCase):
 
         with self.assertRaises(OrderException):
             _ = self.client.place_order(
-                account_id=TradeStrategiesOMX.ACCOUNT_ID,
+                account_id=SETTINGS.ACCOUNT_ID,
                 order_book_id="1757509",
                 order_type=OrderType.SELL,
                 price=1000000,

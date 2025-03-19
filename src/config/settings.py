@@ -1,34 +1,68 @@
+import platform
 from dataclasses import dataclass, field
 from datetime import time
 
 
 @dataclass
+class Strategy:
+    MIN_EFFICIENCY: float = 0.6
+    COUNT_MAX: int = 30
+    INDICATORS: int = 7
+
+
+@dataclass
+class TakeProfit:
+    # The percentage from the buy price that the price must rise to trigger a take profit
+    # Example: 0.09 means that if the buy price is 100 and the price rises to 109, a take profit is triggered
+    VALUE: float = 0.09
+
+
+@dataclass
+class StopLoss:
+    # The percentage from the buy price that the price must fall to trigger a stop loss
+    # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
+    # The stop loss is confirmed if the price falls below the buy price by this percentage for a certain number of times
+    VALUE: float = 0.06
+    CONFIRMATION_COUNT: int = 4
+
+
+@dataclass
+class Pullback:
+    # The percentage of the maximum profit that must be lost before a pullback is confirmed
+    # Example: 0.4 means that if the maximum profit is 10% and the current profit is 6%, a pullback is confirmed
+    # The pullback is confirmed if the price falls below the buy price by this percentage for a certain number of times
+    VALUE: float = 0.4
+    CONFIRMATION_COUNT: int = 2
+
+
+@dataclass
+class Time:
+    # The time range during which the trading is active
+    START: time = time(9, 45)
+    END: time = time(17, 15)
+
+
+@dataclass
 class TradeStrategies:
+    DRY_RUN: bool = platform.system() == "Darwin"
+
     NAME: str = "OMX"
     ACCOUNT_ID: str = "754762"
 
-    RESOLUTION = "2m"
+    DATA_SOURCE: str = "avanza"
+    RESOLUTION: str = "2m"
+    MULTIPLIER: int = 20
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"
 
-    TRADING_DATA: str = "avanza"
-
-    MULTIPLIER: int = 20
-
-    TRADING_START: time = time(9, 45)
-    TRADING_END: time = time(17, 15)
+    STRATEGY: Strategy = field(default_factory=Strategy)
+    TAKE_PROFIT: TakeProfit = field(default_factory=TakeProfit)
+    STOP_LOSS: StopLoss = field(default_factory=StopLoss)
+    PULLBACK: Pullback = field(default_factory=Pullback)
+    TIME: Time = field(default_factory=Time)
 
     BUDGET: float = 1.0
-
-    TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.6
-    TRADING_STRATEGY_COUNT_MAX: int = 30
-    TRADING_STRATEGY_INDICATORS: int = 7
-    TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.06
-    TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN: int = 4
-    TRADING_PULLBACK: float = 0.4
-    TRADING_PULLBACK_CONFIRMATION_COUNT_MIN: int = 2
 
     INDICATORS: dict = field(
         default_factory=lambda: {

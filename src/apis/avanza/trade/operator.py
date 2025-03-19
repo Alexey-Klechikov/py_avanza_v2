@@ -5,9 +5,13 @@ from time import sleep
 import pandas as pd
 from avanza.constants import OrderType
 
-from apis.avanza.operators import Instrument, Orders, Portfolio, Watchlists
-from apis.avanza.operators.models import Position
-from apis.avanza.trade.models import Direction
+from apis.avanza.operators.instrument import Instrument
+from apis.avanza.operators.models.position import Position
+from apis.avanza.operators.orders import Orders
+from apis.avanza.operators.portfolio import Portfolio
+from apis.avanza.operators.watchlists import Watchlists
+from apis.avanza.trade.models.direction import Direction
+from config import SETTINGS
 from utils.logger import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -67,42 +71,22 @@ class PriceState:
 
 
 class Trade:
-    def __init__(
-        self,
-        orders: Orders,
-        portfolio: Portfolio,
-        watchlists: Watchlists,
-        dry_run: bool,
-        budget_percent: int,
-        stop_loss_percent: float,
-        stop_loss_confirmation_count_min: int,
-        take_profit_percent: float,
-        pullback_percent: float,
-        pullback_confirmation_count_min: int,
-    ) -> None:
+    def __init__(self, orders: Orders, portfolio: Portfolio, watchlists: Watchlists) -> None:
         self.orders = orders
         self.portfolio = portfolio
         self.watchlists = watchlists
 
-        self.dry_run = dry_run
-
         self.max_profit = 0
 
-        self.budget_percent = budget_percent
-        self.stop_loss_percent = stop_loss_percent
-        self.stop_loss_confirmation_count_min = stop_loss_confirmation_count_min
-        self.stop_loss_confirmation_count_active = 0
-        self.take_profit_percent = take_profit_percent
-        self.pullback_percent = pullback_percent
-        self.pullback_confirmation_count_min = pullback_confirmation_count_min
-        self.pullback_confirmation_count_active = 0
+        self.stop_loss_confirmation_count = 0
+        self.pullback_confirmation_count = 0
 
         self.price_state: PriceState = PriceState()
 
     def sell(self, direction: Direction | None) -> None:
         caller = "sell"
 
-        if self.dry_run or not direction:
+        if SETTINGS.DRY_RUN or not direction:
             return
 
         for _ in range(5):
@@ -133,7 +117,7 @@ class Trade:
         caller = "buy"
         budget = None
 
-        if self.dry_run or not direction:
+        if SETTINGS.DRY_RUN or not direction:
             return
 
         for _ in range(5):
@@ -163,7 +147,7 @@ class Trade:
 
             if not budget:
                 self.portfolio.reload_balance()
-                budget = max(1200, round(self.portfolio.total_value * self.budget_percent))
+                budget = max(1200, round(self.portfolio.total_value * SETTINGS.BUDGET))
 
                 if self.portfolio.buying_power < budget:
                     log.warning(f"Buying power is not enough for budget {budget}")
@@ -184,7 +168,7 @@ class Trade:
     def take_profit(self, direction: Direction | None) -> None:
         caller = "take_profit"
 
-        if self.dry_run or not self.take_profit_percent or not direction:
+        if SETTINGS.DRY_RUN or not direction:
             return
 
         for _ in range(5):
@@ -194,7 +178,7 @@ class Trade:
                 self.price_state.reset(direction)
                 break
 
-            price = round(acquired_instrument.acquired_price * (1 + self.take_profit_percent), 2)
+            price = round(acquired_instrument.acquired_price * (1 + SETTINGS.TAKE_PROFIT.VALUE), 2)
 
             self.price_state.update(
                 direction,
@@ -218,16 +202,16 @@ class Trade:
             )
 
     def _hit_stop_loss(self, price: float, acquired_instrument: Position) -> bool:
-        if price > (acquired_instrument.acquired_price) * (1 - self.stop_loss_percent):
-            self.stop_loss_confirmation_count_active = 0
+        if price > (acquired_instrument.acquired_price) * (1 - SETTINGS.STOP_LOSS.VALUE):
+            self.stop_loss_confirmation_count = 0
             return False
 
-        self.stop_loss_confirmation_count_active += 1
-        if self.stop_loss_confirmation_count_active <= self.stop_loss_confirmation_count_min:
+        self.stop_loss_confirmation_count += 1
+        if self.stop_loss_confirmation_count <= SETTINGS.STOP_LOSS.CONFIRMATION_COUNT:
             log.warning(
                 "Stop loss confirmation count: {} / {}. Latest instrument price: {}".format(
-                    self.stop_loss_confirmation_count_active,
-                    self.stop_loss_confirmation_count_min,
+                    self.stop_loss_confirmation_count,
+                    SETTINGS.STOP_LOSS.CONFIRMATION_COUNT,
                     price,
                 ),
             )
@@ -236,23 +220,25 @@ class Trade:
         return True
 
     def _hit_pullback(self, price: float, acquired_instrument: Position) -> bool:
+        min_price = acquired_instrument.acquired_price * (1 + 0.015)
+
         profit = (price - acquired_instrument.acquired_price) / acquired_instrument.acquired_price
         self.max_profit = max(self.max_profit, profit)
 
-        if self.max_profit > 0.015 and profit < 0:
+        if price > min_price and profit < 0:
             pass
-        elif self.max_profit > 0.015 and (self.max_profit - profit) / self.max_profit > self.pullback_percent:
+        elif price > min_price and (self.max_profit - profit) / self.max_profit > SETTINGS.PULLBACK.VALUE:
             pass
         else:
-            self.pullback_confirmation_count_active = 0
+            self.pullback_confirmation_count = 0
             return False
 
-        self.pullback_confirmation_count_active += 1
-        if self.pullback_confirmation_count_active <= self.pullback_confirmation_count_min:
+        self.pullback_confirmation_count += 1
+        if self.pullback_confirmation_count <= SETTINGS.PULLBACK.CONFIRMATION_COUNT:
             log.warning(
                 "Pullback confirmation count: {} / {}. Latest instrument price: {}".format(
-                    self.pullback_confirmation_count_active,
-                    self.pullback_confirmation_count_min,
+                    self.pullback_confirmation_count,
+                    SETTINGS.PULLBACK.CONFIRMATION_COUNT,
                     price,
                 ),
             )
@@ -263,7 +249,7 @@ class Trade:
     def stop_loss(self, direction: Direction | None) -> None:
         caller = "stop_loss"
 
-        if self.dry_run or not self.stop_loss_percent or not direction:
+        if SETTINGS.DRY_RUN or not direction:
             return
 
         for _ in range(5):

@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 
-from apis.yahoo.client import Yahoo
+from apis.yahoo.client.client import Yahoo
 from apis.yahoo.client.models import Interval, Period
 from utils.logger import get_logger
 
@@ -10,14 +10,7 @@ log = get_logger()
 
 
 class Ticker:
-    def __init__(self, settings):
-        self.ticker_yahoo = settings.YAHOO
-
-    def _get_extended_history(
-        self,
-        period: Period,
-        interval: Interval,
-    ) -> pd.DataFrame:
+    def _get_extended_history(self, period: Period, interval: Interval) -> pd.DataFrame:
         history = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
 
         available_period_days = period.days
@@ -46,12 +39,7 @@ class Ticker:
             history = pd.concat(
                 [
                     history,
-                    Yahoo.get_history(
-                        ticker_yahoo=self.ticker_yahoo,
-                        interval=interval,
-                        start=start_date,
-                        end=end_date,
-                    ),
+                    Yahoo.get_history(interval=interval, start=start_date, end=end_date),
                 ],
             )
 
@@ -63,9 +51,9 @@ class Ticker:
         history = (
             self._get_extended_history(period, interval)
             if period.days > 7 and interval.mins <= 5
-            else Yahoo.get_history(ticker_yahoo=self.ticker_yahoo, period=period, interval=interval)
+            else Yahoo.get_history(period=period, interval=interval)
         )
 
-        history.index = history.index.rename("Datetime").tz_convert("Europe/Stockholm").tz_localize(None)
+        history.index = history.index.rename("Datetime").tz_convert("Europe/Stockholm").tz_localize(None)  # type: ignore
 
         return history
