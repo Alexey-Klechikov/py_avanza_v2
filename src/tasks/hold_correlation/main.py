@@ -9,7 +9,7 @@ import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 from requests.exceptions import ConnectionError
 
-from apis.avanza.client import get_client
+from apis.avanza.client.client import get_client
 from apis.avanza.operators import Chart, Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from apis.avanza.trade.models import Direction

@@ -3,8 +3,9 @@ from time import sleep
 
 from avanza.constants import OrderType
 
-from apis.avanza.client import get_client
-from apis.avanza.client.models import Order, OrderException
+from apis.avanza.client.client import get_client
+from apis.avanza.client.models.order.exceptions import OrderException
+from apis.avanza.client.models.order.list import Order
 from utils.logger import get_logger
 
 log = get_logger()

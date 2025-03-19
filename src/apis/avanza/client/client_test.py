@@ -4,18 +4,16 @@ from unittest import TestCase
 from avanza import InstrumentType, OrderType, Resolution, TimePeriod
 
 from apis.avanza.client.client import get_client
-from apis.avanza.client.models import (
-    AccountOverview,
-    AccountsPositions,
-    InstrumentCertificate,
-    InstrumentIndex,
-    InstrumentStock,
-    OrderException,
-    Orders,
-    SearchResult,
-)
+from apis.avanza.client.models.account.overview import AccountOverview
+from apis.avanza.client.models.account.positions import AccountsPositions
 from apis.avanza.client.models.chart_data import ChartData
-from config.settings_base import BaseTrade
+from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
+from apis.avanza.client.models.instrument.index import InstrumentIndex
+from apis.avanza.client.models.instrument.stock import InstrumentStock
+from apis.avanza.client.models.order.exceptions import OrderException
+from apis.avanza.client.models.order.list import Orders
+from apis.avanza.client.models.search.filtered_search_result import SearchResult
+from config import TradeStrategiesOMX
 
 
 class Test_AvanzaClient(TestCase):
@@ -53,18 +51,18 @@ class Test_AvanzaClient(TestCase):
         self.assertIsInstance(result, InstrumentIndex)
 
     def test_get_accounts_overview(self):
-        result = self.client.get_accounts_overview(account_url_parameter=BaseTrade.ACCOUNT_ID)
+        result = self.client.get_accounts_overview(account_url_parameter=TradeStrategiesOMX.ACCOUNT_ID)
 
         self.assertIsInstance(result, AccountOverview)
 
-    def test_search_instrument(self):
+    def test_filtered_search(self):
         query = "Tesla"
 
-        result = self.client.search_instrument(query, types=[])
+        result = self.client.filtered_search(query, types=[])
 
         self.assertIsInstance(result, SearchResult)
 
-        result = self.client.search_instrument(query, types=[InstrumentType.STOCK])
+        result = self.client.filtered_search(query, types=[InstrumentType.STOCK])
 
         assert result.total_number_of_hits == 1
 
@@ -81,7 +79,7 @@ class Test_AvanzaClient(TestCase):
     def test_place_order(self):
         with self.assertRaises(OrderException):
             _ = self.client.place_order(
-                account_id=BaseTrade.ACCOUNT_ID,
+                account_id=TradeStrategiesOMX.ACCOUNT_ID,
                 order_book_id="1757509",
                 order_type=OrderType.BUY,
                 price=1,
@@ -91,7 +89,7 @@ class Test_AvanzaClient(TestCase):
 
         with self.assertRaises(OrderException):
             _ = self.client.place_order(
-                account_id=BaseTrade.ACCOUNT_ID,
+                account_id=TradeStrategiesOMX.ACCOUNT_ID,
                 order_book_id="1757509",
                 order_type=OrderType.SELL,
                 price=1000000,

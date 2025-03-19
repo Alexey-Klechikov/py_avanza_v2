@@ -6,6 +6,7 @@ import pandas as pd
 from avanza.constants import OrderType
 
 from apis.avanza.operators import Instrument, Orders, Portfolio, Watchlists
+from apis.avanza.operators.models import Position
 from apis.avanza.trade.models import Direction
 from utils.logger import get_logger
 
@@ -73,9 +74,11 @@ class Trade:
         watchlists: Watchlists,
         dry_run: bool,
         budget_percent: int,
-        stop_loss_percent: float | None = None,
-        stop_loss_confirmation_count_min: int = 1,
-        take_profit_percent: float | None = None,
+        stop_loss_percent: float,
+        stop_loss_confirmation_count_min: int,
+        take_profit_percent: float,
+        pullback_percent: float,
+        pullback_confirmation_count_min: int,
     ) -> None:
         self.orders = orders
         self.portfolio = portfolio
@@ -83,11 +86,16 @@ class Trade:
 
         self.dry_run = dry_run
 
+        self.max_profit = 0
+
         self.budget_percent = budget_percent
         self.stop_loss_percent = stop_loss_percent
         self.stop_loss_confirmation_count_min = stop_loss_confirmation_count_min
         self.stop_loss_confirmation_count_active = 0
         self.take_profit_percent = take_profit_percent
+        self.pullback_percent = pullback_percent
+        self.pullback_confirmation_count_min = pullback_confirmation_count_min
+        self.pullback_confirmation_count_active = 0
 
         self.price_state: PriceState = PriceState()
 
@@ -161,6 +169,8 @@ class Trade:
                     log.warning(f"Buying power is not enough for budget {budget}")
                     return
 
+            self.max_profit = 0
+
             self.orders.delete_all(caller)
             self.orders.place(
                 order_book_id=preferred_instrument.id,
@@ -207,6 +217,49 @@ class Trade:
                 caller=caller,
             )
 
+    def _hit_stop_loss(self, price: float, acquired_instrument: Position) -> bool:
+        if price > (acquired_instrument.acquired_price) * (1 - self.stop_loss_percent):
+            self.stop_loss_confirmation_count_active = 0
+            return False
+
+        self.stop_loss_confirmation_count_active += 1
+        if self.stop_loss_confirmation_count_active <= self.stop_loss_confirmation_count_min:
+            log.warning(
+                "Stop loss confirmation count: {} / {}. Latest instrument price: {}".format(
+                    self.stop_loss_confirmation_count_active,
+                    self.stop_loss_confirmation_count_min,
+                    price,
+                ),
+            )
+            return False
+
+        return True
+
+    def _hit_pullback(self, price: float, acquired_instrument: Position) -> bool:
+        profit = (price - acquired_instrument.acquired_price) / acquired_instrument.acquired_price
+        self.max_profit = max(self.max_profit, profit)
+
+        if self.max_profit > 0.015 and profit < 0:
+            pass
+        elif self.max_profit > 0.015 and (self.max_profit - profit) / self.max_profit > self.pullback_percent:
+            pass
+        else:
+            self.pullback_confirmation_count_active = 0
+            return False
+
+        self.pullback_confirmation_count_active += 1
+        if self.pullback_confirmation_count_active <= self.pullback_confirmation_count_min:
+            log.warning(
+                "Pullback confirmation count: {} / {}. Latest instrument price: {}".format(
+                    self.pullback_confirmation_count_active,
+                    self.pullback_confirmation_count_min,
+                    price,
+                ),
+            )
+            return False
+
+        return True
+
     def stop_loss(self, direction: Direction | None) -> None:
         caller = "stop_loss"
 
@@ -228,19 +281,7 @@ class Trade:
                 sleep(3)
                 continue
 
-            if price > (acquired_instrument.acquired_price) * (1 - self.stop_loss_percent):
-                self.stop_loss_confirmation_count_active = 0
-                return
-
-            self.stop_loss_confirmation_count_active += 1
-            if self.stop_loss_confirmation_count_active <= self.stop_loss_confirmation_count_min:
-                log.warning(
-                    "Stop loss confirmation count: {} / {}. Latest instrument price: {}".format(
-                        self.stop_loss_confirmation_count_active,
-                        self.stop_loss_confirmation_count_min,
-                        price,
-                    ),
-                )
+            if not self._hit_stop_loss(price, acquired_instrument) and not self._hit_pullback(price, acquired_instrument):
                 return
 
             self.price_state.update(

@@ -1,6 +1,7 @@
 import json
 import time
 from collections.abc import Sequence
+from copy import copy
 from datetime import date
 from functools import lru_cache
 
@@ -10,24 +11,23 @@ from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
 from avanza.constants import TransactionsDetailsType
 from requests.exceptions import HTTPError
 
-from apis.avanza.client.models import (
-    AccountOverview,
-    AccountsPositions,
-    CallRequest,
-    DeleteOrderResponse,
-    EditOrderResponse,
-    InstrumentCertificate,
-    InstrumentIndex,
-    InstrumentStock,
-    InstrumentWarrant,
-    OrderException,
-    Orders,
-    PlaceOrderResponse,
-    SearchResult,
-    TransactionsDetails,
-    Watchlist,
-)
+from apis.avanza.client.models.account.overview import AccountOverview
+from apis.avanza.client.models.account.positions import AccountsPositions
+from apis.avanza.client.models.account.watchlists import Watchlist
+from apis.avanza.client.models.call_request import CallRequest
 from apis.avanza.client.models.chart_data import ChartData
+from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
+from apis.avanza.client.models.instrument.index import InstrumentIndex
+from apis.avanza.client.models.instrument.stock import InstrumentStock
+from apis.avanza.client.models.instrument.warrant import InstrumentWarrant
+from apis.avanza.client.models.order.delete import DeleteOrderResponse
+from apis.avanza.client.models.order.edit import EditOrderResponse
+from apis.avanza.client.models.order.exceptions import OrderException
+from apis.avanza.client.models.order.list import Orders
+from apis.avanza.client.models.order.place import PlaceOrderResponse
+from apis.avanza.client.models.order.transactions import TransactionsDetails
+from apis.avanza.client.models.search.filtered_search_result import SearchResult
+from apis.avanza.client.models.search.market_stocks_result import MarketStocksFilterResult
 from utils.logger import get_logger
 
 log = get_logger()
@@ -147,7 +147,7 @@ class Avanza(AvanzaBase):
 
         return [Watchlist(**i) for i in data]  # type: ignore
 
-    def search_instrument(
+    def filtered_search(
         self,
         search_string: str,
         types: list[InstrumentType | str],
@@ -282,6 +282,25 @@ class Avanza(AvanzaBase):
             )
 
         return parsed_response.order_id
+
+    def get_market_stocks(
+        self,
+        market_places: list[str] = copy(["se"]),
+        offset: int = 0,
+        limit: int = 100,
+    ) -> MarketStocksFilterResult:
+        response = self._retry_call(
+            path="/_api/market-stock-filter/stocks",
+            http_method="POST",
+            options={
+                "filter": {"marketPlaces": market_places},
+                "offset": offset,
+                "limit": limit,
+                "sortBy": {"order": "desc", "field": "numberOfOwners"},
+            },
+        )
+
+        return MarketStocksFilterResult(**response)  # type: ignore
 
 
 @lru_cache

@@ -1,7 +1,7 @@
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
-from apis.avanza.client import get_client
+from apis.avanza.client.client import get_client
 from utils.logger import get_logger
 
 log = get_logger()

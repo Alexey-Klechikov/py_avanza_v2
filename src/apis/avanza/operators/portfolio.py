@@ -1,6 +1,6 @@
 from avanza.constants import InstrumentType
 
-from apis.avanza.client import get_client
+from apis.avanza.client.client import get_client
 from apis.avanza.operators.models import Position
 from utils.logger import get_logger
 

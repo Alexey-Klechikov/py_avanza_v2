@@ -17,16 +17,18 @@ class TradeStrategies:
     MULTIPLIER: int = 20
 
     TRADING_START: time = time(9, 45)
-    TRADING_END: time = time(16, 58)
+    TRADING_END: time = time(17, 15)
 
     BUDGET: float = 1.0
 
     TRADING_STRATEGY_MIN_EFFICIENCY: float = 0.6
-    TRADING_STRATEGY_COUNT_MAX: int = 20
+    TRADING_STRATEGY_COUNT_MAX: int = 30
     TRADING_STRATEGY_INDICATORS: int = 7
     TRADING_TAKE_PROFIT: float = 0.09
-    TRADING_STOP_LOSS: float = 0.05
+    TRADING_STOP_LOSS: float = 0.06
     TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN: int = 4
+    TRADING_PULLBACK: float = 0.5
+    TRADING_PULLBACK_CONFIRMATION_COUNT_MIN: int = 2
 
     INDICATORS: dict = field(
         default_factory=lambda: {

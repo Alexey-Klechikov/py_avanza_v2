@@ -4,8 +4,8 @@ from datetime import date, datetime, time, timedelta
 
 from avanza.constants import TransactionsDetailsType
 
-from apis.avanza.client import get_client
-from apis.avanza.client.models import Transaction
+from apis.avanza.client.client import get_client
+from apis.avanza.client.models.order.transactions import Transaction
 from utils.logger import get_logger
 
 log = get_logger()

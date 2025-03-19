@@ -1,5 +1,5 @@
-from apis.avanza.client import get_client
-from apis.avanza.client.models import Watchlist
+from apis.avanza.client.client import get_client
+from apis.avanza.client.models.account.watchlists import Watchlist
 from apis.avanza.operators.models import Orderbook, PreferredInstrument, ValidInstruments
 from utils.logger import get_logger
 
@@ -111,7 +111,7 @@ class Watchlists:
         else:
             return
 
-        search_result = get_client().search_instrument(search_string, [watchlist_name.instrument_type])
+        search_result = get_client().filtered_search(search_string, [watchlist_name.instrument_type])
 
         if search_result.total_number_of_hits == 0:
             log.error(

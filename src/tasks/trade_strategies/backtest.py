@@ -26,6 +26,7 @@ class Order(BaseModel):
     stop_loss_price: float
 
     signal_confirmation_time: datetime
+    max_profit: float = 0
 
     sell_price: float | None = None
     sell_datetime: Any | None = None
@@ -39,6 +40,33 @@ class Order(BaseModel):
         profit -= self.buy_price * 0.01 * 0.03  # Spread
 
         return profit
+
+    def hit_stop_loss(self, close_price: float, instrument_type: str) -> bool:
+        if instrument_type == "LONG":
+            return close_price < self.stop_loss_price
+
+        return close_price > self.stop_loss_price
+
+    def hit_take_profit(self, close_price: float, instrument_type: str) -> bool:
+        if instrument_type == "LONG":
+            return close_price > self.take_profit_price
+
+        return close_price < self.take_profit_price
+
+    def is_pullback(self, close_price: float, instrument_type: str, pullback_limit: float) -> bool:
+        profit = close_price - self.buy_price
+        profit = profit if instrument_type == "LONG" else -profit
+        profit -= self.buy_price * 0.01 * 0.03  # Spread
+
+        self.max_profit = max(self.max_profit, profit)
+
+        if self.max_profit > 2 and profit < 0:
+            return True
+
+        if self.max_profit > 2 and ((self.max_profit - profit) / self.max_profit) > pullback_limit:
+            return True
+
+        return False
 
 
 class Wallet(BaseModel):
@@ -88,6 +116,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
     target_profit = settings.TRADING_TAKE_PROFIT / settings.MULTIPLIER
     stop_loss = settings.TRADING_STOP_LOSS / settings.MULTIPLIER
     stop_loss_confirmation_counter = 0
+    pullback_confirmation_counter = 0
 
     for i, row in data[["Close", "LONG", "SHORT", "EXIT"]].iterrows():
         profit = None
@@ -133,17 +162,13 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                 wallet.set(tested_direction, None)
 
             # Take profit
-            if (tested_direction == "LONG" and close_price > tested_instrument.take_profit_price) or (
-                tested_direction == "SHORT" and close_price < tested_instrument.take_profit_price
-            ):
+            if tested_instrument.hit_take_profit(close_price, tested_direction):
                 sell_price = tested_instrument.take_profit_price
                 profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Stop loss
-            if (tested_direction == "LONG" and close_price < tested_instrument.stop_loss_price) or (
-                tested_direction == "SHORT" and close_price > tested_instrument.stop_loss_price
-            ):
+            if tested_instrument.hit_stop_loss(close_price, tested_direction):
                 stop_loss_confirmation_counter += 1
 
                 if stop_loss_confirmation_counter > settings.TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN:
@@ -152,6 +177,21 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy, settings) ->
                     wallet.set(tested_direction, None)
             else:
                 stop_loss_confirmation_counter = 0
+
+            # Pullback
+            if tested_instrument.is_pullback(
+                close_price,
+                tested_direction,
+                settings.TRADING_PULLBACK,
+            ):
+                pullback_confirmation_counter += 1
+
+                if pullback_confirmation_counter > settings.TRADING_PULLBACK_CONFIRMATION_COUNT_MIN:
+                    sell_price = close_price
+                    profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                    wallet.set(tested_direction, None)
+            else:
+                pullback_confirmation_counter = 0
 
             # End of day
             if timestamp.time() >= settings.TRADING_END:

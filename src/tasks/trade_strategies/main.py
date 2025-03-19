@@ -7,7 +7,7 @@ from time import sleep
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
-from apis.avanza.client import get_client
+from apis.avanza.client.client import get_client
 from apis.avanza.operators import Chart, Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from apis.avanza.trade.models import Direction
@@ -286,6 +286,8 @@ def trade(dry_run: bool, settings) -> None:
         stop_loss_percent=settings.TRADING_STOP_LOSS,
         stop_loss_confirmation_count_min=settings.TRADING_STOP_LOSS_CONFIRMATION_COUNT_MIN,
         take_profit_percent=settings.TRADING_TAKE_PROFIT,
+        pullback_percent=settings.TRADING_PULLBACK,
+        pullback_confirmation_count_min=settings.TRADING_PULLBACK_CONFIRMATION_COUNT_MIN,
     )
 
     flow = Flow(settings, data, dry_run)

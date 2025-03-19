@@ -4,7 +4,7 @@ from time import sleep
 
 import pandas as pd
 
-from apis.avanza.client import get_client
+from apis.avanza.client.client import get_client
 from apis.avanza.operators import Orders, Portfolio, Transactions, Watchlists
 from apis.avanza.trade import Trade
 from services.calendar import get_market_is_close

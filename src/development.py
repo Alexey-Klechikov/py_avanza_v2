@@ -6,6 +6,8 @@ from datetime import timedelta
 from pprint import pprint
 
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 
 from config import SETTINGS_TRADE_STRATEGIES_OMX
 from services import Storage
@@ -80,7 +82,7 @@ def run_plotting_for_active_strategies(settings, period_days: int):
 
 
 def _generate_tested_kwargs() -> TestedKwargs:
-    tested_kwargs = TestedKwargs(indicator_to_test=("Trend", "CHOP"), kwargs=[])
+    tested_kwargs = TestedKwargs(indicator_to_test=("Volatility", "STARC"), kwargs=[])
 
     # ma_list = [
     #     "sma",
@@ -102,29 +104,29 @@ def _generate_tested_kwargs() -> TestedKwargs:
     #     "zlma",
     # ]
     # for ma in ma_list:
-    for length_1 in range(40, 46, 2):
-        for length_2 in range(16, 20, 2):
-            # for length_3 in range(70, 90, 5):
-            #     # for threshold in range(57, 61, 2):
-            #     if length_1 >= length_2:
-            #         continue
+    for length_1 in range(6, 14, 2):
+        for length_2 in range(length_1, 16, 2):
+            for length_3 in range(18, 24, 2):
+                #     # for threshold in range(57, 61, 2):
+                if length_1 == length_2:
+                    continue
 
-            kwargs = {"length": length_1, "bars": length_2}
+                kwargs = {"length_ma": length_1, "length_atr": length_2, "multiplier_atr": length_3 / 10, "mamode": "wma"}
 
-            # -----------
-            already_tested = False
-            for file in sorted(os.listdir("src/config")):
-                if (
-                    tested_kwargs.strategies_file_name_suffix_new_suffix
-                    + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}"
-                    in file
-                ):
-                    already_tested = True
+                # -----------
+                already_tested = False
+                for file in sorted(os.listdir("src/config")):
+                    if (
+                        tested_kwargs.strategies_file_name_suffix_new_suffix
+                        + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}"
+                        in file
+                    ):
+                        already_tested = True
 
-            if already_tested:
-                continue
+                if already_tested:
+                    continue
 
-            tested_kwargs.kwargs.append(kwargs)
+                tested_kwargs.kwargs.append(kwargs)
 
     return tested_kwargs
 
@@ -164,13 +166,30 @@ def run_test_for_selected_indicators(settings, period_days: int):
                 round(s["profitable_trades_share"] * s["total_profit"], 2),
                 s["profitable_trades_share"],
                 s["total_profit"],
-                s["name"],
+                # s["name"],
+                "GLOBAL_STATS",
                 round(sum([i["profitable_trades_share"] for i in strategies]), 2),
+                round(sum([round(i["profitable_trades_share"] * i["total_profit"], 2) for i in strategies]), 2),
             ),
         )
 
+    # log.warning(f"Stats for {tested_kwargs.indicator_to_test}")
+    # for s in sorted(stats, key=lambda x: x[5], reverse=True):
+    #     log.info("> {}".format(" | ".join([str(i) for i in s])))
+
     log.warning(f"Stats for {tested_kwargs.indicator_to_test}")
-    for s in sorted(stats, key=lambda x: x[5], reverse=True):
+    log.info(
+        " | ".join(
+            [
+                "normalized_profit [top]",
+                "profitable_trades_share [top]",
+                "total_profit [top]",
+                "profitable_trades_share [sum all]",
+                "normalized_profit [sum all]",
+            ],
+        ),
+    )
+    for s in sorted(stats, key=lambda x: x[6], reverse=True):
         log.info("> {}".format(" | ".join([str(i) for i in s])))
 
 
@@ -204,9 +223,87 @@ def get_statistics_per_indicator():
         )
 
 
+def parse_avanza_list():
+    url = "https://www.avanza.se/aktier/lista.html"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        log.error(f"Error fetching URL: {e}")
+        return
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    title = soup.title.string if soup.title else "No title found"
+    log.info(f"Page title: {title}")
+
+    log.info(soup.prettify())
+
+
 if __name__ == "__main__":
     settings = SETTINGS_TRADE_STRATEGIES_OMX
     run_strategies_generation(settings, period_days=40, full=True)
+
     # run_test_for_selected_indicators(settings, period_days=60)
     # run_plotting_for_active_strategies(settings, period_days=5)
-    get_statistics_per_indicator()
+    # get_statistics_per_indicator()
+
+    # from apis.avanza.operators.search import get_all_swedish_stocks
+    # from pprint import pprint
+    # from datetime import date
+    # import pickle
+
+    # file = "src/data/avanza_stocks_list.pickle"
+    # if not os.path.exists(file):
+    #     stocks_list = get_all_swedish_stocks()
+    #     df = pd.DataFrame([i.model_dump() for i in stocks_list])
+    #     pickle.dump(df, open(file, "wb"))
+
+    # else:
+    #     df = pickle.load(open(file, "rb"))
+
+    # pprint(df.columns)
+
+    # df.drop(columns=["country_code", "currency", "type"], inplace=True)
+    # df = df[
+    #     (df["price_earnings_ratio"] > 0)
+    #     & (df["earnings_per_share"] > 0)
+    #     & (df["direct_yield"] > 0)
+    #     # & (df["dividends_per_year"] > 0)
+    #     & (df["five_years_change_percent"] > 0)
+    #     & (df["ten_years_change_percent"] > 0)
+    #     & (df["three_years_change_percent"] > 0)
+    #     # & (df["next_dividend"] > date.today())
+    #     & (df["sma20"] > 0)
+    #     & (df["sma50"] > 0)
+    #     & (df["sma200"] > 0)
+    #     & (df["market_capitalization"] > 10000)
+    # ]
+    # df["dividend_ratio"] = df["dividend_per_share"] / df["buy_price"]
+    # # df = df[(df["dividend_ratio"] > 0.02)]
+    # df = df.loc[df.groupby("next_dividend")["dividend_ratio"].idxmax()]
+    # print(
+    #     df[
+    #         [
+    #             "name",
+    #             "return_on_equity",
+    #             "price_earnings_ratio",
+    #             "earnings_per_share",
+    #             "net_debt_ebitda_ratio",
+    #             "direct_yield",
+    #             "dividends_per_year",
+    #             "price_book_ratio",
+    #             "equity_per_share",
+    #             "ev_ebit_ratio",
+    #             "market_capitalization",
+    #             "beta",
+    #             "next_dividend",
+    #             "dividend_ratio",
+    #             "short_selling_ratio",
+    #             "buy_price",
+    #             "sma20",
+    #             "sma50",
+    #             "sma200",
+    #             "rsi14",
+    #         ]
+    #     ].reset_index()
+    # )
