@@ -220,14 +220,21 @@ class Trade:
         return True
 
     def _hit_pullback(self, price: float, acquired_instrument: Position) -> bool:
-        trigger_profit = 0.02
-
         profit = (price - acquired_instrument.acquired_price) / acquired_instrument.acquired_price
         self.max_profit = max(self.max_profit, profit)
 
-        if self.max_profit > trigger_profit and profit < 0:
-            pass
-        elif self.max_profit > trigger_profit and (self.max_profit - profit) / self.max_profit > SETTINGS.PULLBACK.VALUE:
+        log.debug(
+            "Max profit: {}. Current price: {}. Current profit: {}. Current pullback: {}".format(
+                self.max_profit,
+                price,
+                profit,
+                (self.max_profit - profit) / self.max_profit,
+            ),
+        )
+
+        if self.max_profit > SETTINGS.PULLBACK.TRIGGER_PROFIT and (
+            (profit < 0) or ((self.max_profit - profit) / self.max_profit > SETTINGS.PULLBACK.VALUE)
+        ):
             pass
         else:
             self.pullback_confirmation_count = 0

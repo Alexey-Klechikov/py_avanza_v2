@@ -59,7 +59,7 @@ class Order(BaseModel):
         profit = profit if instrument_type == "LONG" else -profit
         profit -= self.buy_price * 0.01 / SETTINGS.MULTIPLIER  # Spread 1%
 
-        trigger_profit = self.buy_price * 0.015 / SETTINGS.MULTIPLIER  # 1.5%
+        trigger_profit = (SETTINGS.PULLBACK.TRIGGER_PROFIT - 0.005) * (self.buy_price / SETTINGS.MULTIPLIER)
         self.max_profit = max(self.max_profit, profit)
 
         if self.max_profit > trigger_profit and profit < 0:

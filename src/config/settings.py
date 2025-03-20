@@ -33,6 +33,7 @@ class Pullback:
     # The pullback is confirmed if the price falls below the buy price by this percentage for a certain number of times
     VALUE: float = 0.4
     CONFIRMATION_COUNT: int = 2
+    TRIGGER_PROFIT: float = 0.02
 
 
 @dataclass
