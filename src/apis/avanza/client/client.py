@@ -286,7 +286,7 @@ class Avanza(AvanzaBase):
 
     def get_market_stocks(
         self,
-        market_places: list[str] = copy(["se"]),
+        market_places: list[str] = copy(["se", "fi", "de", "no"]),
         offset: int = 0,
         limit: int = 100,
     ) -> MarketStocksFilterResult:

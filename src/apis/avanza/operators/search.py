@@ -5,7 +5,7 @@ from utils.logger import get_logger
 log = get_logger()
 
 
-def get_all_swedish_stocks() -> list[Stock]:
+def get_all_nordic_stocks() -> list[Stock]:
     stocks_results: list[Stock] = []
 
     try:
@@ -13,7 +13,10 @@ def get_all_swedish_stocks() -> list[Stock]:
         step = 100
 
         while True:
-            market_stocks_filter_results = get_client().get_market_stocks(offset=offset)
+            market_stocks_filter_results = get_client().get_market_stocks(
+                market_places=["se", "fi", "de", "no"],
+                offset=offset,
+            )
             stocks_results += market_stocks_filter_results.stocks
 
             offset += step

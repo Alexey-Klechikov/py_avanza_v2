@@ -8,7 +8,7 @@ from pprint import pprint
 
 import pandas as pd
 
-from apis.avanza.operators.search import get_all_swedish_stocks
+from apis.avanza.operators.search import get_all_nordic_stocks
 from config import SETTINGS
 from services import Storage
 from services.ta.strategies.models import ComposeStrategiesListMethod
@@ -217,7 +217,7 @@ def get_statistics_per_indicator():
 def get_all_stocks():
     file = "src/data/avanza_stocks_list.pickle"
     if not os.path.exists(file):
-        stocks_list = get_all_swedish_stocks()
+        stocks_list = get_all_nordic_stocks()
         df = pd.DataFrame([i.model_dump() for i in stocks_list])
         pickle.dump(df, open(file, "wb"))
     else:
@@ -225,28 +225,33 @@ def get_all_stocks():
 
     pprint(df.columns)
 
-    df.drop(columns=["country_code", "currency", "type"], inplace=True)
+    # df.fillna(0, inplace=True)
+    df.drop(columns=["currency", "type"], inplace=True)
     df = df[
         (df["price_earnings_ratio"] > 0)
         & (df["earnings_per_share"] > 0)
         & (df["direct_yield"] > 0)
         # & (df["dividends_per_year"] > 0)
         & (df["five_years_change_percent"] > 0)
-        & (df["ten_years_change_percent"] > 0)
+        & (df["one_year_change_percent"] > 0)
         & (df["three_years_change_percent"] > 0)
         # & (df["next_dividend"] > date.today())
         & (df["sma20"] > 0)
         & (df["sma50"] > 0)
         & (df["sma200"] > 0)
         & (df["market_capitalization"] > 10000)
+        & (df["rsi_trend_three_days"] > 0)
+        & (df["rsi_trend_five_days"] > 0)
     ]
     df["dividend_ratio"] = df["dividend_per_share"] / df["buy_price"]
+    df.sort_values(by=["price_earnings_ratio"], ascending=False, inplace=True)
     # df = df[(df["dividend_ratio"] > 0.02)]
-    df = df.loc[df.groupby("next_dividend")["dividend_ratio"].idxmax()]
+    # df = df.loc[df.groupby("next_dividend")["dividend_ratio"].idxmax()]
     print(
         df[
             [
                 "name",
+                "country_code",
                 "return_on_equity",
                 "price_earnings_ratio",
                 "earnings_per_share",
@@ -266,6 +271,8 @@ def get_all_stocks():
                 "sma50",
                 "sma200",
                 "rsi14",
+                "rsi_trend_three_days",
+                "rsi_trend_five_days",
             ]
         ].reset_index(),
     )
