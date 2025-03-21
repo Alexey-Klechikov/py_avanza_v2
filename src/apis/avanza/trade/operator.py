@@ -149,7 +149,7 @@ class Trade:
                 self.portfolio.reload_balance()
                 budget = max(1200, round(self.portfolio.total_value * SETTINGS.BUDGET))
 
-                if self.portfolio.buying_power < budget:
+                if self.portfolio.buying_power + 1 < budget:
                     log.warning(f"Buying power is not enough for budget {budget}")
                     return
 
