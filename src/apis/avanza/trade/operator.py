@@ -228,7 +228,7 @@ class Trade:
                 self.max_profit,
                 price,
                 profit,
-                (self.max_profit - profit) / self.max_profit,
+                0 if self.max_profit == 0 else (self.max_profit - profit) / self.max_profit,
             ),
         )
 
