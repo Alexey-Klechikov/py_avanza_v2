@@ -1,6 +1,6 @@
 import telegram_send
 
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

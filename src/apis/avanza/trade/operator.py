@@ -12,7 +12,7 @@ from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.watchlists import Watchlists
 from apis.avanza.trade.models.direction import Direction
 from config import SETTINGS
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'

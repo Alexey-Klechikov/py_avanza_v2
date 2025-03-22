@@ -1,6 +1,6 @@
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.search.market_stocks_result import Stock
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

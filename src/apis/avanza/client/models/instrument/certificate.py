@@ -24,7 +24,7 @@ class HistoricalClosingPrices(BaseModel):
     one_month: float | None = Field(alias="oneMonth", default=None)
     three_months: float | None = Field(alias="threeMonths", default=None)
     start_of_year: float | None = Field(alias="startOfYear", default=None)
-    one_year: float = Field(alias="oneYear", default=None)
+    one_year: float | None = Field(alias="oneYear", default=None)
     start_date: date = Field(alias="startDate", default=datetime.now().date())
 
 
@@ -36,14 +36,14 @@ class KeyIndicators(BaseModel):
 
 
 class Quote(BaseModel):
-    buy: float = Field(default=None)
-    sell: float = Field(default=None)
+    buy: float | None = Field(default=None)
+    sell: float | None = Field(default=None)
     last: float
     highest: float | None = Field(default=None)
     lowest: float | None = Field(default=None)
     change: float
     change_percent: float = Field(alias="changePercent")
-    spread: float = Field(default=None)
+    spread: float | None = Field(default=None)
     time_of_last: datetime = Field(alias="timeOfLast")
     total_value_traded: float = Field(alias="totalValueTraded")
     total_volume_traded: int = Field(alias="totalVolumeTraded")

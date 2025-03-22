@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import argrelextrema
 
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

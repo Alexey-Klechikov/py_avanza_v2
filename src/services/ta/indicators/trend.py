@@ -1,8 +1,8 @@
 import pandas_ta as ta  # type: ignore
 
-from services.ta.indicators.models import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
-from utils.logger import get_logger
+from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

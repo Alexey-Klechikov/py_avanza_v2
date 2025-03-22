@@ -1,3 +1,0 @@
-from services.candlesticks.patterns.custom import append_custom_candlestick_patterns
-from services.candlesticks.patterns.peak import append_peak_based_candlestick_patterns
-from services.candlesticks.patterns.talib import append_talib_candlestick_patterns

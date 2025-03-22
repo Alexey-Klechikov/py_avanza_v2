@@ -1,7 +1,7 @@
 import pandas as pd
 import talib
 
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

@@ -145,4 +145,4 @@ class Test_Orders(TestCase):
             ],
         }
 
-        assert isinstance(Orders(**mock_orders), Orders)
+        assert isinstance(Orders(**mock_orders), Orders)  # type: ignore

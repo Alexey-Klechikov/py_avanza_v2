@@ -10,11 +10,11 @@ import pandas as pd
 
 from apis.avanza.operators.search import get_all_nordic_stocks
 from config import SETTINGS
-from services import Storage
-from services.ta.strategies.models import ComposeStrategiesListMethod
+from services.storage.operators import Storage
+from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.trade_strategies.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger import get_logger, set_handlers
+from utils.logger.operators import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.set_option("display.max_rows", None)
@@ -279,9 +279,9 @@ def get_all_stocks():
 
 
 if __name__ == "__main__":
-    # run_strategies_generation(period_days=40, full=True)
+    run_strategies_generation(period_days=40, full=True)
     # run_test_for_selected_indicators(period_days=60)
     # run_plotting_for_active_strategies(period_days=5)
     # get_statistics_per_indicator()
 
-    get_all_stocks()
+    # get_all_stocks()

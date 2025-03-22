@@ -5,7 +5,7 @@ import pandas as pd
 from apis.telegram.operators import Telegram as TelegramBase
 from config import SETTINGS
 from tasks.trade_strategies.main import trade
-from utils.logger import get_logger, set_handlers
+from utils.logger.operators import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'

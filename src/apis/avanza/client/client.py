@@ -29,7 +29,7 @@ from apis.avanza.client.models.order.transactions import TransactionsDetails
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
 from apis.avanza.client.models.search.market_stocks_result import MarketStocksFilterResult
 from config import ACCOUNT_USERNAME
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

@@ -7,7 +7,7 @@ from avanza.constants import TransactionsDetailsType
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.order.transactions import Transaction
 from config import SETTINGS
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

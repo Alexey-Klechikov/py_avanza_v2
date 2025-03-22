@@ -6,14 +6,14 @@ from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.operators.chart import Chart
 from apis.telegram.operators import Telegram
-from apis.yahoo.client.models import Interval, Period
+from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker as YahooTicker
 from config import SETTINGS
-from services import Storage
-from services.ta.strategies.models import ComposeStrategiesListMethod
+from services.storage.operators import Storage
+from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.trade_strategies.backtest import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger import get_logger, set_handlers
+from utils.logger.operators import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 

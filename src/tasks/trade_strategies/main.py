@@ -18,12 +18,12 @@ from apis.avanza.trade.operator import Trade
 from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker
 from config import SETTINGS
-from services import Storage
-from services.calendar import get_market_close_time, get_market_is_close
-from services.ta import get_indicators, read_top_strategies
-from services.ta.strategies.models import Strategy
+from services.calendar.operators import get_market_close_time, get_market_is_close
+from services.storage.operators import Storage
+from services.ta.operators import get_indicators, read_top_strategies
+from services.ta.strategies.models.strategy import Strategy
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'

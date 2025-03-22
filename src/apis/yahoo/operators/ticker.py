@@ -3,8 +3,8 @@ from datetime import date, timedelta
 import pandas as pd
 
 from apis.yahoo.client.client import Yahoo
-from apis.yahoo.client.models import Interval, Period
-from utils.logger import get_logger
+from apis.yahoo.client.models.history_request import Interval, Period
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

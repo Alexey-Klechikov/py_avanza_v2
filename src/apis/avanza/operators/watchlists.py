@@ -2,7 +2,7 @@ from apis.avanza.client.client import get_client
 from apis.avanza.client.models.account.watchlists import Watchlist
 from apis.avanza.operators.models.watchlist import Orderbook, PreferredInstrument, ValidInstruments
 from config import SETTINGS
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

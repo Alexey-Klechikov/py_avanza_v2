@@ -8,10 +8,12 @@ from pathos.multiprocessing import ProcessingPool as Pool
 from pydantic import BaseModel
 
 from config import SETTINGS
-from services.ta import Figure, dump_strategies_in_file, get_indicators, get_strategies
-from services.ta.indicators.models import Panel, Plot, Plots
-from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
-from utils.logger import get_logger
+from services.ta.figure import Figure
+from services.ta.indicators.models.indicator import Panel, Plot, Plots
+from services.ta.operators import get_indicators, get_strategies
+from services.ta.strategies.models.strategy import ComposeStrategiesListMethod, Strategy
+from services.ta.strategies.operators import dump_strategies_in_file
+from utils.logger.operators import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 

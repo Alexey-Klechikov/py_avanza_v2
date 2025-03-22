@@ -4,7 +4,7 @@ import pickle
 import pandas as pd
 
 from config import SETTINGS
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

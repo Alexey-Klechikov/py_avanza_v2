@@ -1,7 +1,7 @@
 import pandas as pd
 
-from services.ta.indicators.models import Indicator
-from utils.logger import get_logger
+from services.ta.indicators.models.indicator import Indicator
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

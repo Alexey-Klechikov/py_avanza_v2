@@ -7,11 +7,11 @@ from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.transactions import Transactions
 from apis.telegram.operators import Telegram
 from config import SETTINGS
-from services import Storage
-from services.ta.strategies.models import ComposeStrategiesListMethod
+from services.storage.operators import Storage
+from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.trade_strategies.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger import get_logger, reset_file_handlers, set_handlers
+from utils.logger.operators import get_logger, reset_file_handlers, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)

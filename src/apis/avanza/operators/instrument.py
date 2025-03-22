@@ -1,7 +1,7 @@
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
 from apis.avanza.client.models.instrument.warrant import InstrumentWarrant
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

@@ -1,9 +1,9 @@
 import pandas as pd
 import yfinance as yf
 
-from apis.yahoo.client.models import HistoryRequest
+from apis.yahoo.client.models.history_request import HistoryRequest
 from config import SETTINGS
-from utils.logger import get_logger
+from utils.logger.operators import get_logger
 
 log = get_logger()
 

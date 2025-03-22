@@ -3,9 +3,9 @@ import os
 import warnings
 from copy import deepcopy
 
-from services.ta.indicators.models import Indicator
-from services.ta.strategies.models import ComposeStrategiesListMethod, Strategy
-from utils.logger import get_logger
+from services.ta.indicators.models.indicator import Indicator
+from services.ta.strategies.models.strategy import ComposeStrategiesListMethod, Strategy
+from utils.logger.operators import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -207,20 +207,15 @@ def dump_strategies_in_file(
     )
 
 
-def get_top_strategies(
+def get_stored_strategies(
     indicators_mapping: dict[str, dict[str, Indicator]],
     strategies_file_name_prefix: str,
 ) -> list[Strategy]:
-    top_strategies = sorted(
-        json.load(open(_get_file_path(strategies_file_name_prefix))),
-        key=lambda x: x["profitable_trades_share"],
-        reverse=True,
-    )
     return [
         Strategy(
             selected_indicators=list(tuple(indicator.split("-")) for indicator in i["name"].split(" | ")),
             indicators_mapping=indicators_mapping,
             efficiency=i["profitable_trades_share"],
         )
-        for i in top_strategies
+        for i in json.load(open(_get_file_path(strategies_file_name_prefix)))
     ]
