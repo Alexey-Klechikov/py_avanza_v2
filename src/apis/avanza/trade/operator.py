@@ -225,10 +225,10 @@ class Trade:
 
         log.debug(
             "Max profit: {}. Current price: {}. Current profit: {}. Current pullback: {}".format(
-                self.max_profit,
+                round((self.max_profit) * 100, 2),
                 price,
-                profit,
-                0 if self.max_profit == 0 else (self.max_profit - profit) / self.max_profit,
+                round((profit * 100), 2),
+                round(0 if self.max_profit == 0 else (self.max_profit - profit) / self.max_profit, 2),
             ),
         )
 
