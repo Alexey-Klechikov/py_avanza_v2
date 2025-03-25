@@ -57,7 +57,7 @@ def generate_strategies(period_days: int) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(period_days=40)
+        generate_strategies(period_days=80)
 
         reset_file_handlers("deals_OMX")
         Transactions().log_deals(log_header="trade_OMX")
