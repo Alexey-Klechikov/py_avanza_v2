@@ -223,16 +223,6 @@ class Trade:
         profit = (price - acquired_instrument.acquired_price) / acquired_instrument.acquired_price
         self.max_profit = max(self.max_profit, profit)
 
-        if self.max_profit > 0:
-            log.debug(
-                "Max profit: {}. Current price: {}. Current profit: {}. Current pullback: {}".format(
-                    round((self.max_profit) * 100, 2),
-                    price,
-                    round((profit * 100), 2),
-                    round(0 if self.max_profit == 0 else (self.max_profit - profit) / self.max_profit, 2),
-                ),
-            )
-
         if self.max_profit > SETTINGS.PULLBACK.TRIGGER_PROFIT and (
             (profit < 0) or ((self.max_profit - profit) / self.max_profit > SETTINGS.PULLBACK.VALUE)
         ):
