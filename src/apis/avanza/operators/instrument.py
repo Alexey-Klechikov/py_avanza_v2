@@ -33,7 +33,10 @@ class Instrument:
             return
 
         if instrument_info.order_depth.market_maker_level_in_bid != 0:
-            log.info("> Market maker in the order depth level: %s", instrument_info.order_depth.market_maker_level_in_bid)
+            log.debug(
+                "> Market maker in the order depth level: %s",
+                instrument_info.order_depth.market_maker_level_in_bid,
+            )
             return
 
         return instrument_info.quote.buy

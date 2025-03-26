@@ -208,7 +208,7 @@ class Trade:
 
         self.stop_loss_confirmation_count += 1
         if self.stop_loss_confirmation_count <= SETTINGS.STOP_LOSS.CONFIRMATION_COUNT:
-            log.warning(
+            log.debug(
                 "Stop loss confirmation count: {} / {}. Latest instrument price: {}".format(
                     self.stop_loss_confirmation_count,
                     SETTINGS.STOP_LOSS.CONFIRMATION_COUNT,
@@ -216,6 +216,8 @@ class Trade:
                 ),
             )
             return False
+
+        log.info(f"Stop loss confirmed. Latest instrument price: {price}")
 
         return True
 
@@ -233,7 +235,7 @@ class Trade:
 
         self.pullback_confirmation_count += 1
         if self.pullback_confirmation_count <= SETTINGS.PULLBACK.CONFIRMATION_COUNT:
-            log.warning(
+            log.debug(
                 "Pullback confirmation count: {} / {}. Latest instrument price: {}".format(
                     self.pullback_confirmation_count,
                     SETTINGS.PULLBACK.CONFIRMATION_COUNT,
@@ -241,6 +243,8 @@ class Trade:
                 ),
             )
             return False
+
+        log.info(f"Pullback confirmed. Latest instrument price: {price}")
 
         return True
 

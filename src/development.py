@@ -242,6 +242,9 @@ def get_all_stocks():
         & (df["market_capitalization"] > 10000)
         & (df["rsi_trend_three_days"] > 0)
         & (df["rsi_trend_five_days"] > 0)
+        & (df["one_month_change_percent"] > 0.02)
+        & (df["one_week_change_percent"] > 0.01)
+        & (df["rsi14"] < 75)
     ]
     df["dividend_ratio"] = df["dividend_per_share"] / df["buy_price"]
     df.sort_values(by=["price_earnings_ratio"], ascending=False, inplace=True)
@@ -262,7 +265,6 @@ def get_all_stocks():
                 "equity_per_share",
                 "ev_ebit_ratio",
                 "market_capitalization",
-                "beta",
                 "next_dividend",
                 "dividend_ratio",
                 "short_selling_ratio",
@@ -273,15 +275,17 @@ def get_all_stocks():
                 "rsi14",
                 "rsi_trend_three_days",
                 "rsi_trend_five_days",
+                "one_month_change_percent",
+                "beta",
             ]
         ].reset_index(),
     )
 
 
 if __name__ == "__main__":
-    run_strategies_generation(period_days=40, full=True)
+    # run_strategies_generation(period_days=80, full=True)
     # run_test_for_selected_indicators(period_days=60)
     # run_plotting_for_active_strategies(period_days=5)
     # get_statistics_per_indicator()
 
-    # get_all_stocks()
+    get_all_stocks()
