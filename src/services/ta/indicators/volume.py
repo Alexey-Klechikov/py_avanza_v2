@@ -221,21 +221,27 @@ class Volume(IndicatorsCategoryBase):
             "KVOs": f"KVOs_{fast}_{slow}_{signal}",
         }
 
-        self.data.ta.kvo(fast=fast, slow=slow, signal=signal, mamode=mamode, append=True)
-        if column_names["KVO"] not in self.data.columns:
-            log.debug("Indicator 'Volume -> KVO' can not be added.")
-            return
+        try:
+            self.data.ta.kvo(fast=fast, slow=slow, signal=signal, mamode=mamode, append=True)
 
-        column_names_slope = {
-            "KVO": "KVO_slope",
-            "close": f"Close_slope_{length_divergence}",
-        }
-        self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
-        self.data[column_names_slope["KVO"]] = self.data.ta.linreg(
-            close=column_names["KVO"],
-            length=length_divergence,
-            slope=True,
-        )
+            if column_names["KVO"] not in self.data.columns:
+                raise AttributeError
+
+            column_names_slope = {
+                "KVO": "KVO_slope",
+                "close": f"Close_slope_{length_divergence}",
+            }
+            self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
+            self.data[column_names_slope["KVO"]] = self.data.ta.linreg(
+                close=column_names["KVO"],
+                length=length_divergence,
+                slope=True,
+            )
+
+        except AttributeError:
+            log.debug("Indicator 'Volume -> KVO' can not be added.")
+
+            return
 
         self.indicators["KVO"] = Indicator(
             signal=Signal(

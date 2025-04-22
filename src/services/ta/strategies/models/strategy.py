@@ -37,7 +37,7 @@ class Strategy:
         for category, name in selected_indicators:
             indicator = indicators_mapping.get(category, {}).get(name)
             if not indicator:
-                log.warning(f"Indicator {name} from category {category} does not exist.")
+                # log.warning(f"Indicator {name} from category {category} does not exist.")
                 continue
 
             if indicator.plots is None:
