@@ -70,7 +70,7 @@ def backtest_trade_strategies(period_days: int):
 if __name__ == "__main__":
     try:
         cache_history()
-        backtest_trade_strategies(period_days=80)
+        backtest_trade_strategies(period_days=30)
 
     except Exception as e:
         telegram = Telegram()

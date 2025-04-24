@@ -28,28 +28,28 @@ def _get_data(period_days: int):
     return data
 
 
-def generate_strategies(period_days: int) -> None:
-    log.warning(f"Generating strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days + 20} days)")
+def generate_strategies(period_days_dev: int, period_days_prod: int) -> None:
+    log.warning(f"Generating strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_dev} days)")
     backtest_trade_strategies(
-        _get_data(period_days + 20),
+        _get_data(period_days_dev),
         ComposeStrategiesListMethod.GENERATE,
         strategies_file_name_suffix_new="dev_3",
     )
 
     for i in range(3, SETTINGS.STRATEGY.INDICATORS):
         log.warning(
-            f"Extending strategies ({i} -> {i + 1}) for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days + 20} days)",
+            f"Extending strategies ({i} -> {i + 1}) for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_dev} days)",
         )
         backtest_trade_strategies(
-            _get_data(period_days + 20),
+            _get_data(period_days_dev),
             ComposeStrategiesListMethod.EXTEND,
             strategies_file_name_suffix_old=f"dev_{i}",
             strategies_file_name_suffix_new=f"dev_{i + 1}",
         )
 
-    log.warning(f"Backtesting strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days} days)")
+    log.warning(f"Backtesting strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_prod} days)")
     backtest_trade_strategies(
-        _get_data(period_days),
+        _get_data(period_days_prod),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
@@ -57,7 +57,7 @@ def generate_strategies(period_days: int) -> None:
 
 if __name__ == "__main__":
     try:
-        generate_strategies(period_days=80)
+        generate_strategies(period_days_dev=120, period_days_prod=30)
 
         reset_file_handlers("deals_OMX")
         Transactions().log_deals(log_header="trade_OMX")

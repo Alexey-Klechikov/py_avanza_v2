@@ -42,11 +42,11 @@ def _get_data(period_days: int):
     return data
 
 
-def run_strategies_generation(period_days: int, full: bool, comment: str | None = None):
+def run_strategies_generation(period_days_dev: int, period_days_prod: int, full: bool, comment: str | None = None):
     if full:
         log.warning("Generating strategies")
         backtest_trade_strategies(
-            _get_data(period_days + 20),
+            _get_data(period_days_dev),
             ComposeStrategiesListMethod.GENERATE,
             strategies_file_name_suffix_new="dev_3",
         )
@@ -54,7 +54,7 @@ def run_strategies_generation(period_days: int, full: bool, comment: str | None 
         for i in range(3, SETTINGS.STRATEGY.INDICATORS):
             log.warning(f"Extending strategies ({i} -> {i + 1})")
             backtest_trade_strategies(
-                _get_data(period_days + 20),
+                _get_data(period_days_dev),
                 ComposeStrategiesListMethod.EXTEND,
                 strategies_file_name_suffix_old=f"dev_{i}",
                 strategies_file_name_suffix_new=f"dev_{i + 1}",
@@ -62,7 +62,7 @@ def run_strategies_generation(period_days: int, full: bool, comment: str | None 
 
     log.warning("Backtesting strategies")
     backtest_trade_strategies(
-        _get_data(period_days),
+        _get_data(period_days_prod),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
         strategies_file_name_suffix_new=comment,
@@ -283,9 +283,10 @@ def get_all_stocks():
 
 
 if __name__ == "__main__":
-    # run_strategies_generation(period_days=80, full=True)
+    run_strategies_generation(period_days_dev=120, period_days_prod=30, full=False)
+
     # run_test_for_selected_indicators(period_days=60)
     # run_plotting_for_active_strategies(period_days=5)
     # get_statistics_per_indicator()
 
-    get_all_stocks()
+    # get_all_stocks()
