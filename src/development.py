@@ -48,7 +48,7 @@ def run_strategies_generation(period_days_dev: int, period_days_prod: int, full:
         backtest_trade_strategies(
             _get_data(period_days_dev),
             ComposeStrategiesListMethod.GENERATE,
-            strategies_file_name_suffix_new="dev_3",
+            strategies_file_name_suffix_new="dev_3" + (comment if comment else ""),
         )
 
         for i in range(3, SETTINGS.STRATEGY.INDICATORS):
@@ -56,15 +56,15 @@ def run_strategies_generation(period_days_dev: int, period_days_prod: int, full:
             backtest_trade_strategies(
                 _get_data(period_days_dev),
                 ComposeStrategiesListMethod.EXTEND,
-                strategies_file_name_suffix_old=f"dev_{i}",
-                strategies_file_name_suffix_new=f"dev_{i + 1}",
+                strategies_file_name_suffix_old=f"dev_{i}" + (comment if comment else ""),
+                strategies_file_name_suffix_new=f"dev_{i + 1}" + (comment if comment else ""),
             )
 
     log.warning("Backtesting strategies")
     backtest_trade_strategies(
         _get_data(period_days_prod),
         ComposeStrategiesListMethod.READ,
-        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
+        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}" + (comment if comment else ""),
         strategies_file_name_suffix_new=comment,
     )
 
@@ -78,7 +78,7 @@ def run_plotting_for_active_strategies(period_days: int):
 
 
 def _generate_tested_kwargs() -> TestedKwargs:
-    tested_kwargs = TestedKwargs(indicator_to_test=("Volatility", "STARC"), kwargs=[])
+    tested_kwargs = TestedKwargs(indicator_to_test=("Volume", "KVO"), kwargs=[])
 
     # ma_list = [
     #     "sma",
@@ -100,29 +100,35 @@ def _generate_tested_kwargs() -> TestedKwargs:
     #     "zlma",
     # ]
     # for ma in ma_list:
-    for length_1 in range(6, 14, 2):
-        for length_2 in range(length_1, 16, 2):
-            for length_3 in range(18, 24, 2):
-                #     # for threshold in range(57, 61, 2):
-                if length_1 == length_2:
-                    continue
+    for length_1 in range(14, 38, 4):
+        # for length_2 in range(20, 60, 5):
+        #     for length_3 in range(10, 18, 2):
+        #         #     # for threshold in range(57, 61, 2):
+        #         if length_1 > length_2:
+        #             continue
 
-                kwargs = {"length_ma": length_1, "length_atr": length_2, "multiplier_atr": length_3 / 10, "mamode": "wma"}
+        kwargs = {
+            "fast": 22,
+            "slow": 55,
+            "signal": 10,
+            "mamode": "rma",
+            "length_divergence": 30,
+        }
 
-                # -----------
-                already_tested = False
-                for file in sorted(os.listdir("src/config")):
-                    if (
-                        tested_kwargs.strategies_file_name_suffix_new_suffix
-                        + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}"
-                        in file
-                    ):
-                        already_tested = True
+        # -----------
+        already_tested = False
+        for file in sorted(os.listdir("src/config")):
+            if (
+                tested_kwargs.strategies_file_name_suffix_new_suffix
+                + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}"
+                in file
+            ):
+                already_tested = True
 
-                if already_tested:
-                    continue
+        if already_tested:
+            continue
 
-                tested_kwargs.kwargs.append(kwargs)
+        tested_kwargs.kwargs.append(kwargs)
 
     return tested_kwargs
 
@@ -283,7 +289,7 @@ def get_all_stocks():
 
 
 if __name__ == "__main__":
-    run_strategies_generation(period_days_dev=120, period_days_prod=30, full=False)
+    run_strategies_generation(period_days_dev=120, period_days_prod=30, full=True)
 
     # run_test_for_selected_indicators(period_days=60)
     # run_plotting_for_active_strategies(period_days=5)

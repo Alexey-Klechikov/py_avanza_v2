@@ -70,7 +70,7 @@ class TradeStrategies:
             "Trend": {
                 "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
                 "TII": {"length_sma": 14, "length_signal": 8},
-                "PSAR": {"acceleration": 0.02, "maximum": 0.2},
+                "PSAR": {"acceleration": 0.01, "maximum": 0.2},
                 "CHOP": {"length": 6, "length_atr": 14, "scalar": 55.0},
             },
             "Overlap": {
@@ -81,8 +81,8 @@ class TradeStrategies:
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
                 "STC": {"tclength": 10, "fast": 15, "slow": 31, "factor": 0.63},
-                "CCI": {"length": 12, "c": 0.015},
-                "RVGI": {"length": 24, "length_swma": 4, "length_divergence": 18},
+                # "CCI": {"length": 12, "c": 0.015},
+                "RVGI": {"length": 18, "length_swma": 3, "length_divergence": 22},
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
             },
             "Cycles": {
@@ -90,15 +90,15 @@ class TradeStrategies:
             },
             "Volatility": {
                 "STARC": {"length_ma": 12, "length_atr": 14, "multiplier_atr": 1.8, "mamode": "wma"},
-                "MASSI": {"fast": 6, "slow": 8, "threshold": 8},
+                # "MASSI": {"fast": 9, "slow": 23, "threshold": 26.5},
                 "BBANDS": {"length": 10, "std": 2.4},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
             },
             "Volume": {
                 "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
                 "ADOSC": {"fast": 6, "slow": 10, "length_divergence": 28},
-                "CMF": {"length": 24, "length_divergence": 24},
-                "KVO": {"fast": 14, "slow": 30, "signal": 14, "mamode": "rma", "length_divergence": 28},
+                # "CMF": {"length": 28, "length_divergence": 32},
+                # "KVO": {"fast": 22, "slow": 55, "signal": 10, "mamode": "rma", "length_divergence": 30},
             },
         },
     )
