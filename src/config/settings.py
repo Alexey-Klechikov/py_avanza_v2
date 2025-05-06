@@ -14,7 +14,7 @@ class Strategy:
 class TakeProfit:
     # The percentage from the buy price that the price must rise to trigger a take profit
     # Example: 0.09 means that if the buy price is 100 and the price rises to 109, a take profit is triggered
-    VALUE: float = 0.09
+    VALUE: float = 0.05
 
 
 @dataclass
@@ -22,7 +22,7 @@ class StopLoss:
     # The percentage from the buy price that the price must fall to trigger a stop loss
     # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
     # The stop loss is confirmed if the price falls below the buy price by this percentage for a certain number of times
-    VALUE: float = 0.06
+    VALUE: float = 0.035
     CONFIRMATION_COUNT: int = 4
 
 
@@ -52,7 +52,7 @@ class TradeStrategies:
 
     DATA_SOURCE: str = "avanza"
     RESOLUTION: str = "2m"
-    MULTIPLIER: int = 20
+    MULTIPLIER: int = 10
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"

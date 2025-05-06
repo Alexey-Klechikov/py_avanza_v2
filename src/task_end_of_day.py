@@ -37,6 +37,7 @@ def cache_history():
         (Resolution.TWO_MINUTES, Interval.TWO_MINUTES),
         (Resolution.FIVE_MINUTES, Interval.FIVE_MINUTES),
         (Resolution.HOUR, Interval.SIXTY_MINUTES),
+        (Resolution.DAY, Interval.ONE_DAY),
     ]:
         storage = Storage(resolution=interval_yahoo.value.raw)
         rows_before = storage.read().shape[0]
