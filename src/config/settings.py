@@ -7,7 +7,7 @@ from datetime import time
 class Strategy:
     MIN_EFFICIENCY: float = 0.6
     COUNT_MAX: int = 30
-    INDICATORS: int = 7
+    INDICATORS: int = 8
 
 
 @dataclass
