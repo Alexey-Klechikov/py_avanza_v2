@@ -53,6 +53,7 @@ class TradeStrategies:
     DATA_SOURCE: str = "avanza"
     RESOLUTION: str = "2m"
     MULTIPLIER: int = 10
+    MAX_SPREAD: float = 0.004  # 0.4%
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"

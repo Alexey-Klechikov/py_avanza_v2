@@ -123,7 +123,7 @@ class Watchlists:
             if not (
                 hit.price.spread
                 and hit.price.spread > 0.1
-                and hit.price.spread < 1.0
+                and hit.price.spread < SETTINGS.MAX_SPREAD * 100
                 and hit.price.last
                 and hit.price.last > 1
                 and hit.price.last < 300

@@ -40,7 +40,6 @@ class Order(BaseModel):
 
         profit = self.sell_price - self.buy_price
         profit = profit if instrument_type == "LONG" else -profit
-        profit -= self.buy_price * 0.01 * 0.03  # Spread
 
         return profit
 
@@ -59,9 +58,9 @@ class Order(BaseModel):
     def is_pullback(self, close_price: float, instrument_type: str) -> bool:
         profit = close_price - self.buy_price
         profit = profit if instrument_type == "LONG" else -profit
-        profit -= self.buy_price * 0.01 / SETTINGS.MULTIPLIER  # Spread 1%
 
-        trigger_profit = (SETTINGS.PULLBACK.TRIGGER_PROFIT - 0.005) * (self.buy_price / SETTINGS.MULTIPLIER)
+        trigger_profit = SETTINGS.PULLBACK.TRIGGER_PROFIT * self.buy_price / SETTINGS.MULTIPLIER
+
         self.max_profit = max(self.max_profit, profit)
 
         if self.max_profit > trigger_profit and profit < 0:
@@ -144,7 +143,8 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
                 wallet.set(
                     tested_direction,
                     Order(
-                        buy_price=tested_direction_price,
+                        buy_price=tested_direction_price
+                        * (1 + (SETTINGS.MAX_SPREAD * direction_correction / SETTINGS.MULTIPLIER)),
                         buy_datetime=timestamp,
                         take_profit_price=tested_direction_price * (1 + (direction_correction * target_profit)),
                         stop_loss_price=tested_direction_price * (1 - (direction_correction * stop_loss)),
