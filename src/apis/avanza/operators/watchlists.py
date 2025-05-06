@@ -57,8 +57,8 @@ class Watchlists:
                 instrument_info = get_client().get_instrument_warrant(orderbook_id)
                 instrument_direction = INSTRUMENT_DIRECTIONS[instrument_info.key_indicators.direction]
                 if (
-                    instrument_info.key_indicators.leverage < SETTINGS.MULTIPLIER * 0.75
-                    or instrument_info.key_indicators.leverage > SETTINGS.MULTIPLIER * 1.35
+                    instrument_info.key_indicators.leverage < SETTINGS.MULTIPLIER * 0.85
+                    or instrument_info.key_indicators.leverage > SETTINGS.MULTIPLIER * 1.15
                 ):
                     continue
             else:
