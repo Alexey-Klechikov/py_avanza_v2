@@ -120,18 +120,27 @@ class Watchlists:
             return
 
         for hit in search_result.hits:
-            if (
-                hit.price.today_change_percent != 0
-                and hit.price.spread
+            if not (
+                hit.price.spread
                 and hit.price.spread > 0.1
-                and hit.price.spread < 1.5
+                and hit.price.spread < 1.0
                 and hit.price.last
                 and hit.price.last > 1
-                and hit.price.last < 210
+                and hit.price.last < 300
             ):
-                log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
+                continue
 
-                get_client().add_to_watchlist(hit.order_book_id, watchlist.watchList_id)
+            if watchlist_name.instrument_type == "WARRANT":
+                instrument_info = get_client().get_instrument_warrant(hit.order_book_id)
+                if (
+                    instrument_info.key_indicators.leverage < SETTINGS.MULTIPLIER * 0.85
+                    or instrument_info.key_indicators.leverage > SETTINGS.MULTIPLIER * 1.15
+                ):
+                    continue
+
+            log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
+
+            get_client().add_to_watchlist(hit.order_book_id, watchlist.watchList_id)
 
     def refresh_all(self):
         log.debug("Refresh watchlists")
