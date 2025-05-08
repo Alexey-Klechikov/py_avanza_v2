@@ -31,6 +31,10 @@ jobs:
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
           "mkdir -p /home/ubuntu/pyAvanza/"
 
+        # Remove all directories except "data", "logs", and "config"
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
+          "find /home/ubuntu/pyAvanza/ -mindepth 1 -maxdepth 1 -type d ! -name 'data' ! -name 'logs' ! -name 'config' -exec rm -rf {} +"
+
         # Use rsync to copy only files under src/ directory to remote server
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
           ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
