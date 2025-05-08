@@ -171,6 +171,7 @@ class Flow:
         self.data = data
 
         self.triggered_strategy: Strategy | None = None
+        self.triggered_strategy_time: datetime | None = None
 
     def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
@@ -179,6 +180,11 @@ class Flow:
         portfolio.reload_positions(caller="get_action")
         if not portfolio.positions:
             self.triggered_strategy = None
+            self.triggered_strategy_time = None
+
+        if self.triggered_strategy_time and (datetime.now() - self.triggered_strategy_time) >= timedelta(minutes=60):
+            self.triggered_strategy = None
+            self.triggered_strategy_time = None
 
         # Start of the day
         if datetime.now().time() <= SETTINGS.TIME.START:
@@ -213,7 +219,7 @@ class Flow:
             self.triggered_strategy, signal = self.data.get_signal(self.triggered_strategy)
 
             if signal:
-                # Not enough funds on the account
+                self.triggered_strategy_time = datetime.now()
                 portfolio.reload_balance()
                 if portfolio.buying_power < 1100 and not portfolio.positions:
                     log.info("Not enough funds on the account. No action is taken.")
