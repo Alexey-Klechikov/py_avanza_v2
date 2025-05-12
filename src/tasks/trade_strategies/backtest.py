@@ -121,7 +121,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
     stop_loss_confirmation_counter = 0
     pullback_confirmation_counter = 0
 
-    for i, row in data[["Close", "LONG", "SHORT", "EXIT"]].iterrows():
+    for i, row in data[["Close", "Next Open", "LONG", "SHORT", "EXIT"]].iterrows():
         profit = None
         timestamp: datetime = i.to_pydatetime()  # type: ignore
 
@@ -129,8 +129,9 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
             tested_instrument = wallet.get(tested_direction)
             opposite_instrument = wallet.get(opposite_direction)
 
-            tested_direction_price: float = row[tested_direction]  # type: ignore
-            close_price = row["Close"]
+            tested_direction_price: float = row[tested_direction]
+            close_price: float = row["Close"]
+            next_row_open_price: float = row["Next Open"] or close_price
             direction_correction = 1 if tested_direction == "LONG" else -1
 
             # Buy signal without open positions
@@ -143,17 +144,17 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
                 wallet.set(
                     tested_direction,
                     Order(
-                        buy_price=tested_direction_price
+                        buy_price=next_row_open_price
                         * (1 + (SETTINGS.MAX_SPREAD * direction_correction / SETTINGS.MULTIPLIER)),
                         buy_datetime=timestamp,
-                        take_profit_price=tested_direction_price * (1 + (direction_correction * target_profit)),
-                        stop_loss_price=tested_direction_price * (1 - (direction_correction * stop_loss)),
+                        take_profit_price=next_row_open_price * (1 + (direction_correction * target_profit)),
+                        stop_loss_price=next_row_open_price * (1 - (direction_correction * stop_loss)),
                         signal_confirmation_time=timestamp,
                     ),
                 )
 
                 if opposite_instrument is not None:
-                    profit = opposite_instrument.sell(tested_direction_price, timestamp, opposite_direction)
+                    profit = opposite_instrument.sell(next_row_open_price, timestamp, opposite_direction)
                     wallet.set(opposite_direction, None)
 
             if tested_instrument is None:
@@ -161,14 +162,12 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
 
             # Exit signal
             if row["EXIT"] > 0:
-                sell_price = row["EXIT"]
-                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                profit = tested_instrument.sell(next_row_open_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Take profit
-            if tested_instrument.hit_take_profit(close_price, tested_direction):
-                sell_price = tested_instrument.take_profit_price
-                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+            if tested_instrument.hit_take_profit(next_row_open_price, tested_direction):
+                profit = tested_instrument.sell(tested_instrument.take_profit_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
             # Stop loss
@@ -176,8 +175,7 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
                 stop_loss_confirmation_counter += 1
 
                 if stop_loss_confirmation_counter > SETTINGS.STOP_LOSS.CONFIRMATION_COUNT:
-                    sell_price = close_price
-                    profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                    profit = tested_instrument.sell(next_row_open_price, timestamp, tested_direction)
                     wallet.set(tested_direction, None)
             else:
                 stop_loss_confirmation_counter = 0
@@ -187,16 +185,14 @@ def _consider_trading_logic(data: pd.DataFrame, strategy: Strategy) -> None:
                 pullback_confirmation_counter += 1
 
                 if pullback_confirmation_counter > SETTINGS.PULLBACK.CONFIRMATION_COUNT:
-                    sell_price = close_price
-                    profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                    profit = tested_instrument.sell(next_row_open_price, timestamp, tested_direction)
                     wallet.set(tested_direction, None)
             else:
                 pullback_confirmation_counter = 0
 
             # End of day
             if timestamp.time() >= SETTINGS.TIME.END:
-                sell_price = close_price
-                profit = tested_instrument.sell(sell_price, timestamp, tested_direction)
+                profit = tested_instrument.sell(next_row_open_price, timestamp, tested_direction)
                 wallet.set(tested_direction, None)
 
         if profit is not None:
@@ -210,6 +206,7 @@ def process_strategy(kwargs: dict) -> Strategy:
     strategy: Strategy = kwargs["strategy"]
     strategy_rank: str | None = kwargs.get("strategy_rank")
 
+    data["Next Open"] = data["Open"].shift(-1)
     for column in ["LONG", "SHORT", "EXIT"]:
         data[column] = data["Close"]
 
