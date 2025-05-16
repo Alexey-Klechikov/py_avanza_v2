@@ -182,15 +182,19 @@ class Avanza(AvanzaBase):
         transaction_details_types: Sequence[TransactionsDetailsType],
         transactions_from: date,
         transactions_to: date | None = None,
-        isin: str | None = None,
         max_elements: int | None = 1000,
+        account_id: str | None = None,
     ) -> TransactionsDetails:
-        data = super().get_transactions_details(
-            transaction_details_types,
-            transactions_from,
-            transactions_to,
-            isin,
-            max_elements,
+        data = self._retry_call(
+            "/_api/transactions/list",
+            http_method="GET",
+            options={
+                "transactionTypes": ",".join([type.value for type in transaction_details_types]),
+                "from": transactions_from.isoformat(),
+                "to": transactions_to.isoformat() if transactions_to else None,
+                "maxElements": max_elements,
+                "accountIds": account_id,
+            },
         )
 
         return TransactionsDetails(**data)  # type: ignore

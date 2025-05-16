@@ -38,7 +38,7 @@ class Transaction(BaseModel):
     backoffice_type_text: str = Field(alias="backofficeTypeText")
     cancel_date: datetime | None = Field(alias="cancelDate")
     cancelled: bool
-    comission: Any
+    commission: Any
     currency_rate: Any = Field(alias="currencyRate")
     date: datetime
     description: str
