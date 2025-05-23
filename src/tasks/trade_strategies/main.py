@@ -173,6 +173,8 @@ class Flow:
         self.triggered_strategy: Strategy | None = None
         self.triggered_strategy_time: datetime | None = None
 
+        self.counter_repeating_exception: int = 0
+
     def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.direction_buy = None
@@ -248,6 +250,15 @@ class Flow:
             self.data.get()
             log.debug(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.data.is_new}")
 
+    def hit_repeated_exception(self, e: Exception) -> bool:
+        if self.counter_repeating_exception >= 3:
+            log.warning("Repeated unknown error. Exiting trading.")
+            return True
+
+        self.counter_repeating_exception += 1
+        log.warning(f"Unknown error. {e}")
+        return False
+
 
 # MAIN
 def trade() -> None:
@@ -293,7 +304,16 @@ def trade() -> None:
 
             flow.wait_for_data()
 
+            flow.counter_repeating_exception = 0
+
         except (ConnectionError, RemoteDisconnected):
             get_client.cache_clear()
+
+        except Exception as e:
+            if not flow.hit_repeated_exception(e):
+                continue
+
+            [trade.sell(direction) for direction in (Direction.BEAR, Direction.BULL)]
+            raise e
 
     Transactions().log_deals(only_today=True)
