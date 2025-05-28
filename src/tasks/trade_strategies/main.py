@@ -307,4 +307,4 @@ def trade() -> None:
             raise e
 
     transactions.log_deals(only_today=True)
-    transactions.get_daily_trading_stats()
+    transactions.save_daily_trading_stats()
