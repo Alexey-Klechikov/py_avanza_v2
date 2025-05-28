@@ -270,6 +270,8 @@ def trade() -> None:
     watchlists = Watchlists()
     watchlists.update_all()
 
+    transactions = Transactions()
+
     trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists)
 
     flow = Flow(data)
@@ -304,7 +306,5 @@ def trade() -> None:
             [trade.sell(direction) for direction in (Direction.BEAR, Direction.BULL)]
             raise e
 
-        finally:
-            transactions = Transactions()
-            transactions.log_deals(only_today=True)
-            transactions.get_daily_trading_stats()
+    transactions.log_deals(only_today=True)
+    transactions.get_daily_trading_stats()
