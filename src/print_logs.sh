@@ -10,7 +10,7 @@ seconds_until_end=$((end_time - current_time))
 
 while [ $SECONDS -lt $seconds_until_end ]; do
     clear
-    tail -n 50 logs/trade_OMX_$current_date.log
+    tail -n 50 logs/trade_$current_date.log
     sleep 120  # Wait for 2 minutes
 done
 

@@ -1,3 +1,5 @@
+import json
+import os
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -20,7 +22,7 @@ class Deal:
 
 class Transactions:
     def __init__(self):
-        self.log: list[Transaction] = []
+        self.log_per_day: dict = {}
 
     def _reload_log(self, date_from: date, date_to: date | None = None) -> list[Transaction]:
         log = (
@@ -40,11 +42,10 @@ class Transactions:
 
     def log_deals(
         self,
-        log_header: str | None = None,
         date_from: date = (datetime.today() - timedelta(days=6)).date(),
         only_today: bool = False,
-    ) -> dict:
-        log.info("Group transactions into deals" + ("" if not log_header else f" for script '{log_header}'"))
+    ) -> None:
+        log.info("Group transactions into deals")
 
         log_per_instrument = defaultdict(list)
         for i in self._reload_log(date_from):
@@ -98,4 +99,31 @@ class Transactions:
 
         log.info(f"Total deals value: {total_deal_value}")
 
-        return deals_per_instrument
+    def get_daily_trading_stats(self, date_from: date = (datetime.today() - timedelta(days=61)).date()) -> dict:
+        log.info("Log daily trading stats")
+
+        for i in self._reload_log(date_from):
+            date_str = i.date.date().strftime("%Y-%m-%d")
+            if date_str not in self.log_per_day:
+                self.log_per_day[date_str] = {"amount": 0, "transactions": 0}
+
+            self.log_per_day[date_str]["amount"] += int(i.amount.value)
+            self.log_per_day[date_str]["transactions"] += 1
+
+        for k, v in self.log_per_day.items():
+            v["deals"] = int(v.pop("transactions") / 2)
+
+        return self.log_per_day
+
+    def save_daily_trading_stats(self, date_from: date = (datetime.today() - timedelta(days=61)).date()) -> None:
+        log.info("Save daily trading stats")
+
+        if not self.log_per_day:
+            self.get_daily_trading_stats(date_from)
+
+        logs_dir = os.path.abspath(__file__).split("apis")[0] + "logs"
+        json.dump(
+            self.log_per_day,
+            open(f"{logs_dir}/daily_trading_stats_{SETTINGS.NAME}.json", "w"),
+            indent=4,
+        )

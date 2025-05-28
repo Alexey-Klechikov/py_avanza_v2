@@ -4,14 +4,13 @@ from datetime import timedelta
 import pandas as pd
 
 from apis.avanza.operators.portfolio import Portfolio
-from apis.avanza.operators.transactions import Transactions
 from apis.telegram.operators import Telegram
 from config import SETTINGS
 from services.storage.operators import Storage
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.trade_strategies.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
-from utils.logger.operators import get_logger, reset_file_handlers, set_handlers
+from utils.logger.operators import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=UserWarning)
@@ -58,9 +57,6 @@ def generate_strategies(period_days_dev: int, period_days_prod: int) -> None:
 if __name__ == "__main__":
     try:
         generate_strategies(period_days_dev=120, period_days_prod=60)
-
-        reset_file_handlers("deals_OMX")
-        Transactions().log_deals(log_header="trade_OMX")
 
         portfolio = Portfolio()
         portfolio.reload_balance()

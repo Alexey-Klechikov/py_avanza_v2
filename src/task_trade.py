@@ -10,7 +10,7 @@ from utils.logger.operators import get_logger, set_handlers
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
-set_handlers("trade_OMX")
+set_handlers("trade")
 log = get_logger()
 
 

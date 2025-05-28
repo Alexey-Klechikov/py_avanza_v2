@@ -1,6 +1,5 @@
 import warnings
 from datetime import datetime, timedelta
-from enum import Enum
 from http.client import RemoteDisconnected
 from time import sleep
 
@@ -22,6 +21,7 @@ from services.calendar.operators import get_market_close_time, get_market_is_clo
 from services.storage.operators import Storage
 from services.ta.operators import get_indicators, read_top_strategies
 from services.ta.strategies.models.strategy import Strategy
+from tasks.trade_strategies.models import FlowAction, Signal
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger
 
@@ -29,12 +29,6 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
-
-
-class Signal(Enum):
-    LONG = "LONG"
-    SHORT = "SHORT"
-    EXIT = "EXIT"
 
 
 class Data:
@@ -154,12 +148,6 @@ class Data:
             return (strategy, signal)
 
         return (last_triggered_strategy, signal)
-
-
-class FlowAction(Enum):
-    TRADE = "TRADE"
-    DO_NOTHING = "DO_NOTHING"
-    EXIT_TRADING = "EXIT_TRADING"
 
 
 class Flow:
@@ -316,4 +304,7 @@ def trade() -> None:
             [trade.sell(direction) for direction in (Direction.BEAR, Direction.BULL)]
             raise e
 
-    Transactions().log_deals(only_today=True)
+        finally:
+            transactions = Transactions()
+            transactions.log_deals(only_today=True)
+            transactions.get_daily_trading_stats()
