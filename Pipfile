@@ -20,7 +20,6 @@ requests-html = "*"
 lxml-html-clean = "*"
 cloudscraper = "*"
 pathos = "*"
-ta-lib = "*"
 scipy = "*"
 
 [dev-packages]
