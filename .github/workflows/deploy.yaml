@@ -52,6 +52,7 @@ jobs:
           "task_end_of_day 10 22 * * 1-5"
           "task_end_of_week 0 9 * * 6"
           "task_trade 43 9 * * 1-5"
+          "copy_stats 0 * * * *"
         )
 
         # Fetch existing crontab
@@ -74,7 +75,11 @@ jobs:
           task_name="${job%% *}"
           cron_schedule="${job#* }"
 
-          updated_crontab+="$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py\n"
+          if [ "$task_name" = "copy_stats" ]; then
+            updated_crontab+="$cron_schedule sudo cp /home/ubuntu/pyAvanza/logs/daily_trading_stats_OMX.json /var/www/klechikov_dev/webApp/\n"
+          else
+            updated_crontab+="$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py\n"
+          fi
         done
 
         # Update crontab on remote server
