@@ -76,7 +76,7 @@ jobs:
           cron_schedule="${job#* }"
 
           if [ "$task_name" = "copy_stats" ]; then
-            updated_crontab+="$cron_schedule sudo cp /home/ubuntu/pyAvanza/logs/daily_trading_stats_OMX.json /var/www/klechikov_dev/webApp/\n"
+            updated_crontab+="$cron_schedule sudo cp /home/ubuntu/pyAvanza/logs/daily_trading_stats_OMX.json /var/www/klechikov_dev/webApp/data/\n"
           else
             updated_crontab+="$cron_schedule /usr/bin/python3 /home/ubuntu/pyAvanza/$task_name.py\n"
           fi
