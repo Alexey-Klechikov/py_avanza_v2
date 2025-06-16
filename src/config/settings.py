@@ -5,8 +5,8 @@ from datetime import time
 
 @dataclass
 class Strategy:
-    MIN_EFFICIENCY: float = 0.6
-    COUNT_MAX: int = 30
+    MIN_EFFICIENCY: float = 0.55
+    COUNT_MAX: int = 10
     INDICATORS: int = 8
 
 
@@ -23,7 +23,7 @@ class StopLoss:
     # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
     # The stop loss is confirmed if the price falls below the buy price by this percentage for a certain number of times
     VALUE: float = 0.035
-    CONFIRMATION_COUNT: int = 4
+    CONFIRMATION_COUNT: int = 3
 
 
 @dataclass
@@ -31,7 +31,7 @@ class Pullback:
     # The percentage of the maximum profit that must be lost before a pullback is confirmed
     # Example: 0.4 means that if the maximum profit is 10% and the current profit is 6%, a pullback is confirmed
     # The pullback is confirmed if the price falls below the buy price by this percentage for a certain number of times
-    VALUE: float = 0.4
+    VALUE: float = 0.0
     CONFIRMATION_COUNT: int = 2
     TRIGGER_PROFIT: float = 0.025
 

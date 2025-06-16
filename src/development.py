@@ -3,16 +3,18 @@ import os
 import pickle
 import warnings
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pprint import pprint
 
 import pandas as pd
 
 from apis.avanza.operators.search import get_all_nordic_stocks
 from config import SETTINGS
+from services.levels.models import LevelType
 from services.storage.operators import Storage
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.trade_strategies.backtest import backtest_trade_strategies
+from tasks.trade_supply_demand.backtest import backtest_trade_supply_demand
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 
@@ -34,35 +36,59 @@ class TestedKwargs:
         return f"dev_6_{'-'.join(self.indicator_to_test)}_"
 
 
-def _get_data(period_days: int):
+def _get_data(point_of_origin: datetime, period_days: int):
+    log.info(f"Get data: {(point_of_origin - timedelta(days=period_days)).date()} - {point_of_origin.date()}")
+
     data = Storage().read()
-    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
+    data = data.loc[(data.index >= point_of_origin - timedelta(days=period_days)) & (data.index < point_of_origin)]
     data.index = pd.to_datetime(data.index)
 
     return data
 
 
-def run_strategies_generation(period_days_dev: int, period_days_prod: int, full: bool, comment: str | None = None):
+def run_strategies_generation(
+    period_days_back_test: int,
+    period_days_forward_test: int,
+    full: bool,
+    comment: str | None = None,
+):
     if full:
-        log.warning("Generating strategies")
+        log.warning(f"Back-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_back_test} days)")
         backtest_trade_strategies(
-            _get_data(period_days_dev),
+            _get_data(
+                point_of_origin=(TODAY_MIDNIGHT - timedelta(days=period_days_forward_test)),
+                period_days=period_days_back_test,
+            ),
             ComposeStrategiesListMethod.GENERATE,
             strategies_file_name_suffix_new="dev_3" + (comment if comment else ""),
         )
 
         for i in range(3, SETTINGS.STRATEGY.INDICATORS):
-            log.warning(f"Extending strategies ({i} -> {i + 1})")
+            log.warning(
+                "Back-test strategies ({} -> {}) for {} ({}, {} days)".format(
+                    i,
+                    i + 1,
+                    SETTINGS.NAME,
+                    SETTINGS.RESOLUTION,
+                    period_days_back_test,
+                ),
+            )
             backtest_trade_strategies(
-                _get_data(period_days_dev),
+                _get_data(
+                    point_of_origin=(TODAY_MIDNIGHT - timedelta(days=period_days_forward_test)),
+                    period_days=period_days_back_test,
+                ),
                 ComposeStrategiesListMethod.EXTEND,
                 strategies_file_name_suffix_old=f"dev_{i}" + (comment if comment else ""),
                 strategies_file_name_suffix_new=f"dev_{i + 1}" + (comment if comment else ""),
             )
 
-    log.warning("Backtesting strategies")
+    log.warning(f"Forward-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_forward_test} days)")
     backtest_trade_strategies(
-        _get_data(period_days_prod),
+        _get_data(
+            point_of_origin=TODAY_MIDNIGHT,
+            period_days=period_days_forward_test,
+        ),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}" + (comment if comment else ""),
         strategies_file_name_suffix_new=comment,
@@ -71,7 +97,10 @@ def run_strategies_generation(period_days_dev: int, period_days_prod: int, full:
 
 def run_plotting_for_active_strategies(period_days: int):
     backtest_trade_strategies(
-        _get_data(period_days),
+        _get_data(
+            point_of_origin=TODAY_MIDNIGHT,
+            period_days=period_days,
+        ),
         ComposeStrategiesListMethod.READ,
         plot=True,
     )
@@ -141,7 +170,10 @@ def run_test_for_selected_indicators(period_days: int):
 
         log.warning(f"Testing for {tested_kwargs.indicator_to_test}_{list(kwargs.items())}")
         backtest_trade_strategies(
-            _get_data(period_days),
+            _get_data(
+                point_of_origin=TODAY_MIDNIGHT,
+                period_days=period_days,
+            ),
             ComposeStrategiesListMethod.EXTEND,
             strategies_file_name_suffix_old="dev_5",
             strategies_file_name_suffix_new=tested_kwargs.strategies_file_name_suffix_new_suffix
@@ -289,10 +321,114 @@ def get_all_stocks():
 
 
 if __name__ == "__main__":
-    run_strategies_generation(period_days_dev=120, period_days_prod=30, full=True)
+    run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=True)
+
+    raise Exception("Stop here")
 
     # run_test_for_selected_indicators(period_days=60)
-    # run_plotting_for_active_strategies(period_days=5)
+    # run_plotting_for_active_strategies(period_days=50)
     # get_statistics_per_indicator()
 
     # get_all_stocks()
+
+    # data_long_timeframe = Storage(resolution="1d").read()
+    # data_long_timeframe = data_long_timeframe.loc[
+    #     (data_long_timeframe.index >= TODAY_MIDNIGHT - timedelta(days=365))
+    #       & (data_long_timeframe.index < TODAY_MIDNIGHT)
+    # ]
+    # data_long_timeframe.index = pd.to_datetime(data_long_timeframe.index)
+    # levels = backtest_trade_supply_demand(
+    #     data=data_long_timeframe,
+    #     cut_off_pips=50,
+    #     plot=False,
+    # )
+
+    data_short_timeframe = Storage(resolution="1m").read()
+    data_short_timeframe = data_short_timeframe.loc[
+        (data_short_timeframe.index >= TODAY_MIDNIGHT - timedelta(days=0))
+        # & (data_short_timeframe.index < TODAY_MIDNIGHT)
+    ]
+    data_short_timeframe.index = pd.to_datetime(data_short_timeframe.index)
+    levels = backtest_trade_supply_demand(
+        data=data_short_timeframe,
+        cut_off_pips=50,
+        plot=False,
+    )
+
+    # raise Exception("Stop here")
+
+    ####
+    data = data_short_timeframe
+    supply_levels = [i for i in levels if i.type == LevelType.SUPPLY]
+    demand_levels = [i for i in levels if i.type == LevelType.DEMAND]
+
+    # plot
+    from matplotlib import pyplot as plt
+
+    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(
+        5,
+        1,
+        figsize=(12, 8),
+        sharex=True,
+        gridspec_kw={"height_ratios": [3, 1, 1, 1, 1]},
+    )
+
+    # Plot the Ref Price with peaks and troughs on the first subplot
+    ax1.plot(data.index, data["Close"], color="blue")
+    ax1.plot(data.index, data["Close"].ewm(span=10).mean(), label="EMA 20", color="orange")
+
+    for supply_level in supply_levels:
+        ax1.axhline(
+            supply_level.value,
+            color="red",
+            linestyle="--",
+            alpha=supply_level.confirmation_count
+            / max(supply_levels, key=lambda x: x.confirmation_count).confirmation_count,
+        )
+    for demand_level in demand_levels:
+        ax1.axhline(
+            demand_level.value,
+            color="green",
+            linestyle="--",
+            alpha=demand_level.confirmation_count
+            / max(demand_levels, key=lambda x: x.confirmation_count).confirmation_count,
+        )
+    ax1.set_title("Close Price")
+
+    # ax2 plot Volume
+    ax2.bar(data.index, data["Volume"], color="gray", alpha=0.3)
+    ax2.set_title("Volume")
+    ax2.axhline(data["Volume"].median(), color="black", linestyle="--", label="Median Volume")
+
+    # ax3 plot RSI
+    import pandas_ta as ta
+
+    data["RSI"] = ta.rsi(data["Close"], length=14)
+    ax3.plot(data.index, data["RSI"], label="RSI", color="purple")
+    ax3.axhline(60, color="red", linestyle="--", label="Overbought")
+    ax3.axhline(40, color="green", linestyle="--", label="Oversold")
+    ax3.set_title("RSI")
+
+    # ax4 plot MACD
+    data["MACD"] = ta.macd(data["Close"], fast=12, slow=26, signal=9)["MACD_12_26_9"]  # type: ignore
+    data["MACD_Signal"] = ta.macd(data["Close"], fast=12, slow=26, signal=9)["MACDs_12_26_9"]  # type: ignore
+    data["MACD_Hist"] = ta.macd(data["Close"], fast=12, slow=26, signal=9)["MACDh_12_26_9"]  # type: ignore
+    ax4.plot(data.index, data["MACD"], label="MACD", color="blue")
+    ax4.plot(data.index, data["MACD_Signal"], label="MACD Signal", color="orange")
+    ax4.axhline(0, color="black", linestyle="--", label="Zero Line")
+    ax4.fill_between(data.index, data["MACD_Hist"], color="gray", alpha=0.3, label="MACD Histogram")
+    ax4.axhline(10, color="red", linestyle="--", label="Overbought")
+    ax4.axhline(-10, color="green", linestyle="--", label="Oversold")
+    ax4.set_title("MACD")
+
+    # ax5 plot SLOPE
+    from scipy.stats import linregress
+
+    data["SLOPE"] = data["Close"].rolling(window=3).apply(lambda x: linregress(range(len(x)), x)[0], raw=False)
+    ax5.plot(data.index, data["SLOPE"], label="SLOPE", color="purple")
+    ax5.axhline(0, color="black", linestyle="--", label="Zero Line")
+    ax5.set_title("SLOPE")
+
+    # Adjust layout and show the plot
+    plt.tight_layout()
+    plt.show()
