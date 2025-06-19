@@ -5,8 +5,8 @@ from datetime import time
 
 @dataclass
 class Strategy:
-    MIN_EFFICIENCY: float = 0.55
-    COUNT_MAX: int = 10
+    MIN_EFFICIENCY: float = 0.6
+    COUNT_MAX: int = 20
     INDICATORS: int = 8
 
 
