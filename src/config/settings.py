@@ -6,7 +6,7 @@ from datetime import time
 @dataclass
 class Strategy:
     MIN_EFFICIENCY: float = 0.6
-    COUNT_MAX: int = 20
+    COUNT_MAX: int = 200
     INDICATORS: int = 8
 
 

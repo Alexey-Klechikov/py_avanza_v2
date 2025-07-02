@@ -63,7 +63,7 @@ class Info(BaseModel):
 
 class Account(BaseModel):
     info: Info
-    tradable: bool
+    tradable: bool | None = None
     total_value: TotalValue = Field(alias="totalValue")
     buying_power: BuyingPower = Field(alias="buyingPower")
     is_tradable: bool = Field(alias="isTradable")
