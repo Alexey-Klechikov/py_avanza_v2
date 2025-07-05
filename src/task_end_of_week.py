@@ -1,5 +1,5 @@
 import warnings
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pandas as pd
 
@@ -19,11 +19,11 @@ set_handlers("end_of_week")
 log = get_logger()
 
 
-def _get_data(point_of_origin: datetime, period_days: int):
-    log.info(f"Get data: {(point_of_origin - timedelta(days=period_days)).date()} - {point_of_origin.date()}")
+def _get_data(period_days: int):
+    log.info(f"Get data: {(TODAY_MIDNIGHT - timedelta(days=period_days)).date()} - {TODAY_MIDNIGHT.date()}")
 
     data = Storage().read()
-    data = data.loc[(data.index >= point_of_origin - timedelta(days=period_days)) & (data.index < point_of_origin)]
+    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
     return data
@@ -32,10 +32,7 @@ def _get_data(point_of_origin: datetime, period_days: int):
 def generate_strategies(period_days_long_test: int, period_days_final_test: int) -> None:
     log.warning(f"Long-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_long_test} days)")
     backtest_trade_strategies(
-        _get_data(
-            point_of_origin=(TODAY_MIDNIGHT - timedelta(days=period_days_final_test)),
-            period_days=period_days_long_test,
-        ),
+        _get_data(period_days=period_days_long_test),
         ComposeStrategiesListMethod.GENERATE,
         strategies_file_name_suffix_new="dev_3",
     )
@@ -51,10 +48,7 @@ def generate_strategies(period_days_long_test: int, period_days_final_test: int)
             ),
         )
         backtest_trade_strategies(
-            _get_data(
-                point_of_origin=(TODAY_MIDNIGHT - timedelta(days=period_days_final_test)),
-                period_days=period_days_long_test,
-            ),
+            _get_data(period_days=period_days_long_test),
             ComposeStrategiesListMethod.EXTEND,
             strategies_file_name_suffix_old=f"dev_{i}",
             strategies_file_name_suffix_new=f"dev_{i + 1}",
@@ -62,10 +56,7 @@ def generate_strategies(period_days_long_test: int, period_days_final_test: int)
 
     log.warning(f"Final-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_final_test} days)")
     backtest_trade_strategies(
-        _get_data(
-            point_of_origin=(TODAY_MIDNIGHT - timedelta(days=period_days_final_test)),
-            period_days=period_days_final_test,
-        ),
+        _get_data(period_days=period_days_final_test),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
@@ -73,7 +64,7 @@ def generate_strategies(period_days_long_test: int, period_days_final_test: int)
 
 if __name__ == "__main__":
     try:
-        generate_strategies(period_days_long_test=365, period_days_final_test=60)
+        generate_strategies(period_days_long_test=250, period_days_final_test=60)
 
         portfolio = Portfolio()
         portfolio.reload_balance()
