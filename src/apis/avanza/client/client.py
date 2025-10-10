@@ -1,14 +1,15 @@
 import json
+import os
 import time
 from collections.abc import Sequence
 from copy import copy
 from datetime import date
 from functools import lru_cache
 
-import keyring
 from avanza import Avanza as AvanzaBase
 from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
 from avanza.constants import TransactionsDetailsType
+from dotenv import load_dotenv
 from requests.exceptions import HTTPError
 
 from apis.avanza.client.models.account.overview import AccountOverview
@@ -28,7 +29,6 @@ from apis.avanza.client.models.order.place import PlaceOrderResponse
 from apis.avanza.client.models.order.transactions import TransactionsDetails
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
 from apis.avanza.client.models.search.market_stocks_result import MarketStocksFilterResult
-from config import ACCOUNT_USERNAME
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -309,18 +309,20 @@ class Avanza(AvanzaBase):
 
 
 @lru_cache
-def get_client(user: str = ACCOUNT_USERNAME) -> Avanza:
+def get_client() -> Avanza:
     log.debug("Connect to Avanza")
 
+    load_dotenv(os.path.join(os.path.dirname(__file__), "../../../config/.env"))
+
     credentials = {
-        "username": keyring.get_password(user, "un"),
-        "password": keyring.get_password(user, "pass"),
-        "totpSecret": keyring.get_password(user, "totp"),
+        "username": os.getenv("AVA_USERNAME"),
+        "password": os.getenv("AVA_PASS"),
+        "totpSecret": os.getenv("AVA_TOTP"),
     }
 
-    if [i for i in credentials.values() if i is None]:
-        log.error("Missing credentials")
-        raise ValueError
+    if any(v is None for v in credentials.values()):
+        log.error("Missing credentials in .env file")
+        raise ValueError("Missing Avanza credentials. Check your .env file.")
 
     i = 1
     while True:

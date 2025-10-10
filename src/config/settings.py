@@ -90,7 +90,7 @@ class TradeStrategies:
                 "EBSW": {"length": 40, "bars": 18},
             },
             "Volatility": {
-                "STARC": {"length_ma": 12, "length_atr": 14, "multiplier_atr": 1.8, "mamode": "wma"},
+                "STARC": {"length_ma": 12, "length_atr": 14, "multiplier_atr": 1.8},
                 # "MASSI": {"fast": 9, "slow": 23, "threshold": 26.5},
                 "BBANDS": {"length": 10, "std": 2.4},
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},

@@ -1,5 +1,5 @@
 import pandas_ta as ta  # type: ignore
-from pandas_ta.overlap import ma as calculator_ma
+from pandas_ta.overlap import wma
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -15,7 +15,7 @@ class Volatility(IndicatorsCategoryBase):
         https://www.investopedia.com/terms/s/starc.asp
         https://www.viperreport.com/how-to-use-starc-bands-one-of-my-favorite-chart-tools-of-all-time/
 
-        defaults: length_ma = 6, length_atr = 15 , multiplier_atr = 2, mamode = "sma"
+        defaults: length_ma = 6, length_atr = 15 , multiplier_atr = 2
 
         During an overall uptrend, buying near the lower band and selling near the top band is favorable,
         for example. STARC bands can provide insight for both ranging and trending markets.
@@ -26,7 +26,7 @@ class Volatility(IndicatorsCategoryBase):
             "STARC_U": f"STARC_U_{length_ma}_{length_atr}_{multiplier_atr}",
         }
 
-        ma = calculator_ma(mamode, self.data["Close"], length=length_ma)
+        ma = wma(self.data["Close"], length=length_ma)
         atr = self.data.ta.atr(length=length_atr)
 
         self.data[column_names["STARC_B"]] = ma - multiplier_atr * atr

@@ -31,3 +31,49 @@ disable = [
     "logging-format-interpolation",
     "broad-exception-caught"
 ]
+
+[tool.pdm]
+distribution = false
+
+[[tool.pdm.source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+[project]
+name = "pyAvanza_v2"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "", email = ""},
+]
+dependencies = [
+    "avanza-api==12.0.0",
+    "pandas-ta",
+    "yfinance",
+    "pydantic",
+    "mplfinance",
+    "numpy",
+    "telegram-send==0.34",
+    "python-telegram-bot==13.13",
+    "workalendar",
+    "pandas-market-calendars",
+    "beautifulsoup4",
+    "requests-html",
+    "lxml-html-clean",
+    "cloudscraper",
+    "pathos",
+    "scipy",
+    "python-dotenv>=1.1.1",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[dependency-groups]
+dev = [
+    "black",
+    "pytest",
+    "pre-commit",
+    "flake8-pyproject",
+    "pyupgrade",
+]

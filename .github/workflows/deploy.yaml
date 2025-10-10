@@ -8,6 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
+      REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
 
     steps:
     - name: Checkout repository
@@ -17,10 +21,6 @@ jobs:
       run: sudo apt-get install -y openssh-client
 
     - name: Deploy
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
-        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
       run: |
         mkdir -p ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
@@ -31,21 +31,31 @@ jobs:
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
           "mkdir -p /home/ubuntu/pyAvanza/"
 
-        # Remove all files and directories except "data", "logs", and "config"
+        # Remove all files and directories except "data", "logs", ".venv", "config"
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
           "find /home/ubuntu/pyAvanza/ -mindepth 1 -maxdepth 1 -type f -exec rm -f {} +"
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} \
-          "find /home/ubuntu/pyAvanza/ -mindepth 1 -maxdepth 1 -type d ! -name 'data' ! -name 'logs' ! -name 'config' -exec rm -rf {} +"
+          "find /home/ubuntu/pyAvanza/ -mindepth 1 -maxdepth 1 -type d ! -name 'data' ! -name 'logs' ! -name 'config' ! -name '.venv' -exec rm -rf {} +"
 
         # Use rsync to copy only files under src/ directory to remote server
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
           ./src/ ${REMOTE_USERNAME}@${REMOTE_HOST}:/home/ubuntu/pyAvanza/
 
-    - name: Update Crontab
+    - name: Configure Avanza Credentials
       env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        REMOTE_USERNAME: ${{ secrets.REMOTE_USERNAME }}
-        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+        AVA_USERNAME: ${{ secrets.AVA_USERNAME }}
+        AVA_PASS: ${{ secrets.AVA_PASS }}
+        AVA_TOTP: ${{ secrets.AVA_TOTP }}
+      run: |
+        # Create .env file with credentials
+        echo "AVA_USERNAME='$AVA_USERNAME'" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "cat > /home/ubuntu/pyAvanza/config/.env"
+        echo "AVA_PASS='$AVA_PASS'" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "cat >> /home/ubuntu/pyAvanza/config/.env"
+        echo "AVA_TOTP='$AVA_TOTP'" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "cat >> /home/ubuntu/pyAvanza/config/.env"
+
+        # Set proper permissions
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "chmod 600 /home/ubuntu/pyAvanza/config/.env"
+
+    - name: Update Crontab
       run: |
         # Define cronjobs as a simple array of strings
         cronjobs=(
@@ -85,5 +95,7 @@ jobs:
         # Update crontab on remote server
         echo -e "$updated_crontab" | ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "crontab -"
 
+    - name: Additional actions
+      run: |
         # Give permissions to print_logs.sh
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "chmod +x /home/ubuntu/pyAvanza/print_logs.sh"

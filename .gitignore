@@ -7,3 +7,4 @@ ___*
 hold*.json
 *trade*.json
 analytics*.json
+*.env
