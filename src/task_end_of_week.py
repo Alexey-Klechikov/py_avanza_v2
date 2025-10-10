@@ -64,7 +64,7 @@ def generate_strategies(period_days_long_test: int, period_days_final_test: int)
 
 if __name__ == "__main__":
     try:
-        generate_strategies(period_days_long_test=250, period_days_final_test=60)
+        generate_strategies(period_days_long_test=90, period_days_final_test=60)
 
         portfolio = Portfolio()
         portfolio.reload_balance()

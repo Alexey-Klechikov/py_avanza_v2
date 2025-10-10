@@ -19,9 +19,10 @@ class Overlap(IndicatorsCategoryBase):
         Standard Linear Regression is between two or more variables.
         """
 
-        column_name = f"LRr_{length}"
+        column_name = f"LINREGr_{length}"
 
         self.data.ta.linreg(length=length, r=True, append=True)
+
         if column_name not in self.data.columns:
             log.debug("Indicator 'Overlap -> LINREG' can not be added.")
             return
@@ -50,9 +51,10 @@ class Overlap(IndicatorsCategoryBase):
         Standard Linear Regression is between two or more variables.
         """
 
-        column_name = f"LRm_{length}"
+        column_name = f"LINREGm_{length}"
 
         self.data.ta.linreg(length=length, slope=True, append=True)
+
         if column_name not in self.data.columns:
             log.debug("Indicator 'Overlap -> SLOPE' can not be added.")
             return

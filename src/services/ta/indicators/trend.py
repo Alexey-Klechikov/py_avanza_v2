@@ -70,12 +70,13 @@ class Trend(IndicatorsCategoryBase):
         """
 
         column_names = {
-            "ADX": f"ADX_{lensig}",
+            "ADX": f"ADX_{length}",
             "DMN": f"DMN_{length}",
             "DMP": f"DMP_{length}",
         }
 
         self.data.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
+
         if column_names["ADX"] not in self.data.columns:
             log.debug("Indicator 'Trend -> ADX' can not be added.")
             return

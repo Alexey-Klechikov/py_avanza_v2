@@ -89,10 +89,14 @@ class Volatility(IndicatorsCategoryBase):
         Many traders see stocks as overbought as their price nears the upper band and oversold as they
         approach the lower band, signaling an opportune time to trade.
         """
+        column_names = {
+            "BBM": f"BBM_{length}_{std}_{std}",
+            "BBL": f"BBL_{length}_{std}_{std}",
+            "BBU": f"BBU_{length}_{std}_{std}",
+        }
 
-        column_names = {"BBM": f"BBM_{length}_{std}", "BBL": f"BBL_{length}_{std}", "BBU": f"BBU_{length}_{std}"}
+        self.data.ta.bbands(length=length, lower_std=std, upper_std=std, append=True)
 
-        self.data.ta.bbands(length=length, std=std, append=True)
         if column_names["BBM"] not in self.data.columns:
             log.debug("Indicator 'Volatility -> BBANDS' can not be added.")
             return
