@@ -115,7 +115,10 @@ class Transactions:
 
         return self.log_per_day
 
-    def save_daily_trading_stats(self, date_from: date = (datetime.today() - timedelta(days=61)).date()) -> None:
+    def save_daily_trading_stats(
+        self,
+        date_from: date = (datetime.today() - timedelta(days=180)).replace(day=1).date(),
+    ) -> None:
         log.info("Save daily trading stats")
 
         if not self.log_per_day:
