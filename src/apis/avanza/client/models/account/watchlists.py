@@ -17,4 +17,3 @@ class Watchlist(BaseModel):
     created: datetime
     modified: datetime
     name: str
-    url_name: str = Field(alias="urlName")

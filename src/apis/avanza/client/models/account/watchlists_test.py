@@ -31,7 +31,6 @@ class Test_Watchlists(TestCase):
                 "created": "2024-08-27T13:08:03.000+02:00",
                 "modified": "2024-09-27T18:04:31.000+02:00",
                 "name": "DT_BEAR_NASDAQ_WARRANT",
-                "urlName": "dt-bear-nasdaq-warrant",
             },
             {
                 "watchListId": "11319278",
@@ -39,7 +38,6 @@ class Test_Watchlists(TestCase):
                 "created": "2023-03-23T03:11:01.000+01:00",
                 "modified": "2024-11-27T09:10:11.000+01:00",
                 "name": "DT_BEAR_OMX_CERTIFICATE",
-                "urlName": "dt-bear-omx-certificate",
             },
             {
                 "watchListId": "11319272",
@@ -64,7 +62,6 @@ class Test_Watchlists(TestCase):
                 "created": "2023-03-23T03:46:32.000+01:00",
                 "modified": "2024-11-27T09:10:12.000+01:00",
                 "name": "DT_BEAR_OMX_WARRANT",
-                "urlName": "dt-bear-omx-warrant",
             },
             {
                 "watchListId": "12217704",
@@ -72,7 +69,6 @@ class Test_Watchlists(TestCase):
                 "created": "2024-08-27T13:08:51.000+02:00",
                 "modified": "2024-09-27T18:04:32.000+02:00",
                 "name": "DT_BULL_NASDAQ_CERTIFICATE",
-                "urlName": "dt-bull-nasdaq-certificate",
             },
             {
                 "watchListId": "12217702",
@@ -80,7 +76,6 @@ class Test_Watchlists(TestCase):
                 "created": "2024-08-27T13:08:17.000+02:00",
                 "modified": "2024-09-27T18:04:34.000+02:00",
                 "name": "DT_BULL_NASDAQ_WARRANT",
-                "urlName": "dt-bull-nasdaq-warrant",
             },
             {
                 "watchListId": "11319279",
@@ -98,7 +93,6 @@ class Test_Watchlists(TestCase):
                 "created": "2023-03-23T03:11:17.000+01:00",
                 "modified": "2024-11-27T09:10:15.000+01:00",
                 "name": "DT_BULL_OMX_CERTIFICATE",
-                "urlName": "dt-bull-omx-certificate",
             },
             {
                 "watchListId": "11319271",
@@ -137,7 +131,6 @@ class Test_Watchlists(TestCase):
                 "created": "2023-03-23T03:45:19.000+01:00",
                 "modified": "2024-11-27T09:10:18.000+01:00",
                 "name": "DT_BULL_OMX_WARRANT",
-                "urlName": "dt-bull-omx-warrant",
             },
         ]
 
