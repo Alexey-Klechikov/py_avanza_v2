@@ -13,9 +13,8 @@ class Listing(BaseModel):
     country_code: str = Field(alias="countryCode")
     currency: str
     market_place_code: str = Field(alias="marketPlaceCode")
-    market_place_name: str = Field(alias="marketPlaceName")
-    tick_size_list_id: int = Field(alias="tickSizeListId")
-    market_trades_available: bool = Field(alias="marketTradesAvailable")
+    # market_place_name and market_trades_available are not present in test data
+    tick_size_list_id: str = Field(alias="tickSizeListId")
 
 
 class HistoricalClosingPrices(BaseModel):
@@ -29,6 +28,14 @@ class HistoricalClosingPrices(BaseModel):
     five_years: float = Field(alias="fiveYears")
     ten_years: float = Field(alias="tenYears")
     start_date: date = Field(alias="startDate")
+    start: float | None = Field(default=None, alias="start")
+
+
+class Constituent(BaseModel):
+    change_percent: float = Field(alias="changePercent")
+    country_code: str = Field(alias="countryCode")
+    name: str
+    orderbook_id: str = Field(alias="orderbookId")
 
 
 class KeyIndicators(BaseModel):
@@ -106,25 +113,14 @@ class Trade(BaseModel):
 
 
 class InstrumentIndex(BaseModel):
-    orderbook_id: int = Field(alias="orderbookId")
+    orderbook_id: str = Field(alias="orderbookId")
     name: str
     isin: str
-    instrument_id: int = Field(alias="instrumentId")
-    sectors: list[str]
-    tradable: str
     listing: Listing
-    historical_closing_prices: HistoricalClosingPrices = Field(
-        alias="historicalClosingPrices",
-    )
-    key_indicators: KeyIndicators = Field(alias="keyIndicators")
+    historical_closing_prices: HistoricalClosingPrices = Field(alias="historicalClosingPrices")
     quote: Quote
     type: str
-    stock: Stock
-    company: Company
-    company_owners: CompanyOwners = Field(alias="companyOwners")
-    broker_trade_summaries: list[BrokerTradeSummary] = Field(
-        alias="brokerTradeSummaries",
-    )
-    dividends: Dividends
-    trading_terms: TradingTerms = Field(alias="tradingTerms")
-    trades: list[Trade]
+    index_type: str = Field(alias="indexType")
+    previous_closing_price: float = Field(alias="previousClosingPrice")
+    description: str
+    constituents: list[Constituent]

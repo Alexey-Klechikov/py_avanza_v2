@@ -3,12 +3,13 @@ import os
 import time
 from collections.abc import Sequence
 from copy import copy
+from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 
 from avanza import Avanza as AvanzaBase
-from avanza import InstrumentType, OrderType, Resolution, TimePeriod, constants
-from avanza.constants import TransactionsDetailsType
+from avanza import InstrumentType, OrderType, Resolution, TimePeriod
+from avanza.constants import HttpMethod, TransactionsDetailsType
 from dotenv import load_dotenv
 from requests.exceptions import HTTPError
 
@@ -18,6 +19,8 @@ from apis.avanza.client.models.account.watchlists import Watchlist
 from apis.avanza.client.models.call_request import CallRequest
 from apis.avanza.client.models.chart_data import ChartData
 from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
+from apis.avanza.client.models.instrument.etf import InstrumentETF
+from apis.avanza.client.models.instrument.fund import InstrumentFund
 from apis.avanza.client.models.instrument.index import InstrumentIndex
 from apis.avanza.client.models.instrument.stock import InstrumentStock
 from apis.avanza.client.models.instrument.warrant import InstrumentWarrant
@@ -34,22 +37,40 @@ from utils.logger.operators import get_logger
 log = get_logger()
 
 
+@dataclass
+class Endpoints:
+    chart_data = "/_api/price-chart/stock/{order_book_id}"
+    instrument = "/_api/market-guide/{type}/{id}"
+    instrument_details = "/_api/market-guide/{type}/{id}/details"
+    index = "/_api/market-index/{id}"
+    index_details = "/_api/market-index/{id}/details"
+    etf = "/_api/market-etf/{id}"
+    etf_details = "/_api/market-etf/{id}/details"
+    fund_references = "/_api/fund-reference/reference/{id}"
+    fund_sustainability = "/_api/fund-reference/sustainability/{id}"
+    fund_portfolio = "/_api/fund-reference/portfolio-data/{id}"
+    fund_trading_terms = "/_api/fund-guide/fund-trading-terms/{id}"
+    accounts_overview = "/_api/account-performance/overview/total-values"
+    watchlists = "/_api/watchlist/watchlist"
+    filtered_search = "/_api/search/filtered-search"
+    accounts_positions = "/_api/position-data/positions"
+    list_orders = "/_api/trading/rest/orders"
+    transactions_list = "/_api/transactions/list"
+    watchlist_remove = "/_api/watchlist/watchlist/remove/{watchlist_id}/{instrument_id}"
+    watchlist_add = "/_api/watchlist/watchlist/add/{watchlist_id}/{instrument_id}"
+    place_order = "/_api/trading-critical/rest/order/place"
+    edit_order = "/_api/trading-critical/rest/order/modify"
+    delete_order = "/_api/trading-critical/rest/order/delete"
+    market_stocks_filter = "/_api/market-stock-filter/stocks"
+
+
 class Avanza(AvanzaBase):
     def __init__(self, credentials: dict):
         super().__init__(credentials)
         self._authentication_session = None
 
-    def _retry_call(
-        self,
-        path: str,
-        http_method: str = "GET",
-        options: dict | list | None = None,
-    ) -> dict:
-        request = CallRequest(
-            path=path,
-            method=http_method,
-            options=options,
-        ).model_dump()
+    def _retry_call(self, method: HttpMethod, path: str, options: dict | list | None = None) -> dict:
+        request = CallRequest(method=method, path=path, options=options).model_dump()
 
         response = {}
         for i in range(10):
@@ -78,9 +99,9 @@ class Avanza(AvanzaBase):
         for _ in range(2 * 60):
             try:
                 response = self.__call(
-                    constants.HttpMethod.GET,
-                    f"/_api/price-chart/stock/{order_book_id}",
-                    options,
+                    method=HttpMethod.GET,
+                    path=Endpoints.chart_data.format(order_book_id=order_book_id),
+                    options=options,
                 )
 
             except HTTPError:
@@ -95,15 +116,14 @@ class Avanza(AvanzaBase):
         self,
         instrument_type: InstrumentType,
         instrument_id: str,
+        endpoints: list[str] = [Endpoints.instrument, Endpoints.instrument_details],
     ) -> dict:
         result = {}
 
-        for path in [
-            "/_api/market-guide/{}/{}",
-            "/_api/market-guide/{}/{}/details",
-        ]:
+        for path in endpoints:
             response = self._retry_call(
-                path.format(instrument_type.value, instrument_id),
+                method=HttpMethod.GET,
+                path=path.format(type=instrument_type.value, id=instrument_id),
             )
 
             if response:
@@ -112,55 +132,73 @@ class Avanza(AvanzaBase):
         return result
 
     def get_instrument_certificate(self, instrument_id: str) -> InstrumentCertificate:
-        data = self._get_instrument(InstrumentType.CERTIFICATE, instrument_id)
+        data = self._get_instrument(instrument_type=InstrumentType.CERTIFICATE, instrument_id=instrument_id)
 
         return InstrumentCertificate(**data)
 
     def get_instrument_warrant(self, instrument_id: str) -> InstrumentWarrant:
-        data = self._get_instrument(InstrumentType.WARRANT, instrument_id)
+        data = self._get_instrument(instrument_type=InstrumentType.WARRANT, instrument_id=instrument_id)
 
         return InstrumentWarrant(**data)
 
     def get_instrument_stock(self, instrument_id: str) -> InstrumentStock:
-        data = self._get_instrument(InstrumentType.STOCK, instrument_id)
+        data = self._get_instrument(instrument_type=InstrumentType.STOCK, instrument_id=instrument_id)
 
         return InstrumentStock(**data)
 
     def get_instrument_index(self, instrument_id: str) -> InstrumentIndex:
-        data = self._get_instrument(InstrumentType.STOCK, instrument_id)
+        data = self._get_instrument(
+            instrument_type=InstrumentType.INDEX,
+            instrument_id=instrument_id,
+            endpoints=[Endpoints.index],
+        )
 
         return InstrumentIndex(**data)
 
+    def get_instrument_etf(self, instrument_id: str) -> InstrumentETF:
+        data = self._get_instrument(
+            instrument_type=InstrumentType.EXCHANGE_TRADED_FUND,
+            instrument_id=instrument_id,
+            endpoints=[Endpoints.etf, Endpoints.etf_details],
+        )
+
+        return InstrumentETF(**data)
+
+    def get_instrument_fund(self, instrument_id: str) -> InstrumentFund:
+        data = self._get_instrument(
+            instrument_type=InstrumentType.FUND,
+            instrument_id=instrument_id,
+            endpoints=[
+                Endpoints.fund_references,
+                Endpoints.fund_sustainability,
+                Endpoints.fund_portfolio,
+                Endpoints.fund_trading_terms,
+            ],
+        )
+
+        return InstrumentFund(**data)
+
     def get_accounts_overview(self, account_url_parameter: str) -> AccountOverview:
         data = self._retry_call(
-            "/_api/account-performance/overview/total-values",
-            http_method="POST",
+            method=HttpMethod.POST,
+            path=Endpoints.accounts_overview,
             options=[account_url_parameter],
         )
 
         return AccountOverview(**data)
 
     def get_watchlists(self) -> list[Watchlist]:
-        data = self._retry_call(
-            "/_api/watchlist/watchlist",
-            http_method="GET",
-        )
+        data = self._retry_call(method=HttpMethod.GET, path=Endpoints.watchlists)
 
         return [Watchlist(**i) for i in data]  # type: ignore
 
-    def filtered_search(
-        self,
-        search_string: str,
-        types: list[InstrumentType | str],
-    ) -> SearchResult:
+    def filtered_search(self, search_string: str, types: list[InstrumentType | str]) -> SearchResult:
         data = self._retry_call(
-            path="/_api/search/filtered-search",
-            http_method="POST",
+            method=HttpMethod.POST,
+            path=Endpoints.filtered_search,
             options={
                 "query": search_string,
-                "searchFilter": {
-                    "types": [i.name if isinstance(i, InstrumentType) else i for i in types],
-                },
+                "searchFilter": {"types": [i.name if isinstance(i, InstrumentType) else i for i in types]},
                 "pagination": {"from": 0, "size": 200},
             },
         )
@@ -168,12 +206,12 @@ class Avanza(AvanzaBase):
         return SearchResult(**data)
 
     def get_accounts_positions(self) -> AccountsPositions:
-        data = self._retry_call("/_api/position-data/positions")
+        data = self._retry_call(method=HttpMethod.GET, path=Endpoints.accounts_positions)
 
-        return AccountsPositions(**data)  # type: ignore
+        return AccountsPositions(**data)
 
     def list_orders(self) -> Orders:
-        data = self._retry_call("/_api/trading/rest/orders")
+        data = self._retry_call(method=HttpMethod.GET, path=Endpoints.list_orders)
 
         return Orders(**data)
 
@@ -186,8 +224,8 @@ class Avanza(AvanzaBase):
         account_id: str | None = None,
     ) -> TransactionsDetails:
         data = self._retry_call(
-            "/_api/transactions/list",
-            http_method="GET",
+            method=HttpMethod.GET,
+            path=Endpoints.transactions_list,
             options={
                 "transactionTypes": ",".join([type.value for type in transaction_details_types]),
                 "from": transactions_from.isoformat(),
@@ -197,18 +235,18 @@ class Avanza(AvanzaBase):
             },
         )
 
-        return TransactionsDetails(**data)  # type: ignore
+        return TransactionsDetails(**data)
 
     def remove_from_watchlist(self, instrument_id: str, watchlist_id: str):
         self._retry_call(
-            path=f"/_api/watchlist/watchlist/remove/{watchlist_id}/{instrument_id}",
-            http_method="POST",
+            method=HttpMethod.POST,
+            path=Endpoints.watchlist_remove.format(watchlist_id=watchlist_id, instrument_id=instrument_id),
         )
 
     def add_to_watchlist(self, instrument_id: str, watchlist_id: str) -> None:
         self._retry_call(
-            path=f"/_api/watchlist/watchlist/add/{watchlist_id}/{instrument_id}",
-            http_method="POST",
+            method=HttpMethod.POST,
+            path=Endpoints.watchlist_add.format(watchlist_id=watchlist_id, instrument_id=instrument_id),
         )
 
     def place_order(
@@ -234,24 +272,14 @@ class Avanza(AvanzaBase):
 
         parsed_response = PlaceOrderResponse(**response)
         if parsed_response.order_request_status != "SUCCESS":
-            raise OrderException(
-                f"Failed to place order ({parsed_response.message_code})",
-            )
+            raise OrderException(f"Failed to place order ({parsed_response.message_code})")
 
         return parsed_response.order_id
 
-    def edit_order(
-        self,
-        order_id: str,
-        account_id: str,
-        price: float,
-        valid_until: date,
-        volume: int,
-        **_,
-    ):
+    def edit_order(self, order_id: str, account_id: str, price: float, valid_until: date, volume: int, **_):
         response = self._retry_call(
-            path="/_api/trading-critical/rest/order/modify",
-            http_method="POST",
+            method=HttpMethod.POST,
+            path=Endpoints.edit_order,
             options={
                 "orderId": order_id,
                 "price": price,
@@ -268,9 +296,7 @@ class Avanza(AvanzaBase):
 
         parsed_response = EditOrderResponse(**response)
         if parsed_response.order_request_status != "SUCCESS":
-            raise OrderException(
-                f"Failed to edit order ({parsed_response.message_code})",
-            )
+            raise OrderException(f"Failed to edit order ({parsed_response.message_code})")
 
         return parsed_response.order_id
 
@@ -282,9 +308,7 @@ class Avanza(AvanzaBase):
 
         parsed_response = DeleteOrderResponse(**response)
         if parsed_response.order_request_status != "SUCCESS":
-            raise OrderException(
-                f"Failed to delete order ({parsed_response.message_code})",
-            )
+            raise OrderException(f"Failed to delete order ({parsed_response.message_code})")
 
         return parsed_response.order_id
 
@@ -295,8 +319,8 @@ class Avanza(AvanzaBase):
         limit: int = 100,
     ) -> MarketStocksFilterResult:
         response = self._retry_call(
-            path="/_api/market-stock-filter/stocks",
-            http_method="POST",
+            method=HttpMethod.POST,
+            path=Endpoints.market_stocks_filter,
             options={
                 "filter": {"marketPlaces": market_places},
                 "offset": offset,

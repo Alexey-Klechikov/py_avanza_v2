@@ -3,8 +3,8 @@ from pydantic import BaseModel, field_validator
 
 
 class CallRequest(BaseModel):
-    path: str
     method: constants.HttpMethod | str
+    path: str
     options: list | dict | None = None
 
     @field_validator("method", mode="before")
