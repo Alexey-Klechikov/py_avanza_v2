@@ -1,4 +1,4 @@
-import pandas_ta as ta  # type: ignore
+import pandas_ta as ta  # noqa: F401
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
 from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
@@ -204,10 +204,10 @@ class Momentum(IndicatorsCategoryBase):
 
         default: k=14, d=3, smooth_k=3, mamode="sma"
 
-        The Stochastic Oscillator is a momentum indicator that shows the location of the close relative to the high-low
-        range over a set number of periods. According to an interview with Lane, the Stochastic Oscillator "doesn't follow
-        price, it doesn't follow volume or anything like that. It follows the speed or the momentum of price. As a rule,
-        the momentum changes direction before price."
+        The Stochastic Oscillator is a momentum indicator that shows the location of the close relative
+        to the high-low range over a set number of periods. According to an interview with Lane, the
+        Stochastic Oscillator "doesn't follow price, it doesn't follow volume or anything like that.
+        It follows the speed or the momentum of price. As a rule, the momentum changes direction before price."
         """
 
         column_names = {

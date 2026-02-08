@@ -45,7 +45,9 @@ class Watchlists:
 
             if preferred_instrument:
                 self.preferred_instrument.set(instrument_direction, preferred_instrument)
-                log.debug(f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]")
+                log.debug(
+                    f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]",
+                )
 
     def _refresh_one(self, watchlist: Watchlist, watchlist_name: UnpackedWatchlistName):
         for orderbook_id in watchlist.orderbook_ids:
@@ -165,7 +167,10 @@ class Watchlists:
 
         for watchlist in get_client().get_watchlists():
             unpacked_watchlist_name = UnpackedWatchlistName(watchlist.name)
-            if unpacked_watchlist_name.trading_perspective != "DT" or unpacked_watchlist_name.instrument != SETTINGS.NAME:
+            if (
+                unpacked_watchlist_name.trading_perspective != "DT"
+                or unpacked_watchlist_name.instrument != SETTINGS.NAME
+            ):
                 continue
 
             self._clear_one(watchlist)

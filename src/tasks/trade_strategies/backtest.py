@@ -66,7 +66,10 @@ class Order(BaseModel):
         if self.max_profit > trigger_profit and profit < 0:
             return True
 
-        if self.max_profit > trigger_profit and ((self.max_profit - profit) / self.max_profit) > SETTINGS.PULLBACK.VALUE:
+        if (
+            self.max_profit > trigger_profit
+            and ((self.max_profit - profit) / self.max_profit) > SETTINGS.PULLBACK.VALUE
+        ):
             return True
 
         return False
@@ -99,7 +102,8 @@ def _consider_signals(data: pd.DataFrame, strategy: Strategy) -> None:
         data[column] = data.apply(
             lambda row: (
                 np.nan
-                if not signal_methods or not combination_condition(signal_method(row) for signal_method in signal_methods)
+                if not signal_methods
+                or not combination_condition(signal_method(row) for signal_method in signal_methods)
                 else row[column]
             ),
             axis=1,

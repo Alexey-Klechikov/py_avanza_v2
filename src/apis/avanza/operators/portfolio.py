@@ -75,7 +75,9 @@ class Portfolio:
                         "name": i.instrument.name,
                     },
                     "quote": {
-                        "buy": (None if not i.instrument.orderbook.quote.buy else i.instrument.orderbook.quote.buy.value),
+                        "buy": (
+                            None if not i.instrument.orderbook.quote.buy else i.instrument.orderbook.quote.buy.value
+                        ),
                         "sell": (
                             None if not i.instrument.orderbook.quote.sell else i.instrument.orderbook.quote.sell.value
                         ),
@@ -86,10 +88,14 @@ class Portfolio:
                     "acquired_value": i.acquired_value.value,
                     "performance": {
                         "percent": (
-                            None if not i.last_trading_day_performance else i.last_trading_day_performance.relative.value
+                            None
+                            if not i.last_trading_day_performance
+                            else i.last_trading_day_performance.relative.value
                         ),
                         "value": (
-                            None if not i.last_trading_day_performance else i.last_trading_day_performance.absolute.value
+                            None
+                            if not i.last_trading_day_performance
+                            else i.last_trading_day_performance.absolute.value
                         ),
                     },
                 },

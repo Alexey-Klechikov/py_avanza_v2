@@ -56,7 +56,9 @@ class Orders:
                 volume=volume,
                 valid_until=valid_until,
             )
-            log.info((f"[{caller}] " if caller else "") + f"Order placed: {order_type.value} {instrument_name} {price}")
+            log.info(
+                (f"[{caller}] " if caller else "") + f"Order placed: {order_type.value} {instrument_name} {price}",
+            )
 
             sleep(3)
 

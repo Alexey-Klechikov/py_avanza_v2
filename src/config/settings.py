@@ -21,7 +21,7 @@ class TakeProfit:
 class StopLoss:
     # The percentage from the buy price that the price must fall to trigger a stop loss
     # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
-    # The stop loss is confirmed if the price falls below the buy price by this percentage for a certain number of times
+    # The stop loss is confirmed if the price falls below the buy price by the percentage for a certain number of times
     VALUE: float = 0.035
     CONFIRMATION_COUNT: int = 3
 
@@ -30,7 +30,7 @@ class StopLoss:
 class Pullback:
     # The percentage of the maximum profit that must be lost before a pullback is confirmed
     # Example: 0.4 means that if the maximum profit is 10% and the current profit is 6%, a pullback is confirmed
-    # The pullback is confirmed if the price falls below the buy price by this percentage for a certain number of times
+    # The pullback is confirmed if the price falls below the buy price by the percentage for a certain number of times
     VALUE: float = 0.0
     CONFIRMATION_COUNT: int = 2
     TRIGGER_PROFIT: float = 0.025
@@ -86,9 +86,7 @@ class TradeStrategies:
                 "RVGI": {"length": 18, "length_swma": 3, "length_divergence": 22},
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
             },
-            "Cycles": {
-                "EBSW": {"length": 40, "bars": 18},
-            },
+            "Cycles": {"EBSW": {"length": 40, "bars": 18}},
             "Volatility": {
                 "STARC": {"length_ma": 12, "length_atr": 14, "multiplier_atr": 1.8},
                 # "MASSI": {"fast": 9, "slow": 23, "threshold": 26.5},
@@ -99,7 +97,7 @@ class TradeStrategies:
                 "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
                 "ADOSC": {"fast": 6, "slow": 10, "length_divergence": 28},
                 # "CMF": {"length": 28, "length_divergence": 32},
-                # "KVO": {"fast": 22, "slow": 55, "signal": 10, "mamode": "rma", "length_divergence": 30},
+                # "KVO": {"fast": 22, "slow": 55, "signal": 10, "mamode": "rma", "length_divergence": 30}
             },
         },
     )

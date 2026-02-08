@@ -1,4 +1,4 @@
-import pandas_ta as ta  # type: ignore
+import pandas_ta as ta  # noqa: F401
 from pandas_ta.overlap import wma
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase

@@ -40,7 +40,9 @@ class Storage:
         else:
             combined_data = pd.concat([old_data, data]).reset_index()
             combined_data = (
-                combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()].set_index("Datetime").sort_index()
+                combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()]
+                .set_index("Datetime")
+                .sort_index()
             )
 
         combined_data = combined_data[["Open", "High", "Low", "Close", "Volume"]].dropna(how="any")

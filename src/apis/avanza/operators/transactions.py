@@ -55,7 +55,12 @@ class Transactions:
         for instrument_name, transactions in log_per_instrument.items():
             deal = Deal()
             for i, transaction in enumerate(transactions):
-                if only_today and not deal.buy and not deal.sell and transaction.date.date() != datetime.today().date():
+                if (
+                    only_today
+                    and not deal.buy
+                    and not deal.sell
+                    and transaction.date.date() != datetime.today().date()
+                ):
                     break
 
                 if transaction.type == TransactionsDetailsType.SELL and not deal.buy:
