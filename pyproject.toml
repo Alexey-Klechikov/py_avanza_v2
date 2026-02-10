@@ -26,8 +26,11 @@ disable = [
     "unspecified-encoding",
     "expression-not-assigned",
     "logging-format-interpolation",
-    "broad-exception-caught"
+    "broad-exception-caught",
+    "no-member"
 ]
+load-plugins = ["pylint_pydantic"]
+extension-pkg-allow-list = ["pydantic"]
 
 [tool.pdm]
 distribution = false
@@ -70,6 +73,7 @@ dev = [
     "black",
     "pytest",
     "pre-commit",
+    "pylint-pydantic",
     "flake8-pyproject",
     "pyupgrade",
 ]

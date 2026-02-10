@@ -37,18 +37,22 @@ class Orders:
         order_type: OrderType,
         price: float | None,
         volume: int,
-        valid_until: date = date.today() + timedelta(days=7),
+        valid_until: date | None = None,
         caller: str = "",
     ) -> str | None:
         if SETTINGS.DRY_RUN:
             log.warning(f"Dry run: {order_type.value} order not placed")
+            return None
 
         if not price:
             log.warning("No price set for order: %s %s", order_book_id, order_type.value)
-            return
+            return None
+
+        if valid_until is None:
+            valid_until = date.today() + timedelta(days=7)
 
         try:
-            get_client().place_order(
+            order_id = get_client().place_order(
                 account_id=SETTINGS.ACCOUNT_ID,
                 order_book_id=order_book_id,
                 order_type=order_type,
@@ -57,28 +61,40 @@ class Orders:
                 valid_until=valid_until,
             )
             log.info(
-                (f"[{caller}] " if caller else "") + f"Order placed: {order_type.value} {instrument_name} {price}",
+                "%sOrder placed: %s %s %s",
+                f"[{caller}] " if caller else "",
+                order_type.value,
+                instrument_name,
+                price,
             )
 
             sleep(3)
+            return order_id
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
+            return None
 
     def delete(self, order: Order, caller: str = "") -> str | None:
         if SETTINGS.DRY_RUN:
-            log.warning("Dry run: DELETE order not placed")
-            return
+            log.warning("Dry run: DELETE order not performed")
+            return None
 
         try:
-            get_client().delete_order(account_id=SETTINGS.ACCOUNT_ID, order_id=order.order_id)
+            order_id = get_client().delete_order(account_id=SETTINGS.ACCOUNT_ID, order_id=order.order_id)
             log.info(
-                (f"[{caller}] " if caller else "")
-                + f"Order deleted: {order.side} {order.orderbook.name} {order.price} [{order.state}]",
+                "%sOrder deleted: %s %s %s [%s]",
+                f"[{caller}] " if caller else "",
+                order.side,
+                order.orderbook.name,
+                order.price,
+                order.state,
             )
+            return order_id
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
+            return None
 
     def reload_active(self):
         self.active_order = None
@@ -86,7 +102,7 @@ class Orders:
         orders = self._list()
         if not orders:
             log.debug("No orders found")
-            return
+            return None
 
         active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
         if active_orders:
@@ -99,10 +115,14 @@ class Orders:
 
             self.delete(order)
 
-    def edit_active(self, new_price: float):
+    def edit_active(self, new_price: float) -> str | None:
+        if SETTINGS.DRY_RUN:
+            log.warning("Dry run: Order not edited")
+            return None
+
         if not self.active_order:
             log.warning("No active order found")
-            return
+            return None
 
         try:
             get_client().edit_order(
@@ -116,10 +136,12 @@ class Orders:
             self.active_order.price = new_price
             self.active_order.amount = new_price * self.active_order.volume
 
-            log.info("Order edited")
+            log.info(f"Order edited: {self.active_order.order_id} -> {new_price}")
+            return self.active_order.order_id
 
         except OrderException as exc:
             log.error(f"Exception: {exc}")
+            return None
 
     def delete_all(self, caller: str = ""):
         for order in self._list():

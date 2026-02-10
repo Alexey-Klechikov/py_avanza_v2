@@ -2,10 +2,10 @@ import json
 import os
 import time
 from collections.abc import Sequence
-from copy import copy
 from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
+from json import JSONDecodeError
 
 from avanza import Avanza as AvanzaBase
 from avanza import InstrumentType, OrderType, Resolution, TimePeriod
@@ -37,6 +37,14 @@ from utils.logger.operators import get_logger
 log = get_logger()
 
 
+RETRY_ATTEMPTS = 10
+RETRY_BACKOFF_SECONDS = 3
+CHART_DATA_RETRY_ATTEMPTS = 120
+CHART_DATA_RETRY_SLEEP_SECONDS = 30
+CONNECT_RETRY_ATTEMPTS: int | None = None
+CONNECT_RETRY_BACKOFF_SECONDS = 2
+
+
 @dataclass
 class Endpoints:
     chart_data = "/_api/price-chart/stock/{order_book_id}"
@@ -65,25 +73,33 @@ class Endpoints:
 
 
 class Avanza(AvanzaBase):
-    def __init__(self, credentials: dict):
+    def __init__(self, credentials: dict[str, str]):
         super().__init__(credentials)
         self._authentication_session = None
 
     def _retry_call(self, method: HttpMethod, path: str, options: dict | list | None = None) -> dict:
         request = CallRequest(method=method, path=path, options=options).model_dump()
 
-        response = {}
-        for i in range(10):
+        response: dict | str | None = None
+        for i in range(RETRY_ATTEMPTS):
             try:
                 response = self.__call(**request, return_content=True)
 
             except HTTPError as e:
                 log.debug(e)
-                time.sleep((i + 1) * 3)
+                time.sleep((i + 1) * RETRY_BACKOFF_SECONDS)
 
             if response:
-                return response if isinstance(response, dict) else json.loads(response, parse_float=float)
+                if isinstance(response, dict):
+                    return response
 
+                try:
+                    return json.loads(response, parse_float=float)
+                except JSONDecodeError as exc:
+                    log.error(f"Failed to decode JSON response for {method} {path}: {exc}")
+                    return {}
+
+        log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")
         return {}
 
     def get_chart_data(
@@ -96,7 +112,8 @@ class Avanza(AvanzaBase):
         if resolution is not None:
             options["resolution"] = resolution.value.lower()
 
-        for _ in range(2 * 60):
+        response: dict | None = None
+        for _ in range(CHART_DATA_RETRY_ATTEMPTS):
             try:
                 response = self.__call(
                     method=HttpMethod.GET,
@@ -104,22 +121,25 @@ class Avanza(AvanzaBase):
                     options=options,
                 )
 
-            except HTTPError:
-                time.sleep(30)
+                if response:
+                    return ChartData(**response)
 
-        if response:
-            return ChartData(**response)
+            except HTTPError:
+                time.sleep(CHART_DATA_RETRY_SLEEP_SECONDS)
 
         log.error(f"Failed to get chart data for {order_book_id}")
+        return None
 
     def _get_instrument(
         self,
         instrument_type: InstrumentType,
         instrument_id: str,
-        endpoints: list[str] = [Endpoints.instrument, Endpoints.instrument_details],
+        endpoints: list[str] | None = None,
     ) -> dict:
-        result = {}
+        if endpoints is None:
+            endpoints = [Endpoints.instrument, Endpoints.instrument_details]
 
+        combined_response = {}
         for path in endpoints:
             response = self._retry_call(
                 method=HttpMethod.GET,
@@ -127,9 +147,9 @@ class Avanza(AvanzaBase):
             )
 
             if response:
-                result.update(response)
+                combined_response.update(response)
 
-        return result
+        return combined_response
 
     def get_instrument_certificate(self, instrument_id: str) -> InstrumentCertificate:
         data = self._get_instrument(instrument_type=InstrumentType.CERTIFICATE, instrument_id=instrument_id)
@@ -189,6 +209,9 @@ class Avanza(AvanzaBase):
 
     def get_watchlists(self) -> list[Watchlist]:
         data = self._retry_call(method=HttpMethod.GET, path=Endpoints.watchlists)
+        if not isinstance(data, list):
+            log.error("Unexpected watchlists response type")
+            return []
 
         return [Watchlist(**i) for i in data]  # type: ignore
 
@@ -300,7 +323,7 @@ class Avanza(AvanzaBase):
 
         return parsed_response.order_id
 
-    def delete_order(self, account_id, order_id: str) -> str | None:
+    def delete_order(self, account_id: str, order_id: str) -> str | None:
         response = super().delete_order(account_id, order_id)
 
         if not response:
@@ -314,10 +337,13 @@ class Avanza(AvanzaBase):
 
     def get_market_stocks(
         self,
-        market_places: list[str] = copy(["se", "fi", "de", "no"]),
+        market_places: list[str] | None = None,
         offset: int = 0,
         limit: int = 100,
     ) -> MarketStocksFilterResult:
+        if market_places is None:
+            market_places = ["se", "fi", "de", "no"]
+
         response = self._retry_call(
             method=HttpMethod.POST,
             path=Endpoints.market_stocks_filter,
@@ -344,11 +370,11 @@ def get_client() -> Avanza:
         "totpSecret": os.getenv("AVA_TOTP"),
     }
 
-    if any(v is None for v in credentials.values()):
+    if any(not v for v in credentials.values()):
         log.error("Missing credentials in .env file")
         raise ValueError("Missing Avanza credentials. Check your .env file.")
 
-    i = 1
+    i = 0
     while True:
         try:
             client = Avanza(credentials)  # type: ignore
@@ -358,4 +384,7 @@ def get_client() -> Avanza:
             log.error(e)
             i += 1
 
-            time.sleep(i * 2)
+            if CONNECT_RETRY_ATTEMPTS is not None and i >= CONNECT_RETRY_ATTEMPTS:
+                raise
+
+            time.sleep(i * CONNECT_RETRY_BACKOFF_SECONDS)
