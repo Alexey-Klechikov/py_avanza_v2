@@ -3,21 +3,44 @@ from dataclasses import dataclass, field
 from datetime import time
 
 
-@dataclass
+@dataclass(frozen=True)
+class SettingsWatchlist:
+    INSTRUMENT_DIRECTIONS = {
+        "Kort": "BEAR",
+        "Lång": "BULL",
+    }
+
+    TRADING_PERSPECTIVE_PREFIX = "DT"
+    WATCHLIST_NAME_PARTS = 4
+
+    # Leverage tolerance constants
+    LEVERAGE_LOWER_MULTIPLIER = 0.85
+    LEVERAGE_UPPER_MULTIPLIER = 1.15
+
+    # Price and spread constants
+    MIN_SPREAD_PERCENT = 0.1
+    MIN_PRICE = 1
+    MAX_PRICE = 300
+
+    # Search prefix constants
+    SEARCH_WARRANT_PREFIX = {"BULL": "L", "BEAR": "S"}
+
+
+@dataclass(frozen=True)
 class Strategy:
     MIN_EFFICIENCY: float = 0.6
     COUNT_MAX: int = 200
     INDICATORS: int = 8
 
 
-@dataclass
+@dataclass(frozen=True)
 class TakeProfit:
     # The percentage from the buy price that the price must rise to trigger a take profit
     # Example: 0.09 means that if the buy price is 100 and the price rises to 109, a take profit is triggered
     VALUE: float = 0.05
 
 
-@dataclass
+@dataclass(frozen=True)
 class StopLoss:
     # The percentage from the buy price that the price must fall to trigger a stop loss
     # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
@@ -26,7 +49,7 @@ class StopLoss:
     CONFIRMATION_COUNT: int = 3
 
 
-@dataclass
+@dataclass(frozen=True)
 class Pullback:
     # The percentage of the maximum profit that must be lost before a pullback is confirmed
     # Example: 0.4 means that if the maximum profit is 10% and the current profit is 6%, a pullback is confirmed
@@ -36,14 +59,14 @@ class Pullback:
     TRIGGER_PROFIT: float = 0.025
 
 
-@dataclass
+@dataclass(frozen=True)
 class Time:
     # The time range during which the trading is active
     START: time = time(9, 45)
     END: time = time(17, 15)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TradeStrategies:
     DRY_RUN: bool = platform.system() == "Darwin"
 

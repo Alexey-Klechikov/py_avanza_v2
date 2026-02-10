@@ -113,7 +113,7 @@ class Orders:
             if self.active_order and self.active_order.order_id == order.order_id:
                 continue
 
-            self.delete(order)
+            self.delete(order=order)
 
     def edit_active(self, new_price: float) -> str | None:
         if SETTINGS.DRY_RUN:
@@ -126,11 +126,11 @@ class Orders:
 
         try:
             get_client().edit_order(
-                self.active_order.order_id,
-                self.active_order.account.account_id,
-                new_price,
-                self.active_order.valid_until.date(),
-                self.active_order.volume,
+                order_id=self.active_order.order_id,
+                account_id=self.active_order.account.account_id,
+                price=new_price,
+                valid_until=self.active_order.valid_until.date(),
+                volume=self.active_order.volume,
             )
 
             self.active_order.price = new_price
@@ -145,4 +145,4 @@ class Orders:
 
     def delete_all(self, caller: str = ""):
         for order in self._list():
-            self.delete(order, caller)
+            self.delete(order=order, caller=caller)
