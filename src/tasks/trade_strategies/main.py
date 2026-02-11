@@ -49,14 +49,15 @@ class Data:
 
         else:
             new_data = None
-            if SETTINGS.DATA_SOURCE == "yahoo":
+            data_source = SETTINGS.DATA_SOURCE
+            if data_source == "yahoo":
                 try:
                     new_data = Ticker().get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
                 except Exception as e:
                     log.warning(f"Error fetching Yahoo data: {e}. Will use avanza data instead.")
-                    SETTINGS.DATA_SOURCE = "avanza"
+                    data_source = "avanza"
 
-            if SETTINGS.DATA_SOURCE == "avanza":
+            if data_source == "avanza":
                 new_data = Chart.get_chart_data(TimePeriod.TODAY, Resolution.TWO_MINUTES)
 
             if new_data is None:

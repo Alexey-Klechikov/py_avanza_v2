@@ -295,7 +295,7 @@ class Avanza(AvanzaBase):
 
         return parsed_response.order_id
 
-    def edit_order(self, order_id: str, account_id: str, price: float, valid_until: date, volume: int, **_):
+    def edit_order(self, order_id: str, account_id: str, price: float, valid_until: date, volume: int, *_):
         response = self._retry_call(
             method=HttpMethod.POST,
             path=Endpoints.edit_order,

@@ -105,4 +105,4 @@ class Portfolio:
         self._detect_acquired_instruments()
 
         if self.positions:
-            log.debug((f"[{caller}] " if caller else "") + f"Active positions found [{len(self.positions)} st.]")
+            log.debug("Active positions found [%d st.]%s", len(self.positions), f" [{caller}]" if caller else "")

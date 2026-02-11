@@ -1,4 +1,4 @@
-import pandas_ta as ta  # noqa: F401
+import pandas_ta as ta  # pylint: disable=unused-import # noqa: F401 # noqa: F401
 from pandas_ta.overlap import wma
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
@@ -9,7 +9,7 @@ log = get_logger()
 
 
 class Volatility(IndicatorsCategoryBase):
-    def add_starc_bands(self, length_ma: int, length_atr: int, multiplier_atr: float, mamode: str = "sma") -> None:
+    def add_starc_bands(self, length_ma: int, length_atr: int, multiplier_atr: float) -> None:
         """
         STARC (Stoller Average Range Channel)
         https://www.investopedia.com/terms/s/starc.asp

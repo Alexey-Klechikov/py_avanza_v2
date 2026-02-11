@@ -13,7 +13,7 @@ from utils.logger.operators import get_logger
 log = get_logger()
 
 
-def get_indicators(data, **kwargs) -> dict[str, dict[str, Indicator]]:  # type: ignore
+def get_indicators(data, **_) -> dict[str, dict[str, Indicator]]:
     indicators_mapping = dict()
 
     trend = Trend(data)
