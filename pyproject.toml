@@ -17,6 +17,14 @@ known_first_party = ["black", "blib2to3", "blackd", "_black_version"]
 minversion = "6.0"
 pythonpath = ["src"]
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "integration: marks tests as integration tests (may be slow or require API access)",
+]
+env = [
+    "AVANZA_RETRY_ATTEMPTS=2",
+    "AVANZA_CHART_DATA_RETRY_ATTEMPTS=3",
+    "AVANZA_CHART_DATA_RETRY_SLEEP_SECONDS=1",
+]
 
 [tool.pylint]
 disable = [
@@ -76,6 +84,7 @@ dev = [
     "pylint-pydantic",
     "flake8-pyproject",
     "pyupgrade",
+    "pytest-env>=1.2.0",
 ]
 
 [tool.black]

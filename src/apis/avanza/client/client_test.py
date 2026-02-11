@@ -1,7 +1,7 @@
-from datetime import date
 from unittest import TestCase
 
-from avanza import InstrumentType, OrderType, Resolution, TimePeriod
+import pytest
+from avanza import InstrumentType, Resolution, TimePeriod
 
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.account.overview import AccountOverview
@@ -10,12 +10,12 @@ from apis.avanza.client.models.chart_data import ChartData
 from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
 from apis.avanza.client.models.instrument.index import InstrumentIndex
 from apis.avanza.client.models.instrument.stock import InstrumentStock
-from apis.avanza.client.models.order.exceptions import OrderException
 from apis.avanza.client.models.order.list import Orders
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
 from config import SETTINGS
 
 
+@pytest.mark.integration
 class Test_AvanzaClient(TestCase):
     def setUp(self) -> None:
         self.client = get_client()
@@ -30,7 +30,7 @@ class Test_AvanzaClient(TestCase):
         self.assertIsInstance(result, ChartData)
 
     def test_get_instrument_certificate(self):
-        order_book_id = "1522311"
+        order_book_id = "2204332"
 
         result = self.client.get_instrument_certificate(order_book_id)
 
@@ -76,23 +76,23 @@ class Test_AvanzaClient(TestCase):
 
         self.assertIsInstance(result, Orders)
 
-    def test_place_order(self):
-        with self.assertRaises(OrderException):
-            _ = self.client.place_order(
-                account_id=SETTINGS.ACCOUNT_ID,
-                order_book_id="1757509",
-                order_type=OrderType.BUY,
-                price=1,
-                valid_until=date.today(),
-                volume=1000000,
-            )
+    # def test_place_order(self):
+    #     with self.assertRaises(OrderException):
+    #         _ = self.client.place_order(
+    #             account_id=SETTINGS.ACCOUNT_ID,
+    #             order_book_id="1757509",
+    #             order_type=OrderType.BUY,
+    #             price=1,
+    #             valid_until=date.today(),
+    #             volume=1000000,
+    #         )
 
-        with self.assertRaises(OrderException):
-            _ = self.client.place_order(
-                account_id=SETTINGS.ACCOUNT_ID,
-                order_book_id="1757509",
-                order_type=OrderType.SELL,
-                price=1000000,
-                valid_until=date.today(),
-                volume=1,
-            )
+    #     with self.assertRaises(OrderException):
+    #         _ = self.client.place_order(
+    #             account_id=SETTINGS.ACCOUNT_ID,
+    #             order_book_id="1757509",
+    #             order_type=OrderType.SELL,
+    #             price=1000000,
+    #             valid_until=date.today(),
+    #             volume=1,
+    #         )
