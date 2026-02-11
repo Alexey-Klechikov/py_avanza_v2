@@ -4,7 +4,7 @@ import pandas_market_calendars as mcal
 import pytz
 
 
-def get_market_is_close() -> bool:
+def market_is_close() -> bool:
     now = datetime.now(tz=pytz.timezone("Europe/Berlin"))
     today = datetime.today().strftime("%Y-%m-%d")
 

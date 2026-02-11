@@ -26,10 +26,7 @@ class Volume(IndicatorsCategoryBase):
         A VPT divergence occurs when the price of an asset is rising but the VPT line is declining.
         """
 
-        column_names = {
-            "PVT": "PVT",
-            "PVT_SMA": f"PVT_SMA_{length_sma}",
-        }
+        column_names = {"PVT": "PVT", "PVT_SMA": f"PVT_SMA_{length_sma}"}
 
         self.data.ta.pvt(drift=drift, append=True)
         self.data[column_names["PVT_SMA"]] = self.data.ta.sma(close="PVT", length=length_sma)
@@ -37,10 +34,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> PVT' can not be added.")
             return
 
-        column_names_slope = {
-            "PVT": "PVT_slope",
-            "close": f"Close_slope_{length_divergence}",
-        }
+        column_names_slope = {"PVT": "PVT_slope", "close": f"Close_slope_{length_divergence}"}
         self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
         self.data[column_names_slope["PVT"]] = self.data.ta.linreg(
             close=column_names["PVT"],
@@ -66,10 +60,7 @@ class Volume(IndicatorsCategoryBase):
                 ),
             ),
             columns=list(column_names.values()) + list(column_names_slope.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=list(column_names.values()), ylabel="Volume [PVT]")],
-            ),
+            plots=Plots(panel=Panel.SEPARATE, list=[Plot(columns=list(column_names.values()), ylabel="Volume [PVT]")]),
         )
 
     def add_accumulation_distribution_oscillator(self, fast: int, slow: int, length_divergence: int) -> None:
@@ -98,10 +89,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> ADOSC' can not be added.")
             return
 
-        column_names_slope = {
-            "ADOSC": "ADOSC_slope",
-            "close": f"Close_slope_{length_divergence}",
-        }
+        column_names_slope = {"ADOSC": "ADOSC_slope", "close": f"Close_slope_{length_divergence}"}
         self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
         self.data[column_names_slope["ADOSC"]] = self.data.ta.linreg(
             close=column_name,
@@ -130,10 +118,7 @@ class Volume(IndicatorsCategoryBase):
                 ),
             ),
             columns=[column_name, column_name_lag] + list(column_names_slope.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], ylabel="Volume [ADOSC]")],
-            ),
+            plots=Plots(panel=Panel.SEPARATE, list=[Plot(columns=[column_name], ylabel="Volume [ADOSC]")]),
         )
 
     def add_chaikin_money_flow(self, length: int, length_divergence: int) -> None:
@@ -155,10 +140,7 @@ class Volume(IndicatorsCategoryBase):
             log.debug("Indicator 'Volume -> CMF' can not be added.")
             return
 
-        column_names_slope = {
-            "CMF": "CMF_slope",
-            "close": f"Close_slope_{length_divergence}",
-        }
+        column_names_slope = {"CMF": "CMF_slope", "close": f"Close_slope_{length_divergence}"}
         self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
         self.data[column_names_slope["CMF"]] = self.data.ta.linreg(
             close=column_name,
@@ -216,10 +198,7 @@ class Volume(IndicatorsCategoryBase):
         or short-sell could be initiated the next time the Klinger crosses below the signal line.
         """
 
-        column_names = {
-            "KVO": f"KVO_{fast}_{slow}_{signal}",
-            "KVOs": f"KVOs_{fast}_{slow}_{signal}",
-        }
+        column_names = {"KVO": f"KVO_{fast}_{slow}_{signal}", "KVOs": f"KVOs_{fast}_{slow}_{signal}"}
 
         try:
             self.data.ta.kvo(fast=fast, slow=slow, signal=signal, mamode=mamode, append=True)
@@ -227,10 +206,7 @@ class Volume(IndicatorsCategoryBase):
             if column_names["KVO"] not in self.data.columns:
                 raise AttributeError
 
-            column_names_slope = {
-                "KVO": "KVO_slope",
-                "close": f"Close_slope_{length_divergence}",
-            }
+            column_names_slope = {"KVO": "KVO_slope", "close": f"Close_slope_{length_divergence}"}
             self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
             self.data[column_names_slope["KVO"]] = self.data.ta.linreg(
                 close=column_names["KVO"],
@@ -245,34 +221,11 @@ class Volume(IndicatorsCategoryBase):
 
         self.indicators["KVO"] = Indicator(
             signal=Signal(
-                LONG=lambda x: all(
-                    [
-                        x[column_names["KVO"]] > x[column_names["KVOs"]],
-                        x[column_names["KVOs"]] > 0,
-                    ],
-                )
-                or all(
-                    [
-                        x[column_names_slope["KVO"]] > 0,
-                        x[column_names_slope["close"]] < 0,
-                    ],
-                ),
-                SHORT=lambda x: all(
-                    [
-                        x[column_names["KVO"]] < x[column_names["KVOs"]],
-                        x[column_names["KVOs"]] < 0,
-                    ],
-                )
-                or all(
-                    [
-                        x[column_names_slope["KVO"]] < 0,
-                        x[column_names_slope["close"]] > 0,
-                    ],
-                ),
+                LONG=lambda x: all([x[column_names["KVO"]] > x[column_names["KVOs"]], x[column_names["KVOs"]] > 0])
+                or all([x[column_names_slope["KVO"]] > 0, x[column_names_slope["close"]] < 0]),
+                SHORT=lambda x: all([x[column_names["KVO"]] < x[column_names["KVOs"]], x[column_names["KVOs"]] < 0])
+                or all([x[column_names_slope["KVO"]] < 0, x[column_names_slope["close"]] > 0]),
             ),
             columns=list(column_names.values()) + list(column_names_slope.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=list(column_names.values()), ylabel="Volume [KVO]")],
-            ),
+            plots=Plots(panel=Panel.SEPARATE, list=[Plot(columns=list(column_names.values()), ylabel="Volume [KVO]")]),
         )

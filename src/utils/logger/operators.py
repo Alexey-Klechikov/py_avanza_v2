@@ -24,13 +24,7 @@ def _create_console_handler(log: Logger, log_levels: tuple) -> None:
     log.addHandler(ch)
 
 
-def _create_file_handler(
-    log: Logger,
-    file_name: str,
-    log_levels: tuple,
-    write_mode: str,
-    datefmt="%H:%M:%S",
-) -> None:
+def _create_file_handler(log: Logger, file_name: str, log_levels: tuple, write_mode: str, datefmt="%H:%M:%S") -> None:
     fh = logging.FileHandler(file_name, write_mode)
     fh.addFilter(LevelFilter(log_levels))
     ff = OneLineFormatter(datefmt=datefmt)
@@ -45,10 +39,7 @@ def _remove_handlers(log: Logger, handler_type: type) -> None:
         handler.close()
 
 
-def set_handlers(
-    file_prefix: str,
-    console_log_levels: tuple = ("DEBUG", "WARNING"),
-) -> None:
+def set_handlers(file_prefix: str, console_log_levels: tuple = ("DEBUG", "WARNING")) -> None:
     log = logging.getLogger("main")
     log_file_name = _get_log_file_name(file_prefix)
 
@@ -61,12 +52,7 @@ def set_handlers(
         write_mode="a",
     )
 
-    _create_file_handler(
-        log,
-        file_name=f"{log_file_name}_DEBUG.log",
-        log_levels=("DEBUG", "WARNING"),
-        write_mode="w",
-    )
+    _create_file_handler(log, file_name=f"{log_file_name}_DEBUG.log", log_levels=("DEBUG", "WARNING"), write_mode="w")
 
     _create_file_handler(
         log,
@@ -79,20 +65,13 @@ def set_handlers(
     log.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
 
 
-def reset_file_handlers(
-    file_prefix: str,
-):
+def reset_file_handlers(file_prefix: str):
     log = logging.getLogger("main")
     log_file_name = _get_log_file_name(file_prefix)
 
     _remove_handlers(log, logging.FileHandler)
 
-    _create_file_handler(
-        log,
-        file_name=f"{log_file_name}.log",
-        log_levels=("INFO", "WARNING"),
-        write_mode="a",
-    )
+    _create_file_handler(log, file_name=f"{log_file_name}.log", log_levels=("INFO", "WARNING"), write_mode="a")
 
     log.warning("#########################################################")
 

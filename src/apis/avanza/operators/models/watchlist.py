@@ -74,14 +74,14 @@ class PreferredInstrument(BaseModel):
 
 
 @dataclass
-class UnpackedWatchlistName:
+class WatchlistNameComposition:
     trading_perspective: str = ""
     direction: str = ""
     instrument: str = ""
     instrument_type: str = ""
 
     @classmethod
-    def from_name(cls, name: str) -> "UnpackedWatchlistName":
+    def from_name(cls, name: str) -> "WatchlistNameComposition":
         """Parse a watchlist name into its components.
         Expected format: DT_<direction>_<instrument>_<instrument_type>
         """
@@ -92,28 +92,13 @@ class UnpackedWatchlistName:
         if len(parts) != SETTINGS_WATCHLIST.WATCHLIST_NAME_PARTS:
             return cls()
 
-        return cls(
-            trading_perspective=parts[0],
-            direction=parts[1],
-            instrument=parts[2],
-            instrument_type=parts[3],
-        )
+        return cls(trading_perspective=parts[0], direction=parts[1], instrument=parts[2], instrument_type=parts[3])
 
-    def matches_filter(
-        self,
-        watchlist_name: str,
-        filter_orderbook_type: str | None,
-    ) -> bool:
-        if not bool(self.trading_perspective):
-            return False
-
+    def is_valid(self) -> bool:
         if self.trading_perspective != SETTINGS_WATCHLIST.TRADING_PERSPECTIVE_PREFIX:
             return False
 
         if self.instrument != SETTINGS.NAME:
-            return False
-
-        if filter_orderbook_type and filter_orderbook_type not in watchlist_name:
             return False
 
         return True
@@ -142,37 +127,37 @@ class InstrumentValidators:
 
     @staticmethod
     def type_is_valid(
-        watchlist_name: UnpackedWatchlistName,
+        watchlist_name_composition: WatchlistNameComposition,
         instrument_info: InstrumentWarrant | InstrumentCertificate,
         watchlist: Watchlist,
     ) -> bool:
-        if watchlist_name.instrument_type == instrument_info.type:
+        if watchlist_name_composition.instrument_type == instrument_info.type:
             return True
 
         log.error(
             "> Wrong instrument type in watchlist %s - %s (expected: %s, got: %s)",
             watchlist.name,
             instrument_info.name,
-            watchlist_name.instrument_type,
+            watchlist_name_composition.instrument_type,
             instrument_info.type,
         )
         return False
 
     @staticmethod
     def direction_is_valid(
-        watchlist_name: UnpackedWatchlistName,
+        watchlist_name_composition: WatchlistNameComposition,
         instrument_info: InstrumentWarrant | InstrumentCertificate,
         instrument_direction: str,
         watchlist: Watchlist,
     ) -> bool:
-        if watchlist_name.direction == instrument_direction:
+        if watchlist_name_composition.direction == instrument_direction:
             return True
 
         log.error(
             "> Wrong instrument direction in watchlist %s - %s (expected: %s, got: %s)",
             watchlist.name,
             instrument_info.name,
-            watchlist_name.direction,
+            watchlist_name_composition.direction,
             instrument_direction,
         )
         return False
@@ -182,8 +167,5 @@ class InstrumentValidators:
         if instrument_info.order_depth.market_maker_level_in_bid == 0:
             return True
 
-        log.debug(
-            "> Market maker in the order depth level: %s",
-            instrument_info.order_depth.market_maker_level_in_bid,
-        )
+        log.debug("> Market maker in the order depth level: %s", instrument_info.order_depth.market_maker_level_in_bid)
         return False

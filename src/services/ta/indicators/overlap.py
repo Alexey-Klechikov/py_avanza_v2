@@ -28,10 +28,7 @@ class Overlap(IndicatorsCategoryBase):
             return
 
         self.indicators["LINREG"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] > limit,
-                SHORT=lambda x: x[column_name] < -1 * limit,
-            ),
+            signal=Signal(LONG=lambda x: x[column_name] > limit, SHORT=lambda x: x[column_name] < -1 * limit),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
@@ -60,10 +57,7 @@ class Overlap(IndicatorsCategoryBase):
             return
 
         self.indicators["SLOPE"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] > limit,
-                SHORT=lambda x: x[column_name] < -1 * limit,
-            ),
+            signal=Signal(LONG=lambda x: x[column_name] > limit, SHORT=lambda x: x[column_name] < -1 * limit),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,

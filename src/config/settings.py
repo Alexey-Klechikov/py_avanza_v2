@@ -5,10 +5,7 @@ from datetime import time
 
 @dataclass(frozen=True)
 class SettingsWatchlist:
-    INSTRUMENT_DIRECTIONS = {
-        "Kort": "BEAR",
-        "Lång": "BULL",
-    }
+    INSTRUMENT_DIRECTIONS = {"Kort": "BEAR", "Lång": "BULL"}
 
     TRADING_PERSPECTIVE_PREFIX = "DT"
     WATCHLIST_NAME_PARTS = 4

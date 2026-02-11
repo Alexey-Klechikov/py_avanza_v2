@@ -135,7 +135,4 @@ class Test_Watchlists(TestCase):
         ]
 
         for mock_watchlist in mock_watchlists:
-            assert isinstance(
-                Watchlist(**mock_watchlist),
-                Watchlist,
-            )
+            assert isinstance(Watchlist(**mock_watchlist), Watchlist)

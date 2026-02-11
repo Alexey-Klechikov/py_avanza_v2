@@ -12,10 +12,7 @@ class Test_DeleteOrderResponse(TestCase):
             "parameters": ["5554179", "-1099.100"],
         }
 
-        assert isinstance(
-            DeleteOrderResponse(**delete_order_response),
-            DeleteOrderResponse,
-        )
+        assert isinstance(DeleteOrderResponse(**delete_order_response), DeleteOrderResponse)
 
         delete_order_response = {
             "orderRequestStatus": "SUCCESS",
@@ -24,7 +21,4 @@ class Test_DeleteOrderResponse(TestCase):
             "orderId": "650930816",
         }
 
-        assert isinstance(
-            DeleteOrderResponse(**delete_order_response),
-            DeleteOrderResponse,
-        )
+        assert isinstance(DeleteOrderResponse(**delete_order_response), DeleteOrderResponse)

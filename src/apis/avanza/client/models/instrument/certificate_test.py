@@ -93,32 +93,16 @@ class Test_InstrumentCertificate(TestCase):
                 "receivedTime": 1717491925305,
                 "levels": [
                     {
-                        "buySide": {
-                            "price": 0.003,
-                            "priceString": "0.003",
-                            "volume": 10000000,
-                        },
-                        "sellSide": {
-                            "price": 0.254,
-                            "priceString": "0.254",
-                            "volume": 85325,
-                        },
+                        "buySide": {"price": 0.003, "priceString": "0.003", "volume": 10000000},
+                        "sellSide": {"price": 0.254, "priceString": "0.254", "volume": 85325},
                     },
                     {
                         "buySide": {"price": 0.0, "priceString": "0.00", "volume": 0.0},
-                        "sellSide": {
-                            "price": 0.35,
-                            "priceString": "0.350",
-                            "volume": 87542,
-                        },
+                        "sellSide": {"price": 0.35, "priceString": "0.350", "volume": 87542},
                     },
                     {
                         "buySide": {"price": 0.0, "priceString": "0.00", "volume": 0.0},
-                        "sellSide": {
-                            "price": 0.47,
-                            "priceString": "0.470",
-                            "volume": 154223,
-                        },
+                        "sellSide": {"price": 0.47, "priceString": "0.470", "volume": 154223},
                     },
                 ],
                 "marketMakerLevelInBid": 0,
@@ -157,7 +141,4 @@ class Test_InstrumentCertificate(TestCase):
             "collateralValue": 0.0,
         }
 
-        assert isinstance(
-            InstrumentCertificate(**mock_certificate),
-            InstrumentCertificate,
-        )
+        assert isinstance(InstrumentCertificate(**mock_certificate), InstrumentCertificate)

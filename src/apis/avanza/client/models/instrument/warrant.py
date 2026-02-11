@@ -82,14 +82,8 @@ class OrderDepthLevel(BaseModel):
 class OrderDepth(BaseModel):
     received_time: int = Field(alias="receivedTime")
     levels: list[OrderDepthLevel]
-    market_maker_level_in_bid: int | None = Field(
-        alias="marketMakerLevelInBid",
-        default=None,
-    )
-    market_maker_level_in_ask: int | None = Field(
-        alias="marketMakerLevelInAsk",
-        default=None,
-    )
+    market_maker_level_in_bid: int | None = Field(alias="marketMakerLevelInBid", default=None)
+    market_maker_level_in_ask: int | None = Field(alias="marketMakerLevelInAsk", default=None)
 
 
 class BrokerTradeSummary(BaseModel):
@@ -128,18 +122,14 @@ class InstrumentWarrant(BaseModel):
     isin: str
     tradable: str
     listing: Listing
-    historical_closing_prices: HistoricalClosingPrices = Field(
-        alias="historicalClosingPrices",
-    )
+    historical_closing_prices: HistoricalClosingPrices = Field(alias="historicalClosingPrices")
     key_indicators: KeyIndicators = Field(alias="keyIndicators")
     quote: Quote
     type: str
     issuer: str
     documents: Documents
     order_depth: OrderDepth = Field(alias="orderDepth")
-    broker_trade_summaries: list[BrokerTradeSummary] = Field(
-        alias="brokerTradeSummaries",
-    )
+    broker_trade_summaries: list[BrokerTradeSummary] = Field(alias="brokerTradeSummaries")
     fee: Fee
     trades: list[Trade]
     trading_unit: int = Field(alias="tradingUnit")

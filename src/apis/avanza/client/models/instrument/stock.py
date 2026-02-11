@@ -217,9 +217,7 @@ class InstrumentStock(BaseModel):
     sectors: list[Sector]
     tradable: str
     listing: Listing
-    historical_closing_prices: HistoricalClosingPrices = Field(
-        alias="historicalClosingPrices",
-    )
+    historical_closing_prices: HistoricalClosingPrices = Field(alias="historicalClosingPrices")
     key_indicators: dict = Field(alias="keyIndicators")
     quote: Quote
     type: str
@@ -227,9 +225,7 @@ class InstrumentStock(BaseModel):
     company: Company
     company_events: CompanyEvents = Field(alias="companyEvents")
     company_owners: CompanyOwners = Field(alias="companyOwners")
-    broker_trade_summaries: list[BrokerTradeSummary] = Field(
-        alias="brokerTradeSummaries",
-    )
+    broker_trade_summaries: list[BrokerTradeSummary] = Field(alias="brokerTradeSummaries")
     dividends: Dividends
     trading_terms: TradingTerms = Field(alias="tradingTerms")
     fund_exposures: list[FundExposure] = Field(alias="fundExposures")

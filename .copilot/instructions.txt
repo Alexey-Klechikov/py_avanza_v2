@@ -1,5 +1,0 @@
-# Instructions for GitHub Copilot
-
-## Copilot chat
-- Only output part of code that is changed, unless specified to output all file content
-- If I request to change/fix the code, always compare input code to output code and if it is the same - reiterate the request to yourself until the  output is different from input.

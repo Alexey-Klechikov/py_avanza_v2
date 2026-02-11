@@ -668,7 +668,4 @@ class Test_Transactions(TestCase):
             },
         }
 
-        assert isinstance(
-            TransactionsDetails(**transactions_response),
-            TransactionsDetails,
-        )
+        assert isinstance(TransactionsDetails(**transactions_response), TransactionsDetails)

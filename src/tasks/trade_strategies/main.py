@@ -17,7 +17,7 @@ from apis.avanza.trade.operator import Trade
 from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker
 from config import SETTINGS
-from services.calendar.operators import get_market_close_time, get_market_is_close
+from services.calendar.operators import get_market_close_time, market_is_close
 from services.storage.operators import Storage
 from services.ta.operators import get_indicators, read_top_strategies
 from services.ta.strategies.models.strategy import Strategy
@@ -191,7 +191,7 @@ class Flow:
         # End of day
         if datetime.now().time() >= min(get_market_close_time(), SETTINGS.TIME.END):
             orders.reload_active()
-            if portfolio.positions and not get_market_is_close():
+            if portfolio.positions and not market_is_close():
                 self.directions_sell = [Direction.BULL, Direction.BEAR]
                 return FlowAction.TRADE
 
@@ -297,6 +297,7 @@ def trade() -> None:
             flow.counter_repeating_exception = 0
 
         except (ConnectionError, RemoteDisconnected):
+            log.warning("Connection error. Will retry")
             get_client.cache_clear()
 
         except Exception as e:

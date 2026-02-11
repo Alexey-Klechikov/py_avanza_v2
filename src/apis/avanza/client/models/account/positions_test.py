@@ -61,12 +61,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-04T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-04", "time": None},
@@ -182,12 +177,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-04T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-04", "time": None},
@@ -303,12 +293,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-04T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-04", "time": None},
@@ -424,12 +409,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-05T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-05", "time": None},
@@ -545,12 +525,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-05T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-05", "time": None},
@@ -666,12 +641,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-05T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-05", "time": None},
@@ -787,12 +757,7 @@ class Test_AccountsPositions(TestCase):
                                 "updated": "2024-06-05T00:00:00",
                             },
                             "turnover": {
-                                "volume": {
-                                    "value": 0,
-                                    "unit": "",
-                                    "unitType": "UNITLESS",
-                                    "decimalPrecision": 0,
-                                },
+                                "volume": {"value": 0, "unit": "", "unitType": "UNITLESS", "decimalPrecision": 0},
                                 "value": None,
                             },
                             "lastDeal": {"date": "2024-06-05", "time": None},
@@ -925,7 +890,4 @@ class Test_AccountsPositions(TestCase):
             "withCreditAccount": False,
         }
 
-        assert isinstance(
-            AccountsPositions(**mock_accounts_positions),
-            AccountsPositions,
-        )
+        assert isinstance(AccountsPositions(**mock_accounts_positions), AccountsPositions)

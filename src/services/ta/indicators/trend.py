@@ -69,11 +69,7 @@ class Trend(IndicatorsCategoryBase):
         DI- is above DI+, the current price momentum is down.
         """
 
-        column_names = {
-            "ADX": f"ADX_{length}",
-            "DMN": f"DMN_{length}",
-            "DMP": f"DMP_{length}",
-        }
+        column_names = {"ADX": f"ADX_{length}", "DMN": f"DMN_{length}", "DMP": f"DMP_{length}"}
 
         self.data.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
 
@@ -149,9 +145,7 @@ class Trend(IndicatorsCategoryBase):
             return
 
         self.indicators["CHOP"] = Indicator(
-            signal=Signal(
-                EXIT=lambda x: x[column_name] > 55,
-            ),
+            signal=Signal(EXIT=lambda x: x[column_name] > 55),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,

@@ -34,22 +34,14 @@ def _generate_strategies(indicators_mapping: dict[str, dict[str, Indicator]]) ->
     for i1, indicator1 in enumerate(indicators):
         if len(indicators) == 1:
             strategies.append(
-                deepcopy(
-                    Strategy(
-                        selected_indicators=[indicator1],
-                        indicators_mapping=indicators_mapping,
-                    ),
-                ),
+                deepcopy(Strategy(selected_indicators=[indicator1], indicators_mapping=indicators_mapping)),
             )
 
         for i2, indicator2 in enumerate(indicators[i1 + 1 :]):
             if len(indicators) <= 2:
                 strategies.append(
                     deepcopy(
-                        Strategy(
-                            selected_indicators=[indicator1, indicator2],
-                            indicators_mapping=indicators_mapping,
-                        ),
+                        Strategy(selected_indicators=[indicator1, indicator2], indicators_mapping=indicators_mapping),
                     ),
                 )
 
@@ -122,9 +114,7 @@ def _read_strategies(indicators_mapping: dict[str, dict[str, Indicator]], old_st
         strategy_indicators = list(tuple(indicator.split("-")) for indicator in strategy["name"].split(" | "))
 
         old_strategies.append(
-            deepcopy(
-                Strategy(selected_indicators=strategy_indicators, indicators_mapping=indicators_mapping),
-            ),
+            deepcopy(Strategy(selected_indicators=strategy_indicators, indicators_mapping=indicators_mapping)),
         )
 
     return old_strategies

@@ -62,10 +62,7 @@ class Volatility(IndicatorsCategoryBase):
             return
 
         self.indicators["MASSI"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] <= threshold,
-                SHORT=lambda x: x[column_name] <= threshold,
-            ),
+            signal=Signal(LONG=lambda x: x[column_name] <= threshold, SHORT=lambda x: x[column_name] <= threshold),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
@@ -130,11 +127,7 @@ class Volatility(IndicatorsCategoryBase):
         a bearish trend. Traders can use these levels to set stop-loss orders or profit targets.
         """
 
-        column_names = {
-            "ACCBU": f"ACCBU_{length}",
-            "ACCBM": f"ACCBM_{length}",
-            "ACCBL": f"ACCBL_{length}",
-        }
+        column_names = {"ACCBU": f"ACCBU_{length}", "ACCBM": f"ACCBM_{length}", "ACCBL": f"ACCBL_{length}"}
 
         self.data.ta.accbands(length=length, c=c, mamode=mamode, append=True)
         if column_names["ACCBM"] not in self.data.columns:

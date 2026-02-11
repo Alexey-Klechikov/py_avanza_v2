@@ -34,10 +34,7 @@ class Momentum(IndicatorsCategoryBase):
             return
 
         self.indicators["STC"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] > 50,
-                SHORT=lambda x: x[column_name] < 50,
-            ),
+            signal=Signal(LONG=lambda x: x[column_name] > 50, SHORT=lambda x: x[column_name] < 50),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
@@ -68,10 +65,7 @@ class Momentum(IndicatorsCategoryBase):
             return
 
         self.indicators["CCI"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_name] > 100,
-                SHORT=lambda x: x[column_name] < -100,
-            ),
+            signal=Signal(LONG=lambda x: x[column_name] > 100, SHORT=lambda x: x[column_name] < -100),
             columns=[column_name],
             plots=Plots(
                 panel=Panel.SEPARATE,
@@ -102,20 +96,14 @@ class Momentum(IndicatorsCategoryBase):
         future price direction.
         """
 
-        column_names = {
-            "RVGI": f"RVGI_{length}_{length_swma}",
-            "RVGIs": f"RVGIs_{length}_{length_swma}",
-        }
+        column_names = {"RVGI": f"RVGI_{length}_{length_swma}", "RVGIs": f"RVGIs_{length}_{length_swma}"}
 
         self.data.ta.rvgi(length=length, swma_length=length_swma, append=True)
         if column_names["RVGI"] not in self.data.columns:
             log.debug("Indicator 'Momentum -> RVGI' can not be added.")
             return
 
-        column_names_slope = {
-            "RVGI": "RVGI_slope",
-            "close": f"Close_slope_{length_divergence}",
-        }
+        column_names_slope = {"RVGI": "RVGI_slope", "close": f"Close_slope_{length_divergence}"}
         self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
         self.data[column_names_slope["RVGI"]] = self.data.ta.linreg(
             close=column_names["RVGI"],
@@ -210,10 +198,7 @@ class Momentum(IndicatorsCategoryBase):
         It follows the speed or the momentum of price. As a rule, the momentum changes direction before price."
         """
 
-        column_names = {
-            "STOCHk": f"STOCHk_{k}_{d}_{smooth_k}",
-            "STOCHd": f"STOCHd_{k}_{d}_{smooth_k}",
-        }
+        column_names = {"STOCHk": f"STOCHk_{k}_{d}_{smooth_k}", "STOCHd": f"STOCHd_{k}_{d}_{smooth_k}"}
 
         self.data.ta.stoch(k=k, d=d, smooth_k=smooth_k, mamode=mamode, append=True)
         if column_names["STOCHk"] not in self.data.columns:

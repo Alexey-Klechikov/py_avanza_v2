@@ -3,11 +3,7 @@ import logging
 
 
 class OneLineFormatter(logging.Formatter):
-    def __init__(
-        self,
-        fmt="[%(levelname)s] [%(asctime)s] [%(name)s] - %(message)s",
-        datefmt="%H:%M:%S",
-    ):
+    def __init__(self, fmt="[%(levelname)s] [%(asctime)s] [%(name)s] - %(message)s", datefmt="%H:%M:%S"):
         super().__init__(fmt, datefmt)
         self.displacements = {
             0: {"type": "time", "size": 8},
@@ -28,16 +24,10 @@ class OneLineFormatter(logging.Formatter):
             s = s.split("--")[0]
 
         for i, block in enumerate(s.split("]")[:3]):
-            s = s.replace(
-                f"{block}]",
-                f"{block}]" + (" " * (self.displacements[i]["size"] - len(block))),
-            )
+            s = s.replace(f"{block}]", f"{block}]" + (" " * (self.displacements[i]["size"] - len(block))))
 
             if self.displacements[i]["type"] == "message":
-                self.displacements[i]["size"] = max(
-                    len(block),
-                    self.displacements[i]["size"],
-                )
+                self.displacements[i]["size"] = max(len(block), self.displacements[i]["size"])
 
         return s
 

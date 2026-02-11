@@ -7,12 +7,8 @@ class Price(BaseModel):
     today_change_percent: float | None = Field(alias="todayChangePercent")
     today_change_value: float | None = Field(alias="todayChangeValue")
     today_change_direction: float | None = Field(alias="todayChangeDirection")
-    three_months_ago_change_percent: float | None = Field(
-        alias="threeMonthsAgoChangePercent",
-    )
-    three_months_ago_change_direction: float | None = Field(
-        alias="threeMonthsAgoChangeDirection",
-    )
+    three_months_ago_change_percent: float | None = Field(alias="threeMonthsAgoChangePercent")
+    three_months_ago_change_direction: float | None = Field(alias="threeMonthsAgoChangeDirection")
     spread: float | None
 
     @field_validator(

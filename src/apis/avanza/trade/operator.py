@@ -33,11 +33,7 @@ class PriceState:
     BULL: DirectionPrice = field(default_factory=DirectionPrice)
     BEAR: DirectionPrice = field(default_factory=DirectionPrice)
 
-    def update(
-        self,
-        direction: Direction,
-        **kwargs,
-    ) -> None:
+    def update(self, direction: Direction, **kwargs) -> None:
         direction_price = getattr(self, direction.value)
 
         for key, value in kwargs.items():
@@ -54,17 +50,8 @@ class PriceState:
 
         setattr(self, direction.value, DirectionPrice())
 
-    def set(
-        self,
-        direction: Direction,
-        buy: float,
-        volume: float,
-    ) -> None:
-        setattr(
-            self,
-            direction.value,
-            DirectionPrice(buy=buy, volume=volume),
-        )
+    def set(self, direction: Direction, buy: float, volume: float) -> None:
+        setattr(self, direction.value, DirectionPrice(buy=buy, volume=volume))
 
     def get(self, direction: Direction) -> DirectionPrice:
         return getattr(self, direction.value)

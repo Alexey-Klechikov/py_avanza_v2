@@ -90,24 +90,12 @@ class Test_InstrumentWarrant(TestCase):
                 "receivedTime": 1717587387365,
                 "levels": [
                     {
-                        "buySide": {
-                            "price": 121.13,
-                            "priceString": "121.13",
-                            "volume": 10000,
-                        },
-                        "sellSide": {
-                            "price": 121.38,
-                            "priceString": "121.38",
-                            "volume": 10000,
-                        },
+                        "buySide": {"price": 121.13, "priceString": "121.13", "volume": 10000},
+                        "sellSide": {"price": 121.38, "priceString": "121.38", "volume": 10000},
                     },
                     {
                         "buySide": {"price": 0.0, "priceString": "0.00", "volume": 0.0},
-                        "sellSide": {
-                            "price": 149.18,
-                            "priceString": "149.18",
-                            "volume": 100,
-                        },
+                        "sellSide": {"price": 149.18, "priceString": "149.18", "volume": 100},
                     },
                 ],
                 "marketMakerLevelInBid": 0,

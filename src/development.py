@@ -83,10 +83,7 @@ def run_strategies_generation(
         f"Forward-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_forward_test} days)",
     )
     backtest_trade_strategies(
-        _get_data(
-            point_of_origin=TODAY_MIDNIGHT,
-            period_days=period_days_forward_test,
-        ),
+        _get_data(point_of_origin=TODAY_MIDNIGHT, period_days=period_days_forward_test),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}" + (comment if comment else ""),
         strategies_file_name_suffix_new=comment,
@@ -95,10 +92,7 @@ def run_strategies_generation(
 
 def run_plotting_for_active_strategies(period_days: int):
     backtest_trade_strategies(
-        _get_data(
-            point_of_origin=TODAY_MIDNIGHT,
-            period_days=period_days,
-        ),
+        _get_data(point_of_origin=TODAY_MIDNIGHT, period_days=period_days),
         ComposeStrategiesListMethod.READ,
         plot=True,
     )
@@ -162,10 +156,7 @@ def run_test_for_selected_indicators(period_days: int):
 
         log.warning(f"Testing for {tested_kwargs.indicator_to_test}_{list(kwargs.items())}")
         backtest_trade_strategies(
-            _get_data(
-                point_of_origin=TODAY_MIDNIGHT,
-                period_days=period_days,
-            ),
+            _get_data(point_of_origin=TODAY_MIDNIGHT, period_days=period_days),
             ComposeStrategiesListMethod.EXTEND,
             strategies_file_name_suffix_old="dev_5",
             strategies_file_name_suffix_new=tested_kwargs.strategies_file_name_suffix_new_suffix

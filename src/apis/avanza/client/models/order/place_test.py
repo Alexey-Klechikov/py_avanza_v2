@@ -12,10 +12,7 @@ class Test_PlaceOrderResponse(TestCase):
             "parameters": ["5554179", "-1099.100"],
         }
 
-        assert isinstance(
-            PlaceOrderResponse(**place_order_response),
-            PlaceOrderResponse,
-        )
+        assert isinstance(PlaceOrderResponse(**place_order_response), PlaceOrderResponse)
 
         place_order_response = {
             "orderRequestStatus": "SUCCESS",
@@ -24,7 +21,4 @@ class Test_PlaceOrderResponse(TestCase):
             "orderId": "650930816",
         }
 
-        assert isinstance(
-            PlaceOrderResponse(**place_order_response),
-            PlaceOrderResponse,
-        )
+        assert isinstance(PlaceOrderResponse(**place_order_response), PlaceOrderResponse)

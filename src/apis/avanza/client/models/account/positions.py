@@ -71,13 +71,9 @@ class WithOrderbookPosition(BaseModel):
     volume: Value
     value: Value
     average_acquired_price: Value = Field(alias="averageAcquiredPrice")
-    average_acquired_price_instrument_currency: Value = Field(
-        alias="averageAcquiredPriceInstrumentCurrency",
-    )
+    average_acquired_price_instrument_currency: Value = Field(alias="averageAcquiredPriceInstrumentCurrency")
     acquired_value: Value = Field(alias="acquiredValue")
-    last_trading_day_performance: LastTradingDayPerformance | None = Field(
-        alias="lastTradingDayPerformance",
-    )
+    last_trading_day_performance: LastTradingDayPerformance | None = Field(alias="lastTradingDayPerformance")
     collateral_factor: Value = Field(alias="collateralFactor")
     super_interest_approved: bool = Field(alias="superInterestApproved")
     id: str

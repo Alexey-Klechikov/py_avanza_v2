@@ -16,7 +16,6 @@ from requests.exceptions import HTTPError
 from apis.avanza.client.models.account.overview import AccountOverview
 from apis.avanza.client.models.account.positions import AccountsPositions
 from apis.avanza.client.models.account.watchlists import Watchlist
-from apis.avanza.client.models.call_request import CallRequest
 from apis.avanza.client.models.chart_data import ChartData
 from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
 from apis.avanza.client.models.instrument.etf import InstrumentETF
@@ -31,7 +30,6 @@ from apis.avanza.client.models.order.list import Orders
 from apis.avanza.client.models.order.place import PlaceOrderResponse
 from apis.avanza.client.models.order.transactions import TransactionsDetails
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
-from apis.avanza.client.models.search.market_stocks_result import MarketStocksFilterResult
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -78,12 +76,10 @@ class Avanza(AvanzaBase):
         self._authentication_session = None
 
     def _retry_call(self, method: HttpMethod, path: str, options: dict | list | None = None) -> dict:
-        request = CallRequest(method=method, path=path, options=options).model_dump()
-
         response: dict | str | None = None
         for i in range(RETRY_ATTEMPTS):
             try:
-                response = self.__call(**request, return_content=True)
+                response = self.__call(method=method, path=path, options=options, return_content=True)
 
             except HTTPError as e:
                 log.debug(e)
@@ -334,28 +330,6 @@ class Avanza(AvanzaBase):
             raise OrderException(f"Failed to delete order ({parsed_response.message_code})")
 
         return parsed_response.order_id
-
-    def get_market_stocks(
-        self,
-        market_places: list[str] | None = None,
-        offset: int = 0,
-        limit: int = 100,
-    ) -> MarketStocksFilterResult:
-        if market_places is None:
-            market_places = ["se", "fi", "de", "no"]
-
-        response = self._retry_call(
-            method=HttpMethod.POST,
-            path=Endpoints.market_stocks_filter,
-            options={
-                "filter": {"marketPlaces": market_places},
-                "offset": offset,
-                "limit": limit,
-                "sortBy": {"order": "desc", "field": "numberOfOwners"},
-            },
-        )
-
-        return MarketStocksFilterResult(**response)  # type: ignore
 
 
 @lru_cache

@@ -87,11 +87,7 @@ class Test_InstrumentStock(TestCase):
                 "volumeWeightedAveragePrice": 46.62,
             },
             "type": "STOCK",
-            "stock": {
-                "preferred": False,
-                "depositoryReceipt": False,
-                "numberOfShares": 20483402,
-            },
+            "stock": {"preferred": False, "depositoryReceipt": False, "numberOfShares": 20483402},
             "company": {
                 "companyId": "25427",
                 "description": "Vertiseit är ett SaaS-bolag inom Digital ...",
@@ -323,64 +319,24 @@ class Test_InstrumentStock(TestCase):
                 "receivedTime": 1717418742379,
                 "levels": [
                     {
-                        "buySide": {
-                            "price": 46.3,
-                            "priceString": "46.30",
-                            "volume": 300,
-                        },
-                        "sellSide": {
-                            "price": 46.8,
-                            "priceString": "46.80",
-                            "volume": 200,
-                        },
+                        "buySide": {"price": 46.3, "priceString": "46.30", "volume": 300},
+                        "sellSide": {"price": 46.8, "priceString": "46.80", "volume": 200},
                     },
                     {
-                        "buySide": {
-                            "price": 46.1,
-                            "priceString": "46.10",
-                            "volume": 488,
-                        },
-                        "sellSide": {
-                            "price": 46.9,
-                            "priceString": "46.90",
-                            "volume": 238,
-                        },
+                        "buySide": {"price": 46.1, "priceString": "46.10", "volume": 488},
+                        "sellSide": {"price": 46.9, "priceString": "46.90", "volume": 238},
                     },
                     {
-                        "buySide": {
-                            "price": 46.0,
-                            "priceString": "46.00",
-                            "volume": 350,
-                        },
-                        "sellSide": {
-                            "price": 47.0,
-                            "priceString": "47.00",
-                            "volume": 1915,
-                        },
+                        "buySide": {"price": 46.0, "priceString": "46.00", "volume": 350},
+                        "sellSide": {"price": 47.0, "priceString": "47.00", "volume": 1915},
                     },
                     {
-                        "buySide": {
-                            "price": 45.5,
-                            "priceString": "45.50",
-                            "volume": 69,
-                        },
-                        "sellSide": {
-                            "price": 47.1,
-                            "priceString": "47.10",
-                            "volume": 304,
-                        },
+                        "buySide": {"price": 45.5, "priceString": "45.50", "volume": 69},
+                        "sellSide": {"price": 47.1, "priceString": "47.10", "volume": 304},
                     },
                     {
-                        "buySide": {
-                            "price": 45.1,
-                            "priceString": "45.10",
-                            "volume": 500,
-                        },
-                        "sellSide": {
-                            "price": 47.4,
-                            "priceString": "47.40",
-                            "volume": 52,
-                        },
+                        "buySide": {"price": 45.1, "priceString": "45.10", "volume": 500},
+                        "sellSide": {"price": 47.4, "priceString": "47.40", "volume": 52},
                     },
                 ],
             },

@@ -13,18 +13,14 @@ log = get_logger()
 
 
 class Orders:
-    def __init__(self, filter_orderbook_direction: str | None = None):
+    def __init__(self):
         self.active_order: Order | None = None
-
-        self.filter_orderbook_direction = filter_orderbook_direction
 
     def _list(self) -> list[Order]:
         orders = get_client().list_orders().orders
 
         if SETTINGS.ACCOUNT_ID:
             orders = [i for i in orders if i.account.account_id == SETTINGS.ACCOUNT_ID]
-        if self.filter_orderbook_direction:
-            orders = [i for i in orders if self.filter_orderbook_direction in i.orderbook.name]
         if SETTINGS.NAME:
             orders = [i for i in orders if SETTINGS.NAME in i.orderbook.name]
 

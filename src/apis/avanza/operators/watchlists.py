@@ -4,8 +4,8 @@ from apis.avanza.operators.models.watchlist import (
     InstrumentValidators,
     Orderbook,
     PreferredInstrument,
-    UnpackedWatchlistName,
     ValidInstruments,
+    WatchlistNameComposition,
 )
 from config import SETTINGS, SETTINGS_WATCHLIST
 from utils.logger.operators import get_logger
@@ -37,13 +37,13 @@ class Watchlists:
                     f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]",
                 )
 
-    def _refresh_one(self, watchlist: Watchlist, watchlist_name: UnpackedWatchlistName) -> None:
+    def _refresh_one(self, watchlist: Watchlist, watchlist_name_composition: WatchlistNameComposition) -> None:
         for orderbook_id in watchlist.orderbook_ids:
-            if watchlist_name.instrument_type == "CERTIFICATE":
+            if watchlist_name_composition.instrument_type == "CERTIFICATE":
                 instrument_info = get_client().get_instrument_certificate(instrument_id=orderbook_id)
                 instrument_direction = SETTINGS_WATCHLIST.INSTRUMENT_DIRECTIONS[instrument_info.direction]
                 instrument_leverage = instrument_info.leverage
-            elif watchlist_name.instrument_type == "WARRANT":
+            elif watchlist_name_composition.instrument_type == "WARRANT":
                 instrument_info = get_client().get_instrument_warrant(instrument_id=orderbook_id)
                 instrument_direction = SETTINGS_WATCHLIST.INSTRUMENT_DIRECTIONS[
                     instrument_info.key_indicators.direction
@@ -56,14 +56,14 @@ class Watchlists:
                 continue
 
             if not InstrumentValidators.type_is_valid(
-                watchlist_name=watchlist_name,
+                watchlist_name_composition=watchlist_name_composition,
                 instrument_info=instrument_info,
                 watchlist=watchlist,
             ):
                 continue
 
             if not InstrumentValidators.direction_is_valid(
-                watchlist_name=watchlist_name,
+                watchlist_name_composition=watchlist_name_composition,
                 instrument_info=instrument_info,
                 instrument_direction=instrument_direction,
                 watchlist=watchlist,
@@ -74,7 +74,7 @@ class Watchlists:
                 continue
 
             self.valid_instruments.append(
-                watchlist_name.direction,
+                watchlist_name_composition.direction,
                 Orderbook(
                     id=orderbook_id,
                     name=instrument_info.name,
@@ -90,34 +90,38 @@ class Watchlists:
     def _clear_one(self, watchlist: Watchlist) -> None:
         log.debug(f"Clear watchlist {watchlist.name}")
 
+        if SETTINGS.DRY_RUN:
+            log.warning("Dry run: CLEAR watchlist not performed")
+            return
+
         for instrument_id in watchlist.orderbook_ids:
             get_client().remove_from_watchlist(instrument_id=instrument_id, watchlist_id=watchlist.watchList_id)
 
-    def _build_search_string(self, watchlist_name: UnpackedWatchlistName) -> str | None:
-        if watchlist_name.instrument_type == "CERTIFICATE":
-            return f"{watchlist_name.direction} {SETTINGS.NAME} AVA X{SETTINGS.MULTIPLIER}"
+    def _build_search_string(self, watchlist_name_composition: WatchlistNameComposition) -> str | None:
+        if watchlist_name_composition.instrument_type == "CERTIFICATE":
+            return f"{watchlist_name_composition.direction} {SETTINGS.NAME} AVA X{SETTINGS.MULTIPLIER}"
 
-        elif watchlist_name.instrument_type == "WARRANT":
-            prefix = SETTINGS_WATCHLIST.SEARCH_WARRANT_PREFIX[watchlist_name.direction]
+        elif watchlist_name_composition.instrument_type == "WARRANT":
+            prefix = SETTINGS_WATCHLIST.SEARCH_WARRANT_PREFIX[watchlist_name_composition.direction]
             return f"{prefix} {SETTINGS.NAME} AVA"
 
         return None
 
-    def _update_one(self, watchlist: Watchlist, watchlist_name: UnpackedWatchlistName) -> None:
+    def _update_one(self, watchlist: Watchlist, watchlist_name_composition: WatchlistNameComposition) -> None:
         log.debug(f"Update watchlist {watchlist.name}")
 
-        search_string = self._build_search_string(watchlist_name=watchlist_name)
+        search_string = self._build_search_string(watchlist_name_composition=watchlist_name_composition)
         if not search_string:
             return
 
         search_result = get_client().filtered_search(
             search_string=search_string,
-            types=[watchlist_name.instrument_type],
+            types=[watchlist_name_composition.instrument_type],
         )
 
         if search_result.total_number_of_hits == 0:
             log.error(
-                f"> Failed to find {watchlist_name.instrument_type} instruments using '{search_string}'",
+                f"> Failed to find {watchlist_name_composition.instrument_type} instruments using '{search_string}'",
             )
             return
 
@@ -126,7 +130,7 @@ class Watchlists:
                 continue
 
             # Additional validation for warrants
-            if watchlist_name.instrument_type == "WARRANT":
+            if watchlist_name_composition.instrument_type == "WARRANT":
                 instrument_info = get_client().get_instrument_warrant(instrument_id=hit.order_book_id)
                 if not InstrumentValidators.leverage_within_range(leverage=instrument_info.key_indicators.leverage):
                     continue
@@ -142,15 +146,12 @@ class Watchlists:
         self.valid_instruments = ValidInstruments()
 
         for watchlist in get_client().get_watchlists():
-            unpacked_watchlist_name = UnpackedWatchlistName.from_name(name=watchlist.name)
+            watchlist_name_composition = WatchlistNameComposition.from_name(name=watchlist.name)
 
-            if not unpacked_watchlist_name.matches_filter(
-                watchlist_name=watchlist.name,
-                filter_orderbook_type=self.filter_orderbook_type,
-            ):
+            if not watchlist_name_composition.is_valid():
                 continue
 
-            self._refresh_one(watchlist=watchlist, watchlist_name=unpacked_watchlist_name)
+            self._refresh_one(watchlist=watchlist, watchlist_name_composition=watchlist_name_composition)
 
         self._set_preferred_instrument()
 
@@ -158,19 +159,10 @@ class Watchlists:
         log.info("Update watchlists")
 
         for watchlist in get_client().get_watchlists():
-            unpacked_watchlist_name = UnpackedWatchlistName.from_name(name=watchlist.name)
+            watchlist_name_composition = WatchlistNameComposition.from_name(name=watchlist.name)
 
-            if not unpacked_watchlist_name.matches_filter(
-                watchlist_name=watchlist.name,
-                filter_orderbook_type=self.filter_orderbook_type,
-            ):
-                continue
-
-            if unpacked_watchlist_name.trading_perspective != SETTINGS_WATCHLIST.TRADING_PERSPECTIVE_PREFIX:
-                continue
-
-            if unpacked_watchlist_name.instrument != SETTINGS.NAME:
+            if not watchlist_name_composition.is_valid():
                 continue
 
             self._clear_one(watchlist=watchlist)
-            self._update_one(watchlist=watchlist, watchlist_name=unpacked_watchlist_name)
+            self._update_one(watchlist=watchlist, watchlist_name_composition=watchlist_name_composition)

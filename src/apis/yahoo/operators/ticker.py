@@ -54,6 +54,8 @@ class Ticker:
             else Yahoo.get_history(period=period, interval=interval)
         )
 
-        history.index = history.index.rename("Datetime").tz_convert("Europe/Stockholm").tz_localize(None)
+        history.index = (
+            history.index.rename("Datetime").tz_convert("Europe/Stockholm").tz_localize(None)  # type: ignore
+        )
 
         return history

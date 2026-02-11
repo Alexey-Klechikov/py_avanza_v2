@@ -1,23 +1,17 @@
 import json
 import os
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
 from avanza.constants import TransactionsDetailsType
 
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.order.transactions import Transaction
+from apis.avanza.operators.models.transactions import Deal
 from config import SETTINGS
 from utils.logger.operators import get_logger
 
 log = get_logger()
-
-
-@dataclass
-class Deal:
-    buy: Transaction | None = None
-    sell: Transaction | None = None
 
 
 class Transactions:
@@ -159,9 +153,6 @@ class Transactions:
         logs_dir = self._get_logs_dir()
         json.dump(
             obj=self.log_per_day,
-            fp=open(
-                file=f"{logs_dir}/daily_trading_stats_{SETTINGS.NAME}.json",
-                mode="w",
-            ),
+            fp=open(file=f"{logs_dir}/daily_trading_stats_{SETTINGS.NAME}.json", mode="w"),
             indent=4,
         )
