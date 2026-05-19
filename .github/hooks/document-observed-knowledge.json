@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "command": "python3 ./.github/hooks/scripts/pre-edit-doc-warning.py",
+        "cwd": ".",
+        "timeout": 5,
+        "type": "command"
+      }
+    ],
+    "SessionStart": [
+      {
+        "command": "sh ./.github/hooks/scripts/remind-doc-updates.sh",
+        "cwd": ".",
+        "timeout": 5,
+        "type": "command"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "sh ./.github/hooks/scripts/warn-missing-doc-updates.sh",
+        "cwd": ".",
+        "timeout": 5,
+        "type": "command"
+      },
+      {
+        "command": "sh ./.github/hooks/scripts/documentation-checklist.sh",
+        "cwd": ".",
+        "timeout": 5,
+        "type": "command"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "command": "sh ./.github/hooks/scripts/remind-doc-updates.sh",
+        "cwd": ".",
+        "timeout": 5,
+        "type": "command"
+      }
+    ]
+  }
+}

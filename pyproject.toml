@@ -40,17 +40,13 @@ disable = [
 load-plugins = ["pylint_pydantic"]
 extension-pkg-allow-list = ["pydantic"]
 
-[tool.pdm]
-distribution = false
+[tool.uv]
+package = false
 
-[[tool.pdm.source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
 [project]
 name = "pyAvanza_v2"
 version = "0.1.0"
-description = "Default template for PDM package"
+description = "Automated OMX trading workflows for Avanza"
 authors = [
     {name = "", email = ""},
 ]
@@ -72,7 +68,7 @@ dependencies = [
     "scipy",
     "python-dotenv>=1.1.1",
 ]
-requires-python = ">=3.12"
+requires-python = "==3.13.*"
 readme = "README.md"
 license = {text = "MIT"}
 

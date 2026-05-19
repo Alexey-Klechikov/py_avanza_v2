@@ -8,3 +8,4 @@ hold*.json
 *trade*.json
 analytics*.json
 *.env
+.venv
