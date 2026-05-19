@@ -114,8 +114,8 @@ class TradeStrategies:
                 "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
             },
             "Volume": {
-                "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
-                "ADOSC": {"fast": 6, "slow": 10, "length_divergence": 28},
+                # "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
+                # "ADOSC": {"fast": 6, "slow": 10, "length_divergence": 28},
                 # "CMF": {"length": 28, "length_divergence": 32},
                 # "KVO": {"fast": 22, "slow": 55, "signal": 10, "mamode": "rma", "length_divergence": 30}
             },
