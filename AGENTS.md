@@ -55,5 +55,13 @@
 
 ## Automation Notes
 - [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) writes `config/.env` on the remote host from GitHub Secrets and refreshes the project cron section.
-- The documentation reminder hooks should trigger on `src/`, `.github/`, and repo runtime or config files.
-- If you change persistent path layout, deploy sync behavior, cron scheduling, or generated strategy file names, update both `AGENTS.md` and `README.md` in the same change.
+- [check_documentation_alignment.py](.github/hooks/scripts/check_documentation_alignment.py) is the deterministic documentation-routing check. Run `python3 .github/hooks/scripts/check_documentation_alignment.py` from the repository root before completing changes that affect durable workflow or runtime contracts.
+- The checker requires `AGENTS.md` for changes to `pyproject.toml` or Copilot customization files. It requires both `AGENTS.md` and `README.md` for deploy changes and the explicit runtime-contract owners: settings, Avanza credential loading, storage, strategy persistence, and scheduled task entry points.
+- Generated cache, log, and strategy snapshot updates intentionally do not trigger the checker. If a generated-artifact schema or path contract changes, update the relevant docs anyway.
+- A Stop hook runs the same checker as a backstop. Hooks cannot run skills. When it blocks completion, load and execute `documentation-skill`, make the evidence-backed documentation updates, then rerun the checker.
+
+## Copilot Customizations
+- `AGENTS.md` is the concise contributor baseline. [.github/copilot-instructions.md](.github/copilot-instructions.md) contains repo-wide engineering behavior; path-specific rules belong in [.github/instructions/](.github/instructions/).
+- [.github/agents/linus.agent.md](.github/agents/linus.agent.md) is the primary implementation agent. It coordinates focused validation and the documentation checker; do not duplicate specialized workflows in the agent.
+- Use `documentation-skill` for documentation audits, instruction/hook updates, or any checker-routed pass. Use `code-review-skill` before a production deploy or pull request. Use `refactoring-skill` only for a requested, evidence-backed behavior-preserving cleanup.
+- Follow [documentation-scope.instructions.md](.github/instructions/documentation-scope.instructions.md) to route durable facts between `AGENTS.md` and `README.md`. Keep skills reusable and on-demand, instructions narrowly scoped with `applyTo`, and hooks fast and deterministic.

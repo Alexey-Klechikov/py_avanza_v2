@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/scripts/check_documentation_alignment.py",
+        "timeout": 15
+      }
+    ]
+  }
+}
