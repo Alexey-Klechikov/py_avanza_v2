@@ -27,7 +27,7 @@ class SettingsWatchlist:
 class Strategy:
     MIN_EFFICIENCY: float = 0.6
     COUNT_MAX: int = 200
-    INDICATORS: int = 8
+    INDICATORS: int = 7
 
 
 @dataclass(frozen=True)
@@ -90,28 +90,28 @@ class TradeStrategies:
         default_factory=lambda: {
             "Trend": {
                 "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
-                "TII": {"length_sma": 14, "length_signal": 8},
+                "TII": {"length_sma": 16, "length_signal": 4},
                 "PSAR": {"acceleration": 0.01, "maximum": 0.2},
                 "CHOP": {"length": 6, "length_atr": 14, "scalar": 55.0},
             },
             "Overlap": {
                 "LINREG": {"length": 12, "limit": 0.32},
                 "SLOPE": {"length": 18, "limit": 0.1},
-                "SUPERTREND": {"length": 7, "multiplier": 3.0},
+                "SUPERTREND": {"length": 15, "multiplier": 7.0},
             },
             "Momentum": {
                 "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
-                "STC": {"tclength": 10, "fast": 15, "slow": 31, "factor": 0.63},
+                "STC": {"tclength": 10, "fast": 10, "slow": 20, "factor": 0.63},
                 # "CCI": {"length": 12, "c": 0.015},
                 "RVGI": {"length": 18, "length_swma": 3, "length_divergence": 22},
                 "STOCH": {"k": 14, "d": 3, "smooth_k": 2, "mamode": "rma"},
             },
             "Cycles": {"EBSW": {"length": 40, "bars": 18}},
             "Volatility": {
-                "STARC": {"length_ma": 12, "length_atr": 14, "multiplier_atr": 1.8},
+                "STARC": {"length_ma": 10, "length_atr": 8, "multiplier_atr": 2.4},
                 # "MASSI": {"fast": 9, "slow": 23, "threshold": 26.5},
-                "BBANDS": {"length": 10, "std": 2.4},
-                "ACCBANDS": {"length": 12, "c": 1, "mamode": "zlma"},
+                "BBANDS": {"length": 16, "std": 2.4},
+                "ACCBANDS": {"length": 12, "c": 1, "mamode": "t3"},
             },
             "Volume": {
                 # "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
