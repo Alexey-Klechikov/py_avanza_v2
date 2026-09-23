@@ -98,7 +98,7 @@ class Avanza(AvanzaBase):
                     log.error(f"Failed to decode JSON response for {method} {path}: {exc}")
                     return {}
 
-            if response is None:
+            if response is None and path in [Endpoints.watchlist_add, Endpoints.watchlist_remove]:
                 return {}
 
         log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")
