@@ -45,28 +45,31 @@ CONNECT_RETRY_BACKOFF_SECONDS = int(os.getenv("AVANZA_CONNECT_RETRY_BACKOFF_SECO
 
 @dataclass
 class Endpoints:
+    # Recently tested
+    place_order = "/_api/trading/order-entry/order/new"
+    delete_order = "/_api/trading/order-entry/order/delete"
+    list_orders = "/_api/trading/trading-orders-and-deals/orders"
     chart_data = "/_api/price-chart/stock/{order_book_id}"
-    instrument = "/_api/market-guide/{type}/{id}"
-    instrument_details = "/_api/market-guide/{type}/{id}/details"
     index = "/_api/market-index/{id}"
+    instrument = "/_api/market-guide/{type}/{id}"
+    watchlists = "/_api/watchlist/watchlist"
+    watchlist_add = "/_api/watchlist/watchlist/add/{watchlist_id}/{instrument_id}"
+    watchlist_remove = "/_api/watchlist/watchlist/remove/{watchlist_id}/{instrument_id}"
+    filtered_search = "/_api/search/filtered-search"
+    accounts_positions = "/_api/position-data/positions"
+    accounts_overview = "/_api/account-performance/overview/total-values"
+    transactions_list = "/_api/transactions/list"
+    # Untested
+    instrument_details = "/_api/market-guide/{type}/{id}/details"
     index_details = "/_api/market-index/{id}/details"
+    edit_order = "/_api/trading/order-entry/order/modify"
+    # Unused endpoints for now
     etf = "/_api/market-etf/{id}"
     etf_details = "/_api/market-etf/{id}/details"
     fund_references = "/_api/fund-reference/reference/{id}"
     fund_sustainability = "/_api/fund-reference/sustainability/{id}"
     fund_portfolio = "/_api/fund-reference/portfolio-data/{id}"
     fund_trading_terms = "/_api/fund-guide/fund-trading-terms/{id}"
-    accounts_overview = "/_api/account-performance/overview/total-values"
-    watchlists = "/_api/watchlist/watchlist"
-    filtered_search = "/_api/search/filtered-search"
-    accounts_positions = "/_api/position-data/positions"
-    list_orders = "/_api/trading/rest/orders"
-    transactions_list = "/_api/transactions/list"
-    watchlist_remove = "/_api/watchlist/watchlist/remove/{watchlist_id}/{instrument_id}"
-    watchlist_add = "/_api/watchlist/watchlist/add/{watchlist_id}/{instrument_id}"
-    place_order = "/_api/trading-critical/rest/order/place"
-    edit_order = "/_api/trading-critical/rest/order/modify"
-    delete_order = "/_api/trading-critical/rest/order/delete"
     market_stocks_filter = "/_api/market-stock-filter/stocks"
 
 
@@ -277,13 +280,18 @@ class Avanza(AvanzaBase):
         valid_until: date,
         volume: int,
     ) -> str | None:
-        response = super().place_order(
-            account_id=account_id,
-            order_book_id=order_book_id,
-            order_type=order_type,
-            price=price,
-            valid_until=valid_until,
-            volume=volume,
+
+        response = self._retry_call(
+            method=HttpMethod.POST,
+            path=Endpoints.place_order,
+            options={
+                "accountId": account_id,
+                "orderbookId": order_book_id,
+                "side": order_type.value,
+                "price": price,
+                "validUntil": valid_until.isoformat(),
+                "volume": volume,
+            },
         )
 
         if not response:
@@ -320,7 +328,11 @@ class Avanza(AvanzaBase):
         return parsed_response.order_id
 
     def delete_order(self, account_id: str, order_id: str) -> str | None:
-        response = super().delete_order(account_id, order_id)
+        response = self._retry_call(
+            method=HttpMethod.POST,
+            path=Endpoints.delete_order,
+            options={"accountId": account_id, "orderId": order_id},
+        )
 
         if not response:
             raise OrderException("Failed to delete order (Unknown reason)")
