@@ -98,6 +98,9 @@ class Avanza(AvanzaBase):
                     log.error(f"Failed to decode JSON response for {method} {path}: {exc}")
                     return {}
 
+            if response is None:
+                return {}
+
         log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")
         return {}
 
