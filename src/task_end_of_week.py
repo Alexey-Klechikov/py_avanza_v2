@@ -8,7 +8,7 @@ from apis.telegram.operators import Telegram
 from config import SETTINGS
 from services.storage.operators import Storage
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.trade_strategies.backtest import backtest_trade_strategies
+from tasks.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 

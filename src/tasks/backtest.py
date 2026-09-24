@@ -288,7 +288,7 @@ def backtest_trade_strategies(
                     {
                         "data": data,
                         "strategy": strategy,
-                        "strategy_rank": f" {i+1} / {len(strategies)}",
+                        "strategy_rank": f" {i + 1} / {len(strategies)}",
                     }
                     for i, strategy in enumerate(strategies)
                 ],

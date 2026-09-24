@@ -11,7 +11,7 @@ from apis.yahoo.operators.ticker import Ticker as YahooTicker
 from config import SETTINGS
 from services.storage.operators import Storage
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.trade_strategies.backtest import backtest_trade_strategies as _backtest_trade_strategies
+from tasks.backtest import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 
@@ -43,14 +43,10 @@ def cache_history():
         rows_before = storage.read().shape[0]
 
         if SETTINGS.DATA_SOURCE == "yahoo":
-            try:
-                data_yahoo = YahooTicker().get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
-                storage.write(data_yahoo)
-            except Exception as e:
-                log.error(f"Error fetching Yahoo data: {e}")
-                SETTINGS.DATA_SOURCE = "avanza"
+            data_yahoo = YahooTicker().get_history(period=Period.FIVE_DAYS, interval=interval_yahoo)
+            storage.write(data_yahoo)
 
-        if SETTINGS.DATA_SOURCE == "avanza":
+        elif SETTINGS.DATA_SOURCE == "avanza":
             data_ava = Chart.get_chart_data(TimePeriod.TODAY, resolution_ava)
             storage.write(data_ava)
 

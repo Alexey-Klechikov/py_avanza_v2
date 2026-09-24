@@ -21,7 +21,7 @@ from services.calendar.operators import get_market_close_time, market_is_close
 from services.storage.operators import Storage
 from services.ta.operators import get_indicators, read_top_strategies
 from services.ta.strategies.models.strategy import Strategy
-from tasks.trade_strategies.models import FlowAction, Signal
+from tasks.models import FlowAction, Signal
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger
 
@@ -84,7 +84,7 @@ class Data:
         )
         if not self.strategies or self.strategies[0].name != strategies[0].name:
             for i, strategy in enumerate(strategies):
-                log.info(f"Strategy {i+1} [{strategy.efficiency}]: {strategy.name}")
+                log.info(f"Strategy {i + 1} [{strategy.efficiency}]: {strategy.name}")
 
         self.strategies = strategies
 
@@ -137,7 +137,7 @@ class Data:
                 continue
 
             message_signal_summary = (
-                f"Signal: {signal}. Strategy {i+1} [{strategy.efficiency}]. "
+                f"Signal: {signal}. Strategy {i + 1} [{strategy.efficiency}]. "
                 + f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}"
             )
             if last_triggered_strategy and strategy.efficiency < last_triggered_strategy.efficiency:

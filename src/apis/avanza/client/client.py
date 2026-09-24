@@ -59,10 +59,10 @@ class Endpoints:
     accounts_positions = "/_api/position-data/positions"
     accounts_overview = "/_api/account-performance/overview/total-values"
     transactions_list = "/_api/transactions/list"
+    edit_order = "/_api/trading/order-entry/order/modify"
     # Untested
     instrument_details = "/_api/market-guide/{type}/{id}/details"
     index_details = "/_api/market-index/{id}/details"
-    edit_order = "/_api/trading/order-entry/order/modify"
     # Unused endpoints for now
     etf = "/_api/market-etf/{id}"
     etf_details = "/_api/market-etf/{id}/details"

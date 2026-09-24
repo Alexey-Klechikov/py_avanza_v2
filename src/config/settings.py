@@ -111,7 +111,7 @@ class TradeStrategies:
                 "STARC": {"length_ma": 10, "length_atr": 8, "multiplier_atr": 2.4},
                 # "MASSI": {"fast": 9, "slow": 23, "threshold": 26.5},
                 "BBANDS": {"length": 16, "std": 2.4},
-                "ACCBANDS": {"length": 12, "c": 1, "mamode": "t3"},
+                "ACCBANDS": {"length": 14, "c": 2, "mamode": "vidya"},
             },
             "Volume": {
                 # "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},

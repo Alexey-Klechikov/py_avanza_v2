@@ -1,18 +1,20 @@
 import json
 import os
 import warnings
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pprint import pprint
+from itertools import product
 
 import pandas as pd
 
 from config import SETTINGS
 from services.storage.operators import Storage
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.trade_strategies.backtest import backtest_trade_strategies
+from tasks.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
+from enum import Enum
+from pydantic import BaseModel
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.set_option("display.max_rows", None)
@@ -22,14 +24,65 @@ set_handlers("development")
 log = get_logger()
 
 
-@dataclass
-class TestedKwargs:
-    indicator_to_test: tuple[str, str]
-    kwargs: list[dict]
+class MovingAverageType(Enum):
+    SMA = "sma"
+    EMA = "ema"
+    DEMA = "dema"
+    FWMA = "fwma"
+    LINREG = "linreg"
+    MIDPOINT = "midpoint"
+    PWMA = "pwma"
+    RMA = "rma"
+    SINWMA = "sinwma"
+    SWMA = "swma"
+    T3 = "t3"
+    TEMA = "tema"
+    TRIMA = "trima"
+    VIDYA = "vidya"
+    WMA = "wma"
+    ZLMA = "zlma"
+
+
+class TestParams(BaseModel):
+    indicator_category: str
+    indicator_name: str
+    indicators_count_base: int
+    kwargs_base: dict
+
+    _kwargs: list[dict] = []
 
     @property
-    def strategies_file_name_suffix_new_suffix(self) -> str:
-        return f"dev_6_{'-'.join(self.indicator_to_test)}_"
+    def strategies_file_name_new_suffix(self) -> str:
+        return f"dev_{self.indicators_count_base + 1}_{self.indicator_category}_{self.indicator_name}_"
+
+    def _generate_kwargs(self) -> None:
+        keys = list(self.kwargs_base)
+        choices = [value if isinstance(value, list) else [value] for value in self.kwargs_base.values()]
+
+        self._kwargs = [dict(zip(keys, reversed(combination))) for combination in product(*reversed(choices))]
+
+    def _drop_tested_kwargs(self) -> None:
+        untested_kwargs = []
+
+        for kwarg in self._kwargs:
+            already_tested = False
+            for file in sorted(os.listdir("src/config")):
+                if (
+                    self.strategies_file_name_new_suffix + f"{'_'.join([f'{k}={v}' for k, v in kwarg.items()])}"
+                    in file
+                ):
+                    already_tested = True
+                    break
+
+            if not already_tested:
+                untested_kwargs.append(kwarg)
+
+        self._kwargs = untested_kwargs
+
+    def get_kwargs(self) -> list[dict]:
+        self._generate_kwargs()
+        self._drop_tested_kwargs()
+        return self._kwargs
 
 
 def _get_data(point_of_origin: datetime, period_days: int):
@@ -98,76 +151,26 @@ def run_plotting_for_active_strategies(period_days: int):
     )
 
 
-def _generate_tested_kwargs() -> TestedKwargs:
-    tested_kwargs = TestedKwargs(indicator_to_test=("Volume", "PVT"), kwargs=[])
+def run_test_for_selected_indicators(period_days: int, test_params: TestParams):
+    for kwargs in test_params.get_kwargs():
+        SETTINGS.INDICATORS[test_params.indicator_category][test_params.indicator_name] = kwargs
 
-    # ma_list = [
-    #     "sma",
-    #     "ema",
-    #     "dema",
-    #     "fwma",
-    #     # "hma",
-    #     "linreg",
-    #     "midpoint",
-    #     "pwma",
-    #     "rma",
-    #     "sinwma",
-    #     "swma",
-    #     "t3",
-    #     "tema",
-    #     "trima",
-    #     "vidya",
-    #     "wma",
-    #     "zlma",
-    # ]
-    # for ma in ma_list:
-    for length_1 in range(8, 20, 2):
-        for length_2 in range(16, 28, 2):
-            #     for length_3 in range(10, 18, 2):
-            #         #     # for threshold in range(57, 61, 2):
-            #         if length_1 > length_2:
-            #             continue
-
-            kwargs = {"drift": length_1, "length_sma": length_2, "length_divergence": 24}
-
-            # -----------
-            already_tested = False
-            for file in sorted(os.listdir("src/config")):
-                if (
-                    tested_kwargs.strategies_file_name_suffix_new_suffix
-                    + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}"
-                    in file
-                ):
-                    already_tested = True
-
-            if already_tested:
-                continue
-
-            tested_kwargs.kwargs.append(kwargs)
-
-    return tested_kwargs
-
-
-def run_test_for_selected_indicators(period_days: int):
-    tested_kwargs = _generate_tested_kwargs()
-
-    for kwargs in tested_kwargs.kwargs:
-        SETTINGS.INDICATORS[tested_kwargs.indicator_to_test[0]][tested_kwargs.indicator_to_test[1]] = kwargs
-
-        log.warning(f"Testing for {tested_kwargs.indicator_to_test}_{list(kwargs.items())}")
+        log.warning(
+            f"Testing for {test_params.indicator_category}_{test_params.indicator_name}_{list(kwargs.items())}"
+        )
         backtest_trade_strategies(
             _get_data(point_of_origin=TODAY_MIDNIGHT, period_days=period_days),
             ComposeStrategiesListMethod.EXTEND,
-            strategies_file_name_suffix_old="dev_5",
-            strategies_file_name_suffix_new=tested_kwargs.strategies_file_name_suffix_new_suffix
+            strategies_file_name_suffix_old=f"dev_{test_params.indicators_count_base}",
+            strategies_file_name_suffix_new=test_params.strategies_file_name_new_suffix
             + f"{'_'.join([f'{k}={v}' for k, v in kwargs.items()])}",
-            indicators_filter=[tested_kwargs.indicator_to_test[1]],
+            indicators_filter=[test_params.indicator_name],
             **kwargs,
         )
 
     stats = []
     for file in os.listdir("src/config"):
-        if tested_kwargs.strategies_file_name_suffix_new_suffix not in file:
+        if test_params.strategies_file_name_new_suffix not in file:
             continue
 
         strategies = json.load(open(f"src/config/{file}"))
@@ -178,7 +181,7 @@ def run_test_for_selected_indicators(period_days: int):
 
         stats.append(
             (
-                file.replace(tested_kwargs.strategies_file_name_suffix_new_suffix, "").replace(".json", ""),
+                file.replace(test_params.strategies_file_name_new_suffix, "").replace(".json", ""),
                 round(s["profitable_trades_share"] * s["total_profit"], 2),
                 s["profitable_trades_share"],
                 s["total_profit"],
@@ -189,7 +192,7 @@ def run_test_for_selected_indicators(period_days: int):
             ),
         )
 
-    log.warning(f"Stats for {tested_kwargs.indicator_to_test}")
+    log.warning(f"Stats for {test_params.indicator_category}_{test_params.indicator_name}")
     log.info(
         " | ".join(
             [
@@ -236,8 +239,24 @@ def get_statistics_per_indicator():
 
 
 if __name__ == "__main__":
-    # run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=True)
-
-    run_test_for_selected_indicators(period_days=90)
+    run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=True)
     # run_plotting_for_active_strategies(period_days=50)
-    # get_statistics_per_indicator()
+    get_statistics_per_indicator()
+
+    raise SystemExit
+
+    moving_average_types = [ma_type.value for ma_type in MovingAverageType]
+
+    run_test_for_selected_indicators(
+        period_days=90,
+        test_params=TestParams(
+            indicator_category="Volatility",
+            indicator_name="ACCBANDS",
+            indicators_count_base=6,
+            kwargs_base={
+                "length": list(range(8, 16, 2)),
+                "c": list(range(1, 3)),
+                "mamode": moving_average_types,
+            },
+        ),
+    )
