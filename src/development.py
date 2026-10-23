@@ -2,10 +2,12 @@ import json
 import os
 import warnings
 from datetime import datetime, timedelta
-from pprint import pprint
+from enum import Enum
 from itertools import product
+from pprint import pprint
 
 import pandas as pd
+from pydantic import BaseModel
 
 from config import SETTINGS
 from services.storage.operators import Storage
@@ -13,8 +15,6 @@ from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.backtest import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
-from enum import Enum
-from pydantic import BaseModel
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.set_option("display.max_rows", None)
@@ -156,7 +156,7 @@ def run_test_for_selected_indicators(period_days: int, test_params: TestParams):
         SETTINGS.INDICATORS[test_params.indicator_category][test_params.indicator_name] = kwargs
 
         log.warning(
-            f"Testing for {test_params.indicator_category}_{test_params.indicator_name}_{list(kwargs.items())}"
+            f"Testing for {test_params.indicator_category}_{test_params.indicator_name}_{list(kwargs.items())}",
         )
         backtest_trade_strategies(
             _get_data(point_of_origin=TODAY_MIDNIGHT, period_days=period_days),

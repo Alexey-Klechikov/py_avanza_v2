@@ -9,3 +9,4 @@ hold*.json
 analytics*.json
 *.env
 .venv
+.DS_Store
