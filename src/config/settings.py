@@ -91,7 +91,7 @@ class TradeStrategies:
             "Trend": {
                 "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
                 "TII": {"length_sma": 16, "length_signal": 4},
-                "PSAR": {"acceleration": 0.01, "maximum": 0.2},
+                "PSAR": {"acceleration": 0.008, "maximum": 0.2},
                 "CHOP": {"length": 6, "length_atr": 14, "scalar": 55.0},
             },
             "Overlap": {

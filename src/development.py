@@ -250,13 +250,13 @@ if __name__ == "__main__":
     run_test_for_selected_indicators(
         period_days=90,
         test_params=TestParams(
-            indicator_category="Volatility",
-            indicator_name="ACCBANDS",
+            indicator_category="Trend",
+            indicator_name="CHOP",
             indicators_count_base=6,
             kwargs_base={
-                "length": list(range(8, 16, 2)),
-                "c": list(range(1, 3)),
-                "mamode": moving_average_types,
+                "length": list(range(10, 12, 2)),
+                "length_atr": list(range(12, 18, 4)),
+                "scalar": [float(i) for i in range(40, 100, 10)],
             },
         ),
     )
