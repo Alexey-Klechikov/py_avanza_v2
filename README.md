@@ -23,7 +23,7 @@ pyAvanza_v2 is a Python trading bot for OMX-linked BULL and BEAR products on Ava
 - `src/services/ta/`: indicators, plots, strategy composition, and strategy persistence.
 - `src/services/storage/`: pickle-backed OHLCV cache.
 - `src/services/calendar/`: Stockholm market-hours helpers.
-- `src/tasks/trade_strategies/`: live signal loop and backtest engine.
+- `src/tasks/`: live signal loop and backtest engine.
 - `src/config/`: runtime settings and generated strategy ranking files.
 - `src/utils/`: logging and shared constants.
 
@@ -47,7 +47,7 @@ AVA_TOTP=...
 ```sh
 uv sync
 mkdir -p src/data
-uv run python -m compileall src .github/hooks/scripts
+uv run python -m compileall src .claude/hooks
 uv run pytest src/apis/yahoo/client/models/history_request_test.py
 ```
 
@@ -89,7 +89,7 @@ uv run python src/development.py
 ## Testing
 
 ```sh
-uv run python -m compileall src .github/hooks/scripts
+uv run python -m compileall src .claude/hooks
 uv run pytest
 uv run pytest -m integration src/apis/avanza/client/client_test.py
 ```

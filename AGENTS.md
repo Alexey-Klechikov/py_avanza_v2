@@ -5,13 +5,13 @@
 - Install dependencies with `uv sync`.
 - Create `src/data/` locally before running cache or trading flows; `Storage.write()` assumes that directory already exists.
 - Put Avanza credentials in `src/config/.env` for local runs. The deployed host uses `config/.env`.
-- Prefer `uv run python -m compileall src .github/hooks/scripts` as the quickest repo-wide sanity check after edits.
+- Prefer `uv run python -m compileall src .github/hooks/scripts .claude/hooks` as the quickest repo-wide sanity check after edits.
 
 ## Where To Look First
 - [README.md](README.md) for the project overview, runtime expectations, and deploy flow.
 - [src/task_trade.py](src/task_trade.py) for the live trading entry point.
-- [src/tasks/trade_strategies/main.py](src/tasks/trade_strategies/main.py) for the trading loop, signal evaluation, and flow control.
-- [src/tasks/trade_strategies/backtest.py](src/tasks/trade_strategies/backtest.py) for simulated trades and ranked strategy generation.
+- [src/tasks/main.py](src/tasks/main.py) for the trading loop, signal evaluation, and flow control.
+- [src/tasks/backtest.py](src/tasks/backtest.py) for simulated trades and ranked strategy generation.
 - [src/task_end_of_day.py](src/task_end_of_day.py) and [src/task_end_of_week.py](src/task_end_of_week.py) for scheduled cache and strategy-refresh workflows.
 - [src/apis/avanza/client/client.py](src/apis/avanza/client/client.py) for Avanza authentication, retries, and typed API wrappers.
 - [src/apis/avanza/operators/watchlists.py](src/apis/avanza/operators/watchlists.py), [src/apis/avanza/operators/orders.py](src/apis/avanza/operators/orders.py), [src/apis/avanza/operators/portfolio.py](src/apis/avanza/operators/portfolio.py), and [src/apis/avanza/operators/transactions.py](src/apis/avanza/operators/transactions.py) for live account workflows.
@@ -23,7 +23,7 @@
 - `src/apis/**`: Avanza, Yahoo Finance, and Telegram integrations plus repo-facing operators.
 - `src/services/ta/**`: indicator computation, plotting, strategy composition, and JSON strategy persistence.
 - `src/services/storage/**` and `src/services/calendar/**`: OHLCV cache persistence and Stockholm market-hours helpers.
-- `src/tasks/trade_strategies/**`: live trading flow, signal translation, and backtest engine.
+- `src/tasks/**`: live trading flow (`main.py`), signal translation (`models.py`), and the backtest engine (`backtest.py`).
 - `src/config/**`: code-backed settings, local credentials, and generated `OMX_trade_strategies*.json` files.
 - `src/utils/**`: logging and small shared constants.
 - `.github/**`: deploy workflow plus Copilot agents, instructions, and documentation reminders.
@@ -31,14 +31,14 @@
 ## Codebase Conventions
 - Keep `src/task_*.py` and `src/development.py` thin. They should set handlers, call into operators/tasks, and own top-level exception or alert handling only.
 - Keep `src/apis/*/client/` for third-party payload adaptation and retries; keep repo-specific workflows in `src/apis/*/operators/`.
-- Keep `src/services/ta/**` free of broker/account side effects. Live trading stays in `src/tasks/trade_strategies/main.py` and `src/apis/avanza/trade/operator.py`.
+- Keep `src/services/ta/**` free of broker/account side effects. Live trading stays in `src/tasks/main.py` and `src/apis/avanza/trade/operator.py`.
 - Strategy ranking files under `src/config/OMX_trade_strategies*.json` are generated artifacts. Preserve their schema and naming because the live loop reads them by convention.
 - Path handling is intentionally dual-mode. Local runs read and write under `src/config`, `src/data`, and `src/logs`, while the deployed server uses `config`, `data`, and `logs` after [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) syncs `src/` into the remote root.
 - Watchlists are parsed by name in the format `DT_<direction>_<instrument>_<instrument_type>`. If you change the prefix or part count, update `WatchlistNameComposition` and the surrounding operator logic together.
 - `telegram-send` is used directly for alerts. There is no repo-specific Telegram setting in `src/config/settings.py`.
 
 ## Validation Notes
-- Cheapest executable check: `uv run python -m compileall src .github/hooks/scripts`.
+- Cheapest executable check: `uv run python -m compileall src .github/hooks/scripts .claude/hooks`.
 - Cheapest unit tests: the model tests under `src/apis/avanza/client/models/**` and `src/apis/yahoo/client/models/history_request_test.py`.
 - `src/apis/avanza/client/client_test.py` is integration coverage. It requires valid credentials in `src/config/.env` and can hit a live Avanza account.
 - `uv run python src/task_end_of_day.py` rewrites cached data and strategy files.
@@ -65,3 +65,8 @@
 - [.github/agents/linus.agent.md](.github/agents/linus.agent.md) is the primary implementation agent. It coordinates focused validation and the documentation checker; do not duplicate specialized workflows in the agent.
 - Use `documentation-skill` for documentation audits, instruction/hook updates, or any checker-routed pass. Use `code-review-skill` before a production deploy or pull request. Use `refactoring-skill` only for a requested, evidence-backed behavior-preserving cleanup.
 - Follow [documentation-scope.instructions.md](.github/instructions/documentation-scope.instructions.md) to route durable facts between `AGENTS.md` and `README.md`. Keep skills reusable and on-demand, instructions narrowly scoped with `applyTo`, and hooks fast and deterministic.
+
+## Claude Code Customizations
+- [CLAUDE.md](CLAUDE.md) is the Claude-facing equivalent of this file: the same contributor facts plus Claude-specific agent/skill/rule routing under `.claude/`. Keep both aligned when a durable fact changes, phrased independently rather than copy-pasted.
+- `.claude/agents/refactorer.md` is the only custom Claude agent. `.claude/skills/documentation-skill/SKILL.md` and `.claude/skills/code-review-skill/SKILL.md` are its on-demand workflows, and `.claude/rules/*.md` hold path-scoped guidance.
+- `.pre-commit-config.yaml` runs `documentation-alignment` (blocking) and `refactorer-review` (advisory) through the Claude Code CLI at `git push`, independent of the Copilot checker above. See `.claude/rules/claude-customizations.md` for the full contract. Bypass once with `SKIP=documentation-alignment git push` or `SKIP=refactorer-review git push`.

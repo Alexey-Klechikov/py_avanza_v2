@@ -1,11 +1,11 @@
 ---
-description: "Use when editing runtime entry points under src/task_*.py, src/development.py, or src/print_logs.sh. Covers delegation, logging setup, and operational safety."
-applyTo:
+paths:
   - "src/task_*.py"
   - "src/development.py"
   - "src/print_logs.sh"
 ---
-# Entry Point Guidelines
+
+# Entry Points
 
 - Keep entry scripts thin: set log handlers, call into `tasks/`, `apis/`, or `services/`, and handle top-level alerting or exception reporting only.
 - `src/task_trade.py` is the live-trading entry point. Treat any change that could bypass `DRY_RUN`, change order placement timing, or alter exit behavior as high risk and validate narrowly.
