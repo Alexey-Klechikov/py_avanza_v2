@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -98,7 +99,13 @@ class Avanza(AvanzaBase):
                     log.error(f"Failed to decode JSON response for {method} {path}: {exc}")
                     return {}
 
-            if path in [Endpoints.watchlist_add, Endpoints.watchlist_remove]:
+            if any(
+                i.startswith(re.sub(r"\d+", "", path).replace("//", ""))
+                for i in [
+                    Endpoints.watchlist_add,
+                    Endpoints.watchlist_remove,
+                ]
+            ):
                 return {}
 
         log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")
