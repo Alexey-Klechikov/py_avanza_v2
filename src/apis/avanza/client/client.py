@@ -80,7 +80,9 @@ class Avanza(AvanzaBase):
         self._authentication_session = None
 
     def _retry_call(self, method: HttpMethod, path: str, options: dict | list | None = None) -> dict:
-        response: dict | str | None = None
+        # Avanza returns an empty body on success for watchlist add/remove; only those exact paths skip retrying.
+        is_empty_response_ok = re.fullmatch(r"/_api/watchlist/watchlist/(add|remove)/[^/]+/[^/]+", path) is not None
+
         for i in range(RETRY_ATTEMPTS):
             try:
                 response = self.__call(method=method, path=path, options=options, return_content=True)
@@ -88,6 +90,7 @@ class Avanza(AvanzaBase):
             except HTTPError as e:
                 log.debug(e)
                 time.sleep((i + 1) * RETRY_BACKOFF_SECONDS)
+                continue
 
             if response:
                 if isinstance(response, dict):
@@ -99,13 +102,7 @@ class Avanza(AvanzaBase):
                     log.error(f"Failed to decode JSON response for {method} {path}: {exc}")
                     return {}
 
-            if any(
-                i.startswith(re.sub(r"\d+", "", path).replace("//", ""))
-                for i in [
-                    Endpoints.watchlist_add,
-                    Endpoints.watchlist_remove,
-                ]
-            ):
+            if is_empty_response_ok:
                 return {}
 
         log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")

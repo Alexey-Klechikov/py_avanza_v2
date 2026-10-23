@@ -22,9 +22,13 @@ log = get_logger()
 def _get_data(period_days: int):
     log.info(f"Get data: {(TODAY_MIDNIGHT - timedelta(days=period_days)).date()} - {TODAY_MIDNIGHT.date()}")
 
+    requested_start = TODAY_MIDNIGHT - timedelta(days=period_days)
     data = Storage().read()
-    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
+    data = data.loc[(data.index >= requested_start) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
+
+    if not data.empty and data.index.min() > requested_start:
+        log.warning(f"Cached data starts at {data.index.min().date()}, later than requested {requested_start.date()}")
 
     return data
 
