@@ -78,6 +78,7 @@ uv run python src/development.py
 - Watchlists are expected to follow `DT_<direction>_<instrument>_<instrument_type>`, for example `DT_BULL_OMX_CERTIFICATE`.
 - Local runs use `src/config`, `src/data`, and `src/logs`. The deploy workflow copies only the contents of `src/` to `/home/ubuntu/pyAvanza/`, so the server uses `config`, `data`, and `logs` at the remote root.
 - Strategy rankings are persisted as `OMX_trade_strategies*.json` and are read back by the live trading loop.
+- Avanza API calls other than chart data, including watchlist refresh and mutation, retry HTTP errors and empty responses up to `AVANZA_RETRY_ATTEMPTS` (default 10) before giving up; only a genuinely empty, successful response from a watchlist add/remove call short-circuits that retry loop. Chart data uses its own `AVANZA_CHART_DATA_RETRY_ATTEMPTS` (default 120).
 
 ## Generated Artifacts
 
