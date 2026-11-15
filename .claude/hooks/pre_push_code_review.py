@@ -5,13 +5,26 @@ from __future__ import annotations
 import fnmatch
 import sys
 
-from claude_review import READ_ONLY_TOOLS, build_review_diff, parse_verdict, run_claude, tagged_lines
+from claude_review import (
+    READ_ONLY_TOOLS,
+    SELF_CHECK_INSTRUCTIONS,
+    already_passed,
+    blob_ids,
+    build_review_diff,
+    parse_verdict,
+    paste_block,
+    record_pass,
+    review_fingerprint,
+    run_claude,
+    tagged_lines,
+)
 from git_range import changed_files_in_range, resolve_review_range
 
 HOOK_ID = "code-review"
 AGENT = "code-reviewer"
 VERDICT_PREFIX = "CODE_REVIEW_VERDICT:"
-REPORT_PREFIXES = ("BLOCKING:", "ADVISORY:")
+BLOCKING_PREFIX = "BLOCKING:"
+REPORT_PREFIXES = (BLOCKING_PREFIX, "ADVISORY:")
 SKIP_HINT = f"Bypass once with `SKIP={HOOK_ID} git push`."
 EXCLUDED_PATTERNS = ("*.md", "uv.lock", "src/config/OMX_trade_strategies*.json")
 BLOCKED_TOOLS = ("Bash", "Edit", "Write", "NotebookEdit")
@@ -20,6 +33,9 @@ PROMPT_TEMPLATE = """\
 PRE-PUSH CODE REVIEW. Shell and file-editing tools are disabled; only Read, Grep, and Glob are available, so do not \
 run validation. Review the code being pushed in the range {from_ref}..{to_ref}. The diff is below; read surrounding \
 code in the working tree as needed. Only judge lines this range adds or changes; ignore pre-existing code.
+
+This is the only review before the author fixes and pushes again: report every blocking finding now, each with a fix \
+concrete enough to apply without further investigation.
 
 Changed files in scope:
 {files}
@@ -33,6 +49,16 @@ Reply with only these lines and no other text:
 - `BLOCKING: file:line - category - problem - smallest fix` for each blocking finding
 - `ADVISORY: file:line - category - problem - smallest fix` for each advisory finding
 - a final line, `{verdict} PASS` when there is no blocking finding, otherwise `{verdict} BLOCK`
+"""
+
+FIX_PROMPT_TEMPLATE = """\
+Fix these blocking pre-push code-review findings for {from_ref}..{to_ref} in one pass:
+{findings}
+
+For each finding: confirm it against the code, then apply the smallest fix that follows CLAUDE.md and the matching \
+.claude/rules. Do not refactor beyond the findings or act on advisory findings. If a fix changes documented behavior, \
+update README.md or CLAUDE.md too.
+{self_check}
 """
 
 
@@ -50,6 +76,15 @@ def build_prompt(from_ref: str, to_ref: str, files: list[str]) -> str:
     )
 
 
+def build_fix_prompt(from_ref: str, to_ref: str, findings: list[str]) -> str:
+    return FIX_PROMPT_TEMPLATE.format(
+        from_ref=from_ref[:12],
+        to_ref=to_ref[:12],
+        findings="\n".join(f"- {finding.removeprefix(BLOCKING_PREFIX).strip()}" for finding in findings),
+        self_check=SELF_CHECK_INSTRUCTIONS,
+    )
+
+
 def main() -> int:
     if sys.argv[1:] not in ([], ["--working-tree"]):
         print(f"Usage: {sys.argv[0]} [--working-tree]", file=sys.stderr)
@@ -64,6 +99,18 @@ def main() -> int:
     files = select_review_files(changed_files_in_range(from_ref=from_ref, to_ref=to_ref))
     if not files:
         print(f"{HOOK_ID}: no reviewable code in this push; skipping.")
+        return 0
+
+    fingerprint = review_fingerprint(
+        hook_id=HOOK_ID,
+        prompt_template=PROMPT_TEMPLATE,
+        agent=AGENT,
+        from_ref=from_ref,
+        to_ref=to_ref,
+        blobs=blob_ids(paths=files, to_ref=to_ref),
+    )
+    if already_passed(hook_id=HOOK_ID, fingerprint=fingerprint):
+        print(f"{HOOK_ID}: this exact change already passed review; skipping.")
         return 0
 
     print(f"{HOOK_ID}: reviewing {len(files)} file(s) in {from_ref[:12]}..{to_ref[:12]}", flush=True)
@@ -86,11 +133,19 @@ def main() -> int:
         print(f"{HOOK_ID}: Claude run failed or returned no verdict. {SKIP_HINT}", file=sys.stderr)
         return 1
 
-    if verdict != "PASS":
-        print(f"{HOOK_ID}: blocking findings; fix them, commit, and push again. {SKIP_HINT}", file=sys.stderr)
+    if verdict == "PASS":
+        record_pass(hook_id=HOOK_ID, fingerprint=fingerprint)
+        return 0
+
+    blocking = tagged_lines(output=completed.stdout, prefixes=(BLOCKING_PREFIX,))
+    if not blocking:
+        print(f"{HOOK_ID}: verdict BLOCK without findings; rerun the push. {SKIP_HINT}", file=sys.stderr)
         return 1
 
-    return 0
+    print(f"\n{HOOK_ID}: blocked. Paste this into Claude Code, then push again:", flush=True)
+    print(paste_block(build_fix_prompt(from_ref=from_ref, to_ref=to_ref, findings=blocking)), flush=True)
+    print(SKIP_HINT, file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":

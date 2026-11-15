@@ -7,8 +7,6 @@ paths:
 
 # Entry Points
 
-- Keep entry scripts thin: set log handlers, call into `tasks/`, `apis/`, or `services/`, and handle top-level alerting or exception reporting only.
-- `src/task_trade.py` is the live-trading entry point. Treat any change that could bypass `DRY_RUN`, change order placement timing, or alter exit behavior as high risk and validate narrowly.
-- `src/task_end_of_day.py` and `src/task_end_of_week.py` mutate cached data and rewrite strategy ranking files; document any durable file-contract change.
-- `src/development.py` is a manual experimentation surface; keep one-off tuning helpers there instead of leaking experimental code into production paths.
-- `src/print_logs.sh` assumes the deployed Linux layout and GNU `date`; if you make it cross-platform or change log locations, update docs.
+- Any change in `task_trade.py` that could bypass `DRY_RUN`, shift order timing, or alter exits is high risk; validate narrowly.
+- `print_logs.sh` assumes the host layout and GNU `date`; update docs if it becomes cross-platform or log locations change.
+- `development.py` is the manual experimentation surface; keep one-off tuning helpers there, out of production paths.

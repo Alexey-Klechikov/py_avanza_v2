@@ -2,11 +2,12 @@
 paths:
   - "src/services/storage/**"
   - "src/services/calendar/**"
+  - "src/utils/**"
 ---
 
-# Runtime Services
+# Runtime Services And Utilities
 
-- Keep `src/services/storage/` limited to local cache persistence for OHLCV data. The current contract is pickle-backed pandas DataFrames keyed by symbol and resolution.
-- Keep `src/services/calendar/` limited to market-session calculations. Trading-window policy still lives in `src/config/settings.py` and the live loop.
-- Local runs resolve artifact paths under `src/data/`; the deployed host resolves them under `data/` because `.github/workflows/deploy.yaml` syncs `src/` into the server root. Preserve that dual-mode behavior unless you change deployment too.
-- `Storage.write()` assumes the target `data/` directory already exists. If you change that assumption or path layout, update `README.md` and `CLAUDE.md`.
+- `services/storage/` is local OHLCV cache only: pickle-backed pandas DataFrames keyed by symbol and resolution.
+- `services/calendar/` is market-session math only; trading-window policy stays in `config/settings.py` and the live loop.
+- `src/utils/` stays small and repo-wide (logging, constants, formatting/filter helpers); no strategy logic or API workflows.
+- `utils/logger/operators.py` keeps the dual local/host log paths; log naming or handler changes must also update docs and scripts that tail logs.

@@ -1,18 +1,30 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from git_range import REPOSITORY_ROOT, WORKING_TREE, git_output, untracked_files
+from git_range import REPOSITORY_ROOT, WORKING_TREE, git_lines, git_output, untracked_files
 
 VSCODE_BINARY_GLOB = "anthropic.claude-code-*/resources/native-binary/claude"
 READ_ONLY_TOOLS = ("Read", "Grep", "Glob")
 MAX_DIFF_CHARS = 200_000
 TIMED_OUT_RETURN_CODE = 124
 DEFAULT_TIMEOUT_SECONDS = 900
+PASS_RECORD_DIRECTORY = "claude-gates"
+SELF_CHECK_INSTRUCTIONS = """\
+Then validate with `uv run python -m compileall src .claude/hooks` and the focused `uv run pytest <path>` for each \
+touched module. Commit the untracked files that belong to this change and ask before deleting any, since untracked \
+files change the reviewed set. Finally run both push gates in the background (each can take several minutes), \
+in this order: \
+`python3 .claude/hooks/pre_push_documentation.py --working-tree`, then \
+`python3 .claude/hooks/pre_push_code_review.py --working-tree`. Verify and fix anything they report, and rerun until \
+both exit 0; a passing run records the reviewed state so the next `git push` of exactly this content skips review. \
+Commit all resulting changes, including any documentation edits made by the gate, and do not push."""
+PASTE_MARKER = "-" * 30 + " paste into Claude Code " + "-" * 30
 
 
 def _find_claude_binary() -> str | None:
@@ -131,3 +143,69 @@ def run_claude(
             stdout="",
             stderr=f"timed out after {timeout_seconds}s",
         )
+
+
+def blob_ids(paths: list[str], to_ref: str) -> dict[str, str]:
+    if not paths:
+        return {}
+    if to_ref == WORKING_TREE:
+        ids = git_lines(["hash-object", "--", *paths])
+    else:
+        ids = git_lines(["rev-parse", *(f"{to_ref}:{path}" for path in paths)])
+    if len(ids) != len(paths):
+        print("Could not fingerprint the reviewed files; this pass will not be cached.", file=sys.stderr)
+        return {}
+    return dict(zip(paths, ids))
+
+
+def _review_standards(agent: str) -> list[str]:
+    hooks = REPOSITORY_ROOT / ".claude" / "hooks"
+    standard_files = [
+        REPOSITORY_ROOT / "CLAUDE.md",
+        REPOSITORY_ROOT / ".claude" / "agents" / f"{agent}.md",
+        *sorted((REPOSITORY_ROOT / ".claude" / "rules").glob("*.md")),
+        *sorted(hooks.glob("*.py")),
+    ]
+    return [path.read_text(encoding="utf-8") for path in standard_files if path.is_file()]
+
+
+def review_fingerprint(
+    hook_id: str,
+    prompt_template: str,
+    agent: str,
+    from_ref: str,
+    to_ref: str,
+    blobs: dict[str, str],
+) -> str | None:
+    merge_base = git_lines(["merge-base", from_ref, "HEAD" if to_ref == WORKING_TREE else to_ref])
+    if not blobs or not merge_base:
+        return None
+    revision = [merge_base[0]] if to_ref == WORKING_TREE else [merge_base[0], to_ref]
+    deleted = git_lines(["diff", "--name-only", "--diff-filter=D", *revision, "--"])
+    reviewed = [f"{path}:{blobs[path]}" for path in sorted(blobs)] + [f"{path}:deleted" for path in deleted]
+    entries = [hook_id, prompt_template, *_review_standards(agent), merge_base[0], *reviewed]
+    return hashlib.sha256("\n".join(entries).encode()).hexdigest()
+
+
+def _pass_record_path(hook_id: str) -> Path | None:
+    git_path = git_lines(["rev-parse", "--git-path", f"{PASS_RECORD_DIRECTORY}/{hook_id}"])
+    return REPOSITORY_ROOT / git_path[0] if git_path else None
+
+
+def already_passed(hook_id: str, fingerprint: str | None) -> bool:
+    record = _pass_record_path(hook_id)
+    if fingerprint is None or record is None or not record.is_file():
+        return False
+    return record.read_text(encoding="utf-8").strip() == fingerprint
+
+
+def record_pass(hook_id: str, fingerprint: str | None) -> None:
+    record = _pass_record_path(hook_id)
+    if fingerprint is None or record is None:
+        return
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(fingerprint + "\n", encoding="utf-8")
+
+
+def paste_block(prompt: str) -> str:
+    return f"{PASTE_MARKER}\n{prompt.strip()}\n{PASTE_MARKER}"

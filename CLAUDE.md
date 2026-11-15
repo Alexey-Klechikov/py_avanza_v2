@@ -1,69 +1,42 @@
 # pyAvanza_v2
 
-## Fast Start
-- Use Python 3.13 with `uv`. The repo pins the interpreter in `.python-version` and uses a repo-local `.venv`.
-- Install dependencies with `uv sync`.
-- Create `src/data/` locally before running cache or trading flows; `Storage.write()` assumes that directory already exists.
-- Put Avanza credentials in `src/config/.env` for local runs. The deployed host uses `config/.env`.
-- Prefer `uv run python -m compileall src .claude/hooks` as the quickest repo-wide sanity check after edits.
+Python 3.13 trading bot: caches OHLCV data, builds and ranks TA strategies, runs a live Avanza loop that can place real orders. Overview, runtime, and deploy flow: [README.md](README.md).
 
-## Where To Look First
-- [README.md](README.md) for the project overview, runtime expectations, and deploy flow.
-- [src/task_trade.py](src/task_trade.py) for the live trading entry point.
-- [src/tasks/main.py](src/tasks/main.py) for the trading loop, signal evaluation, and flow control.
-- [src/tasks/backtest.py](src/tasks/backtest.py) for simulated trades and ranked strategy generation.
-- [src/task_end_of_day.py](src/task_end_of_day.py) and [src/task_end_of_week.py](src/task_end_of_week.py) for scheduled cache and strategy-refresh workflows.
-- [src/apis/avanza/client/client.py](src/apis/avanza/client/client.py) for Avanza authentication, retries, and typed API wrappers.
-- [src/apis/avanza/operators/watchlists.py](src/apis/avanza/operators/watchlists.py), [src/apis/avanza/operators/orders.py](src/apis/avanza/operators/orders.py), [src/apis/avanza/operators/portfolio.py](src/apis/avanza/operators/portfolio.py), and [src/apis/avanza/operators/transactions.py](src/apis/avanza/operators/transactions.py) for live account workflows.
-- [src/services/ta/operators.py](src/services/ta/operators.py) and [src/services/ta/strategies/operators.py](src/services/ta/strategies/operators.py) for indicator wiring and strategy-file persistence.
-- [src/config/settings.py](src/config/settings.py) for trading window, risk controls, multiplier, and indicator parameters.
-- [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) for the remote layout and cron contract.
+## Setup
+- `uv sync` (interpreter pinned in `.python-version`, repo-local `.venv`). Create `src/data/` first: `Storage.write()` in `src/services/storage/operators.py` does not create it.
+- Credentials (`AVA_USERNAME`, `AVA_PASS`, `AVA_TOTP`): `src/config/.env` locally, `config/.env` on the host (written by the deploy workflow from GitHub Secrets).
 
-## Project Shape
-- `src/apis/**`: Avanza, Yahoo Finance, and Telegram integrations plus repo-facing operators.
-- `src/services/ta/**`: indicator computation, plotting, strategy composition, and JSON strategy persistence.
-- `src/services/storage/**` and `src/services/calendar/**`: OHLCV cache persistence and Stockholm market-hours helpers.
-- `src/tasks/**`: live trading flow (`main.py`), signal translation (`models.py`), and the backtest engine (`backtest.py`).
-- `src/config/**`: code-backed settings, local credentials, and generated `OMX_trade_strategies*.json` files.
-- `src/utils/**`: logging and small shared constants.
-- `.github/**`: the deploy workflow only.
-- `.claude/**`: Claude Code agents, path-scoped rules, and pre-push review hooks.
+## Map
+- [src/task_trade.py](src/task_trade.py) live entry → [src/tasks/main.py](src/tasks/main.py) loop (cached data, top strategies, signals → `FlowAction`, flow control) → `src/apis/avanza/trade/operator.py`. Signal translation: `src/tasks/models.py`.
+- [src/tasks/backtest.py](src/tasks/backtest.py): simulated trades and ranked strategy generation.
+- [src/task_end_of_day.py](src/task_end_of_day.py), [src/task_end_of_week.py](src/task_end_of_week.py): cache and strategy refresh.
+- `src/apis/{avanza,yahoo,telegram}/`: `client/` adapts payloads and retries (shapes in `client/models/`; Avanza auth in `src/apis/avanza/client/client.py`); `operators/` holds repo workflows (`watchlists.py`, `orders.py`, `portfolio.py`, `transactions.py`).
+- `src/services/ta/`: indicators, plotting, strategy composition, JSON persistence (`operators.py`, `strategies/operators.py`). `services/storage/`: OHLCV cache. `services/calendar/`: Stockholm market hours.
+- [src/config/settings.py](src/config/settings.py): trading window, risk controls, multiplier, indicator parameters. `src/utils/`: logging, constants.
+- [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml): remote layout and cron (the only file under `.github/`). `.claude/`: agents, path-scoped rules, skills, pre-push hooks.
 
-## Codebase Conventions
-- Keep `src/task_*.py` and `src/development.py` thin. They should set handlers, call into operators/tasks, and own top-level exception or alert handling only.
-- Keep `src/apis/*/client/` for third-party payload adaptation and retries; keep repo-specific workflows in `src/apis/*/operators/`.
-- Keep `src/services/ta/**` free of broker/account side effects. Live trading stays in `src/tasks/main.py` and `src/apis/avanza/trade/operator.py`.
-- Strategy ranking files under `src/config/OMX_trade_strategies*.json` are generated artifacts. Preserve their schema and naming because the live loop reads them by convention.
-- Path handling is intentionally dual-mode. Local runs read and write under `src/config`, `src/data`, and `src/logs`, while the deployed server uses `config`, `data`, and `logs` after [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) syncs `src/` into the remote root.
-- Watchlists are parsed by name in the format `DT_<direction>_<instrument>_<instrument_type>`. If you change the prefix or part count, update `WatchlistNameComposition` and the surrounding operator logic together.
-- `telegram-send` is used directly for alerts. There is no repo-specific Telegram setting in `src/config/settings.py`.
-- Imports are flat package roots under `src/` (`apis`, `config`, `services`, `tasks`, `utils`), never prefixed with `src.`. `src/` itself is the path root, both when running `uv run python src/task_trade.py` and via pytest's `pythonpath = ["src"]`. Keep `__init__.py` files empty; do not add barrel re-export lists.
+## Conventions
+- `src/task_*.py` and `src/development.py` stay thin: set handlers, call operators/tasks, own top-level exception and alert handling.
+- `src/apis/*/client/` only adapts third-party payloads and retries; repo-specific workflows live in `src/apis/*/operators/`; strategy scoring and TA never live in `apis/`.
+- `services/ta/**` has no broker/account side effects; live trading stays in `tasks/main.py` and `apis/avanza/trade/operator.py`.
+- Imports use the flat roots under `src/` (`apis`, `config`, `services`, `tasks`, `utils`), never `src.`; `src/` is the path root for scripts and pytest (`pythonpath = ["src"]`). Keep `__init__.py` files empty, no barrel re-exports.
+- Dual paths: local `src/config`, `src/data`, `src/logs`; host `config`, `data`, `logs` (deploy syncs only the contents of `src/` to `/home/ubuntu/pyAvanza/`). Preserve both.
+- `src/config/OMX_trade_strategies*.json` are generated; the live loop reads them by name. Preserve schema and naming.
+- Watchlist names are `DT_<direction>_<instrument>_<instrument_type>`; change `WatchlistNameComposition` and the operators together.
+- Alerts call `telegram-send` directly (machine-level config, fails at send time; no setting in `settings.py`).
+- Python style, nesting, and complexity: `.claude/rules/pyavanza-python.md`.
 
-## Validation Notes
-- Cheapest executable check: `uv run python -m compileall src .claude/hooks`.
-- Cheapest unit tests: the model tests under `src/apis/avanza/client/models/**` and `src/apis/yahoo/client/models/history_request_test.py`.
-- `src/apis/avanza/client/client_test.py` is integration coverage. It requires valid credentials in `src/config/.env` and can hit a live Avanza account.
-- `uv run python src/task_end_of_day.py` rewrites cached data and strategy files.
-- `uv run python src/task_end_of_week.py` regenerates the dev strategy snapshots in `src/config/`.
-- Be cautious with `uv run python src/task_trade.py` on non-macOS hosts. `TradeStrategies.DRY_RUN` defaults to `False` outside Darwin, so the script can place live orders.
+## Validation
+- Fast check: `uv run python -m compileall src .claude/hooks`. Focused: `uv run pytest <path>`. Suite: `uv run pytest`. Dependencies: `uv lock`.
+- Credential-free unit tests: `src/apis/avanza/client/models/**`, `src/apis/yahoo/client/models/history_request_test.py`. `src/apis/avanza/client/client_test.py` is integration coverage that needs `src/config/.env` and can hit the live account.
+- Never run `src/task_trade.py` to validate: `TradeStrategies.DRY_RUN` is `False` outside Darwin, so it can place live orders. `task_end_of_day.py` rewrites cached data and strategy files; `task_end_of_week.py` regenerates the dev strategy snapshots.
 
-## Common Pitfalls
-- `src/services/storage/operators.py` does not create the `data/` directory. Fresh local checkouts need `src/data/` before cache, backtest, or trade flows can write data.
-- The deploy workflow copies only the contents of `src/` to `/home/ubuntu/pyAvanza/`; root-level repo files are not synced to the host.
-- [src/print_logs.sh](src/print_logs.sh) assumes the deployed Linux layout and GNU `date -d`, so it is not a portable local helper on macOS.
-- Logs accumulate under `src/logs/` locally and `logs/` on the server. `daily_trading_stats_OMX.json` is written there too.
-- The live loop starts once from cron and then keeps running until shortly after `SETTINGS.TIME.END`; the cron job is not responsible for invoking it every two minutes.
-- Alert delivery depends on machine-level `telegram-send` configuration. Missing local Telegram setup will fail at send time, not at import time.
+## Pitfalls
+- Cron starts the live loop once; it runs until shortly after `SETTINGS.TIME.END` (cron does not invoke it every two minutes).
+- [src/print_logs.sh](src/print_logs.sh) assumes the Linux host layout and GNU `date -d`.
+- Logs and `daily_trading_stats_OMX.json` accumulate under `src/logs/` locally, `logs/` on the host.
 
-## Automation Notes
-- [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) writes `config/.env` on the remote host from GitHub Secrets and refreshes the project cron section.
-- `git push` runs two blocking gates through `.pre-commit-config.yaml` (see `.claude/rules/claude-customizations.md`): `documentation-alignment` ([.claude/hooks/pre_push_documentation.py](.claude/hooks/pre_push_documentation.py)) has the `documenter` agent fix stale docs and blocks if it edited anything, and `code-review` ([.claude/hooks/pre_push_code_review.py](.claude/hooks/pre_push_code_review.py)) has the `code-reviewer` agent review the pushed code and blocks on blocking findings.
-- Run either gate with `--working-tree` to check upstream..working tree before committing. Bypass one push with `SKIP=documentation-alignment git push` or `SKIP=code-review git push`.
-- `.claude/hooks/check_documentation_alignment.py` (deterministic check that `README.md`/`CLAUDE.md` changed alongside routed paths; never edits) and `.claude/hooks/pre_push_refactorer.py` (advisory read-only `refactorer` review of `src/` and `.claude/hooks/` Python) are standalone scripts, not registered in `.pre-commit-config.yaml`, so `git push` does not run them.
-- The code-review gate skips Markdown, `uv.lock`, and generated strategy snapshots. If a generated-artifact schema or path contract changes, update the relevant docs anyway.
-
-## Claude Code Customizations
-- `CLAUDE.md` (this file) is the single contributor baseline. `AGENTS.md` and the Copilot `.github` customizations were removed; do not reintroduce them. When a durable runtime, contributor, or workflow fact changes, update this file.
-- `.claude/agents/` holds three agents: `documenter` (verified documentation updates), `code-reviewer` (read-only review for correctness, security, live-account safety, and conventions), and `refactorer` (behavior-preserving cleanups across `src/**`). The first two also back the pre-push gates. `.claude/skills/` holds two on-demand skills: `code-review-skill` (pre-PR review and readiness) and `documentation-skill` (verified documentation passes).
-- `.claude/rules/*.md` hold path-scoped guidance keyed by frontmatter `paths` globs. Keep each rule narrowly scoped and avoid duplicating one rule across multiple files; see `.claude/rules/claude-customizations.md` for the full policy on agents, hooks, and the pre-push gates.
-- Use `documenter` for CLAUDE.md/README.md audits or after workflow and runtime changes. Use `code-reviewer` before a production deploy or pull request. Use `refactorer` only for a requested, evidence-backed behavior-preserving cleanup.
+## Docs And Automation
+- Update `README.md` and `CLAUDE.md` with changes to `src/apis/avanza/client/client.py`, `src/config/settings.py`, `src/services/storage/operators.py`, `src/services/ta/strategies/operators.py`, `src/task_*.py`, or `deploy.yaml`; update `CLAUDE.md` with changes to `pyproject.toml`, `.pre-commit-config.yaml`, or `.claude/{hooks,agents,skills,rules}/`.
+- `git push` runs two blocking gates: `documentation-alignment` (`documenter` fixes stale docs, blocks if it edited) and `code-review` (`code-reviewer`, blocks on blocking findings). Pre-check with `python3 .claude/hooks/pre_push_documentation.py --working-tree` or `pre_push_code_review.py --working-tree`; bypass once with `SKIP=<gate-id> git push`. A blocked gate prints a paste-ready Claude prompt that fixes everything, self-checks both gates, and commits; passes are recorded in `.git/claude-gates/`, so pushing identical content skips review. Details: `.claude/rules/claude-customizations.md`.
+- Agents: `code-reviewer` before a deploy or PR, `documenter` for doc drift, `refactorer` only for a requested behavior-preserving cleanup. `/code-review-skill` and `/documentation-skill` run the first two in a forked context. Do not reintroduce `AGENTS.md` or Copilot customizations.

@@ -5,8 +5,7 @@ paths:
 
 # API Integrations
 
-- Keep `src/apis/*/client/` for adapting third-party payloads, retries, and low-level request handling. Keep parsed shapes in `client/models/`.
-- Keep `src/apis/*/operators/` for repo-facing workflows such as watchlist refresh, portfolio filtering, order lifecycle, and transaction summaries. Do not move strategy scoring or TA logic into this layer.
-- Preserve the current credential contract in `src/apis/avanza/client/client.py`: credentials are loaded from `config/.env` on the deployed host and from `src/config/.env` during local runs because the deploy workflow flattens `src/` into the remote root.
-- `src/apis/telegram/` uses `telegram-send`; it does not read a repo-specific bot token. If alert delivery changes, update `README.md` and `CLAUDE.md`.
-- Avanza order, watchlist, portfolio, and transaction flows can hit a live account. Prefer model tests or dry-run-safe paths before running integration code.
+- Operators own repo-facing workflows: watchlist refresh, portfolio filtering, order lifecycle, transaction summaries.
+- `client.py` loads credentials from `config/.env` on the host and `src/config/.env` locally; keep both because deploy flattens `src/` into the remote root.
+- `src/apis/telegram/` wraps `telegram-send` and reads no repo bot token.
+- Avanza order, watchlist, portfolio, and transaction flows can hit a live account; prefer model tests or dry-run-safe paths over running integration code. Keep retry bounds on every broker call.
