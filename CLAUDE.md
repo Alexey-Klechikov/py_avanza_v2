@@ -32,6 +32,7 @@ Python 3.13 trading bot: caches OHLCV data, builds and ranks TA strategies, runs
 - Never run `src/task_trade.py` to validate: `TradeStrategies.DRY_RUN` is `False` outside Darwin, so it can place live orders. `task_end_of_day.py` rewrites cached data and strategy files; `task_end_of_week.py` regenerates the dev strategy snapshots (`dev_<INDICATORS_START>` … `dev_<INDICATORS>`). An empty final test writes an empty live strategies file (no trading); only `task_end_of_week.py` alerts.
 
 ## Pitfalls
+- Host cron uses global `/usr/bin/python3.13`; deploy does not install dependencies, so after `uv.lock` changes re-export `requirements.txt` and pip-install it on the host (README "Deployment").
 - Cron starts the live loop once; it runs until shortly after `SETTINGS.TIME.END` (cron does not invoke it every two minutes).
 - [src/print_logs.sh](src/print_logs.sh) assumes the Linux host layout and GNU `date -d`.
 - Logs and `daily_trading_stats_OMX.json` accumulate under `src/logs/` locally, `logs/` on the host.

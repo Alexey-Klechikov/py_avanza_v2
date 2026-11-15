@@ -56,7 +56,13 @@ jobs:
         ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "chmod 600 /home/ubuntu/pyAvanza/config/.env"
 
     - name: Update Crontab
+      env:
+        REMOTE_PYTHON: /usr/bin/python3.13
       run: |
+        # Fail before touching cron if the host interpreter is missing
+        ssh ${REMOTE_USERNAME}@${REMOTE_HOST} "test -x $REMOTE_PYTHON" \
+          || { echo "$REMOTE_PYTHON not found on the host; install Python 3.13 and requirements.txt first"; exit 1; }
+
         # Define cronjobs as a simple array of strings
         cronjobs=(
           "task_end_of_day 10 22 * * 1-5"
@@ -88,7 +94,7 @@ jobs:
           if [ "$task_name" = "copy_stats" ]; then
             updated_crontab+="$cron_schedule sudo cp /home/ubuntu/pyAvanza/logs/daily_trading_stats_OMX.json /var/www/klechikov_dev/webApp/data/\n"
           else
-            updated_crontab+="$cron_schedule /home/ubuntu/pyAvanza/.venv/bin/python3 /home/ubuntu/pyAvanza/$task_name.py\n"
+            updated_crontab+="$cron_schedule $REMOTE_PYTHON /home/ubuntu/pyAvanza/$task_name.py\n"
           fi
         done
 
