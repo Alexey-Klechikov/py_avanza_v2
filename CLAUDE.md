@@ -29,7 +29,7 @@ Python 3.13 trading bot: caches OHLCV data, builds and ranks TA strategies, runs
 ## Validation
 - Fast check: `uv run python -m compileall src .claude/hooks`. Focused: `uv run pytest <path>`. Suite: `uv run pytest`. Dependencies: `uv lock`.
 - Credential-free unit tests: `src/apis/avanza/client/models/**`, `src/apis/yahoo/client/models/history_request_test.py`. `src/apis/avanza/client/client_test.py` is integration coverage that needs `src/config/.env` and can hit the live account.
-- Never run `src/task_trade.py` to validate: `TradeStrategies.DRY_RUN` is `False` outside Darwin, so it can place live orders. `task_end_of_day.py` rewrites cached data and strategy files; `task_end_of_week.py` regenerates the dev strategy snapshots (`dev_<INDICATORS_START>` … `dev_<INDICATORS>`). An empty final test writes an empty live strategies file (no trading) and alerts.
+- Never run `src/task_trade.py` to validate: `TradeStrategies.DRY_RUN` is `False` outside Darwin, so it can place live orders. `task_end_of_day.py` rewrites cached data and strategy files; `task_end_of_week.py` regenerates the dev strategy snapshots (`dev_<INDICATORS_START>` … `dev_<INDICATORS>`). An empty final test writes an empty live strategies file (no trading); only `task_end_of_week.py` alerts.
 
 ## Pitfalls
 - Cron starts the live loop once; it runs until shortly after `SETTINGS.TIME.END` (cron does not invoke it every two minutes).

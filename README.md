@@ -72,7 +72,7 @@ uv run python src/development.py
 3. Backtests rank strategies and write `OMX_trade_strategies*.json` snapshots. Generation starts from every combination of `STRATEGY.INDICATORS_START` indicators (`dev_2`) and adds one indicator per level up to `STRATEGY.INDICATORS` (`dev_7`):
    - Only profitable strategies advance. A parent advances unchanged when none of its one-indicator extensions ranks higher.
    - If a level has no profitable strategy, the `STRATEGY.FALLBACK_COUNT` least-losing strategies that traded advance instead, so later levels can still find a winner.
-   - The final out-of-sample test keeps only profitable strategies. If none pass, `OMX_trade_strategies.json` is written empty so the live loop does not trade, and `task_end_of_day.py`/`task_end_of_week.py` send a Telegram alert.
+   - The final out-of-sample test keeps only profitable strategies. If none pass, `OMX_trade_strategies.json` is written empty so the live loop does not trade, `task_end_of_week.py` sends a Telegram alert, and `task_end_of_day.py` writes it empty without alerting.
 4. The live loop loads the top strategies, refreshes watchlists, and translates signals into Avanza orders.
 5. Transactions are grouped into deals and written into daily trading stats JSON in the logs directory.
 
