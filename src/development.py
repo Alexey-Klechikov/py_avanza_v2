@@ -109,10 +109,10 @@ def run_strategies_generation(
                 period_days=period_days_back_test,
             ),
             ComposeStrategiesListMethod.GENERATE,
-            strategies_file_name_suffix_new="dev_3" + (comment if comment else ""),
+            strategies_file_name_suffix_new=f"dev_{SETTINGS.STRATEGY.INDICATORS_START}" + (comment if comment else ""),
         )
 
-        for i in range(3, SETTINGS.STRATEGY.INDICATORS):
+        for i in range(SETTINGS.STRATEGY.INDICATORS_START, SETTINGS.STRATEGY.INDICATORS):
             log.warning(
                 "Back-test strategies ({} -> {}) for {} ({}, {} days)".format(
                     i,
@@ -239,24 +239,28 @@ def get_statistics_per_indicator():
 
 
 if __name__ == "__main__":
-    run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=True)
-    # run_plotting_for_active_strategies(period_days=50)
     get_statistics_per_indicator()
 
-    raise SystemExit
+    fun_full = False
 
-    moving_average_types = [ma_type.value for ma_type in MovingAverageType]
+    if fun_full:
+        run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=True)
 
-    run_test_for_selected_indicators(
-        period_days=90,
-        test_params=TestParams(
-            indicator_category="Trend",
-            indicator_name="CHOP",
-            indicators_count_base=6,
-            kwargs_base={
-                "length": list(range(10, 12, 2)),
-                "length_atr": list(range(12, 18, 4)),
-                "scalar": [float(i) for i in range(40, 100, 10)],
-            },
-        ),
-    )
+    else:
+        moving_average_types = [ma_type.value for ma_type in MovingAverageType]
+
+        run_test_for_selected_indicators(
+            period_days=90,
+            test_params=TestParams(
+                indicator_category="Trend",
+                indicator_name="CHOP",
+                indicators_count_base=6,
+                kwargs_base={
+                    "length": [i for i in range(5, 7, 1)],
+                    "length_atr": [i for i in range(5, 7, 1)],
+                    "scalar": [float(i) for i in range(45, 55, 2)],
+                },
+            ),
+        )
+
+    # # run_plotting_for_active_strategies(period_days=50)

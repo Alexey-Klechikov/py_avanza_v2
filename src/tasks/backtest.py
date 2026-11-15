@@ -224,11 +224,53 @@ def process_strategy(kwargs: dict) -> Strategy:
     return strategy
 
 
+def _rank_key(strategy: Strategy) -> tuple[bool, float]:
+    counter = strategy.counter
+    if counter.total_profit <= 0:
+        return False, counter.total_profit
+    return True, (counter.total_profit / 2) * (counter.profitable_trades / counter.total_trades)
+
+
+def _parent_keys(strategy: Strategy) -> set[frozenset[tuple[str, str]]]:
+    indicators = frozenset(strategy.selected_indicators)
+    return {indicators - {indicator} for indicator in indicators}
+
+
+def _carry_unbeaten_parents(strategies: list[Strategy]) -> list[Strategy]:
+    parents = {frozenset(strategy.selected_indicators): strategy for strategy in strategies if strategy.original}
+    children = [strategy for strategy in strategies if not strategy.original]
+
+    best_child_ranks: dict[frozenset[tuple[str, str]], tuple[bool, float]] = {}
+    for child in children:
+        child_rank = _rank_key(child)
+        for parent_key in parents.keys() & _parent_keys(child):
+            best_child_ranks[parent_key] = max(best_child_ranks.get(parent_key, child_rank), child_rank)
+
+    unbeaten_parents = [
+        parent
+        for parent_key, parent in parents.items()
+        if parent_key not in best_child_ranks or best_child_ranks[parent_key] <= _rank_key(parent)
+    ]
+    for parent in unbeaten_parents:
+        parent.original = False
+
+    return unbeaten_parents + children
+
+
+def select_strategies(strategies: list[Strategy], allow_fallback: bool) -> list[Strategy]:
+    traded = [strategy for strategy in _carry_unbeaten_parents(strategies) if strategy.counter.total_trades > 0]
+    ranked = sorted(traded, key=_rank_key, reverse=True)
+    profitable = [strategy for strategy in ranked if strategy.counter.total_profit > 0]
+    if profitable or not allow_fallback:
+        return profitable
+
+    fallback = ranked[: SETTINGS.STRATEGY.FALLBACK_COUNT]
+    log.warning(f"No profitable strategies; keeping the top {len(fallback)} by profit to extend further")
+    return fallback
+
+
 def print_strategies_performance(strategies: list[Strategy]) -> None:
     for strategy in strategies:
-        if strategy.counter.total_profit <= 0:
-            break
-
         log.info(
             f"{strategy.name}. Trades: {strategy.counter.total_trades}. "
             f"Profit: {round(strategy.counter.total_profit, 2)}. "
@@ -265,7 +307,7 @@ def backtest_trade_strategies(
     strategies_file_name_suffix_new: str | None = None,
     plot: bool = False,
     **kwargs,
-) -> None:
+) -> list[Strategy]:
     indicators_mapping = get_indicators(data, **kwargs)
 
     strategies = get_strategies(
@@ -300,12 +342,12 @@ def backtest_trade_strategies(
             process_strategy({"data": data, "strategy": strategy})
             plot_indicators(data, strategy)
 
-    strategies = [strategy for strategy in strategies if strategy.counter.total_profit > 0]
-    strategies.sort(
-        key=lambda x: (x.counter.total_profit / 2) * (x.counter.profitable_trades / x.counter.total_trades),
-        reverse=True,
-    )
+    is_final_test = compose_strategies_list_method == ComposeStrategiesListMethod.READ
+    strategies = select_strategies(strategies, allow_fallback=not is_final_test)
 
     print_strategies_performance(strategies)
+    if is_final_test and not strategies:
+        log.warning("No profitable strategies in the final test; writing an empty strategies file, trading disabled")
 
     dump_strategies_in_file(strategies, SETTINGS.NAME, strategies_file_name_suffix_new)
+    return strategies

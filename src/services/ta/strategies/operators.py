@@ -2,7 +2,9 @@ import json
 import os
 import warnings
 from copy import deepcopy
+from itertools import combinations
 
+from config import SETTINGS
 from services.ta.indicators.models.indicator import Indicator
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod, Strategy
 from utils.logger.operators import get_logger
@@ -25,37 +27,15 @@ def _get_file_path(strategies_file_name_prefix: str, strategies_file_name_suffix
 
 
 def _generate_strategies(indicators_mapping: dict[str, dict[str, Indicator]]) -> list[Strategy]:
-    strategies: list[Strategy] = []
-
     indicators = [
         (category, indicator) for category, indicators in indicators_mapping.items() for indicator in indicators.keys()
     ]
+    size = max(1, min(SETTINGS.STRATEGY.INDICATORS_START, len(indicators)))
 
-    for i1, indicator1 in enumerate(indicators):
-        if len(indicators) == 1:
-            strategies.append(
-                deepcopy(Strategy(selected_indicators=[indicator1], indicators_mapping=indicators_mapping)),
-            )
-
-        for i2, indicator2 in enumerate(indicators[i1 + 1 :]):
-            if len(indicators) <= 2:
-                strategies.append(
-                    deepcopy(
-                        Strategy(selected_indicators=[indicator1, indicator2], indicators_mapping=indicators_mapping),
-                    ),
-                )
-
-            for _, indicator3 in enumerate(indicators[i1 + i2 + 2 :]):
-                strategies.append(
-                    deepcopy(
-                        Strategy(
-                            selected_indicators=[indicator1, indicator2, indicator3],
-                            indicators_mapping=indicators_mapping,
-                        ),
-                    ),
-                )
-
-    return strategies
+    return [
+        deepcopy(Strategy(selected_indicators=list(combination), indicators_mapping=indicators_mapping))
+        for combination in combinations(indicators, size)
+    ]
 
 
 def _extend_strategies(
@@ -179,11 +159,8 @@ def dump_strategies_in_file(
             continue
         last_strategy_stats = current_strategy_stats
 
-        if rank > 200 or strategy_candidate["total_profit"] <= 0:
+        if rank > 200:
             break
-
-        if "Original" in strategy_candidate["name"]:
-            continue
 
         strategies_for_file.append(strategy_candidate)
 

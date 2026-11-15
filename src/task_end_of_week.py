@@ -27,21 +27,18 @@ def _get_data(period_days: int):
     data = data.loc[(data.index >= requested_start) & (data.index < TODAY_MIDNIGHT)]
     data.index = pd.to_datetime(data.index)
 
-    if not data.empty and data.index.min() > requested_start:
-        log.warning(f"Cached data starts at {data.index.min().date()}, later than requested {requested_start.date()}")
-
     return data
 
 
-def generate_strategies(period_days_long_test: int, period_days_final_test: int) -> None:
+def generate_strategies(period_days_long_test: int, period_days_final_test: int) -> bool:
     log.warning(f"Long-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_long_test} days)")
     backtest_trade_strategies(
         _get_data(period_days=period_days_long_test),
         ComposeStrategiesListMethod.GENERATE,
-        strategies_file_name_suffix_new="dev_3",
+        strategies_file_name_suffix_new=f"dev_{SETTINGS.STRATEGY.INDICATORS_START}",
     )
 
-    for i in range(3, SETTINGS.STRATEGY.INDICATORS):
+    for i in range(SETTINGS.STRATEGY.INDICATORS_START, SETTINGS.STRATEGY.INDICATORS):
         log.warning(
             "Long-test strategies ({} -> {}) for {} ({}, {} days)".format(
                 i,
@@ -59,16 +56,20 @@ def generate_strategies(period_days_long_test: int, period_days_final_test: int)
         )
 
     log.warning(f"Final-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_final_test} days)")
-    backtest_trade_strategies(
+    final_strategies = backtest_trade_strategies(
         _get_data(period_days=period_days_final_test),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
+    return bool(final_strategies)
 
 
 if __name__ == "__main__":
     try:
-        generate_strategies(period_days_long_test=150, period_days_final_test=60)
+        if not generate_strategies(period_days_long_test=120, period_days_final_test=45):
+            telegram = Telegram()
+            telegram.messages = ["task_eow.py: no profitable strategies in the final test; trading disabled"]
+            telegram.send_message()
 
         portfolio = Portfolio()
         portfolio.reload_balance()

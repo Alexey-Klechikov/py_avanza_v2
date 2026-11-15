@@ -82,7 +82,7 @@ class Data:
             filter_by_min_efficiency=SETTINGS.STRATEGY.MIN_EFFICIENCY,
             limit_count=SETTINGS.STRATEGY.COUNT_MAX,
         )
-        if not self.strategies or self.strategies[0].name != strategies[0].name:
+        if strategies and (not self.strategies or self.strategies[0].name != strategies[0].name):
             for i, strategy in enumerate(strategies):
                 log.info(f"Strategy {i + 1} [{strategy.efficiency}]: {strategy.name}")
 

@@ -27,14 +27,16 @@ class SettingsWatchlist:
 class Strategy:
     MIN_EFFICIENCY: float = 0.6
     COUNT_MAX: int = 200
+    INDICATORS_START: int = 2
     INDICATORS: int = 7
+    FALLBACK_COUNT: int = 5
 
 
 @dataclass(frozen=True)
 class TakeProfit:
     # The percentage from the buy price that the price must rise to trigger a take profit
     # Example: 0.09 means that if the buy price is 100 and the price rises to 109, a take profit is triggered
-    VALUE: float = 0.05
+    VALUE: float = 0.045
 
 
 @dataclass(frozen=True)
@@ -42,7 +44,7 @@ class StopLoss:
     # The percentage from the buy price that the price must fall to trigger a stop loss
     # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
     # The stop loss is confirmed if the price falls below the buy price by the percentage for a certain number of times
-    VALUE: float = 0.035
+    VALUE: float = 0.030
     CONFIRMATION_COUNT: int = 3
 
 
@@ -91,16 +93,16 @@ class TradeStrategies:
             "Trend": {
                 "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
                 "TII": {"length_sma": 16, "length_signal": 4},
-                "PSAR": {"acceleration": 0.008, "maximum": 0.2},
-                "CHOP": {"length": 6, "length_atr": 14, "scalar": 55.0},
+                "PSAR": {"acceleration": 0.01, "maximum": 0.2},
+                "CHOP": {"length": 6, "length_atr": 6, "scalar": 51.0},
             },
             "Overlap": {
-                "LINREG": {"length": 12, "limit": 0.32},
+                "LINREG": {"length": 14, "limit": 0.34},
                 "SLOPE": {"length": 18, "limit": 0.1},
                 "SUPERTREND": {"length": 15, "multiplier": 7.0},
             },
             "Momentum": {
-                "MACD_DEMA": {"length_fast": 16, "length_slow": 18},
+                "MACD_DEMA": {"length_fast": 22, "length_slow": 14},
                 "STC": {"tclength": 10, "fast": 10, "slow": 20, "factor": 0.63},
                 # "CCI": {"length": 12, "c": 0.015},
                 "RVGI": {"length": 18, "length_swma": 3, "length_divergence": 22},

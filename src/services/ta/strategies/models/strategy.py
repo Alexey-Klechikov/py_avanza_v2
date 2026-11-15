@@ -29,6 +29,7 @@ class Strategy:
         efficiency: float = 0,
     ):
         self.counter = Counter()
+        self.original = original
         self.selected_indicators = selected_indicators
         self.indicators_logic: list[Indicator] = []
         self.efficiency = efficiency
@@ -47,4 +48,8 @@ class Strategy:
             components.append(f"{category}-{name}")
             self.indicators_logic.append(indicator)
 
-        self.name = " | ".join(sorted(components)) + (" | Original" if original else "")
+        self.components_name = " | ".join(sorted(components))
+
+    @property
+    def name(self) -> str:
+        return self.components_name + (" | Original" if self.original else "")
