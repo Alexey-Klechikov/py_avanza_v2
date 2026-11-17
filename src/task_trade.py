@@ -3,7 +3,7 @@ import warnings
 import pandas as pd
 
 from apis.telegram.operators import Telegram as TelegramBase
-from config import SETTINGS
+from config import DRY_RUN
 from tasks.main import trade
 from utils.logger.operators import get_logger, set_handlers
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     except Exception as e:
         log.exception(str(e))
 
-        if not SETTINGS.DRY_RUN:
+        if not DRY_RUN:
             telegram = TelegramBase()
             telegram.messages = ["Error in task_trade_strategies OMX"]
             telegram.send_message()

@@ -35,6 +35,10 @@ class WalkForwardResult(BaseModel):
     winning_days_share: float  # among traded days
     average_traded_day_return: float
     total_return: float
+    # The same total split over the earlier and later half of the evaluated days: a setting that only works in one
+    # half is more likely tuned to noise than to a lasting effect
+    first_half_return: float
+    second_half_return: float
 
 
 class SelectionWalkForward:
@@ -123,6 +127,7 @@ def _summarize(
 ) -> WalkForwardResult:
     traded = np.array([day_return for day_return in day_returns if day_return is not None])
     booked = np.array([day_return or 0.0 for day_return in day_returns])
+    first_half, second_half = np.array_split(booked, 2)
 
     return WalkForwardResult(
         half_life_days=half_life_days,
@@ -133,4 +138,6 @@ def _summarize(
         winning_days_share=float((traded > 0).mean()) if len(traded) else 0.0,
         average_traded_day_return=float(traded.mean()) if len(traded) else 0.0,
         total_return=float(booked.sum()),
+        first_half_return=float(first_half.sum()),
+        second_half_return=float(second_half.sum()),
     )

@@ -10,7 +10,7 @@ from apis.avanza.operators.instrument import Instrument
 from apis.avanza.operators.orders import Orders
 from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.watchlists import Watchlists
-from config import SETTINGS
+from config import DRY_RUN, SETTINGS
 from services.trading.tracked_position import TrackedPosition
 from tasks.models import Direction
 from utils.logger.operators import get_logger
@@ -91,7 +91,7 @@ class Trade:
     def sell(self, direction: Direction | None) -> None:
         caller = "sell"
 
-        if SETTINGS.DRY_RUN or not direction:
+        if DRY_RUN or not direction:
             return
 
         for _ in range(5):
@@ -122,7 +122,7 @@ class Trade:
         caller = "buy"
         budget = None
 
-        if SETTINGS.DRY_RUN or not direction:
+        if DRY_RUN or not direction:
             return
 
         for _ in range(5):
@@ -174,7 +174,7 @@ class Trade:
     def take_profit(self, direction: Direction | None, underlying_price: float) -> None:
         caller = "take_profit"
 
-        if SETTINGS.DRY_RUN or not direction:
+        if DRY_RUN or not direction:
             return
 
         for _ in range(5):
@@ -213,7 +213,7 @@ class Trade:
         caller = "stop_loss"
 
         # Confirmations count completed bars, as in the backtest, not loop iterations
-        if SETTINGS.DRY_RUN or not direction or bar_time == self.last_exit_check_bar:
+        if DRY_RUN or not direction or bar_time == self.last_exit_check_bar:
             return
 
         self.portfolio.reload_positions(caller)

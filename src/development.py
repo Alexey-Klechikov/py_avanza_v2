@@ -10,7 +10,6 @@ import pandas as pd
 from pydantic import BaseModel
 
 from config import SETTINGS
-from services.storage.candle_quality import require_clean_bars
 from services.storage.operators import Storage
 from services.storage.windows import DataWindow
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
@@ -89,11 +88,10 @@ class TestParams(BaseModel):
 
 
 def _get_data(point_of_origin: datetime, period_days: int) -> pd.DataFrame:
-    """Bars of the window, partial-candle days dropped (experiments never stop on data quality)."""
     window = DataWindow.days_before(point_of_origin, period_days)
     log.info(f"Get data: {window}")
 
-    return require_clean_bars(window.slice(Storage().read()), min_clean_share=0.0)
+    return window.slice(Storage().read())
 
 
 def run_strategies_generation(

@@ -7,7 +7,7 @@ from apis.avanza.operators.models.watchlist import (
     ValidInstruments,
     WatchlistNameComposition,
 )
-from config import SETTINGS, SETTINGS_WATCHLIST
+from config import DRY_RUN, SETTINGS, SETTINGS_WATCHLIST
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -90,7 +90,7 @@ class Watchlists:
     def _clear_one(self, watchlist: Watchlist) -> None:
         log.debug(f"Clear watchlist {watchlist.name}")
 
-        if SETTINGS.DRY_RUN:
+        if DRY_RUN:
             log.warning("Dry run: CLEAR watchlist not performed")
             return
 

@@ -1,4 +1,3 @@
-import platform
 from dataclasses import dataclass, field
 from datetime import time
 
@@ -35,19 +34,19 @@ class Strategy:
     TRAIN_DAYS: int = 90
     HOLDOUT_DAYS: int = 30
     # Fewer training trades than this cannot rank: a handful of lucky trades is not an edge
-    MIN_TRADES_TRAIN: int = 15
-    # Calibration stops (DataQualityError) when fewer of a window's days than this have complete candles;
-    # partial-candle days are always dropped (services/storage/candle_quality.py)
-    MIN_CLEAN_DAY_SHARE: float = 0.8
+    MIN_TRADES_TRAIN: int = 10
 
     # Daily selection (final test and end of day): expected capital return per trade, where each past trade's
     # weight halves every SCORE_HALF_LIFE_DAYS and SCORE_PRIOR_TRADES zero-return pseudo-trades shrink small samples.
     # Strategies at or below MIN_EDGE are dropped; none left means no trading that day.
-    # Choose these with development.py run_selection_walk_forward (2026-11-17, 312 days, 3-indicator pool: best of
-    # half-life 10-inf x prior 0-30 x min edge 0-0.2%, still -0.05% per traded day, sitting out 18% of days).
+    # Chosen with development.py run_selection_walk_forward (2026-11-17: 540 days of Avanza cache as stored, every
+    # 3-indicator strategy, 312 evaluated days, SPREAD_DEFAULT 0.2%; grid half-life 10-inf x prior 10-100 x min edge
+    # 0-1%). Ranking is best at half-life 20, prior 100 (rank correlation 0.08). No min edge was profitable: every
+    # setting that traded lost (-0.2% to -1.8% per traded day) and none was positive in both halves. At prior 100,
+    # 0.3% never triggered in the test, so the bot sits out until a strategy's record clears it.
     SCORE_HALF_LIFE_DAYS: float = 20
-    SCORE_PRIOR_TRADES: float = 30
-    MIN_EDGE: float = 0.002
+    SCORE_PRIOR_TRADES: float = 100
+    MIN_EDGE: float = 0.003
 
     # After a strategy triggers, lower-ranked strategies are ignored for this long (live loop and replay)
     TRIGGER_LOCK_MINUTES: int = 40
@@ -91,22 +90,16 @@ class Time:
 
 @dataclass(frozen=True)
 class TradeStrategies:
-    DRY_RUN: bool = platform.system() == "Darwin"
-
     NAME: str = "OMX"
     ACCOUNT_ID: str = "754762"
 
     DATA_SOURCE: str = "avanza"
     RESOLUTION: str = "2m"
     MULTIPLIER: int = 10
-    MAX_SPREAD: float = 0.004  # 0.4%: watchlist ceiling for an instrument's spread
-    # Trading costs as fractions of the instrument price, charged on every backtest trade:
-    # SPREAD is paid once per round trip (buy at the ask, sell at the bid); typical AVA mini futures quote ~0.10-0.12%.
-    # COMMISSION_PER_ORDER is the courtage rate, charged on the buy and on the sell. AVA-branded products are
-    # courtage-free on Avanza for orders above 1,000 SEK (the bot's minimum budget is 1,200 SEK); check your
-    # courtage class and set it if you pay commission.
-    SPREAD: float = 0.0012
-    COMMISSION_PER_ORDER: float = 0.0
+    SPREAD_MAX: float = 0.004  # 0.4%: watchlist ceiling for an instrument's spread
+    # The only trading cost: the spread, paid once per trade on the sale (the instrument is sold this fraction below
+    # its actual price; the buy fills at the actual price). Charged on every backtest trade.
+    SPREAD_DEFAULT: float = 0.002
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"
@@ -118,11 +111,6 @@ class TradeStrategies:
     TIME: Time = field(default_factory=Time)
 
     BUDGET: float = 1.0
-
-    @property
-    def ROUND_TRIP_COST(self) -> float:
-        """Total cost of one trade (buy and sell) as a fraction of the instrument price."""
-        return self.SPREAD + 2 * self.COMMISSION_PER_ORDER
 
     INDICATORS: dict = field(
         default_factory=lambda: {

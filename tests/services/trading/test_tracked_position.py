@@ -18,13 +18,24 @@ class Test_TrackedPosition(TestCase):
 
         assert long_position.take_profit_price > ENTRY_PRICE > long_position.stop_loss_price
         assert short_position.take_profit_price < ENTRY_PRICE < short_position.stop_loss_price
-        assert long_position.buy_price > ENTRY_PRICE > short_position.buy_price
 
-    def test_flat_exit_loses_spread_and_commission(self):
+    def test_flat_exit_loses_the_spread(self):
         for is_long in (True, False):
             position = TrackedPosition.open(is_long=is_long, entry_price=ENTRY_PRICE)
 
-            assert abs(position.capital_return(ENTRY_PRICE) + SETTINGS.ROUND_TRIP_COST) < 1e-12
+            assert abs(position.capital_return(ENTRY_PRICE) + SETTINGS.SPREAD_DEFAULT) < 1e-12
+            assert (
+                abs(position.profit(ENTRY_PRICE) + SETTINGS.SPREAD_DEFAULT * ENTRY_PRICE / SETTINGS.MULTIPLIER) < 1e-9
+            )
+
+    def test_spread_is_taken_from_the_sale_proceeds(self):
+        for is_long in (True, False):
+            position = TrackedPosition.open(is_long=is_long, entry_price=ENTRY_PRICE)
+            gross = 0.045  # instrument up 4.5% before costs
+            sell_price = ENTRY_PRICE * (1 + (1 if is_long else -1) * gross / SETTINGS.MULTIPLIER)
+
+            expected = (1 + gross) * (1 - SETTINGS.SPREAD_DEFAULT) - 1
+            assert abs(position.capital_return(sell_price) - expected) < 1e-12
 
     def test_take_profit_fills_inside_bar_or_at_gap_open(self):
         position = TrackedPosition.open(is_long=True, entry_price=ENTRY_PRICE)
@@ -50,7 +61,9 @@ class Test_TrackedPosition(TestCase):
 
     def test_missing_leverage_falls_back_to_nominal(self):
         assert TrackedPosition.open(
-            is_long=True, entry_price=ENTRY_PRICE, instrument_leverage=0
+            is_long=True,
+            entry_price=ENTRY_PRICE,
+            instrument_leverage=0,
         ).instrument_leverage == (SETTINGS.MULTIPLIER)
 
     def test_stop_loss_needs_consecutive_confirmations(self):

@@ -8,7 +8,6 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker as YahooTicker
 from config import SETTINGS
-from services.storage.candle_quality import require_clean_bars
 from services.storage.operators import Storage
 from services.storage.windows import DataWindow
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
@@ -54,7 +53,7 @@ def rescore_strategies() -> None:
     log.warning(f"TASK: Backtest strategies on {SETTINGS.NAME} | {SETTINGS.RESOLUTION} | {window}")
 
     _backtest_trade_strategies(
-        require_clean_bars(window.slice(Storage().read())),
+        window.slice(Storage().read()),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )

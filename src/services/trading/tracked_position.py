@@ -6,14 +6,14 @@ from config import SETTINGS
 class TrackedPosition(BaseModel):
     """One open position and its exit levels, measured on the underlying so the backtest and the live loop agree.
 
-    Prices are underlying (index) prices. `buy_price` includes SETTINGS.ROUND_TRIP_COST (spread and commission), so
-    a flat exit loses exactly that cost.
+    Prices are underlying (index) prices. The entry fills at the actual price; the spread is paid once, on the
+    sale: the instrument is sold SETTINGS.SPREAD_DEFAULT below its actual price, so a flat exit loses exactly
+    the spread.
     Stop-loss and pullback exits need consecutive confirmations; the counters belong to this position only.
     """
 
     is_long: bool
     entry_price: float
-    buy_price: float
     take_profit_price: float
     stop_loss_price: float
     instrument_leverage: float
@@ -34,7 +34,6 @@ class TrackedPosition(BaseModel):
         return cls(
             is_long=is_long,
             entry_price=entry_price,
-            buy_price=entry_price * (1 + sign * SETTINGS.ROUND_TRIP_COST / SETTINGS.MULTIPLIER),
             take_profit_price=entry_price * (1 + sign * SETTINGS.TAKE_PROFIT.VALUE / SETTINGS.MULTIPLIER),
             stop_loss_price=entry_price * (1 - sign * SETTINGS.STOP_LOSS.VALUE / SETTINGS.MULTIPLIER),
             instrument_leverage=instrument_leverage or SETTINGS.MULTIPLIER,
@@ -44,13 +43,19 @@ class TrackedPosition(BaseModel):
     def sign(self) -> int:
         return 1 if self.is_long else -1
 
-    def profit(self, sell_price: float) -> float:
-        """Profit in underlying points."""
-        return self.sign * (sell_price - self.buy_price)
-
     def capital_return(self, sell_price: float) -> float:
-        """Profit as a fraction of the capital in the position, at the nominal leverage."""
-        return self.profit(sell_price) / self.entry_price * SETTINGS.MULTIPLIER
+        """Net return on the capital in the position when sold at `sell_price` (underlying), at nominal leverage.
+
+        The instrument moves `gross` before costs and is sold SPREAD_DEFAULT below its actual price at that moment:
+        proceeds (1 + gross) * (1 - spread), so the net return is gross - spread * (1 + gross).
+        """
+        gross = self.sign * (sell_price / self.entry_price - 1) * SETTINGS.MULTIPLIER
+
+        return gross - SETTINGS.SPREAD_DEFAULT * (1 + gross)
+
+    def profit(self, sell_price: float) -> float:
+        """Net profit in underlying points: the net capital return expressed as an underlying move from entry."""
+        return self.capital_return(sell_price) * self.entry_price / SETTINGS.MULTIPLIER
 
     def hit_take_profit(self, high: float, low: float) -> bool:
         return high >= self.take_profit_price if self.is_long else low <= self.take_profit_price
@@ -88,7 +93,7 @@ class TrackedPosition(BaseModel):
         profit = self.profit(close_price)
         self.max_profit = max(self.max_profit, profit)
 
-        trigger_profit = SETTINGS.PULLBACK.TRIGGER_PROFIT * self.buy_price / SETTINGS.MULTIPLIER
+        trigger_profit = SETTINGS.PULLBACK.TRIGGER_PROFIT * self.entry_price / SETTINGS.MULTIPLIER
         if self.max_profit <= trigger_profit:
             return False
 

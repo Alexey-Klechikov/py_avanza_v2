@@ -6,7 +6,7 @@ from avanza.constants import OrderType
 from apis.avanza.client.client import get_client
 from apis.avanza.client.models.order.exceptions import OrderException
 from apis.avanza.client.models.order.list import Order
-from config import SETTINGS
+from config import DRY_RUN, SETTINGS
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -36,7 +36,7 @@ class Orders:
         valid_until: date | None = None,
         caller: str = "",
     ) -> str | None:
-        if SETTINGS.DRY_RUN:
+        if DRY_RUN:
             log.warning(f"Dry run: {order_type.value} order not placed")
             return None
 
@@ -72,7 +72,7 @@ class Orders:
             return None
 
     def delete(self, order: Order, caller: str = "") -> str | None:
-        if SETTINGS.DRY_RUN:
+        if DRY_RUN:
             log.warning("Dry run: DELETE order not performed")
             return None
 
@@ -112,7 +112,7 @@ class Orders:
             self.delete(order=order)
 
     def edit_active(self, new_price: float) -> str | None:
-        if SETTINGS.DRY_RUN:
+        if DRY_RUN:
             log.warning("Dry run: Order not edited")
             return None
 

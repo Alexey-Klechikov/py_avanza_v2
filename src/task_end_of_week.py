@@ -3,7 +3,6 @@ import warnings
 from apis.avanza.operators.portfolio import Portfolio
 from apis.telegram.operators import Telegram
 from config import SETTINGS
-from services.storage.candle_quality import require_clean_bars
 from services.storage.operators import Storage
 from services.storage.windows import CalibrationWindows
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
@@ -22,9 +21,9 @@ def generate_strategies() -> bool:
     """Train on TRAIN_DAYS that end HOLDOUT_DAYS ago, then final-test on the unseen last HOLDOUT_DAYS."""
     windows = CalibrationWindows.ending(TODAY_MIDNIGHT)
     cached_bars = Storage().read()
-    training_bars = require_clean_bars(windows.training.slice(cached_bars))
-    holdout_bars = require_clean_bars(windows.holdout.slice(cached_bars))
-    log.info(f"Training on {windows.training}, final test on {windows.holdout} (partial-candle days dropped)")
+    training_bars = windows.training.slice(cached_bars)
+    holdout_bars = windows.holdout.slice(cached_bars)
+    log.info(f"Training on {windows.training}, final test on {windows.holdout}")
 
     log.warning(
         f"Long-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.TRAIN_DAYS} days)",

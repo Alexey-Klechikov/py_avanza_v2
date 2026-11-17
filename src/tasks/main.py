@@ -15,7 +15,7 @@ from apis.avanza.operators.transactions import Transactions
 from apis.avanza.operators.watchlists import Watchlists
 from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker
-from config import SETTINGS
+from config import DRY_RUN, SETTINGS
 from services.calendar.operators import get_market_close_time, market_is_close
 from services.storage.operators import Storage
 from services.ta.operators import get_indicators, read_top_strategies
@@ -238,7 +238,7 @@ def trade() -> None:
         "Start trading strategies on {} | {}{}".format(
             SETTINGS.NAME,
             SETTINGS.RESOLUTION,
-            " | DRY_RUN" if SETTINGS.DRY_RUN else "",
+            " | DRY_RUN" if DRY_RUN else "",
         ),
     )
 
