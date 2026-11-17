@@ -39,11 +39,12 @@ class Strategy:
     # Daily selection (final test and end of day): expected capital return per trade, where each past trade's
     # weight halves every SCORE_HALF_LIFE_DAYS and SCORE_PRIOR_TRADES zero-return pseudo-trades shrink small samples.
     # Strategies at or below MIN_EDGE are dropped; none left means no trading that day.
-    # Chosen with development.py run_selection_walk_forward (2026-11-17: 540 days of Avanza cache as stored, every
-    # 3-indicator strategy, 312 evaluated days, SPREAD_DEFAULT 0.2%; grid half-life 10-inf x prior 10-100 x min edge
-    # 0-1%). Ranking is best at half-life 20, prior 100 (rank correlation 0.08). No min edge was profitable: every
-    # setting that traded lost (-0.2% to -1.8% per traded day) and none was positive in both halves. At prior 100,
-    # 0.3% never triggered in the test, so the bot sits out until a strategy's record clears it.
+    # Deliberately strict: with a 30-day hold-out (~3-4 trades per strategy) prior 100 and 0.3% never pass, so the
+    # bot does not trade. Out-of-sample study (2026-11-17): train -> hold-out selection -> live replay of the next
+    # 14 days, 10 periods (2025-03..09, 2026-09..11), train 90/180 days x 4/7 indicators. Every looser rule that
+    # traded (flat scoring prior 3 at min edge 0 or 0.1%, no win-share filter, all dev strategies) lost: win share
+    # 44-45%, -0.4% to -0.5% capital per trade after spread, positive in at most 3 of 7 complete-candle periods.
+    # Loosen only after a forward test shows a positive edge.
     SCORE_HALF_LIFE_DAYS: float = 20
     SCORE_PRIOR_TRADES: float = 100
     MIN_EDGE: float = 0.003

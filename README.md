@@ -65,7 +65,7 @@ uv run python src/development.py
 - `task_end_of_day.py` caches history and reruns the final test on the last `STRATEGY.HOLDOUT_DAYS` days, including today's session.
 - `task_end_of_week.py` rebuilds the dev strategy snapshots and logs the current portfolio balance.
 - `task_trade.py` starts one intraday loop that keeps running until shortly after `SETTINGS.TIME.END`.
-- On macOS, `DRY_RUN` defaults to `True`, so local runs do not place live orders unless you change `DRY_RUN` in `src/config/__init__.py`.
+- On macOS, `DRY_RUN` defaults to `True`, so local runs do not place live orders or send Telegram alerts (the message is only logged) unless you change `DRY_RUN` in `src/config/__init__.py`.
 
 ## Trading Flow
 

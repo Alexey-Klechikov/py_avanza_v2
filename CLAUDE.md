@@ -24,7 +24,7 @@ Python 3.13 trading bot: caches OHLCV data, builds and ranks TA strategies, runs
 - Dual paths: local `src/config`, `src/data`, `src/logs`; host `config`, `data`, `logs` (deploy syncs only the contents of `src/` to `/home/ubuntu/pyAvanza/`). Preserve both.
 - `src/config/OMX_trade_strategies*.json` are generated; the live loop reads them by name. Preserve schema and naming.
 - Watchlist names are `DT_<direction>_<instrument>_<instrument_type>`; change `WatchlistNameComposition` and the operators together.
-- Alerts call `telegram-send` directly (machine-level config, fails at send time; no setting in `settings.py`).
+- Alerts call `telegram-send` directly (machine-level config, fails at send time; no setting in `settings.py`); under `DRY_RUN` (`src/config/__init__.py`) they are only logged.
 - Python style, nesting, and complexity: `.claude/rules/pyavanza-python.md`.
 
 ## Validation
