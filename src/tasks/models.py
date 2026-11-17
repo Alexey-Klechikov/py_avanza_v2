@@ -1,10 +1,14 @@
 from enum import Enum
 
 
-class Signal(Enum):
-    LONG = "LONG"
-    SHORT = "SHORT"
-    EXIT = "EXIT"
+class Direction(Enum):
+    """Which product family a position is held in: BULL instruments rise with the index, BEAR instruments fall."""
+
+    BULL = "BULL"
+    BEAR = "BEAR"
+
+    def __str__(self):
+        return self.value
 
 
 class FlowAction(Enum):

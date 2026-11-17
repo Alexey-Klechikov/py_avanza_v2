@@ -31,19 +31,43 @@ class Strategy:
     INDICATORS: int = 7
     FALLBACK_COUNT: int = 5
 
+    # Calibration windows: train on TRAIN_DAYS that end HOLDOUT_DAYS ago, final-test on the last HOLDOUT_DAYS
+    TRAIN_DAYS: int = 90
+    HOLDOUT_DAYS: int = 30
+    # Fewer training trades than this cannot rank: a handful of lucky trades is not an edge
+    MIN_TRADES_TRAIN: int = 15
+    # Calibration stops (DataQualityError) when fewer of a window's days than this have complete candles;
+    # partial-candle days are always dropped (services/storage/candle_quality.py)
+    MIN_CLEAN_DAY_SHARE: float = 0.8
+
+    # Daily selection (final test and end of day): expected capital return per trade, where each past trade's
+    # weight halves every SCORE_HALF_LIFE_DAYS and SCORE_PRIOR_TRADES zero-return pseudo-trades shrink small samples.
+    # Strategies at or below MIN_EDGE are dropped; none left means no trading that day.
+    # Choose these with development.py run_selection_walk_forward (2026-11-17, 312 days, 3-indicator pool: best of
+    # half-life 10-inf x prior 0-30 x min edge 0-0.2%, still -0.05% per traded day, sitting out 18% of days).
+    SCORE_HALF_LIFE_DAYS: float = 20
+    SCORE_PRIOR_TRADES: float = 30
+    MIN_EDGE: float = 0.002
+
+    # After a strategy triggers, lower-ranked strategies are ignored for this long (live loop and replay)
+    TRIGGER_LOCK_MINUTES: int = 40
+
 
 @dataclass(frozen=True)
 class TakeProfit:
-    # The percentage from the buy price that the price must rise to trigger a take profit
-    # Example: 0.09 means that if the buy price is 100 and the price rises to 109, a take profit is triggered
+    # Take-profit move of the instrument at the nominal MULTIPLIER. Levels are set on the underlying at
+    # VALUE / MULTIPLIER from entry (backtest and live alike); the live limit order on the instrument scales that
+    # underlying move by the instrument's actual leverage.
+    # Example: 0.045 with MULTIPLIER 10 means a take profit once the underlying moves 0.45% in the trade's favour
     VALUE: float = 0.045
 
 
 @dataclass(frozen=True)
 class StopLoss:
-    # The percentage from the buy price that the price must fall to trigger a stop loss
-    # Example: 0.06 means that if the buy price is 100 and the price falls to 94, a stop loss is triggered
-    # The stop loss is confirmed if the price falls below the buy price by the percentage for a certain number of times
+    # Stop-loss move of the instrument at the nominal MULTIPLIER, set on the underlying at VALUE / MULTIPLIER from
+    # entry. On an instrument with higher actual leverage the instrument loss at the stop is proportionally larger.
+    # Example: 0.03 with MULTIPLIER 10 means a stop once the underlying moves 0.3% against the trade
+    # The stop loss is confirmed when CONFIRMATION_COUNT + 1 consecutive completed bars close beyond the level
     VALUE: float = 0.030
     CONFIRMATION_COUNT: int = 3
 
@@ -55,7 +79,7 @@ class Pullback:
     # The pullback is confirmed if the price falls below the buy price by the percentage for a certain number of times
     VALUE: float = 0.0
     CONFIRMATION_COUNT: int = 2
-    TRIGGER_PROFIT: float = 0.025
+    TRIGGER_PROFIT: float = TakeProfit.VALUE / 2
 
 
 @dataclass(frozen=True)
@@ -75,7 +99,14 @@ class TradeStrategies:
     DATA_SOURCE: str = "avanza"
     RESOLUTION: str = "2m"
     MULTIPLIER: int = 10
-    MAX_SPREAD: float = 0.004  # 0.4%
+    MAX_SPREAD: float = 0.004  # 0.4%: watchlist ceiling for an instrument's spread
+    # Trading costs as fractions of the instrument price, charged on every backtest trade:
+    # SPREAD is paid once per round trip (buy at the ask, sell at the bid); typical AVA mini futures quote ~0.10-0.12%.
+    # COMMISSION_PER_ORDER is the courtage rate, charged on the buy and on the sell. AVA-branded products are
+    # courtage-free on Avanza for orders above 1,000 SEK (the bot's minimum budget is 1,200 SEK); check your
+    # courtage class and set it if you pay commission.
+    SPREAD: float = 0.0012
+    COMMISSION_PER_ORDER: float = 0.0
 
     AVA: str = "19002"
     YAHOO: str = "^OMX"
@@ -87,6 +118,11 @@ class TradeStrategies:
     TIME: Time = field(default_factory=Time)
 
     BUDGET: float = 1.0
+
+    @property
+    def ROUND_TRIP_COST(self) -> float:
+        """Total cost of one trade (buy and sell) as a fraction of the instrument price."""
+        return self.SPREAD + 2 * self.COMMISSION_PER_ORDER
 
     INDICATORS: dict = field(
         default_factory=lambda: {

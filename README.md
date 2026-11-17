@@ -16,14 +16,17 @@ pyAvanza_v2 is a Python trading bot for OMX-linked BULL and BEAR products on Ava
 - `src/task_trade.py`: live trading entry point.
 - `src/task_end_of_day.py`: history cache and end-of-day backtest flow.
 - `src/task_end_of_week.py`: weekly strategy regeneration and balance logging.
+- `src/task_repair_history.py`: one-off (not scheduled) cache repair that overwrites cached 2-minute candles with complete ones from Yahoo (only about the last 42 days are available).
 - `src/development.py`: manual strategy-generation and indicator-tuning helper.
-- `src/apis/avanza/`: Avanza client, typed models, account and order operators, and trade execution helpers.
+- `src/apis/avanza/`: Avanza client, typed models, account and order operators.
 - `src/apis/yahoo/`: Yahoo Finance history wrapper.
 - `src/apis/telegram/`: alert delivery through `telegram-send`.
-- `src/services/ta/`: indicators, plots, strategy composition, and strategy persistence.
-- `src/services/storage/`: pickle-backed OHLCV cache.
+- `src/services/ta/`: indicators, plots, strategies and their per-bar signals, strategy composition, and strategy persistence.
+- `src/services/trading/`: trading rules shared by the backtest and the live loop: the strategy rank lock, and take-profit, stop-loss, and pullback levels.
+- `src/services/storage/`: pickle-backed OHLCV cache, data windows, and candle-quality checks.
 - `src/services/calendar/`: Stockholm market-hours helpers.
-- `src/tasks/`: live signal loop and backtest engine.
+- `src/tasks/`: the top layer: live signal loop and order execution (`main.py`, `trade.py`) and the backtest engine (`backtest/`). Each `src/apis/*` and `src/services/*` package is isolated and never imports another; only `tasks/`, the `task_*.py` scripts, and `src/development.py` compose them.
+- `tests/`: unit and integration tests, mirroring `src/` (not deployed).
 - `src/config/`: runtime settings and generated strategy ranking files.
 - `src/utils/`: logging and shared constants.
 
@@ -48,7 +51,7 @@ AVA_TOTP=...
 uv sync
 mkdir -p src/data
 uv run python -m compileall src .claude/hooks
-uv run pytest src/apis/yahoo/client/models/history_request_test.py
+uv run pytest tests/apis/yahoo/client/models/test_history_request.py
 ```
 
 ## Running the Tasks
@@ -57,10 +60,11 @@ uv run pytest src/apis/yahoo/client/models/history_request_test.py
 uv run python src/task_end_of_day.py
 uv run python src/task_end_of_week.py
 uv run python src/task_trade.py
+uv run python src/task_repair_history.py   # one-off: replace partial cached candles with Yahoo's complete ones
 uv run python src/development.py
 ```
 
-- `task_end_of_day.py` caches history and reruns backtests against recent data.
+- `task_end_of_day.py` caches history and reruns the final test on the last `STRATEGY.HOLDOUT_DAYS` days, including today's session.
 - `task_end_of_week.py` rebuilds the dev strategy snapshots and logs the current portfolio balance.
 - `task_trade.py` starts one intraday loop that keeps running until shortly after `SETTINGS.TIME.END`.
 - On macOS, `TradeStrategies.DRY_RUN` defaults to `True`, so local runs do not place live orders unless you change `src/config/settings.py`.
@@ -69,11 +73,14 @@ uv run python src/development.py
 
 1. Cached data is loaded from `src/data/` locally or `data/` on the deployed host.
 2. `src/services/ta/` builds indicators from the defaults in `src/config/settings.py`.
-3. Backtests rank strategies and write `OMX_trade_strategies*.json` snapshots. Generation starts from every combination of `STRATEGY.INDICATORS_START` indicators (`dev_2`) and adds one indicator per level up to `STRATEGY.INDICATORS` (`dev_7`):
-   - Only profitable strategies advance. A parent advances unchanged when none of its one-indicator extensions ranks higher.
-   - If a level has no profitable strategy, the `STRATEGY.FALLBACK_COUNT` least-losing strategies that traded advance instead, so later levels can still find a winner.
-   - The final out-of-sample test keeps only profitable strategies. If none pass, `OMX_trade_strategies.json` is written empty so the live loop does not trade, `task_end_of_week.py` sends a Telegram alert, and `task_end_of_day.py` writes it empty without alerting.
-4. The live loop loads the top strategies, refreshes watchlists, and translates signals into Avanza orders.
+3. Backtests rank strategies and write `OMX_trade_strategies*.json` snapshots. Generation starts from every combination of `STRATEGY.INDICATORS_START` indicators (`dev_2`) and adds one indicator per level up to `STRATEGY.INDICATORS` (`dev_7`), training on `STRATEGY.TRAIN_DAYS` days that end `STRATEGY.HOLDOUT_DAYS` ago:
+   - Strategies rank by total profit weighted by the lower bound of the 95% Wilson interval of their win share. Only profitable strategies with at least `STRATEGY.MIN_TRADES_TRAIN` trades advance. A parent advances unchanged when none of its one-indicator extensions with that many trades ranks higher.
+   - If a level has no such strategy, the `STRATEGY.FALLBACK_COUNT` least-losing strategies advance instead (only those with `STRATEGY.MIN_TRADES_TRAIN` trades if any exist, otherwise any that traded), so later levels can still find a winner.
+   - The final out-of-sample test on the last `STRATEGY.HOLDOUT_DAYS` days keeps, ranked best first, the strategies with at least a `STRATEGY.MIN_EFFICIENCY` win share (the live loop's filter) whose expected return per trade exceeds `STRATEGY.MIN_EDGE` (recent trades weigh more, halving every `STRATEGY.SCORE_HALF_LIFE_DAYS`; `STRATEGY.SCORE_PRIOR_TRADES` zero-return pseudo-trades shrink small samples), then logs a replay of the live strategy selection over the same data. If none pass, `OMX_trade_strategies.json` is written empty so the live loop does not trade, `task_end_of_week.py` sends a Telegram alert, and `task_end_of_day.py` writes it empty without alerting.
+   - Every simulated trade pays `SETTINGS.ROUND_TRIP_COST` (`SETTINGS.SPREAD` plus twice `SETTINGS.COMMISSION_PER_ORDER`, as a fraction of the instrument price); the live pullback check uses the same cost.
+   - Days with partial (in-progress) cached candles are dropped from the training and final-test windows; if fewer than `STRATEGY.MIN_CLEAN_DAY_SHARE` of a window's days are clean, the task stops with `DataQualityError` (Telegram error alert) until the cache is repaired with `task_repair_history.py` or clean days accumulate.
+   - Simulated positions never carry overnight: no entry on a trading day's last bar, and open positions exit at that bar's close or at `SETTINGS.TIME.END`, whichever comes first.
+4. The live loop loads the top strategies in stored `rank` order (after the `STRATEGY.MIN_EFFICIENCY` filter and `STRATEGY.COUNT_MAX` limit), ignores signals from a lower-ranked strategy than the last triggered one for `STRATEGY.TRIGGER_LOCK_MINUTES` (or until no position is held), refreshes watchlists, and translates signals into Avanza orders. Stop-loss and pullback use the backtest's levels on the underlying, checked once per completed bar (a position found without a record, e.g. after a restart, is measured from the current underlying price); the take-profit order scales the underlying move by the bought instrument's leverage.
 5. Transactions are grouped into deals and written into daily trading stats JSON in the logs directory.
 
 ## Runtime Conventions
@@ -95,7 +102,7 @@ uv run python src/development.py
 ```sh
 uv run python -m compileall src .claude/hooks
 uv run pytest
-uv run pytest -m integration src/apis/avanza/client/client_test.py
+uv run pytest -m integration tests/apis/avanza/client/test_client.py
 ```
 
 The integration tests require valid Avanza credentials in `src/config/.env` and can hit a live account.

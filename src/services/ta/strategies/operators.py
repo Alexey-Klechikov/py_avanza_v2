@@ -139,13 +139,9 @@ def dump_strategies_in_file(
         strategy_candidate = {
             "rank": rank,
             "name": strategy.name,
-            "total_trades": strategy.counter.total_trades,
-            "total_profit": round(strategy.counter.total_profit, 2),
-            "profitable_trades_share": (
-                round(strategy.counter.profitable_trades / strategy.counter.total_trades, 2)
-                if strategy.counter.profitable_trades > 0
-                else 0
-            ),
+            "total_trades": strategy.trade_stats.total_trades,
+            "total_profit": round(strategy.trade_stats.total_profit, 2),
+            "profitable_trades_share": round(strategy.trade_stats.profitable_share, 2),
         }
 
         current_strategy_stats = " | ".join(
@@ -177,12 +173,19 @@ def dump_strategies_in_file(
 def get_stored_strategies(
     indicators_mapping: dict[str, dict[str, Indicator]],
     strategies_file_name_prefix: str,
+    strategies_file_name_suffix: str | None = None,
 ) -> list[Strategy]:
+    stored_strategies = sorted(
+        json.load(open(_get_file_path(strategies_file_name_prefix, strategies_file_name_suffix))),
+        key=lambda i: i["rank"],
+    )
+
     return [
         Strategy(
             selected_indicators=list(tuple(indicator.split("-")) for indicator in i["name"].split(" | ")),
             indicators_mapping=indicators_mapping,
             efficiency=i["profitable_trades_share"],
+            rank=i["rank"],
         )
-        for i in json.load(open(_get_file_path(strategies_file_name_prefix)))
+        for i in stored_strategies
     ]

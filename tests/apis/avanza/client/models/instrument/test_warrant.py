@@ -191,3 +191,157 @@ class Test_InstrumentWarrant(TestCase):
         }
 
         assert isinstance(InstrumentWarrant(**instrument_warrant), InstrumentWarrant)
+
+    def test_instrument_warrant_mini_future_without_fee(self):
+        instrument_warrant = {
+            "orderbookId": "2310428",
+            "name": "MINI S OMX AVA 1710",
+            "isin": "GB00BVQ0NK17",
+            "tradable": "BUYABLE_AND_SELLABLE",
+            "listing": {
+                "shortName": "MINI S OMX AVA 1710",
+                "tickerSymbol": "MINI S OMX AVA 1710",
+                "countryCode": "SE",
+                "currency": "SEK",
+                "marketPlaceCode": "FNSE",
+                "marketPlaceName": "First North Stockholm",
+                "tickSizeListId": "1851",
+                "marketTradesAvailable": True,
+            },
+            "historicalClosingPrices": {
+                "oneDay": 176.23,
+                "oneWeek": 163.20,
+                "oneMonth": 244.70,
+                "threeMonths": 220.31,
+                "sixMonths": 510.04,
+                "start": 499.87,
+                "startDate": "2026-02-04",
+                "marketMaker": {
+                    "oneDay": 175.7000,
+                    "oneWeek": 159.5100,
+                    "oneMonth": 238.9100,
+                    "start": 500.1900,
+                    "startDate": "2026-02-04",
+                },
+            },
+            "keyIndicators": {
+                "parity": 1,
+                "barrierLevel": 3435.49,
+                "financingLevel": 3505.009034,
+                "direction": "Kort",
+                "strikePrice": 3612.24,
+                "leverage": 16.21,
+                "isAza": True,
+                "numberOfOwners": 14,
+                "subType": "MINI_FUTURE",
+            },
+            "quote": {
+                "buy": 203.40,
+                "sell": 203.61,
+                "last": 204.25,
+                "highest": 208.03,
+                "lowest": 190.29,
+                "change": 28.02,
+                "changePercent": 15.90,
+                "spread": 0.10,
+                "timeOfLast": 1794909678000,
+                "totalValueTraded": 397370.25000000,
+                "totalVolumeTraded": 2018.00000000,
+                "updated": 1794909956344,
+                "volumeWeightedAveragePrice": 196.91,
+                "isRealTime": False,
+                "marketMakerQuote": {
+                    "currentBuyPrice": 203.36,
+                    "currentSellPrice": 203.61,
+                    "closingPrice": 175.7000,
+                    "latestBuyPrice": 203.36,
+                    "latestBuyPriceUpdated": 1794909956345,
+                    "latestSellPrice": 203.61,
+                    "spread": 0.12,
+                    "updated": 1794909956345,
+                },
+            },
+            "type": "WARRANT",
+            "underlying": {
+                "orderbookId": "19002",
+                "name": "OMX Stockholm 30",
+                "instrumentType": "INDEX",
+                "instrumentSubType": "SECTOR",
+                "quote": {
+                    "last": 3301.42,
+                    "highest": 3316.80,
+                    "lowest": 3296.67,
+                    "change": -40.53,
+                    "changePercent": -1.21,
+                    "timeOfLast": 1794909950000,
+                    "totalValueTraded": 2953194021.84000000,
+                    "totalVolumeTraded": 16453592.00000000,
+                    "updated": 1794909950171,
+                    "isRealTime": False,
+                },
+                "listing": {
+                    "shortName": "OMXS30",
+                    "tickerSymbol": "OMXS30",
+                    "countryCode": "SE",
+                    "currency": "SEK",
+                    "marketPlaceCode": "XXXX",
+                    "marketPlaceName": "Inofficiella (beQuoted)",
+                    "tickSizeListId": "7700011",
+                    "marketTradesAvailable": True,
+                },
+                "previousClosingPrice": 3341.95,
+                "reference": False,
+            },
+            "assetCategory": "Aktier",
+            "category": "Aktieindex",
+            "subCategory": "OMX Stockholm 30 Index",
+            "issuer": "Morgan Stanley & Co. International plc",
+            "documents": {
+                "kid": "https://api.priiphub.com/hub/kid-portal/kid/identifier/GB00BVQ0NK17",
+                "prospectus": "https://etp.morganstanley.com/se/download/final-terms/gb00bvq0nk17",
+            },
+            "orderDepth": {
+                "receivedTime": 1794909956345,
+                "levels": [
+                    {
+                        "buySide": {"price": 203.40, "volume": 9, "priceString": "203.40"},
+                        "sellSide": {"price": 203.61, "volume": 30000, "priceString": "203.61"},
+                    },
+                ],
+                "marketMakerLevelInBid": 1,
+                "marketMakerLevelInAsk": 0,
+            },
+            "brokerTradeSummaries": [
+                {
+                    "brokerCode": "MSN",
+                    "sellVolume": 1416,
+                    "buyVolume": 602,
+                    "netBuyVolume": -814,
+                    "brokerName": "Morgan Stanley Europe SE",
+                },
+            ],
+            "trades": [
+                {
+                    "buyer": "AVA",
+                    "buyerName": "Avanza Bank AB",
+                    "seller": "MSN",
+                    "sellerName": "Morgan Stanley Europe SE",
+                    "dealTime": 1794909678929,
+                    "price": 204.25,
+                    "volume": 9.00000000,
+                    "matchedOnMarket": True,
+                    "cancelled": False,
+                },
+            ],
+            "tradingUnit": 1,
+            "collateralValue": 0.0,
+        }
+
+        warrant = InstrumentWarrant(**instrument_warrant)
+
+        assert warrant.fee is None
+        assert warrant.key_indicators.strike_price == 3612.24
+        assert warrant.historical_closing_prices.market_maker.one_day == 175.7
+        assert warrant.quote.market_maker_quote.current_buy_price == 203.36
+        assert warrant.underlying.name == "OMX Stockholm 30"
+        assert warrant.sub_category == "OMX Stockholm 30 Index"

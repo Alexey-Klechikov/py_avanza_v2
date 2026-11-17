@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from http.client import RemoteDisconnected
 from time import sleep
 
+import numpy as np
 import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
@@ -12,16 +13,18 @@ from apis.avanza.operators.orders import Orders
 from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.transactions import Transactions
 from apis.avanza.operators.watchlists import Watchlists
-from apis.avanza.trade.models.direction import Direction
-from apis.avanza.trade.operator import Trade
 from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker
 from config import SETTINGS
 from services.calendar.operators import get_market_close_time, market_is_close
 from services.storage.operators import Storage
 from services.ta.operators import get_indicators, read_top_strategies
+from services.ta.strategies.models.signal import Signal
 from services.ta.strategies.models.strategy import Strategy
-from tasks.models import FlowAction, Signal
+from services.ta.strategies.signals import strategy_signal_flags
+from services.trading.strategy_trigger import StrategyTrigger
+from tasks.models import Direction, FlowAction
+from tasks.trade import Trade
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger
 
@@ -31,51 +34,62 @@ pd.options.mode.chained_assignment = None  # default='warn'
 log = get_logger()
 
 
-class Data:
-    def __init__(self):
-        self.data: pd.DataFrame = pd.DataFrame()
+BAR_DURATION = pd.Timedelta(SETTINGS.RESOLUTION)
+
+# What each signal does to the held directions: (directions to sell, direction to buy)
+SIGNAL_ORDERS: dict[Signal, tuple[list[Direction], Direction | None]] = {
+    Signal.LONG: ([Direction.BEAR], Direction.BULL),
+    Signal.SHORT: ([Direction.BULL], Direction.BEAR),
+    Signal.EXIT: ([Direction.BEAR, Direction.BULL], None),
+}
+
+
+class MarketData:
+    """Recent 2-minute bars of the underlying, refreshed every bar, and the stored strategies evaluated on them."""
+
+    def __init__(self) -> None:
+        self.bars: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.too_old = False
-        self.strategies = []
+        self.strategies: list[Strategy] = []
 
-    def get(self):
+    def refresh(self) -> None:
         storage = Storage()
 
-        data = storage.read()
+        bars = storage.read()
 
-        if ((datetime.now() - data.index[-1]).seconds) < 2 * 60:  # type: ignore
+        if ((datetime.now() - bars.index[-1]).seconds) < 2 * 60:  # type: ignore
             self.too_old = False
             self.is_new = True
 
         else:
-            new_data = None
+            new_bars = None
             data_source = SETTINGS.DATA_SOURCE
             if data_source == "yahoo":
                 try:
-                    new_data = Ticker().get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
+                    new_bars = Ticker().get_history(period=Period.ONE_DAY, interval=Interval.TWO_MINUTES)
                 except Exception as e:
                     log.warning(f"Error fetching Yahoo data: {e}. Will use avanza data instead.")
                     data_source = "avanza"
 
             if data_source == "avanza":
-                new_data = Chart.get_chart_data(TimePeriod.TODAY, Resolution.TWO_MINUTES)
+                new_bars = Chart.get_chart_data(TimePeriod.TODAY, Resolution.TWO_MINUTES)
 
-            if new_data is None:
+            if new_bars is None:
                 raise ValueError("No data fetched")
 
-            storage.write(new_data)
+            storage.write(new_bars)
 
-            data_size_before = data.shape[0]
-            data = storage.read()
-            data_size_after = data.shape[0]
+            bars_count_before = bars.shape[0]
+            bars = storage.read()
 
-            self.too_old = ((datetime.now() - data.index[-1]).seconds // 60) > 15
-            self.is_new = data_size_before != data_size_after
+            self.too_old = ((datetime.now() - bars.index[-1]).seconds // 60) > 15
+            self.is_new = bars_count_before != bars.shape[0]
 
-        self.data = data.loc[data.index >= TODAY_MIDNIGHT - timedelta(days=4)]
+        self.bars = bars.loc[bars.index >= TODAY_MIDNIGHT - timedelta(days=4)]
 
-    def get_strategies(self):
-        indicators_mapping = get_indicators(self.data)
+    def load_strategies(self) -> None:
+        indicators_mapping = get_indicators(self.bars)
         strategies = read_top_strategies(
             indicators_mapping,
             SETTINGS.NAME,
@@ -83,99 +97,77 @@ class Data:
             limit_count=SETTINGS.STRATEGY.COUNT_MAX,
         )
         if strategies and (not self.strategies or self.strategies[0].name != strategies[0].name):
-            for i, strategy in enumerate(strategies):
-                log.info(f"Strategy {i + 1} [{strategy.efficiency}]: {strategy.name}")
+            for strategy in strategies:
+                log.info(f"Strategy rank {strategy.rank} [{strategy.efficiency}]: {strategy.name}")
 
         self.strategies = strategies
 
-    def add_signals(self, strategy: Strategy) -> None:
-        self.data["LONG"] = False
-        self.data["SHORT"] = False
-        self.data["EXIT"] = False
+    def pick_signal(self, trigger: StrategyTrigger) -> Signal | None:
+        """The signal of the first strategy (rank order) that signals on the last complete bar, if not ignored."""
+        bar_position = self.last_complete_bar_position()
+        candidates = ((strategy, self._bar_signal(strategy, bar_position)) for strategy in self.strategies)
+        signal_pick = trigger.pick(candidates, now=datetime.now())
+        if signal_pick is None:
+            return None
 
-        for column in ["LONG", "SHORT", "EXIT"]:
-            combination_condition = all if column in ["LONG", "SHORT"] else any
+        signal_summary = (
+            f"Signal: {signal_pick.signal}. Strategy rank {signal_pick.strategy.rank} "
+            f"[{signal_pick.strategy.efficiency}]. Latest price: {round(self.latest_price, 2)}"
+        )
+        if signal_pick.is_ignored:
+            log.debug(f"[IGNORED] {signal_summary}")
+        else:
+            log.info(signal_summary)
 
-            signal_methods = [
-                indicator.signal.__getattribute__(column)
-                for indicator in strategy.indicators_logic  # type: ignore
-                if indicator.signal.__getattribute__(column) is not None
-            ]
+        return signal_pick.signal
 
-            for i, row in self.data.iterrows():
-                self.data.at[i, column] = (
-                    False
-                    if not signal_methods
-                    or not combination_condition(signal_method(row) for signal_method in signal_methods)
-                    else True
-                )
+    def last_complete_bar_position(self, now: datetime | None = None) -> int:
+        """Position of the newest bar that has fully closed by `now`.
 
-        for column in ["LONG", "SHORT", "EXIT"]:
-            for non_trading_time in (
-                ["09:00", SETTINGS.TIME.START.strftime("%H:%M")],
-                [SETTINGS.TIME.END.strftime("%H:%M"), "22:30"],
-            ):
-                self.data.loc[self.data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = False
+        Bars are labelled by their start time. Avanza may or may not include the bar still in progress, so the
+        complete bar is chosen by time, never by position: decisions only ever use fully closed candles.
+        """
+        is_closed = self.bars.index + BAR_DURATION <= (now or datetime.now())
+        return int(np.flatnonzero(is_closed)[-1])
 
-    def get_signal(self, last_triggered_strategy: Strategy | None) -> tuple[Strategy | None, Signal | None]:
-        signal = None
+    def _bar_signal(self, strategy: Strategy, bar_position: int) -> Signal | None:
+        signal_flags = strategy_signal_flags(self.bars, strategy)
 
-        for i, strategy in enumerate(self.strategies):
-            self.add_signals(strategy)
+        return Signal.from_bar(*signal_flags[bar_position])
 
-            last_complete_candle = self.data.iloc[-2]
-            if last_complete_candle["EXIT"]:
-                signal = Signal.EXIT
+    @property
+    def latest_price(self) -> float:
+        """Most recent traded price: the bar in progress if Avanza returned it, else the last closed bar."""
+        return float(self.bars["Close"].iloc[-1])
 
-            if last_complete_candle["LONG"] and not last_complete_candle["SHORT"]:
-                signal = Signal.LONG
+    @property
+    def last_complete_close(self) -> float:
+        return float(self.bars["Close"].iloc[self.last_complete_bar_position()])
 
-            elif last_complete_candle["SHORT"] and not last_complete_candle["LONG"]:
-                signal = Signal.SHORT
-
-            if not signal:
-                continue
-
-            message_signal_summary = (
-                f"Signal: {signal}. Strategy {i + 1} [{strategy.efficiency}]. "
-                + f"Latest price: {round(self.data.iloc[-1]['Close'], 2)}"
-            )
-            if last_triggered_strategy and strategy.efficiency < last_triggered_strategy.efficiency:
-                log.debug(f"[IGNORED] {message_signal_summary}")
-                signal = None
-                break
-
-            log.info(message_signal_summary)
-            return (strategy, signal)
-
-        return (last_triggered_strategy, signal)
+    @property
+    def last_complete_bar_time(self) -> datetime:
+        return self.bars.index[self.last_complete_bar_position()].to_pydatetime()
 
 
-class Flow:
-    def __init__(self, data: Data):
+class TradingFlow:
+    """Decides, once per bar, whether to trade, wait, or stop trading for the day."""
+
+    def __init__(self, market_data: MarketData) -> None:
         self.directions_sell: list[Direction] = []
         self.direction_buy: Direction | None = None
         self.direction_in_stock: Direction | None = None
 
-        self.data = data
+        self.market_data = market_data
+        self.trigger = StrategyTrigger.from_settings()
 
-        self.triggered_strategy: Strategy | None = None
-        self.triggered_strategy_time: datetime | None = None
-
-        self.counter_repeating_exception: int = 0
+        self.repeated_exception_count: int = 0
 
     def get_action(self, portfolio: Portfolio, orders: Orders) -> FlowAction:
         self.directions_sell = []
         self.direction_buy = None
 
         portfolio.reload_positions(caller="get_action")
-        if not portfolio.positions:
-            self.triggered_strategy = None
-            self.triggered_strategy_time = None
-
-        if self.triggered_strategy_time and (datetime.now() - self.triggered_strategy_time) >= timedelta(minutes=60):
-            self.triggered_strategy = None
-            self.triggered_strategy_time = None
+        self.trigger.release_if_stale(now=datetime.now(), holds_position=bool(portfolio.positions))
 
         # Start of the day
         if datetime.now().time() <= SETTINGS.TIME.START:
@@ -199,52 +191,43 @@ class Flow:
             return FlowAction.EXIT_TRADING
 
         # No new data
-        elif self.data.too_old:
+        if self.market_data.too_old:
             self.directions_sell = [Direction.BEAR, Direction.BULL]
             return FlowAction.TRADE
 
+        if not self.market_data.is_new:
+            return FlowAction.DO_NOTHING
+
         # Trade
-        elif self.data.is_new:
-            self.data.is_new = False
-            self.data.get_strategies()
-            self.triggered_strategy, signal = self.data.get_signal(self.triggered_strategy)
+        self.market_data.is_new = False
+        self.market_data.load_strategies()
+        signal = self.market_data.pick_signal(self.trigger)
+        if not signal:
+            return FlowAction.DO_NOTHING
 
-            if signal:
-                self.triggered_strategy_time = datetime.now()
-                portfolio.reload_balance()
-                if portfolio.buying_power < 1100 and not portfolio.positions:
-                    log.info("Not enough funds on the account. No action is taken.")
-                    return FlowAction.EXIT_TRADING
+        portfolio.reload_balance()
+        if portfolio.buying_power < 1100 and not portfolio.positions:
+            log.info("Not enough funds on the account. No action is taken.")
+            return FlowAction.EXIT_TRADING
 
-            if signal == Signal.LONG:
-                self.directions_sell = [Direction.BEAR]
-                self.direction_buy = Direction.BULL
-            elif signal == Signal.SHORT:
-                self.directions_sell = [Direction.BULL]
-                self.direction_buy = Direction.BEAR
-            elif signal == Signal.EXIT:
-                self.directions_sell = [Direction.BEAR, Direction.BULL]
-
-            if signal:
-                return FlowAction.TRADE
-
-        return FlowAction.DO_NOTHING
+        self.directions_sell, self.direction_buy = SIGNAL_ORDERS[signal]
+        return FlowAction.TRADE
 
     def wait_for_data(self):
         sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
-        self.data.get()
+        self.market_data.refresh()
 
-        if not self.data.is_new:
+        if not self.market_data.is_new:
             sleep(20)
-            self.data.get()
-            log.debug(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.data.is_new}")
+            self.market_data.refresh()
+            log.debug(f"Data is not new, wait and refetch. 20 seconds later data is new: {self.market_data.is_new}")
 
     def hit_repeated_exception(self, e: Exception) -> bool:
-        if self.counter_repeating_exception >= 3:
+        if self.repeated_exception_count >= 3:
             log.warning("Repeated unknown error. Exiting trading.")
             return True
 
-        self.counter_repeating_exception += 1
+        self.repeated_exception_count += 1
         log.warning(f"Unknown error. {e}")
         return False
 
@@ -259,7 +242,7 @@ def trade() -> None:
         ),
     )
 
-    data = Data()
+    market_data = MarketData()
 
     orders = Orders()
     orders.reload_active()
@@ -275,19 +258,27 @@ def trade() -> None:
 
     trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists)
 
-    flow = Flow(data)
+    flow = TradingFlow(market_data)
 
     while datetime.now() < datetime.combine(datetime.today(), SETTINGS.TIME.END) + timedelta(minutes=15):
         try:
+            # Exits and entries read the underlying price, so bars must be loaded before the first action
+            if market_data.bars.empty:
+                market_data.refresh()
+
             action = flow.get_action(portfolio, orders)
 
-            if action == FlowAction.DO_NOTHING:
-                trade.stop_loss(flow.direction_in_stock)
+            if action == FlowAction.DO_NOTHING and flow.direction_in_stock:
+                trade.stop_loss(
+                    flow.direction_in_stock,
+                    underlying_price=market_data.last_complete_close,
+                    bar_time=market_data.last_complete_bar_time,
+                )
 
             elif action == FlowAction.TRADE:
                 [trade.sell(direction) for direction in flow.directions_sell]
-                trade.buy(flow.direction_buy)
-                trade.take_profit(flow.direction_buy)
+                trade.buy(flow.direction_buy, underlying_price=market_data.latest_price)
+                trade.take_profit(flow.direction_buy, underlying_price=market_data.latest_price)
                 flow.direction_in_stock = flow.direction_buy
 
             elif action == FlowAction.EXIT_TRADING:
@@ -295,7 +286,7 @@ def trade() -> None:
 
             flow.wait_for_data()
 
-            flow.counter_repeating_exception = 0
+            flow.repeated_exception_count = 0
 
         except (ConnectionError, RemoteDisconnected):
             log.warning("Connection error. Will retry")

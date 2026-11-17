@@ -107,15 +107,14 @@ def read_top_strategies(
     strategies_file_name_prefix: str,
     filter_by_min_efficiency: float | None = None,
     limit_count: int | None = None,
+    strategies_file_name_suffix: str | None = None,
 ) -> list[Strategy]:
-    strategies = get_stored_strategies(indicators_mapping, strategies_file_name_prefix)
+    strategies = get_stored_strategies(indicators_mapping, strategies_file_name_prefix, strategies_file_name_suffix)
 
     if filter_by_min_efficiency:
         strategies = [strategy for strategy in strategies if strategy.efficiency >= filter_by_min_efficiency]
 
     if limit_count:
         strategies = strategies[:limit_count]
-
-    strategies = sorted(strategies, key=lambda x: x.efficiency, reverse=True)
 
     return strategies

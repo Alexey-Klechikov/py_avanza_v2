@@ -1,7 +1,6 @@
 import warnings
 from datetime import timedelta
 
-import pandas as pd
 from avanza.constants import Resolution, TimePeriod
 
 from apis.avanza.operators.chart import Chart
@@ -9,9 +8,11 @@ from apis.telegram.operators import Telegram
 from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker as YahooTicker
 from config import SETTINGS
+from services.storage.candle_quality import require_clean_bars
 from services.storage.operators import Storage
+from services.storage.windows import DataWindow
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.backtest import backtest_trade_strategies as _backtest_trade_strategies
+from tasks.backtest.runner import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 
@@ -19,14 +20,6 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 set_handlers("end_of_day")
 log = get_logger()
-
-
-def _get_data(period_days: int):
-    data = Storage().read()
-    data = data.loc[(data.index >= TODAY_MIDNIGHT - timedelta(days=period_days)) & (data.index < TODAY_MIDNIGHT)]
-    data.index = pd.to_datetime(data.index)
-
-    return data
 
 
 def cache_history():
@@ -54,11 +47,14 @@ def cache_history():
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def backtest_trade_strategies(period_days: int):
-    log.warning(f"TASK: Backtest strategies on {SETTINGS.NAME} | {SETTINGS.RESOLUTION} | {period_days} days")
+def rescore_strategies() -> None:
+    """Re-run the final test on the last HOLDOUT_DAYS, up to and including today's session (the task runs after
+    the close). The window never reaches back into the weekly training data, which ended HOLDOUT_DAYS before it."""
+    window = DataWindow.days_before(TODAY_MIDNIGHT + timedelta(days=1), SETTINGS.STRATEGY.HOLDOUT_DAYS)
+    log.warning(f"TASK: Backtest strategies on {SETTINGS.NAME} | {SETTINGS.RESOLUTION} | {window}")
 
     _backtest_trade_strategies(
-        _get_data(period_days),
+        require_clean_bars(window.slice(Storage().read())),
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
@@ -67,7 +63,7 @@ def backtest_trade_strategies(period_days: int):
 if __name__ == "__main__":
     try:
         cache_history()
-        backtest_trade_strategies(period_days=60)
+        rescore_strategies()
 
     except Exception as e:
         telegram = Telegram()

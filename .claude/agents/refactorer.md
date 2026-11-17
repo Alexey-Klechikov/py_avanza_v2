@@ -28,7 +28,7 @@ Remove only with evidence: `Grep` call sites, imports, string references, dynami
 While in the slice, check secret leakage (logs, Telegram), credential handling, unsafe strategy/indicator parsing, order or watchlist paths outside the `DRY_RUN` gate, and repeated broker calls or I/O. Fix when a small local change preserves behavior; otherwise report.
 
 ## Validation
-After each substantive edit run the narrowest check: colocated `uv run pytest <path>_test.py`, then `uv run python -m compileall src .claude/hooks`, then `uv run pytest` (no `-m integration` without credentials and approval). Never edit docs. If the change touches contributor workflow, runtime or public behavior, or repo guidance, assume docs need an update unless the diff proves otherwise, and name them for `documenter`.
+After each substantive edit run the narrowest check: the mirrored `uv run pytest tests/<package>/test_<module>.py`, then `uv run python -m compileall src .claude/hooks`, then `uv run pytest` (no `-m integration` without credentials and approval). Never edit docs. If the change touches contributor workflow, runtime or public behavior, or repo guidance, assume docs need an update unless the diff proves otherwise, and name them for `documenter`.
 
 ## Output
 1. **Verdict:** refactored, or no refactor justified and why.

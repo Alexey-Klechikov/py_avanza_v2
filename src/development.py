@@ -10,9 +10,12 @@ import pandas as pd
 from pydantic import BaseModel
 
 from config import SETTINGS
+from services.storage.candle_quality import require_clean_bars
 from services.storage.operators import Storage
+from services.storage.windows import DataWindow
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.backtest import backtest_trade_strategies
+from tasks.backtest.runner import backtest_trade_strategies
+from tasks.backtest.walk_forward import SelectionWalkForward, WalkForwardGrid
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 
@@ -85,14 +88,12 @@ class TestParams(BaseModel):
         return self._kwargs
 
 
-def _get_data(point_of_origin: datetime, period_days: int):
-    log.info(f"Get data: {(point_of_origin - timedelta(days=period_days)).date()} - {point_of_origin.date()}")
+def _get_data(point_of_origin: datetime, period_days: int) -> pd.DataFrame:
+    """Bars of the window, partial-candle days dropped (experiments never stop on data quality)."""
+    window = DataWindow.days_before(point_of_origin, period_days)
+    log.info(f"Get data: {window}")
 
-    data = Storage().read()
-    data = data.loc[(data.index >= point_of_origin - timedelta(days=period_days)) & (data.index < point_of_origin)]
-    data.index = pd.to_datetime(data.index)
-
-    return data
+    return require_clean_bars(window.slice(Storage().read()), min_clean_share=0.0)
 
 
 def run_strategies_generation(
@@ -208,6 +209,21 @@ def run_test_for_selected_indicators(period_days: int, test_params: TestParams):
         log.info("> {}".format(" | ".join([str(i) for i in s])))
 
 
+def run_selection_walk_forward(period_days: int, indicators_count: int, grid: WalkForwardGrid | None = None):
+    """Compare daily-selection settings (SCORE_HALF_LIFE_DAYS, SCORE_PRIOR_TRADES, MIN_EDGE) on history."""
+    data = _get_data(point_of_origin=TODAY_MIDNIGHT, period_days=period_days)
+    log.warning(f"Walk-forward: simulating every {indicators_count}-indicator strategy over {period_days} days")
+
+    walk_forward = SelectionWalkForward.from_indicator_combinations(data, indicators_count, grid or WalkForwardGrid())
+    results = pd.DataFrame([result.model_dump() for result in walk_forward.run()])
+
+    log.warning(
+        f"Walk-forward over {len(walk_forward.evaluated_days)} days; "
+        f"average candidate {round(100 * walk_forward.average_candidate_daily_return, 3)}%/day",
+    )
+    log.info("\n" + results.sort_values("total_return", ascending=False).to_string(index=False))
+
+
 def get_statistics_per_indicator():
     for file in sorted(os.listdir("src/config")):
         if "OMX_trade_strategies" not in file:
@@ -241,10 +257,11 @@ def get_statistics_per_indicator():
 if __name__ == "__main__":
     get_statistics_per_indicator()
 
-    fun_full = False
+    is_strategies_generation = True
+    is_full = True
 
-    if fun_full:
-        run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=True)
+    if is_strategies_generation:
+        run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=is_full)
 
     else:
         moving_average_types = [ma_type.value for ma_type in MovingAverageType]
@@ -264,3 +281,4 @@ if __name__ == "__main__":
         )
 
     # # run_plotting_for_active_strategies(period_days=50)
+    # # run_selection_walk_forward(period_days=540, indicators_count=3)

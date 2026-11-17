@@ -3,7 +3,7 @@ import pickle
 
 import pandas as pd
 
-from config import SETTINGS
+from config import DATA_COLUMNS, SETTINGS
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -29,23 +29,18 @@ class Storage:
             return pickle.load(f)
 
     def write(self, data: pd.DataFrame) -> None:
-        if data.empty:
+        """Merge `data` into the cache. For a timestamp present in both, the new row wins: a candle fetched while
+        still in progress is replaced once it is fetched complete (index volume is always 0, so volume cannot
+        tell the two apart)."""
+        new_data = data[DATA_COLUMNS].dropna(how="any")
+        if new_data.empty:
             log.warning("Data is empty. Nothing to write.")
             return
 
         old_data = self.read()
-
-        if old_data.empty:
-            combined_data = data
-        else:
-            combined_data = pd.concat([old_data, data]).reset_index()
-            combined_data = (
-                combined_data.loc[combined_data.groupby("Datetime")["Volume"].idxmax()]
-                .set_index("Datetime")
-                .sort_index()
-            )
-
-        combined_data = combined_data[["Open", "High", "Low", "Close", "Volume"]].dropna(how="any")
+        combined_data = new_data if old_data.empty else pd.concat([old_data[DATA_COLUMNS], new_data])
+        combined_data = combined_data[~combined_data.index.duplicated(keep="last")].sort_index()
+        combined_data.index.name = "Datetime"
 
         with open(self.path, "wb") as f:
             pickle.dump(combined_data, f)

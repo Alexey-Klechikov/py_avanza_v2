@@ -1,17 +1,18 @@
 import warnings
 from dataclasses import dataclass, field
+from datetime import datetime
 from time import sleep
 
 import pandas as pd
 from avanza.constants import OrderType
 
 from apis.avanza.operators.instrument import Instrument
-from apis.avanza.operators.models.position import Position
 from apis.avanza.operators.orders import Orders
 from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.watchlists import Watchlists
-from apis.avanza.trade.models.direction import Direction
 from config import SETTINGS
+from services.trading.tracked_position import TrackedPosition
+from tasks.models import Direction
 from utils.logger.operators import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -63,12 +64,29 @@ class Trade:
         self.portfolio = portfolio
         self.watchlists = watchlists
 
-        self.max_profit = 0
-
-        self.stop_loss_confirmation_count = 0
-        self.pullback_confirmation_count = 0
+        # Exit levels per held direction, on the underlying, exactly as the backtest tracks them
+        self.tracked_positions: dict[Direction, TrackedPosition] = {}
+        self.last_exit_check_bar: datetime | None = None
 
         self.price_state: PriceState = PriceState()
+
+    def _track_new_position(self, direction: Direction, underlying_price: float, instrument_leverage: float) -> None:
+        self.tracked_positions[direction] = TrackedPosition.open(
+            is_long=direction == Direction.BULL,
+            entry_price=underlying_price,
+            instrument_leverage=instrument_leverage,
+        )
+
+    def _tracked_position(self, direction: Direction, underlying_price: float) -> TrackedPosition:
+        """A held position without a record (restart, manual buy) is tracked from the current underlying price."""
+        if direction not in self.tracked_positions:
+            self._track_new_position(direction, underlying_price, instrument_leverage=SETTINGS.MULTIPLIER)
+
+        return self.tracked_positions[direction]
+
+    def _forget_position(self, direction: Direction) -> None:
+        self.tracked_positions.pop(direction, None)
+        self.price_state.reset(direction)
 
     def sell(self, direction: Direction | None) -> None:
         caller = "sell"
@@ -80,7 +98,7 @@ class Trade:
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
-                self.price_state.reset(direction)
+                self._forget_position(direction)
                 break
 
             self.price_state.update(
@@ -100,7 +118,7 @@ class Trade:
                 caller=caller,
             )
 
-    def buy(self, direction: Direction | None) -> None:
+    def buy(self, direction: Direction | None, underlying_price: float) -> None:
         caller = "buy"
         budget = None
 
@@ -116,10 +134,11 @@ class Trade:
                     buy=acquired_instrument.acquired_price,
                     volume=acquired_instrument.volume,
                 )
+                self._tracked_position(direction, underlying_price)
                 break
 
             else:
-                self.price_state.reset(direction)
+                self._forget_position(direction)
 
             self.watchlists.refresh_all()
             preferred_instrument = self.watchlists.preferred_instrument.get(direction.value)
@@ -140,7 +159,7 @@ class Trade:
                     log.warning(f"Buying power is not enough for budget {budget}")
                     return
 
-            self.max_profit = 0
+            self._track_new_position(direction, underlying_price, instrument_leverage=preferred_instrument.leverage)
 
             self.orders.delete_all(caller)
             self.orders.place(
@@ -152,7 +171,7 @@ class Trade:
                 caller=caller,
             )
 
-    def take_profit(self, direction: Direction | None) -> None:
+    def take_profit(self, direction: Direction | None, underlying_price: float) -> None:
         caller = "take_profit"
 
         if SETTINGS.DRY_RUN or not direction:
@@ -162,10 +181,12 @@ class Trade:
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
+                # The buy may not have filled yet: keep the position record buy() just created
                 self.price_state.reset(direction)
                 break
 
-            price = round(acquired_instrument.acquired_price * (1 + SETTINGS.TAKE_PROFIT.VALUE), 2)
+            tracked_position = self._tracked_position(direction, underlying_price)
+            price = round(tracked_position.instrument_take_profit_price(acquired_instrument.acquired_price), 2)
 
             self.price_state.update(
                 direction,
@@ -188,64 +209,41 @@ class Trade:
                 caller=caller,
             )
 
-    def _hit_stop_loss(self, price: float, acquired_instrument: Position) -> bool:
-        if price > (acquired_instrument.acquired_price) * (1 - SETTINGS.STOP_LOSS.VALUE):
-            self.stop_loss_confirmation_count = 0
-            return False
-
-        self.stop_loss_confirmation_count += 1
-        if self.stop_loss_confirmation_count <= SETTINGS.STOP_LOSS.CONFIRMATION_COUNT:
-            log.debug(
-                "Stop loss confirmation count: {} / {}. Latest instrument price: {}".format(
-                    self.stop_loss_confirmation_count,
-                    SETTINGS.STOP_LOSS.CONFIRMATION_COUNT,
-                    price,
-                ),
-            )
-            return False
-
-        log.info(f"Stop loss confirmed. Latest instrument price: {price}")
-
-        return True
-
-    def _hit_pullback(self, price: float, acquired_instrument: Position) -> bool:
-        profit = (price - acquired_instrument.acquired_price) / acquired_instrument.acquired_price
-        self.max_profit = max(self.max_profit, profit)
-
-        if self.max_profit > SETTINGS.PULLBACK.TRIGGER_PROFIT and (
-            (profit < 0) or ((self.max_profit - profit) / self.max_profit > SETTINGS.PULLBACK.VALUE)
-        ):
-            pass
-        else:
-            self.pullback_confirmation_count = 0
-            return False
-
-        self.pullback_confirmation_count += 1
-        if self.pullback_confirmation_count <= SETTINGS.PULLBACK.CONFIRMATION_COUNT:
-            log.debug(
-                "Pullback confirmation count: {} / {}. Latest instrument price: {}".format(
-                    self.pullback_confirmation_count,
-                    SETTINGS.PULLBACK.CONFIRMATION_COUNT,
-                    price,
-                ),
-            )
-            return False
-
-        log.info(f"Pullback confirmed. Latest instrument price: {price}")
-
-        return True
-
-    def stop_loss(self, direction: Direction | None) -> None:
+    def stop_loss(self, direction: Direction | None, underlying_price: float, bar_time: datetime) -> None:
         caller = "stop_loss"
 
-        if SETTINGS.DRY_RUN or not direction:
+        # Confirmations count completed bars, as in the backtest, not loop iterations
+        if SETTINGS.DRY_RUN or not direction or bar_time == self.last_exit_check_bar:
             return
+
+        self.portfolio.reload_positions(caller)
+        if not self.portfolio.acquired_instrument.get(direction.value):
+            self._forget_position(direction)
+            return
+
+        # Mark the bar checked only once positions loaded: a connection error must not skip a bar's confirmation
+        self.last_exit_check_bar = bar_time
+        tracked_position = self._tracked_position(direction, underlying_price)
+        hit_stop_loss = tracked_position.confirm_stop_loss(underlying_price)
+        hit_pullback = not hit_stop_loss and tracked_position.confirm_pullback(underlying_price)
+        if not (hit_stop_loss or hit_pullback):
+            log.debug(
+                "Underlying {} | stop loss {} ({} confirmations) | pullback confirmations {}".format(
+                    underlying_price,
+                    round(tracked_position.stop_loss_price, 2),
+                    tracked_position.stop_loss_confirmations,
+                    tracked_position.pullback_confirmations,
+                ),
+            )
+            return
+
+        log.info(f"{'Stop loss' if hit_stop_loss else 'Pullback'} confirmed. Underlying price: {underlying_price}")
 
         for _ in range(5):
             self.portfolio.reload_positions(caller)
             acquired_instrument = self.portfolio.acquired_instrument.get(direction.value)
             if not acquired_instrument:
-                self.price_state.reset(direction)
+                self._forget_position(direction)
                 break
 
             price = Instrument(
@@ -255,14 +253,6 @@ class Trade:
             if not price:
                 sleep(3)
                 continue
-
-            if not any(
-                [
-                    self._hit_stop_loss(price, acquired_instrument),
-                    self._hit_pullback(price, acquired_instrument),
-                ],
-            ):
-                return
 
             self.price_state.update(
                 direction,

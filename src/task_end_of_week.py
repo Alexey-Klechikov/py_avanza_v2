@@ -1,14 +1,13 @@
 import warnings
-from datetime import timedelta
-
-import pandas as pd
 
 from apis.avanza.operators.portfolio import Portfolio
 from apis.telegram.operators import Telegram
 from config import SETTINGS
+from services.storage.candle_quality import require_clean_bars
 from services.storage.operators import Storage
+from services.storage.windows import CalibrationWindows
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.backtest import backtest_trade_strategies
+from tasks.backtest.runner import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 
@@ -19,45 +18,40 @@ set_handlers("end_of_week")
 log = get_logger()
 
 
-def _get_data(period_days: int):
-    log.info(f"Get data: {(TODAY_MIDNIGHT - timedelta(days=period_days)).date()} - {TODAY_MIDNIGHT.date()}")
+def generate_strategies() -> bool:
+    """Train on TRAIN_DAYS that end HOLDOUT_DAYS ago, then final-test on the unseen last HOLDOUT_DAYS."""
+    windows = CalibrationWindows.ending(TODAY_MIDNIGHT)
+    cached_bars = Storage().read()
+    training_bars = require_clean_bars(windows.training.slice(cached_bars))
+    holdout_bars = require_clean_bars(windows.holdout.slice(cached_bars))
+    log.info(f"Training on {windows.training}, final test on {windows.holdout} (partial-candle days dropped)")
 
-    requested_start = TODAY_MIDNIGHT - timedelta(days=period_days)
-    data = Storage().read()
-    data = data.loc[(data.index >= requested_start) & (data.index < TODAY_MIDNIGHT)]
-    data.index = pd.to_datetime(data.index)
-
-    return data
-
-
-def generate_strategies(period_days_long_test: int, period_days_final_test: int) -> bool:
-    log.warning(f"Long-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_long_test} days)")
+    log.warning(
+        f"Long-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.TRAIN_DAYS} days)",
+    )
     backtest_trade_strategies(
-        _get_data(period_days=period_days_long_test),
+        training_bars.copy(),
         ComposeStrategiesListMethod.GENERATE,
         strategies_file_name_suffix_new=f"dev_{SETTINGS.STRATEGY.INDICATORS_START}",
     )
 
-    for i in range(SETTINGS.STRATEGY.INDICATORS_START, SETTINGS.STRATEGY.INDICATORS):
+    for indicators_count in range(SETTINGS.STRATEGY.INDICATORS_START, SETTINGS.STRATEGY.INDICATORS):
         log.warning(
-            "Long-test strategies ({} -> {}) for {} ({}, {} days)".format(
-                i,
-                i + 1,
-                SETTINGS.NAME,
-                SETTINGS.RESOLUTION,
-                period_days_long_test,
-            ),
+            f"Long-test strategies ({indicators_count} -> {indicators_count + 1}) for {SETTINGS.NAME} "
+            f"({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.TRAIN_DAYS} days)",
         )
         backtest_trade_strategies(
-            _get_data(period_days=period_days_long_test),
+            training_bars.copy(),
             ComposeStrategiesListMethod.EXTEND,
-            strategies_file_name_suffix_old=f"dev_{i}",
-            strategies_file_name_suffix_new=f"dev_{i + 1}",
+            strategies_file_name_suffix_old=f"dev_{indicators_count}",
+            strategies_file_name_suffix_new=f"dev_{indicators_count + 1}",
         )
 
-    log.warning(f"Final-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {period_days_final_test} days)")
+    log.warning(
+        f"Final-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.HOLDOUT_DAYS} days)",
+    )
     final_strategies = backtest_trade_strategies(
-        _get_data(period_days=period_days_final_test),
+        holdout_bars,
         ComposeStrategiesListMethod.READ,
         strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
     )
@@ -66,9 +60,9 @@ def generate_strategies(period_days_long_test: int, period_days_final_test: int)
 
 if __name__ == "__main__":
     try:
-        if not generate_strategies(period_days_long_test=120, period_days_final_test=45):
+        if not generate_strategies():
             telegram = Telegram()
-            telegram.messages = ["task_eow.py: no profitable strategies in the final test; trading disabled"]
+            telegram.messages = ["task_eow.py: no strategy clears STRATEGY.MIN_EDGE in the final test; trading paused"]
             telegram.send_message()
 
         portfolio = Portfolio()
