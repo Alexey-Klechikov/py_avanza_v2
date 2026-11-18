@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from src.config import SETTINGS
-from src.services.trading.tracked_position import ExitLevels, TrackedPosition
+from config import SETTINGS
+from services.trading.tracked_position import ExitLevels, TrackedPosition
 
 ENTRY_PRICE = 1000.0
 # Price-based exits on, as a source like the fixed rule sets them

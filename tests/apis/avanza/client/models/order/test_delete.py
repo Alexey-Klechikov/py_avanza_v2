@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.order.delete import DeleteOrderResponse
+from apis.avanza.client.models.order.delete import DeleteOrderResponse
 
 
 class Test_DeleteOrderResponse(TestCase):

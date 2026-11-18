@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from src.services.storage.windows import DataWindow
+from services.storage.windows import DataWindow
 
 END = datetime(2026, 11, 21)
 

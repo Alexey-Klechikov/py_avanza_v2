@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.order.list import Orders
+from apis.avanza.client.models.order.list import Orders
 
 
 class Test_Orders(TestCase):

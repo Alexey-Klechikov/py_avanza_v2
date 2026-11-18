@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.instrument.fund import InstrumentFund
+from apis.avanza.client.models.instrument.fund import InstrumentFund
 
 
 class TestInstrumentFund(TestCase):

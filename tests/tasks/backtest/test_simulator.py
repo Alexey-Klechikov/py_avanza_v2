@@ -4,10 +4,10 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from src.config import SETTINGS
-from src.services.trading.tracked_position import ExitLevels, TrackedPosition
-from src.tasks.backtest.bars import add_execution_columns, bar_index
-from src.tasks.backtest.simulator import BarSimulator
+from config import SETTINGS
+from services.trading.tracked_position import ExitLevels, TrackedPosition
+from tasks.backtest.bars import add_execution_columns, bar_index
+from tasks.backtest.simulator import BarSimulator
 
 ENTRY_PRICE = 1000.0
 TAKE_PROFIT, STOP_LOSS, PULLBACK_TRIGGER = 0.045, 0.03, 0.0225

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.search.filtered_search_result import SearchResult
+from apis.avanza.client.models.search.filtered_search_result import SearchResult
 
 
 class Test_SearchResult(TestCase):

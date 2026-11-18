@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.account.watchlists import Watchlist
+from apis.avanza.client.models.account.watchlists import Watchlist
 
 
 class Test_Watchlists(TestCase):

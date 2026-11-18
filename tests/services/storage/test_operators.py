@@ -4,7 +4,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from src.services.storage.operators import Storage
+from services.storage.operators import Storage
 
 
 def _candles(rows: dict[str, tuple[float, float, float, float]]) -> pd.DataFrame:

@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from src.tasks.trade.main import MarketData
+from tasks.trade.main import MarketData
 
 
 def _market_data(last_bar_start: str, bars: int = 5) -> MarketData:
@@ -34,9 +34,9 @@ class Test_PickSignal(TestCase):
         from dataclasses import replace
         from unittest.mock import MagicMock, patch
 
-        from src.config import SETTINGS
-        from src.services.ta.strategies.models.signal import Signal
-        from src.tasks.trade import main
+        from config import SETTINGS
+        from services.ta.strategies.models.signal import Signal
+        from tasks.trade import main
 
         source_signals = {"fixed_rule": Signal.SHORT, "weighted": Signal.EXIT}
 
@@ -76,9 +76,9 @@ class Test_TimeBoxedFlow(TestCase):
         from dataclasses import replace
         from unittest.mock import MagicMock, patch
 
-        from src.config import SETTINGS
-        from src.services.ta.strategies.models.signal import Signal
-        from src.tasks.trade import main
+        from config import SETTINGS
+        from services.ta.strategies.models.signal import Signal
+        from tasks.trade import main
 
         market_data = MagicMock(is_new=True, too_old=False)
         market_data.source_signal.return_value = Signal.SHORT

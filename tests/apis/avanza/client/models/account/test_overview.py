@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.account.overview import AccountOverview
+from apis.avanza.client.models.account.overview import AccountOverview
 
 
 class Test_AccountOverview(TestCase):

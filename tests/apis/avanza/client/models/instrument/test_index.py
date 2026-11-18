@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.instrument.index import InstrumentIndex
+from apis.avanza.client.models.instrument.index import InstrumentIndex
 
 
 class Test_InstrumentIndex(TestCase):

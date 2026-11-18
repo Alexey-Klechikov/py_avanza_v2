@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.apis.avanza.client.models.chart_data import ChartData
+from apis.avanza.client.models.chart_data import ChartData
 
 
 class Test_ChartData(TestCase):
