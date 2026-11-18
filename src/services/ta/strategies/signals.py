@@ -48,10 +48,3 @@ def mask_outside_trading_time(data: pd.DataFrame) -> None:
         [SETTINGS.TIME.END.strftime("%H:%M"), "23:59"],
     ):
         data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, SIGNAL_COLUMNS] = np.nan
-
-
-def strategy_signal_flags(data: pd.DataFrame, strategy: Strategy) -> np.ndarray:
-    """Boolean (bars x SIGNAL_COLUMNS) matrix of where the strategy signals."""
-    mark_strategy_signals(data, strategy)
-
-    return data[SIGNAL_COLUMNS].notna().to_numpy()

@@ -12,7 +12,7 @@ from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.watchlists import Watchlists
 from config import DRY_RUN, SETTINGS
 from services.trading.tracked_position import ExitLevels, TrackedPosition
-from tasks.models import Direction
+from tasks.trade.models import Direction
 from utils.logger.operators import get_logger
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -188,7 +188,11 @@ class Trade:
                 break
 
             tracked_position = self._tracked_position(direction, underlying_price)
-            price = round(tracked_position.instrument_take_profit_price(acquired_instrument.acquired_price), 2)
+            limit_price = tracked_position.instrument_take_profit_price(acquired_instrument.acquired_price)
+            if limit_price is None:
+                break  # no take-profit level: no resting order
+
+            price = round(limit_price, 2)
 
             self.price_state.update(
                 direction,
@@ -226,20 +230,29 @@ class Trade:
         # Mark the bar checked only once positions loaded: a connection error must not skip a bar's confirmation
         self.last_exit_check_bar = bar_time
         tracked_position = self._tracked_position(direction, underlying_price)
-        hit_stop_loss = tracked_position.confirm_stop_loss(underlying_price)
-        hit_pullback = not hit_stop_loss and tracked_position.confirm_pullback(underlying_price)
-        if not (hit_stop_loss or hit_pullback):
+        # Same order as the backtest: stop loss, then pullback, then the holding time
+        exit_reason = None
+        if tracked_position.confirm_stop_loss(underlying_price):
+            exit_reason = "Stop loss"
+        elif tracked_position.confirm_pullback(underlying_price):
+            exit_reason = "Pullback"
+        elif tracked_position.confirm_hold_expiry():
+            exit_reason = "Holding time"
+
+        if exit_reason is None:
             log.debug(
-                "Underlying {} | stop loss {} ({} confirmations) | pullback confirmations {}".format(
+                "Underlying {} | stop loss {} ({} confirmations) | pullback confirmations {} | bars held {}/{}".format(
                     underlying_price,
-                    round(tracked_position.stop_loss_price, 2),
+                    tracked_position.stop_loss_price and round(tracked_position.stop_loss_price, 2),
                     tracked_position.stop_loss_confirmations,
                     tracked_position.pullback_confirmations,
+                    tracked_position.bars_held,
+                    tracked_position.hold_bars,
                 ),
             )
             return
 
-        log.info(f"{'Stop loss' if hit_stop_loss else 'Pullback'} confirmed. Underlying price: {underlying_price}")
+        log.info(f"{exit_reason} confirmed. Underlying price: {underlying_price}")
 
         for _ in range(5):
             self.portfolio.reload_positions(caller)

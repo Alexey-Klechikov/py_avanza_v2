@@ -5,9 +5,10 @@ paths:
   - "src/services/trading/**"
 ---
 
-# Strategy And Trading Loop
+# Signal Sources And Trading Loop
 
-- `get_stored_strategies()` reads the strategy JSON schema: `rank`, `name`, `total_trades`, `total_profit`, `profitable_trades_share`. Keep `dump_strategies_in_file()` (called by `tasks/backtest/runner.py`) writing exactly that. The live loop orders and gives priority to strategies by stored `rank` (1 is best), the order the final test writes them in (`select_daily_strategies()` expected edge for `OMX_trade_strategies.json`; `select_training_strategies()` for the `dev_*` snapshots).
-- When signal semantics or exit rules change, validate both `tasks/backtest/` and `tasks/main.py` with `tasks/trade.py`: they share indicator contracts, strategy signals (`services/ta/strategies/signals.py`, `Signal.from_bar`), and `services/trading/` (the rank lock in `StrategyTrigger`, exit levels in `TrackedPosition`), but have different control flow.
-- Bound strategy-combination growth in the backtest engine.
-- Changing strategy-file naming, path logic, or ranking rules requires updating docs and deployment expectations in the same change.
+- Signal sources (`SignalSource` in `tasks/trade/models.py`): the fixed rule (`tasks/fixed_rule.py`) and the weighted score (`tasks/backtest/votes.py`, `model.py`). `SETTINGS.LIVE_SIGNAL_SOURCE` picks the live one; `None` (default) places no orders. Keep a paper source's failure from reaching the live one.
+- `WeightedModel` (`config/OMX_weighted_model.json`) is read by the live loop and the paper replay and written by `train_weighted_model()`; keep its schema and file name in step with both readers.
+- Signals act on closed bars only: a coarse bar votes or signals from the 2m bar that completes it (`tasks/coarse_bars.py`), daily votes use the previous session. Never let a backtest see a bar the live loop would not have.
+- When signal semantics or exit rules change, validate the backtest (`tasks/backtest/simulator.py`, `paper_trade.py`) and the live loop (`tasks/trade/main.py`, `states.py`) together: they share signals (`services/ta/strategies/signals.py`, `Signal.from_bar`) and exit rules (`TrackedPosition`, `ExitLevels`: take-profit, stop loss, pullback, holding time) but have different control flow.
+- Changing the model file name, path logic, or a source's frozen parameters (`FIXED_RULE`) requires updating docs in the same change; a changed fixed rule restarts its paper test.

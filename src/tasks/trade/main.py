@@ -18,15 +18,13 @@ from apis.yahoo.operators.ticker import Ticker
 from config import DRY_RUN, SETTINGS
 from services.calendar.operators import get_market_close_time, market_is_close
 from services.storage.operators import Storage
-from services.ta.operators import get_indicators, read_top_strategies
 from services.ta.strategies.models.signal import Signal
-from services.ta.strategies.models.strategy import Strategy
-from services.ta.strategies.signals import strategy_signal_flags
-from services.trading.strategy_trigger import StrategyTrigger
 from services.trading.tracked_position import ExitLevels
+from tasks.backtest.bars import bar_index
+from tasks.backtest.model import WEIGHTED_LEVELS, WeightedModel, load_model, weighted_signal
 from tasks.fixed_rule import FIXED_RULE_LEVELS, fixed_rule_signal
-from tasks.models import Direction, FlowAction
-from tasks.trade import Trade
+from tasks.trade.models import Direction, FlowAction, SignalSource
+from tasks.trade.states import Trade
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger
 
@@ -38,6 +36,19 @@ log = get_logger()
 
 BAR_DURATION = pd.Timedelta(SETTINGS.RESOLUTION)
 
+HISTORY_DAYS = max(SETTINGS.FIXED_RULE.WARMUP_DAYS, SETTINGS.WEIGHTED_SCORE.WARMUP_DAYS)
+# Exit levels per live source; with no live source (None) nothing is bought, and held positions only exit at the end
+SOURCE_LEVELS: dict[SignalSource | None, ExitLevels] = {
+    None: ExitLevels(),
+    SignalSource.FIXED_RULE: FIXED_RULE_LEVELS,
+    SignalSource.WEIGHTED: WEIGHTED_LEVELS,
+}
+
+
+def _live_source() -> SignalSource | None:
+    return None if SETTINGS.LIVE_SIGNAL_SOURCE is None else SignalSource(SETTINGS.LIVE_SIGNAL_SOURCE)
+
+
 # What each signal does to the held directions: (directions to sell, direction to buy)
 SIGNAL_ORDERS: dict[Signal, tuple[list[Direction], Direction | None]] = {
     Signal.LONG: ([Direction.BEAR], Direction.BULL),
@@ -47,17 +58,19 @@ SIGNAL_ORDERS: dict[Signal, tuple[list[Direction], Direction | None]] = {
 
 
 class MarketData:
-    """Recent 2-minute bars of the underlying, refreshed every bar, and the stored strategies evaluated on them.
+    """Recent 2-minute bars of the underlying, refreshed every bar, and the signal sources evaluated on them.
 
-    `bars` covers the last few days (the ranked strategies); `history` reaches FIXED_RULE.WARMUP_DAYS back.
+    `bars` covers the last few days (prices for orders and exits); `history` reaches HISTORY_DAYS back (fixed rule
+    and weighted score), which also use the 1d cache (`daily`, refreshed only at end of day) and the weighted model.
     """
 
     def __init__(self) -> None:
         self.bars: pd.DataFrame = pd.DataFrame()
         self.history: pd.DataFrame = pd.DataFrame()
+        self.daily: pd.DataFrame = pd.DataFrame()
+        self.weighted_model: WeightedModel | None = None
         self.is_new = False
         self.too_old = False
-        self.strategies: list[Strategy] = []
 
     def refresh(self) -> None:
         storage = Storage()
@@ -92,51 +105,23 @@ class MarketData:
             self.too_old = ((datetime.now() - bars.index[-1]).seconds // 60) > 15
             self.is_new = bars_count_before != bars.shape[0]
 
-        self.history = bars.loc[bars.index >= TODAY_MIDNIGHT - timedelta(days=SETTINGS.FIXED_RULE.WARMUP_DAYS)]
+        self.history = bars.loc[bars.index >= TODAY_MIDNIGHT - timedelta(days=HISTORY_DAYS)]
         self.bars = self.history.loc[self.history.index >= TODAY_MIDNIGHT - timedelta(days=4)]
 
-    def load_strategies(self) -> None:
-        indicators_mapping = get_indicators(self.bars)
-        strategies = read_top_strategies(
-            indicators_mapping,
-            SETTINGS.NAME,
-            filter_by_min_efficiency=SETTINGS.STRATEGY.MIN_EFFICIENCY,
-            limit_count=SETTINGS.STRATEGY.COUNT_MAX,
-        )
-        if strategies and (not self.strategies or self.strategies[0].name != strategies[0].name):
-            for strategy in strategies:
-                log.info(f"Strategy rank {strategy.rank} [{strategy.efficiency}]: {strategy.name}")
+    def source_signal(self, source: SignalSource) -> Signal | None:
+        """The fixed rule's or the weighted score's signal on the last complete bar."""
+        closed_history = self.history.loc[bar_index(self.history) + BAR_DURATION <= pd.Timestamp.now()]
+        if source == SignalSource.FIXED_RULE:
+            return fixed_rule_signal(closed_history)
 
-        self.strategies = strategies
+        if self.daily.empty:
+            self.daily = Storage(resolution="1d").read()
+        if self.weighted_model is None:
+            self.weighted_model = load_model()
+        if self.weighted_model is None:
+            raise ValueError("No weighted model file: run task_end_of_week.py or development.py to train it")
 
-    def pick_signal(self, trigger: StrategyTrigger) -> Signal | None:
-        """The signal of the first strategy (rank order) that signals on the last complete bar, if not ignored."""
-        bar_position = self.last_complete_bar_position()
-        candidates = ((strategy, self._bar_signal(strategy, bar_position)) for strategy in self.strategies)
-        signal_pick = trigger.pick(candidates, now=datetime.now())
-        if signal_pick is None:
-            return None
-
-        signal_summary = (
-            f"Signal: {signal_pick.signal}. Strategy rank {signal_pick.strategy.rank} "
-            f"[{signal_pick.strategy.efficiency}]. Latest price: {round(self.latest_price, 2)}"
-        )
-        if signal_pick.is_ignored:
-            log.debug(f"[IGNORED] {signal_summary}")
-        else:
-            log.info(signal_summary)
-
-        return signal_pick.signal
-
-    def fixed_rule_signal(self) -> Signal | None:
-        """The fixed rule's signal on the last complete bar."""
-        is_closed = self.history.index + BAR_DURATION <= datetime.now()
-        signal = fixed_rule_signal(self.history.loc[is_closed])
-        if signal:
-            mode = "" if SETTINGS.FIXED_RULE.LIVE_ORDERS else "[PAPER] "
-            log.info(f"{mode}Fixed rule signal: {signal}. Latest price: {round(self.latest_price, 2)}")
-
-        return signal
+        return weighted_signal(self.weighted_model, closed_history, self.daily)
 
     def last_complete_bar_position(self, now: datetime | None = None) -> int:
         """Position of the newest bar that has fully closed by `now`.
@@ -144,13 +129,8 @@ class MarketData:
         Bars are labelled by their start time. Avanza may or may not include the bar still in progress, so the
         complete bar is chosen by time, never by position: decisions only ever use fully closed candles.
         """
-        is_closed = self.bars.index + BAR_DURATION <= (now or datetime.now())
+        is_closed = bar_index(self.bars) + BAR_DURATION <= pd.Timestamp(now or datetime.now())
         return int(np.flatnonzero(is_closed)[-1])
-
-    def _bar_signal(self, strategy: Strategy, bar_position: int) -> Signal | None:
-        signal_flags = strategy_signal_flags(self.bars, strategy)
-
-        return Signal.from_bar(*signal_flags[bar_position])
 
     @property
     def latest_price(self) -> float:
@@ -175,7 +155,6 @@ class TradingFlow:
         self.direction_in_stock: Direction | None = None
 
         self.market_data = market_data
-        self.trigger = StrategyTrigger.from_settings()
 
         self.repeated_exception_count: int = 0
 
@@ -184,7 +163,6 @@ class TradingFlow:
         self.direction_buy = None
 
         portfolio.reload_positions(caller="get_action")
-        self.trigger.release_if_stale(now=datetime.now(), holds_position=bool(portfolio.positions))
 
         # Start of the day
         if datetime.now().time() <= SETTINGS.TIME.START:
@@ -221,6 +199,11 @@ class TradingFlow:
         if not signal:
             return FlowAction.DO_NOTHING
 
+        # A time-boxed position runs until its holding time is up (Trade.stop_loss sells it then)
+        if SOURCE_LEVELS[_live_source()].hold_bars and portfolio.positions:
+            log.info(f"Signal {signal} ignored: the held position exits on its holding time")
+            return FlowAction.DO_NOTHING
+
         portfolio.reload_balance()
         if portfolio.buying_power < 1100 and not portfolio.positions:
             log.info("Not enough funds on the account. No action is taken.")
@@ -230,17 +213,29 @@ class TradingFlow:
         return FlowAction.TRADE
 
     def _pick_signal(self) -> Signal | None:
-        """The fixed rule's signal when it trades live; otherwise the ranked strategies' (the rule is only logged)."""
-        if SETTINGS.FIXED_RULE.LIVE_ORDERS:
-            return self.market_data.fixed_rule_signal()
+        """The live source's signal (SETTINGS.LIVE_SIGNAL_SOURCE; None trades nothing). The other sources are only
+        logged as [PAPER], and a failure there never reaches the live source."""
+        live_source = _live_source()
+        for source in SignalSource:
+            if source == live_source:
+                continue
+            try:
+                self._log_source_signal(source, self.market_data.source_signal(source), prefix="[PAPER] ")
+            except Exception as e:
+                log.warning(f"[PAPER] {source.value} signal failed, live source unaffected: {e}")
 
-        try:
-            self.market_data.fixed_rule_signal()
-        except Exception as e:
-            log.warning(f"[PAPER] Fixed rule signal failed, ranked strategies unaffected: {e}")
+        if live_source is None:
+            return None
 
-        self.market_data.load_strategies()
-        return self.market_data.pick_signal(self.trigger)
+        signal = self.market_data.source_signal(live_source)
+        self._log_source_signal(live_source, signal, prefix="")
+        return signal
+
+    def _log_source_signal(self, source: SignalSource, signal: Signal | None, prefix: str) -> None:
+        if signal:
+            log.info(
+                f"{prefix}{source.value} signal: {signal}. Latest price: {round(self.market_data.latest_price, 2)}",
+            )
 
     def wait_for_data(self):
         sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
@@ -263,15 +258,17 @@ class TradingFlow:
 
 # MAIN
 def trade() -> None:
-    fixed_rule_live = SETTINGS.FIXED_RULE.LIVE_ORDERS
+    live_source = _live_source()
     log.info(
-        "Start trading {} on {} | {}{}".format(
-            "the fixed rule" if fixed_rule_live else "ranked strategies (fixed rule on paper)",
+        "Start trading {} signals on {} | {}{}".format(
+            live_source.value if live_source else "no (all sources on paper)",
             SETTINGS.NAME,
             SETTINGS.RESOLUTION,
             " | DRY_RUN" if DRY_RUN else "",
         ),
     )
+    if live_source == SignalSource.WEIGHTED and load_model() is None:
+        raise ValueError("LIVE_SIGNAL_SOURCE is weighted but there is no weighted model file to trade")
 
     market_data = MarketData()
 
@@ -287,8 +284,7 @@ def trade() -> None:
 
     transactions = Transactions()
 
-    levels = FIXED_RULE_LEVELS if fixed_rule_live else ExitLevels()
-    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists, levels=levels)
+    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists, levels=SOURCE_LEVELS[live_source])
 
     flow = TradingFlow(market_data)
 

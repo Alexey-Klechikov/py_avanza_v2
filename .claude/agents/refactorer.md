@@ -9,7 +9,7 @@ color: green
 Make a bounded slice of this repo (see `CLAUDE.md`) measurably simpler, flatter, or cheaper while preserving behavior and contracts. Your standards are `.claude/rules/pyavanza-python.md` (style, nesting, complexity) plus the rules matching each touched path; Read them if not loaded.
 
 ## Ground rules
-1. **Preserve behavior:** strategy JSON schema, watchlist naming, dual path layout, `.env` variable names, Avanza/Yahoo payload shapes, `DRY_RUN` semantics, log intent, exception types. Change behavior only when asked, and say so.
+1. **Preserve behavior:** weighted model JSON schema, watchlist naming, dual path layout, `.env` variable names, Avanza/Yahoo payload shapes, `DRY_RUN` semantics, log intent, exception types. Change behavior only when asked, and say so.
 2. **Falsifiable reason first:** name the concrete problem (e.g. "O(n·m) rescan of indicator combinations per candle", "four nesting levels in `_evaluate_signal`", "`_wrap_client` only forwards"). If you can't, report that no refactor is justified and stop.
 3. **One finding at a time:** edit, validate, then the next. Never start a second track while one fails; a failure means behavior, types, or assumptions changed, so repair that slice first.
 4. **Respect layers:** never "simplify" by moving logic across the layer boundaries in `CLAUDE.md`. Move logic only when another layer clearly owns it; otherwise keep it local.

@@ -5,11 +5,25 @@ import numpy as np
 import pandas as pd
 
 from src.config import SETTINGS
-from src.services.trading.tracked_position import TrackedPosition
-from src.tasks.backtest.bars import add_execution_columns
+from src.services.trading.tracked_position import ExitLevels, TrackedPosition
+from src.tasks.backtest.bars import add_execution_columns, bar_index
 from src.tasks.backtest.simulator import BarSimulator
 
 ENTRY_PRICE = 1000.0
+TAKE_PROFIT, STOP_LOSS, PULLBACK_TRIGGER = 0.045, 0.03, 0.0225
+LEVELS = ExitLevels(take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, pullback_trigger=PULLBACK_TRIGGER)
+
+
+def _take_profit(position: TrackedPosition) -> float:
+    assert position.take_profit_price is not None
+    return position.take_profit_price
+
+
+def _stop_loss(position: TrackedPosition) -> float:
+    assert position.stop_loss_price is not None
+    return position.stop_loss_price
+
+
 MIDDAY = datetime(2026, 11, 16, 12, 0)
 
 
@@ -39,8 +53,8 @@ def _bar(
 
 
 def _simulator_holding(is_long: bool) -> tuple[BarSimulator, TrackedPosition]:
-    simulator = BarSimulator()
-    position = TrackedPosition.open(is_long=is_long, entry_price=ENTRY_PRICE)
+    simulator = BarSimulator(LEVELS)
+    position = TrackedPosition.open(is_long=is_long, entry_price=ENTRY_PRICE, levels=LEVELS)
     simulator.wallet.set("LONG" if is_long else "SHORT", position)
 
     return simulator, position
@@ -48,14 +62,14 @@ def _simulator_holding(is_long: bool) -> tuple[BarSimulator, TrackedPosition]:
 
 class Test_BarSimulator(TestCase):
     def test_entry_fills_at_next_open(self):
-        simulator = BarSimulator()
+        simulator = BarSimulator(LEVELS)
 
         assert simulator.step(_bar(long=True, next_open=1001), MIDDAY) == []
         assert simulator.wallet.long is not None and simulator.wallet.long.entry_price == 1001
 
     def test_no_entry_on_exit_conflict_or_day_end(self):
         for bar in (_bar(long=True, exit=True), _bar(long=True, day_end=True), _bar(long=True, short=True)):
-            simulator = BarSimulator()
+            simulator = BarSimulator(LEVELS)
             simulator.step(bar, MIDDAY)
 
             assert simulator.wallet.is_empty()
@@ -71,10 +85,10 @@ class Test_BarSimulator(TestCase):
     def test_take_profit_fills_inside_bar(self):
         simulator, position = _simulator_holding(is_long=True)
 
-        closed_trades = simulator.step(_bar(high=position.take_profit_price + 1), MIDDAY)
+        closed_trades = simulator.step(_bar(high=_take_profit(position) + 1), MIDDAY)
 
-        assert [trade.profit for trade in closed_trades] == [position.profit(position.take_profit_price)]
-        assert closed_trades[0].capital_return == position.capital_return(position.take_profit_price)
+        assert [trade.profit for trade in closed_trades] == [position.profit(_take_profit(position))]
+        assert closed_trades[0].capital_return == position.capital_return(_take_profit(position))
 
     def test_reverse_closes_opposite_at_next_open(self):
         simulator, short_position = _simulator_holding(is_long=False)
@@ -112,16 +126,30 @@ class Test_SameDayResolution(TestCase):
             index=index,
         )
         add_execution_columns(bars)
-        trading_hours = (bars.index.time >= SETTINGS.TIME.START) & (bars.index.time < SETTINGS.TIME.END)
+        times = bar_index(bars).time
+        trading_hours = (times >= SETTINGS.TIME.START) & (times < SETTINGS.TIME.END)
         bars["LONG"] = np.where(trading_hours, ENTRY_PRICE, np.nan)
         bars["SHORT"] = np.nan
         bars["EXIT"] = np.nan
 
-        simulator = BarSimulator()
+        simulator = BarSimulator(LEVELS)
         closed_trades = 0
-        for timestamp, bar in bars.iterrows():
+        for timestamp, bar in zip(bar_index(bars), (row for _, row in bars.iterrows())):
             closed_trades += len(simulator.step(bar, timestamp.to_pydatetime()))
             if bar["Day End"]:
                 assert simulator.wallet.is_empty(), f"position carried past {timestamp}"
 
         assert closed_trades == 2  # one trade per session, each closed the same day
+
+
+class Test_TimeBoxedPositions(TestCase):
+    def test_exit_after_hold_bars_and_no_entries_meanwhile(self):
+        simulator = BarSimulator(ExitLevels(take_profit=None, stop_loss=None, pullback_trigger=None, hold_bars=3))
+
+        assert simulator.step(_bar(long=True, next_open=1000), MIDDAY) == []  # entry fills at 1000
+        assert simulator.step(_bar(short=True, next_open=990), MIDDAY) == []  # held bar 1: opposite signal ignored
+        assert simulator.step(_bar(long=True, next_open=1005), MIDDAY) == []  # held bar 2
+        closed = simulator.step(_bar(short=True, next_open=1010), MIDDAY)  # held bar 3: exit at its next open
+
+        assert len(closed) == 1 and closed[0].capital_return > 0
+        assert simulator.wallet.is_empty()  # no entry on the exit bar either

@@ -6,8 +6,6 @@ from services.ta.indicators.overlap import Overlap
 from services.ta.indicators.trend import Trend
 from services.ta.indicators.volatility import Volatility
 from services.ta.indicators.volume import Volume
-from services.ta.strategies.models.strategy import ComposeStrategiesListMethod, Strategy
-from services.ta.strategies.operators import compose_strategies_list, get_stored_strategies
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -86,35 +84,3 @@ def get_indicators(data, **_) -> dict[str, dict[str, Indicator]]:
     data.drop(columns=list(set(data.columns) - columns_keep), inplace=True)
 
     return indicators_mapping
-
-
-def get_strategies(
-    compose_strategies_list_method: ComposeStrategiesListMethod,
-    indicators_mapping: dict[str, dict[str, Indicator]],
-    strategies_file_name_prefix: str,
-    strategies_file_name_suffix_old: str | None = None,
-) -> list[Strategy]:
-    return compose_strategies_list(
-        compose_strategies_list_method,
-        indicators_mapping,
-        strategies_file_name_prefix,
-        strategies_file_name_suffix_old,
-    )
-
-
-def read_top_strategies(
-    indicators_mapping: dict[str, dict[str, Indicator]],
-    strategies_file_name_prefix: str,
-    filter_by_min_efficiency: float | None = None,
-    limit_count: int | None = None,
-    strategies_file_name_suffix: str | None = None,
-) -> list[Strategy]:
-    strategies = get_stored_strategies(indicators_mapping, strategies_file_name_prefix, strategies_file_name_suffix)
-
-    if filter_by_min_efficiency:
-        strategies = [strategy for strategy in strategies if strategy.efficiency >= filter_by_min_efficiency]
-
-    if limit_count:
-        strategies = strategies[:limit_count]
-
-    return strategies

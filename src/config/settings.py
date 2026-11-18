@@ -23,52 +23,11 @@ class SettingsWatchlist:
 
 
 @dataclass(frozen=True)
-class Strategy:
-    MIN_EFFICIENCY: float = 0.6
-    COUNT_MAX: int = 200
-    INDICATORS_START: int = 2
-    INDICATORS: int = 7
-    FALLBACK_COUNT: int = 5
-
-    # Calibration windows: train on TRAIN_DAYS that end HOLDOUT_DAYS ago, final-test on the last HOLDOUT_DAYS
-    TRAIN_DAYS: int = 90
-    HOLDOUT_DAYS: int = 30
-    # Fewer training trades than this cannot rank: a handful of lucky trades is not an edge
-    MIN_TRADES_TRAIN: int = 10
-
-    # Daily selection (final test and end of day): expected capital return per trade, where each past trade's
-    # weight halves every SCORE_HALF_LIFE_DAYS and SCORE_PRIOR_TRADES zero-return pseudo-trades shrink small samples.
-    # Strategies at or below MIN_EDGE are dropped; none left means no trading that day.
-    # Deliberately strict: with a 30-day hold-out (~3-4 trades per strategy) prior 100 and 0.3% never pass, so the
-    # bot does not trade. Out-of-sample study (2026-11-17): train -> hold-out selection -> live replay of the next
-    # 14 days, 10 periods (2025-03..09, 2026-09..11), train 90/180 days x 4/7 indicators. Every looser rule that
-    # traded (flat scoring prior 3 at min edge 0 or 0.1%, no win-share filter, all dev strategies) lost: win share
-    # 44-45%, -0.4% to -0.5% capital per trade after spread, positive in at most 3 of 7 complete-candle periods.
-    # Loosen only after a forward test shows a positive edge.
-    SCORE_HALF_LIFE_DAYS: float = 20
-    SCORE_PRIOR_TRADES: float = 100
-    MIN_EDGE: float = 0.003
-
-    # After a strategy triggers, lower-ranked strategies are ignored for this long (live loop and replay)
-    TRIGGER_LOCK_MINUTES: int = 40
-
-
-@dataclass(frozen=True)
-class TakeProfit:
-    # Take-profit move of the instrument at the nominal MULTIPLIER. Levels are set on the underlying at
-    # VALUE / MULTIPLIER from entry (backtest and live alike); the live limit order on the instrument scales that
-    # underlying move by the instrument's actual leverage.
-    # Example: 0.045 with MULTIPLIER 10 means a take profit once the underlying moves 0.45% in the trade's favour
-    VALUE: float = 0.045
-
-
-@dataclass(frozen=True)
 class StopLoss:
-    # Stop-loss move of the instrument at the nominal MULTIPLIER, set on the underlying at VALUE / MULTIPLIER from
-    # entry. On an instrument with higher actual leverage the instrument loss at the stop is proportionally larger.
-    # Example: 0.03 with MULTIPLIER 10 means a stop once the underlying moves 0.3% against the trade
+    # Stop and take-profit levels are per signal source (ExitLevels): a move of the instrument at the nominal
+    # MULTIPLIER, set on the underlying at level / MULTIPLIER from entry; the live take-profit order on the instrument
+    # scales that underlying move by the instrument's actual leverage.
     # The stop loss is confirmed when CONFIRMATION_COUNT + 1 consecutive completed bars close beyond the level
-    VALUE: float = 0.030
     CONFIRMATION_COUNT: int = 3
 
 
@@ -77,9 +36,9 @@ class Pullback:
     # The percentage of the maximum profit that must be lost before a pullback is confirmed
     # Example: 0.4 means that if the maximum profit is 10% and the current profit is 6%, a pullback is confirmed
     # The pullback is confirmed if the price falls below the buy price by the percentage for a certain number of times
+    # It only starts once the profit exceeds the source's pullback trigger (ExitLevels.pullback_trigger)
     VALUE: float = 0.0
     CONFIRMATION_COUNT: int = 2
-    TRIGGER_PROFIT: float = TakeProfit.VALUE / 2
 
 
 @dataclass(frozen=True)
@@ -91,15 +50,13 @@ class Time:
 
 @dataclass(frozen=True)
 class FixedRule:
-    # One rule frozen on START and never re-ranked, run beside the ranked strategies (which the MIN_EDGE gate keeps
-    # empty). STRATEGY's indicators run on SIGNAL_RESOLUTION bars built from the 2m cache, faded when INVERTED (an
+    # One rule frozen on START and never re-ranked. STRATEGY's indicators run on SIGNAL_RESOLUTION bars built from
+    # the 2m cache, faded when INVERTED (an
     # indicator LONG opens SHORT and vice versa), and act on the 2m bar that completes each coarse bar; exits are
     # managed on 2m with the levels below.
-    # - task_trade: LIVE_ORDERS False only logs the rule's signals as [PAPER] and keeps trading the ranked
-    #   strategies; True trades this rule instead of them (real orders unless DRY_RUN).
-    # - task_end_of_day replays the session into logs/paper_trades_<NAME>.json (the simulated result; compare it
-    #   with daily_trading_stats when trading live); task_end_of_week sends the running total since START;
-    #   development.py replays the rule over the whole cache.
+    # Traded live when LIVE_SIGNAL_SOURCE is "fixed_rule", otherwise logged as [PAPER]. task_end_of_day replays the
+    # session into logs/paper_trades_<NAME>_fixed_rule.json; task_end_of_week sends the running total since START;
+    # development.py replays the rule over the whole cache.
     # Chosen in the 2026-11-17 study: in-sample 2024-05..2026-11 151 trades, +1.0 capital since 2025-01 (t 2.2),
     # 9 of 11 quarters positive, but the study's luck-only test could not rule out chance (p 0.76 for the family).
     # At ~7 trades a month, judging it needs roughly 100+ forward trades. Changing the rule restarts the test.
@@ -112,7 +69,49 @@ class FixedRule:
     # Calendar days of 2m history before a session that warm up the indicators
     WARMUP_DAYS: int = 60
     START: date = date(2026, 11, 18)
-    LIVE_ORDERS: bool = False
+
+
+@dataclass(frozen=True)
+class WeightedScore:
+    # Every indicator on every resolution votes: "dir" is +1 on its LONG signal, -1 on SHORT, 0 otherwise; "exit" is 1
+    # on its EXIT signal (only with USE_EXIT_VOTES). Intraday RESOLUTIONS are built from the 2m cache (a coarse bar
+    # counts from the 2m bar that completes it); USE_DAILY adds the 1d cache's indicators as of the previous session.
+    # A weight per vote is fitted (L1: useless votes get weight 0) to the underlying move over the next
+    # HORIZON_BARS 2m bars (exit fill, capped at TIME.END; clipped at TARGET_CLIP_SD standard deviations, 0: off), on
+    # the TRAIN_DAYS calendar days before training (0: all cached history). The score is the weighted sum;
+    # BULL above the training ENTRY_QUANTILE of |score - median|, BEAR below its negative, EXIT once |score - median|
+    # falls under EXIT_FRACTION of that threshold (0: never). A position is held exactly HORIZON_BARS completed bars,
+    # the move the score predicts, then sold at the next open (or at TIME.END); signals are ignored meanwhile.
+    # TAKE_PROFIT / STOP_LOSS / PULLBACK_TRIGGER of None turn those exits off, as calibrated.
+    # The model lives in config/<NAME>_weighted_model.json:
+    # task_end_of_week refits it, and its weights can be edited by hand between refits.
+    # Walk-forward 2026-11-18 (weekly refit, 100 out-of-sample weeks): the score predicts the next 30-120 minutes
+    # (correlation +0.02 to +0.07, t 2.2-3.4) but the move behind its strongest readings (~0-2 bp of the underlying)
+    # does not cover the 2 bp the spread costs; every exit variant lost after costs.
+    # Calibration 2026-11-18: 1,500 settings x 7 thresholds, weekly refits, chosen on 2024-11..2025-12 by the score's
+    # correlation with the move, confirmed once on 2026-01..11. These defaults (60-bar horizon, direction votes of
+    # 30min/60min/1d only, ~250 sessions, clipped target) doubled the out-of-sample correlation: 2025 +0.088 (t 3.3),
+    # 2026 +0.060 (t 2.0), vs +0.03 before; every neighbouring setting stayed positive in 2026. Trading the top 1%
+    # with an exit exactly HORIZON_BARS later: 2026 18 trades, +8.6 bp gross, +0.12 capital net, too few to call;
+    # selecting settings by trading profit instead did not survive 2026. Single weights shuffle between correlated
+    # votes from refit to refit (0-17% keep their sign), so read the score, not one weight.
+    RESOLUTIONS: tuple[str, ...] = ("30min", "60min")
+    USE_DAILY: bool = True
+    USE_EXIT_VOTES: bool = False
+    HORIZON_BARS: int = 60
+    TARGET_CLIP_SD: float = 3.0
+    TRAIN_DAYS: int = 365
+    # L1 strengths tried (on standardized votes, target in bp); the one with the best correlation on the last
+    # VALIDATION_SHARE of the training data (still before the model's use) is refitted on all of it
+    ALPHAS: tuple[float, ...] = (0.1, 0.3, 1.0, 3.0)
+    VALIDATION_SHARE: float = 0.2
+    ENTRY_QUANTILE: float = 0.99
+    EXIT_FRACTION: float = 0.0
+    TAKE_PROFIT: float | None = None
+    STOP_LOSS: float | None = None
+    PULLBACK_TRIGGER: float | None = None
+    # Calendar days of 2m history the live loop and the paper replay compute votes on
+    WARMUP_DAYS: int = 60
 
 
 @dataclass(frozen=True)
@@ -131,12 +130,15 @@ class TradeStrategies:
     AVA: str = "19002"
     YAHOO: str = "^OMX"
 
-    STRATEGY: Strategy = field(default_factory=Strategy)
-    TAKE_PROFIT: TakeProfit = field(default_factory=TakeProfit)
     STOP_LOSS: StopLoss = field(default_factory=StopLoss)
     PULLBACK: Pullback = field(default_factory=Pullback)
     TIME: Time = field(default_factory=Time)
     FIXED_RULE: FixedRule = field(default_factory=FixedRule)
+    WEIGHTED_SCORE: WeightedScore = field(default_factory=WeightedScore)
+    # Which signal source task_trade trades: "fixed_rule", "weighted", or None (no orders: every source is only
+    # logged as [PAPER]). Every source is also replayed into a paper journal at end of day. Only switch after a
+    # source's paper journal shows a forward edge.
+    LIVE_SIGNAL_SOURCE: str | None = None
 
     BUDGET: float = 1.0
 

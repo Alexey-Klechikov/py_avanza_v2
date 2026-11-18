@@ -28,7 +28,7 @@ Flatten in this order:
 ## Complexity
 - No nested scans or `x in list` inside loops: build a `dict`/`set` keyed by symbol, resolution, or strategy name once.
 - Hoist loop-invariant work: indicator parameter, date, and resolution parsing, sorting; regexes as module constants. Compute per-symbol or per-resolution values once, not per (symbol, strategy) pair.
-- Read each OHLCV pickle or strategy JSON once per run via `services/storage/operators.py` or `services/ta/strategies/operators.py`; never fix repeated I/O with module-level mutable caches.
+- Read each OHLCV pickle or the weighted model once per run via `services/storage/operators.py` or `tasks/backtest/model.py`; never fix repeated I/O with module-level mutable caches.
 - Sort rankings once; top-N via `heapq.nlargest`/`min`/`max`; no `list.pop(0)`, `insert(0, …)`, or string `+=` in loops; `set`/`dict.fromkeys` for membership and dedup.
 - pandas: vectorize instead of `DataFrame.apply` on large frames; collect frames and `pd.concat` once; no needless `.copy()`.
 - Avanza calls stay sequential: no threads or `asyncio` around trade, order, or watchlist calls; the client holds session/auth state and the live loop's timing is deliberate.

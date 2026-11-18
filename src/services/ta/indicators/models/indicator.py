@@ -1,3 +1,4 @@
+import builtins
 from collections.abc import Callable
 from enum import Enum
 
@@ -41,8 +42,8 @@ class Panel(str, Enum):
 
 class Plots(BaseModel):
     panel: Panel
-    list: list[Plot]
-    horizontal_lines: list[HorizontalLine] = []
+    list: builtins.list[Plot]  # the field name shadows the builtin inside this class
+    horizontal_lines: builtins.list[HorizontalLine] = []
 
 
 class Signal(BaseModel):

@@ -2,13 +2,9 @@ import warnings
 
 from apis.avanza.operators.portfolio import Portfolio
 from apis.telegram.operators import Telegram
-from config import SETTINGS
 from services.storage.operators import Storage
-from services.storage.windows import CalibrationWindows
-from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
-from tasks.backtest.paper_trade import forward_summary
-from tasks.backtest.runner import backtest_trade_strategies
-from utils.constants import TODAY_MIDNIGHT
+from tasks.backtest.model import train_weighted_model
+from tasks.backtest.paper_trade import PaperTrack, forward_summary
 from utils.logger.operators import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -18,54 +14,13 @@ set_handlers("end_of_week")
 log = get_logger()
 
 
-def generate_strategies() -> bool:
-    """Train on TRAIN_DAYS that end HOLDOUT_DAYS ago, then final-test on the unseen last HOLDOUT_DAYS."""
-    windows = CalibrationWindows.ending(TODAY_MIDNIGHT)
-    cached_bars = Storage().read()
-    training_bars = windows.training.slice(cached_bars)
-    holdout_bars = windows.holdout.slice(cached_bars)
-    log.info(f"Training on {windows.training}, final test on {windows.holdout}")
-
-    log.warning(
-        f"Long-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.TRAIN_DAYS} days)",
-    )
-    backtest_trade_strategies(
-        training_bars.copy(),
-        ComposeStrategiesListMethod.GENERATE,
-        strategies_file_name_suffix_new=f"dev_{SETTINGS.STRATEGY.INDICATORS_START}",
-    )
-
-    for indicators_count in range(SETTINGS.STRATEGY.INDICATORS_START, SETTINGS.STRATEGY.INDICATORS):
-        log.warning(
-            f"Long-test strategies ({indicators_count} -> {indicators_count + 1}) for {SETTINGS.NAME} "
-            f"({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.TRAIN_DAYS} days)",
-        )
-        backtest_trade_strategies(
-            training_bars.copy(),
-            ComposeStrategiesListMethod.EXTEND,
-            strategies_file_name_suffix_old=f"dev_{indicators_count}",
-            strategies_file_name_suffix_new=f"dev_{indicators_count + 1}",
-        )
-
-    log.warning(
-        f"Final-test strategies for {SETTINGS.NAME} ({SETTINGS.RESOLUTION}, {SETTINGS.STRATEGY.HOLDOUT_DAYS} days)",
-    )
-    final_strategies = backtest_trade_strategies(
-        holdout_bars,
-        ComposeStrategiesListMethod.READ,
-        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
-    )
-    return bool(final_strategies)
-
-
 if __name__ == "__main__":
     try:
-        has_ranked_strategies = generate_strategies()
+        weighted_model = train_weighted_model(Storage().read(), Storage(resolution="1d").read())
 
         telegram = Telegram()
-        telegram.messages = [forward_summary()]
-        if not (has_ranked_strategies or SETTINGS.FIXED_RULE.LIVE_ORDERS):
-            telegram.messages.append("No strategy clears STRATEGY.MIN_EDGE in the final test; trading paused")
+        telegram.messages = [forward_summary(track) for track in PaperTrack]
+        telegram.messages.append(f"Weighted score refitted: {len(weighted_model.weights)} votes kept")
         telegram.send_message()
 
         portfolio = Portfolio()

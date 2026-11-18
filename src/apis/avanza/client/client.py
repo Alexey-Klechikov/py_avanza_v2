@@ -108,7 +108,8 @@ class Avanza(AvanzaBase):
         log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")
         return {}
 
-    def get_chart_data(
+    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
+    def get_chart_data(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         order_book_id: str,
         period: TimePeriod,
@@ -213,7 +214,8 @@ class Avanza(AvanzaBase):
 
         return AccountOverview(**data)
 
-    def get_watchlists(self) -> list[Watchlist]:
+    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
+    def get_watchlists(self) -> list[Watchlist]:  # pyright: ignore[reportIncompatibleMethodOverride]
         data = self._retry_call(method=HttpMethod.GET, path=Endpoints.watchlists)
         if not isinstance(data, list):
             log.error("Unexpected watchlists response type")
@@ -234,7 +236,8 @@ class Avanza(AvanzaBase):
 
         return SearchResult(**data)
 
-    def get_accounts_positions(self) -> AccountsPositions:
+    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
+    def get_accounts_positions(self) -> AccountsPositions:  # pyright: ignore[reportIncompatibleMethodOverride]
         data = self._retry_call(method=HttpMethod.GET, path=Endpoints.accounts_positions)
 
         return AccountsPositions(**data)
@@ -310,7 +313,16 @@ class Avanza(AvanzaBase):
 
         return parsed_response.order_id
 
-    def edit_order(self, order_id: str, account_id: str, price: float, valid_until: date, volume: int, *_):
+    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
+    def edit_order(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        order_id: str,
+        account_id: str,
+        price: float,
+        valid_until: date,
+        volume: int,
+        *_,
+    ):
         response = self._retry_call(
             method=HttpMethod.POST,
             path=Endpoints.edit_order,

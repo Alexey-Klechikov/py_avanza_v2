@@ -55,9 +55,9 @@ authors = [
 dependencies = [
     "avanza-api==12.0.0",
     "pandas-ta",
+    "scipy",  # not imported here: numba (under pandas-ta indicators) needs it for BLAS/LAPACK
     "yfinance",
     "pydantic",
-    "mplfinance",
     "numpy",
     "telegram-send==0.37",
     "workalendar",
@@ -66,8 +66,6 @@ dependencies = [
     "requests-html",
     "lxml-html-clean",
     "cloudscraper",
-    "pathos",
-    "scipy",
     "python-dotenv>=1.1.1",
 ]
 requires-python = "==3.13.*"
@@ -83,8 +81,19 @@ dev = [
     "flake8-pyproject",
     "pyupgrade",
     "pytest-env>=1.2.0",
+    "pandas-stubs>=3.1.0.261029",
 ]
 
 [tool.black]
 line-length = 119
 target-version = ['py311']
+
+[tool.pyright]
+# Pylance reads this too: src/ is the import root (flat imports), checked at "standard" strictness
+include = ["src", "tests", ".claude/hooks"]
+exclude = ["**/__pycache__", ".venv"]
+extraPaths = ["src"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.13"
+typeCheckingMode = "standard"

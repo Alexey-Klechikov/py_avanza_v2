@@ -18,7 +18,7 @@ Style counts only when it breaks a repo rule, hides behavior, or hampers verific
 - **Live account:** paths that bypass `DRY_RUN`, place/cancel orders, or mutate watchlists unexpectedly; order-timing or exit changes in `task_trade.py`, `tasks/main.py`, `tasks/trade.py`; unbounded broker retries.
 - **Security:** credential and `.env` handling in `apis/avanza/client/client.py`, secrets in logs or Telegram alerts, unsafe parsing of strategy/indicator input, committed secrets.
 - **Performance:** repeated Avanza/Yahoo calls, the complexity anti-patterns in `pyavanza-python.md`, repeated disk I/O on cached data, backtest combination growth.
-- **Architecture and contracts:** layer boundaries, flat imports, strategy JSON schema, watchlist naming, dual path layout (all in `CLAUDE.md`), cron and entry-point assumptions.
+- **Architecture and contracts:** layer boundaries, flat imports, weighted model JSON schema, watchlist naming, dual path layout (all in `CLAUDE.md`), cron and entry-point assumptions.
 - **Docs:** if runtime, public behavior, or contributor workflow changed, assume a doc update is needed unless the diff proves otherwise.
 
 ## Severity

@@ -341,7 +341,11 @@ class Test_InstrumentWarrant(TestCase):
 
         assert warrant.fee is None
         assert warrant.key_indicators.strike_price == 3612.24
-        assert warrant.historical_closing_prices.market_maker.one_day == 175.7
-        assert warrant.quote.market_maker_quote.current_buy_price == 203.36
-        assert warrant.underlying.name == "OMX Stockholm 30"
+        market_maker, market_maker_quote = (
+            warrant.historical_closing_prices.market_maker,
+            warrant.quote.market_maker_quote,
+        )
+        assert market_maker is not None and market_maker.one_day == 175.7
+        assert market_maker_quote is not None and market_maker_quote.current_buy_price == 203.36
+        assert warrant.underlying is not None and warrant.underlying.name == "OMX Stockholm 30"
         assert warrant.sub_category == "OMX Stockholm 30 Index"

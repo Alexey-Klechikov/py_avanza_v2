@@ -1,5 +1,4 @@
 import warnings
-from datetime import timedelta
 
 from avanza.constants import Resolution, TimePeriod
 
@@ -9,10 +8,7 @@ from apis.yahoo.client.models.history_request import Interval, Period
 from apis.yahoo.operators.ticker import Ticker as YahooTicker
 from config import SETTINGS
 from services.storage.operators import Storage
-from services.storage.windows import DataWindow
-from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
 from tasks.backtest.paper_trade import paper_trade_session
-from tasks.backtest.runner import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
 
@@ -47,23 +43,9 @@ def cache_history():
         log.info(f"Cached ({interval_yahoo.value.raw}): {rows_before} rows before -> {rows_after} rows after")
 
 
-def rescore_strategies() -> None:
-    """Re-run the final test on the last HOLDOUT_DAYS, up to and including today's session (the task runs after
-    the close). The window never reaches back into the weekly training data, which ended HOLDOUT_DAYS before it."""
-    window = DataWindow.days_before(TODAY_MIDNIGHT + timedelta(days=1), SETTINGS.STRATEGY.HOLDOUT_DAYS)
-    log.warning(f"TASK: Backtest strategies on {SETTINGS.NAME} | {SETTINGS.RESOLUTION} | {window}")
-
-    _backtest_trade_strategies(
-        window.slice(Storage().read()),
-        ComposeStrategiesListMethod.READ,
-        strategies_file_name_suffix_old=f"dev_{SETTINGS.STRATEGY.INDICATORS}",
-    )
-
-
 if __name__ == "__main__":
     try:
         cache_history()
-        rescore_strategies()
         paper_trade_session(TODAY_MIDNIGHT.date())
 
     except Exception as e:

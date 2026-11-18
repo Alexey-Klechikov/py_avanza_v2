@@ -3,8 +3,6 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import SETTINGS
-
 
 @dataclass(frozen=True)
 class DataWindow:
@@ -26,17 +24,3 @@ class DataWindow:
 
     def __str__(self) -> str:
         return f"{self.start.date()} - {self.end.date()}"
-
-
-@dataclass(frozen=True)
-class CalibrationWindows:
-    """Training ends where the holdout starts, so the final test only sees bars that training never saw."""
-
-    training: DataWindow
-    holdout: DataWindow
-
-    @classmethod
-    def ending(cls, end: datetime) -> "CalibrationWindows":
-        holdout = DataWindow.days_before(end, SETTINGS.STRATEGY.HOLDOUT_DAYS)
-
-        return cls(training=DataWindow.days_before(holdout.start, SETTINGS.STRATEGY.TRAIN_DAYS), holdout=holdout)

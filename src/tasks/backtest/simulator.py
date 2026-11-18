@@ -4,14 +4,8 @@ import numpy as np
 import pandas as pd
 
 from config import SETTINGS
-from services.ta.strategies.models.strategy import Strategy
-from services.ta.strategies.signals import SIGNAL_COLUMNS, mark_strategy_signals
 from services.trading.tracked_position import ExitLevels, TrackedPosition
-from tasks.backtest.bars import BAR_COLUMNS, add_execution_columns
 from tasks.backtest.wallet import SIDES_WITH_OPPOSITE, ClosedTrade, Side, Wallet
-from utils.logger.operators import get_logger
-
-log = get_logger()
 
 
 class BarSimulator:
@@ -19,7 +13,7 @@ class BarSimulator:
 
     On each bar, held positions are checked for exits first (they were open during the bar), then signals open
     new positions at "Next Open". Opening one side closes the opposite one. New positions use `levels`
-    (default: the live settings).
+    (default: the live settings); with `levels.hold_bars`, no entry happens on a bar that started with a position.
     """
 
     def __init__(self, levels: ExitLevels = ExitLevels()) -> None:
@@ -29,6 +23,7 @@ class BarSimulator:
     def step(self, bar: pd.Series, timestamp: datetime) -> list[ClosedTrade]:
         closed_trades = []
         closed_sides: set[Side] = set()
+        held_at_start = not self.wallet.is_empty()
 
         for side, _ in SIDES_WITH_OPPOSITE:
             position = self.wallet.get(side)
@@ -38,6 +33,9 @@ class BarSimulator:
 
             closed_trades.append(self.wallet.close(side, exit_price))
             closed_sides.add(side)
+
+        if self.levels.hold_bars and held_at_start:
+            return closed_trades
 
         for side, opposite_side in SIDES_WITH_OPPOSITE:
             if side in closed_sides or self.wallet.get(side) is not None:
@@ -68,6 +66,9 @@ class BarSimulator:
         if position.confirm_stop_loss(bar["Close"]) or position.confirm_pullback(bar["Close"]):
             return bar["Next Open"]
 
+        if position.confirm_hold_expiry():
+            return bar["Next Open"]
+
         if bar["Day End"] or timestamp.time() >= SETTINGS.TIME.END:
             return bar["Next Open"]
 
@@ -76,19 +77,3 @@ class BarSimulator:
     @staticmethod
     def _is_entry(bar: pd.Series, side: Side, opposite_side: Side) -> bool:
         return bar[side] > 0 and np.isnan(bar["EXIT"]) and np.isnan(bar[opposite_side]) and not bar["Day End"]
-
-
-def simulate_strategy(data: pd.DataFrame, strategy: Strategy, progress_label: str = "") -> Strategy:
-    """Backtest one strategy over `data`, recording every closed trade in `strategy.trade_stats`."""
-    add_execution_columns(data)
-    mark_strategy_signals(data, strategy)
-
-    simulator = BarSimulator()
-    for index, bar in data[BAR_COLUMNS + SIGNAL_COLUMNS].iterrows():
-        timestamp: datetime = index.to_pydatetime()  # type: ignore
-        for closed_trade in simulator.step(bar, timestamp):
-            strategy.trade_stats.record(closed_trade.profit, closed_trade.capital_return, closed_on=timestamp.date())
-
-    log.debug(f"Strategy{progress_label}: {strategy.name} ({round(strategy.trade_stats.total_profit)})")
-
-    return strategy
