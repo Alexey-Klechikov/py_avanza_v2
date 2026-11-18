@@ -15,7 +15,7 @@ Judge each changed file against `CLAUDE.md` and the `.claude/rules/*.md` matchin
 Style counts only when it breaks a repo rule, hides behavior, or hampers verification; don't bury signal in nits.
 
 ## Look for
-- **Live account:** paths that bypass `DRY_RUN`, place/cancel orders, or mutate watchlists unexpectedly; order-timing or exit changes in `task_trade.py`, `tasks/main.py`, `tasks/trade.py`; unbounded broker retries.
+- **Live account:** paths that bypass `DRY_RUN`, place/cancel orders, or mutate watchlists unexpectedly; order-timing or exit changes in `task_trade.py`, `tasks/trade/main.py`, `tasks/trade/states.py`; unbounded broker retries.
 - **Security:** credential and `.env` handling in `apis/avanza/client/client.py`, secrets in logs or Telegram alerts, unsafe parsing of strategy/indicator input, committed secrets.
 - **Performance:** repeated Avanza/Yahoo calls, the complexity anti-patterns in `pyavanza-python.md`, repeated disk I/O on cached data, backtest combination growth.
 - **Architecture and contracts:** layer boundaries, flat imports, weighted model JSON schema, watchlist naming, dual path layout (all in `CLAUDE.md`), cron and entry-point assumptions.
