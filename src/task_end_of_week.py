@@ -6,6 +6,7 @@ from config import SETTINGS
 from services.storage.operators import Storage
 from services.storage.windows import CalibrationWindows
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
+from tasks.backtest.paper_trade import forward_summary
 from tasks.backtest.runner import backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
@@ -59,10 +60,13 @@ def generate_strategies() -> bool:
 
 if __name__ == "__main__":
     try:
-        if not generate_strategies():
-            telegram = Telegram()
-            telegram.messages = ["task_eow.py: no strategy clears STRATEGY.MIN_EDGE in the final test; trading paused"]
-            telegram.send_message()
+        has_ranked_strategies = generate_strategies()
+
+        telegram = Telegram()
+        telegram.messages = [forward_summary()]
+        if not (has_ranked_strategies or SETTINGS.FIXED_RULE.LIVE_ORDERS):
+            telegram.messages.append("No strategy clears STRATEGY.MIN_EDGE in the final test; trading paused")
+        telegram.send_message()
 
         portfolio = Portfolio()
         portfolio.reload_balance()

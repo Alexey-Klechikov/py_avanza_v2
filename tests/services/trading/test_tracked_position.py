@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from src.config import SETTINGS
-from src.services.trading.tracked_position import TrackedPosition
+from src.services.trading.tracked_position import ExitLevels, TrackedPosition
 
 ENTRY_PRICE = 1000.0
 
@@ -85,3 +85,11 @@ class Test_TrackedPosition(TestCase):
         attempts = SETTINGS.PULLBACK.CONFIRMATION_COUNT + 1
         confirmations = [position.confirm_pullback(ENTRY_PRICE * 0.999) for _ in range(attempts)]
         assert confirmations[-1] and not any(confirmations[:-1])
+
+    def test_custom_levels(self):
+        levels = ExitLevels(take_profit=0.07, stop_loss=0.12, pullback_trigger=0.035)
+        position = TrackedPosition.open(is_long=False, entry_price=ENTRY_PRICE, levels=levels)
+
+        assert position.take_profit_price == ENTRY_PRICE * (1 - 0.07 / SETTINGS.MULTIPLIER)
+        assert position.stop_loss_price == ENTRY_PRICE * (1 + 0.12 / SETTINGS.MULTIPLIER)
+        assert position.pullback_trigger == 0.035

@@ -16,7 +16,7 @@ pyAvanza_v2 is a Python trading bot for OMX-linked BULL and BEAR products on Ava
 - `src/task_trade.py`: live trading entry point.
 - `src/task_end_of_day.py`: history cache and end-of-day backtest flow.
 - `src/task_end_of_week.py`: weekly strategy regeneration and balance logging.
-- `src/development.py`: manual strategy-generation and indicator-tuning helper.
+- `src/development.py`: manual helper; by default replays the fixed rule over the cache (no files written), otherwise strategy generation and indicator tuning.
 - `src/apis/avanza/`: Avanza client, typed models, account and order operators.
 - `src/apis/yahoo/`: Yahoo Finance history wrapper.
 - `src/apis/telegram/`: alert delivery through `telegram-send`.
@@ -24,7 +24,7 @@ pyAvanza_v2 is a Python trading bot for OMX-linked BULL and BEAR products on Ava
 - `src/services/trading/`: trading rules shared by the backtest and the live loop: the strategy rank lock, and take-profit, stop-loss, and pullback levels.
 - `src/services/storage/`: pickle-backed OHLCV cache, data windows, and candle-quality checks.
 - `src/services/calendar/`: Stockholm market-hours helpers.
-- `src/tasks/`: the top layer: live signal loop and order execution (`main.py`, `trade.py`) and the backtest engine (`backtest/`). Each `src/apis/*` and `src/services/*` package is isolated and never imports another; only `tasks/`, the `task_*.py` scripts, and `src/development.py` compose them.
+- `src/tasks/`: the top layer: live signal loop and order execution (`main.py`, `trade.py`), the fixed rule's signals (`fixed_rule.py`), and the backtest engine (`backtest/`). Each `src/apis/*` and `src/services/*` package is isolated and never imports another; only `tasks/`, the `task_*.py` scripts, and `src/development.py` compose them.
 - `tests/`: unit and integration tests, mirroring `src/` (not deployed).
 - `src/config/`: runtime settings and generated strategy ranking files.
 - `src/utils/`: logging and shared constants.
@@ -62,8 +62,8 @@ uv run python src/task_trade.py
 uv run python src/development.py
 ```
 
-- `task_end_of_day.py` caches history and reruns the final test on the last `STRATEGY.HOLDOUT_DAYS` days, including today's session.
-- `task_end_of_week.py` rebuilds the dev strategy snapshots and logs the current portfolio balance.
+- `task_end_of_day.py` caches history, reruns the final test on the last `STRATEGY.HOLDOUT_DAYS` days, including today's session, and then replays today's session with the fixed rule (see Fixed Rule).
+- `task_end_of_week.py` rebuilds the dev strategy snapshots, sends the fixed rule's running total by Telegram, and logs the current portfolio balance.
 - `task_trade.py` starts one intraday loop that keeps running until shortly after `SETTINGS.TIME.END`.
 - On macOS, `DRY_RUN` defaults to `True`, so local runs do not place live orders or send Telegram alerts (the message is only logged) unless you change `DRY_RUN` in `src/config/__init__.py`.
 
@@ -74,11 +74,22 @@ uv run python src/development.py
 3. Backtests rank strategies and write `OMX_trade_strategies*.json` snapshots. Generation starts from every combination of `STRATEGY.INDICATORS_START` indicators (`dev_2`) and adds one indicator per level up to `STRATEGY.INDICATORS` (`dev_7`), training on `STRATEGY.TRAIN_DAYS` days that end `STRATEGY.HOLDOUT_DAYS` ago:
    - Strategies rank by total profit weighted by the lower bound of the 95% Wilson interval of their win share. Only profitable strategies with at least `STRATEGY.MIN_TRADES_TRAIN` trades advance. A parent advances unchanged when none of its one-indicator extensions with that many trades ranks higher.
    - If a level has no such strategy, the `STRATEGY.FALLBACK_COUNT` least-losing strategies advance instead (only those with `STRATEGY.MIN_TRADES_TRAIN` trades if any exist, otherwise any that traded), so later levels can still find a winner.
-   - The final out-of-sample test on the last `STRATEGY.HOLDOUT_DAYS` days keeps, ranked best first, the strategies with at least a `STRATEGY.MIN_EFFICIENCY` win share (the live loop's filter) whose expected return per trade exceeds `STRATEGY.MIN_EDGE` (recent trades weigh more, halving every `STRATEGY.SCORE_HALF_LIFE_DAYS`; `STRATEGY.SCORE_PRIOR_TRADES` zero-return pseudo-trades shrink small samples), then logs a replay of the live strategy selection over the same data. If none pass, `OMX_trade_strategies.json` is written empty so the live loop does not trade, `task_end_of_week.py` sends a Telegram alert, and `task_end_of_day.py` writes it empty without alerting.
+   - The final out-of-sample test on the last `STRATEGY.HOLDOUT_DAYS` days keeps, ranked best first, the strategies with at least a `STRATEGY.MIN_EFFICIENCY` win share (the live loop's filter) whose expected return per trade exceeds `STRATEGY.MIN_EDGE` (recent trades weigh more, halving every `STRATEGY.SCORE_HALF_LIFE_DAYS`; `STRATEGY.SCORE_PRIOR_TRADES` zero-return pseudo-trades shrink small samples), then logs a replay of the live strategy selection over the same data. If none pass, `OMX_trade_strategies.json` is written empty so the ranked strategies do not trade, `task_end_of_week.py` adds a "trading paused" line to its Telegram message (unless the fixed rule trades live), and `task_end_of_day.py` writes it empty without alerting.
    - Every simulated trade pays the spread once, on the sale: entries fill at the actual price and the instrument is sold `SETTINGS.SPREAD_DEFAULT` below its actual price (there is no commission); the live pullback check uses the same cost.
    - Simulated positions never carry overnight: no entry on a trading day's last bar, and open positions exit at that bar's close or at `SETTINGS.TIME.END`, whichever comes first.
 4. The live loop loads the top strategies in stored `rank` order (after the `STRATEGY.MIN_EFFICIENCY` filter and `STRATEGY.COUNT_MAX` limit), ignores signals from a lower-ranked strategy than the last triggered one for `STRATEGY.TRIGGER_LOCK_MINUTES` (or until no position is held), refreshes watchlists, and translates signals into Avanza orders. Stop-loss and pullback use the backtest's levels on the underlying, checked once per completed bar (a position found without a record, e.g. after a restart, is measured from the current underlying price); the take-profit order scales the underlying move by the bought instrument's leverage.
 5. Transactions are grouped into deals and written into daily trading stats JSON in the logs directory.
+
+## Fixed Rule
+
+`SETTINGS.FIXED_RULE` freezes one rule that is never re-ranked: the `STRATEGY` indicators on `SIGNAL_RESOLUTION` (30-minute) bars built from the 2m cache, faded when `INVERTED` (an indicator LONG opens SHORT), acting on the 2m bar that completes each coarse bar (a coarse bar still in progress never signals), with exits managed on 2m bars at the rule's own take-profit, stop-loss, and pullback trigger. Signals come from `src/tasks/fixed_rule.py`, shared by the live loop and the replay; indicators warm up on `WARMUP_DAYS` of history.
+
+- `task_trade.py`: with `LIVE_ORDERS = False` (default) the rule's signals are only logged as `[PAPER]` (a failure there never stops the loop) and the ranked strategies trade as before; with `LIVE_ORDERS = True` the rule replaces the ranked strategies, and positions use its exit levels (real orders unless `DRY_RUN`).
+- `task_end_of_day.py`: replays the session with the backtest simulator (`src/tasks/backtest/paper_trade.py`) into `paper_trades_OMX.json` in the logs directory (re-running a session replaces its entry) and logs the running total since `START`. When trading live, compare it with `daily_trading_stats_OMX.json`.
+- `task_end_of_week.py`: sends that running total by Telegram.
+- `development.py`: `run_fixed_rule_replay()` logs the rule's result per quarter over the cache.
+
+Do not change the rule while it is being tested; a changed rule restarts the test.
 
 ## Runtime Conventions
 
@@ -91,7 +102,7 @@ uv run python src/development.py
 
 - `src/config/OMX_trade_strategies*.json` locally and `config/OMX_trade_strategies*.json` on the server: ranked strategy snapshots.
 - `src/data/*.pickle` locally and `data/*.pickle` on the server: OHLCV cache files.
-- `src/logs/*.log` locally and `logs/*.log` on the server: task logs and `daily_trading_stats_OMX.json`.
+- `src/logs/*.log` locally and `logs/*.log` on the server: task logs, `daily_trading_stats_OMX.json`, and the fixed rule's simulated journal `paper_trades_OMX.json`.
 - `uv.lock`: committed dependency lockfile for reproducible syncs.
 
 ## Testing

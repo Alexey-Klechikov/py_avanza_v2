@@ -23,6 +23,8 @@ from services.ta.strategies.models.signal import Signal
 from services.ta.strategies.models.strategy import Strategy
 from services.ta.strategies.signals import strategy_signal_flags
 from services.trading.strategy_trigger import StrategyTrigger
+from services.trading.tracked_position import ExitLevels
+from tasks.fixed_rule import FIXED_RULE_LEVELS, fixed_rule_signal
 from tasks.models import Direction, FlowAction
 from tasks.trade import Trade
 from utils.constants import TODAY_MIDNIGHT
@@ -45,10 +47,14 @@ SIGNAL_ORDERS: dict[Signal, tuple[list[Direction], Direction | None]] = {
 
 
 class MarketData:
-    """Recent 2-minute bars of the underlying, refreshed every bar, and the stored strategies evaluated on them."""
+    """Recent 2-minute bars of the underlying, refreshed every bar, and the stored strategies evaluated on them.
+
+    `bars` covers the last few days (the ranked strategies); `history` reaches FIXED_RULE.WARMUP_DAYS back.
+    """
 
     def __init__(self) -> None:
         self.bars: pd.DataFrame = pd.DataFrame()
+        self.history: pd.DataFrame = pd.DataFrame()
         self.is_new = False
         self.too_old = False
         self.strategies: list[Strategy] = []
@@ -86,7 +92,8 @@ class MarketData:
             self.too_old = ((datetime.now() - bars.index[-1]).seconds // 60) > 15
             self.is_new = bars_count_before != bars.shape[0]
 
-        self.bars = bars.loc[bars.index >= TODAY_MIDNIGHT - timedelta(days=4)]
+        self.history = bars.loc[bars.index >= TODAY_MIDNIGHT - timedelta(days=SETTINGS.FIXED_RULE.WARMUP_DAYS)]
+        self.bars = self.history.loc[self.history.index >= TODAY_MIDNIGHT - timedelta(days=4)]
 
     def load_strategies(self) -> None:
         indicators_mapping = get_indicators(self.bars)
@@ -120,6 +127,16 @@ class MarketData:
             log.info(signal_summary)
 
         return signal_pick.signal
+
+    def fixed_rule_signal(self) -> Signal | None:
+        """The fixed rule's signal on the last complete bar."""
+        is_closed = self.history.index + BAR_DURATION <= datetime.now()
+        signal = fixed_rule_signal(self.history.loc[is_closed])
+        if signal:
+            mode = "" if SETTINGS.FIXED_RULE.LIVE_ORDERS else "[PAPER] "
+            log.info(f"{mode}Fixed rule signal: {signal}. Latest price: {round(self.latest_price, 2)}")
+
+        return signal
 
     def last_complete_bar_position(self, now: datetime | None = None) -> int:
         """Position of the newest bar that has fully closed by `now`.
@@ -200,8 +217,7 @@ class TradingFlow:
 
         # Trade
         self.market_data.is_new = False
-        self.market_data.load_strategies()
-        signal = self.market_data.pick_signal(self.trigger)
+        signal = self._pick_signal()
         if not signal:
             return FlowAction.DO_NOTHING
 
@@ -212,6 +228,19 @@ class TradingFlow:
 
         self.directions_sell, self.direction_buy = SIGNAL_ORDERS[signal]
         return FlowAction.TRADE
+
+    def _pick_signal(self) -> Signal | None:
+        """The fixed rule's signal when it trades live; otherwise the ranked strategies' (the rule is only logged)."""
+        if SETTINGS.FIXED_RULE.LIVE_ORDERS:
+            return self.market_data.fixed_rule_signal()
+
+        try:
+            self.market_data.fixed_rule_signal()
+        except Exception as e:
+            log.warning(f"[PAPER] Fixed rule signal failed, ranked strategies unaffected: {e}")
+
+        self.market_data.load_strategies()
+        return self.market_data.pick_signal(self.trigger)
 
     def wait_for_data(self):
         sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
@@ -234,8 +263,10 @@ class TradingFlow:
 
 # MAIN
 def trade() -> None:
+    fixed_rule_live = SETTINGS.FIXED_RULE.LIVE_ORDERS
     log.info(
-        "Start trading strategies on {} | {}{}".format(
+        "Start trading {} on {} | {}{}".format(
+            "the fixed rule" if fixed_rule_live else "ranked strategies (fixed rule on paper)",
             SETTINGS.NAME,
             SETTINGS.RESOLUTION,
             " | DRY_RUN" if DRY_RUN else "",
@@ -256,7 +287,8 @@ def trade() -> None:
 
     transactions = Transactions()
 
-    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists)
+    levels = FIXED_RULE_LEVELS if fixed_rule_live else ExitLevels()
+    trade = Trade(orders=orders, portfolio=portfolio, watchlists=watchlists, levels=levels)
 
     flow = TradingFlow(market_data)
 

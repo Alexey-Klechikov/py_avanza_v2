@@ -8,11 +8,12 @@ from services.ta.strategies.models.strategy import Strategy
 SIGNAL_COLUMNS = ["LONG", "SHORT", "EXIT"]
 
 
-def mark_strategy_signals(data: pd.DataFrame, strategy: Strategy) -> None:
+def mark_strategy_signals(data: pd.DataFrame, strategy: Strategy, mask_trading_time: bool = True) -> None:
     """Fill SIGNAL_COLUMNS with the bar close where the strategy signals and NaN elsewhere.
 
     LONG and SHORT need every indicator of the strategy to agree; EXIT needs any one. Bars outside the
-    trading window (SETTINGS.TIME) never signal.
+    trading window (SETTINGS.TIME) never signal, unless `mask_trading_time` is off (signals computed on a coarser
+    resolution are masked on the bar where they act instead).
     """
     for column in SIGNAL_COLUMNS:
         data[column] = data["Close"]
@@ -36,12 +37,17 @@ def mark_strategy_signals(data: pd.DataFrame, strategy: Strategy) -> None:
             axis=1,
         )
 
-    for column in SIGNAL_COLUMNS:
-        for non_trading_time in (
-            ["00:00", SETTINGS.TIME.START.strftime("%H:%M")],
-            [SETTINGS.TIME.END.strftime("%H:%M"), "23:59"],
-        ):
-            data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, column] = np.nan
+    if mask_trading_time:
+        mask_outside_trading_time(data)
+
+
+def mask_outside_trading_time(data: pd.DataFrame) -> None:
+    """Clear SIGNAL_COLUMNS on bars outside SETTINGS.TIME (both window edges are outside)."""
+    for non_trading_time in (
+        ["00:00", SETTINGS.TIME.START.strftime("%H:%M")],
+        [SETTINGS.TIME.END.strftime("%H:%M"), "23:59"],
+    ):
+        data.loc[data.between_time(non_trading_time[0], non_trading_time[1]).index, SIGNAL_COLUMNS] = np.nan
 
 
 def strategy_signal_flags(data: pd.DataFrame, strategy: Strategy) -> np.ndarray:

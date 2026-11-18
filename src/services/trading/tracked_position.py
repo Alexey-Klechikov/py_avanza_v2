@@ -3,6 +3,15 @@ from pydantic import BaseModel
 from config import SETTINGS
 
 
+class ExitLevels(BaseModel, frozen=True):
+    """Exit parameters of a position, in instrument terms at the nominal MULTIPLIER (see SETTINGS.TAKE_PROFIT,
+    SETTINGS.STOP_LOSS, SETTINGS.PULLBACK). The defaults are the live settings."""
+
+    take_profit: float = SETTINGS.TAKE_PROFIT.VALUE
+    stop_loss: float = SETTINGS.STOP_LOSS.VALUE
+    pullback_trigger: float = SETTINGS.PULLBACK.TRIGGER_PROFIT
+
+
 class TrackedPosition(BaseModel):
     """One open position and its exit levels, measured on the underlying so the backtest and the live loop agree.
 
@@ -17,6 +26,7 @@ class TrackedPosition(BaseModel):
     take_profit_price: float
     stop_loss_price: float
     instrument_leverage: float
+    pullback_trigger: float = SETTINGS.PULLBACK.TRIGGER_PROFIT
 
     max_profit: float = 0
     stop_loss_confirmations: int = 0
@@ -28,15 +38,17 @@ class TrackedPosition(BaseModel):
         is_long: bool,
         entry_price: float,
         instrument_leverage: float = SETTINGS.MULTIPLIER,
+        levels: ExitLevels = ExitLevels(),
     ) -> "TrackedPosition":
         sign = 1 if is_long else -1
 
         return cls(
             is_long=is_long,
             entry_price=entry_price,
-            take_profit_price=entry_price * (1 + sign * SETTINGS.TAKE_PROFIT.VALUE / SETTINGS.MULTIPLIER),
-            stop_loss_price=entry_price * (1 - sign * SETTINGS.STOP_LOSS.VALUE / SETTINGS.MULTIPLIER),
+            take_profit_price=entry_price * (1 + sign * levels.take_profit / SETTINGS.MULTIPLIER),
+            stop_loss_price=entry_price * (1 - sign * levels.stop_loss / SETTINGS.MULTIPLIER),
             instrument_leverage=instrument_leverage or SETTINGS.MULTIPLIER,
+            pullback_trigger=levels.pullback_trigger,
         )
 
     @property
@@ -93,7 +105,7 @@ class TrackedPosition(BaseModel):
         profit = self.profit(close_price)
         self.max_profit = max(self.max_profit, profit)
 
-        trigger_profit = SETTINGS.PULLBACK.TRIGGER_PROFIT * self.entry_price / SETTINGS.MULTIPLIER
+        trigger_profit = self.pullback_trigger * self.entry_price / SETTINGS.MULTIPLIER
         if self.max_profit <= trigger_profit:
             return False
 

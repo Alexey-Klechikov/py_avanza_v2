@@ -6,7 +6,7 @@ import pandas as pd
 from config import SETTINGS
 from services.ta.strategies.models.strategy import Strategy
 from services.ta.strategies.signals import SIGNAL_COLUMNS, mark_strategy_signals
-from services.trading.tracked_position import TrackedPosition
+from services.trading.tracked_position import ExitLevels, TrackedPosition
 from tasks.backtest.bars import BAR_COLUMNS, add_execution_columns
 from tasks.backtest.wallet import SIDES_WITH_OPPOSITE, ClosedTrade, Side, Wallet
 from utils.logger.operators import get_logger
@@ -18,11 +18,13 @@ class BarSimulator:
     """Plays bars (BAR_COLUMNS + SIGNAL_COLUMNS) against a wallet.
 
     On each bar, held positions are checked for exits first (they were open during the bar), then signals open
-    new positions at "Next Open". Opening one side closes the opposite one.
+    new positions at "Next Open". Opening one side closes the opposite one. New positions use `levels`
+    (default: the live settings).
     """
 
-    def __init__(self) -> None:
+    def __init__(self, levels: ExitLevels = ExitLevels()) -> None:
         self.wallet = Wallet()
+        self.levels = levels
 
     def step(self, bar: pd.Series, timestamp: datetime) -> list[ClosedTrade]:
         closed_trades = []
@@ -47,7 +49,10 @@ class BarSimulator:
             if self.wallet.get(opposite_side) is not None:
                 closed_trades.append(self.wallet.close(opposite_side, bar["Next Open"]))
 
-            self.wallet.set(side, TrackedPosition.open(is_long=side == "LONG", entry_price=bar["Next Open"]))
+            self.wallet.set(
+                side,
+                TrackedPosition.open(is_long=side == "LONG", entry_price=bar["Next Open"], levels=self.levels),
+            )
 
         return closed_trades
 

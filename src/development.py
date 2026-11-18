@@ -13,6 +13,7 @@ from config import SETTINGS
 from services.storage.operators import Storage
 from services.storage.windows import DataWindow
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
+from tasks.backtest.paper_trade import replay_fixed_rule
 from tasks.backtest.runner import backtest_trade_strategies
 from tasks.backtest.walk_forward import SelectionWalkForward, WalkForwardGrid
 from utils.constants import TODAY_MIDNIGHT
@@ -222,6 +223,27 @@ def run_selection_walk_forward(period_days: int, indicators_count: int, grid: Wa
     log.info("\n" + results.sort_values("total_return", ascending=False).to_string(index=False))
 
 
+def run_fixed_rule_replay(period_days: int):
+    """Replay SETTINGS.FIXED_RULE over the cache (no files written) and log its result per quarter."""
+    data = _get_data(point_of_origin=TODAY_MIDNIGHT + timedelta(days=1), period_days=period_days)
+    log.warning(f"Fixed rule replay: {' | '.join(SETTINGS.FIXED_RULE.STRATEGY)} over {period_days} days")
+
+    sessions = pd.DataFrame(
+        [
+            (session, paper.trades, paper.wins, paper.capital_return)
+            for session, paper in replay_fixed_rule(data).items()
+        ],
+        columns=["session", "trades", "wins", "capital_return"],
+    )
+    quarters = sessions.groupby(pd.PeriodIndex(sessions["session"], freq="Q"))[["trades", "wins", "capital_return"]]
+    log.info("\n" + quarters.sum().round(3).to_string())
+    log.warning(
+        f"Fixed rule: {len(sessions)} sessions, {sessions['trades'].sum()} trades, "
+        f"{sessions['wins'].sum()} profitable, "
+        f"capital return {round(100 * sessions['capital_return'].sum(), 2)}%",
+    )
+
+
 def get_statistics_per_indicator():
     for file in sorted(os.listdir("src/config")):
         if "OMX_trade_strategies" not in file:
@@ -253,12 +275,15 @@ def get_statistics_per_indicator():
 
 
 if __name__ == "__main__":
-    get_statistics_per_indicator()
-
+    is_fixed_rule_replay = True
     is_strategies_generation = True
     is_full = True
 
-    if is_strategies_generation:
+    if is_fixed_rule_replay:
+        run_fixed_rule_replay(period_days=1000)
+
+    elif is_strategies_generation:
+        get_statistics_per_indicator()
         run_strategies_generation(period_days_back_test=90, period_days_forward_test=30, full=is_full)
 
     else:

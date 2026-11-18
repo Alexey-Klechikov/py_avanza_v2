@@ -11,6 +11,7 @@ from config import SETTINGS
 from services.storage.operators import Storage
 from services.storage.windows import DataWindow
 from services.ta.strategies.models.strategy import ComposeStrategiesListMethod
+from tasks.backtest.paper_trade import paper_trade_session
 from tasks.backtest.runner import backtest_trade_strategies as _backtest_trade_strategies
 from utils.constants import TODAY_MIDNIGHT
 from utils.logger.operators import get_logger, set_handlers
@@ -63,6 +64,7 @@ if __name__ == "__main__":
     try:
         cache_history()
         rescore_strategies()
+        paper_trade_session(TODAY_MIDNIGHT.date())
 
     except Exception as e:
         telegram = Telegram()

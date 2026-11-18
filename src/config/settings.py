@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import time
+from datetime import date, time
 
 
 @dataclass(frozen=True)
@@ -90,6 +90,32 @@ class Time:
 
 
 @dataclass(frozen=True)
+class FixedRule:
+    # One rule frozen on START and never re-ranked, run beside the ranked strategies (which the MIN_EDGE gate keeps
+    # empty). STRATEGY's indicators run on SIGNAL_RESOLUTION bars built from the 2m cache, faded when INVERTED (an
+    # indicator LONG opens SHORT and vice versa), and act on the 2m bar that completes each coarse bar; exits are
+    # managed on 2m with the levels below.
+    # - task_trade: LIVE_ORDERS False only logs the rule's signals as [PAPER] and keeps trading the ranked
+    #   strategies; True trades this rule instead of them (real orders unless DRY_RUN).
+    # - task_end_of_day replays the session into logs/paper_trades_<NAME>.json (the simulated result; compare it
+    #   with daily_trading_stats when trading live); task_end_of_week sends the running total since START;
+    #   development.py replays the rule over the whole cache.
+    # Chosen in the 2026-11-17 study: in-sample 2024-05..2026-11 151 trades, +1.0 capital since 2025-01 (t 2.2),
+    # 9 of 11 quarters positive, but the study's luck-only test could not rule out chance (p 0.76 for the family).
+    # At ~7 trades a month, judging it needs roughly 100+ forward trades. Changing the rule restarts the test.
+    STRATEGY: tuple[str, ...] = ("Cycles-EBSW", "Momentum-MACD_DEMA", "Overlap-LINREG")
+    INVERTED: bool = True
+    SIGNAL_RESOLUTION: str = "30min"
+    TAKE_PROFIT: float = 0.07
+    STOP_LOSS: float = 0.12
+    PULLBACK_TRIGGER: float = 0.07 / 2  # as the study simulated it: half the take profit
+    # Calendar days of 2m history before a session that warm up the indicators
+    WARMUP_DAYS: int = 60
+    START: date = date(2026, 11, 18)
+    LIVE_ORDERS: bool = False
+
+
+@dataclass(frozen=True)
 class TradeStrategies:
     NAME: str = "OMX"
     ACCOUNT_ID: str = "754762"
@@ -110,6 +136,7 @@ class TradeStrategies:
     STOP_LOSS: StopLoss = field(default_factory=StopLoss)
     PULLBACK: Pullback = field(default_factory=Pullback)
     TIME: Time = field(default_factory=Time)
+    FIXED_RULE: FixedRule = field(default_factory=FixedRule)
 
     BUDGET: float = 1.0
 

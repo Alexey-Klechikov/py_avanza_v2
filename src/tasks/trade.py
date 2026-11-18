@@ -11,7 +11,7 @@ from apis.avanza.operators.orders import Orders
 from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.watchlists import Watchlists
 from config import DRY_RUN, SETTINGS
-from services.trading.tracked_position import TrackedPosition
+from services.trading.tracked_position import ExitLevels, TrackedPosition
 from tasks.models import Direction
 from utils.logger.operators import get_logger
 
@@ -59,10 +59,11 @@ class PriceState:
 
 
 class Trade:
-    def __init__(self, orders: Orders, portfolio: Portfolio, watchlists: Watchlists) -> None:
+    def __init__(self, orders: Orders, portfolio: Portfolio, watchlists: Watchlists, levels: ExitLevels) -> None:
         self.orders = orders
         self.portfolio = portfolio
         self.watchlists = watchlists
+        self.levels = levels
 
         # Exit levels per held direction, on the underlying, exactly as the backtest tracks them
         self.tracked_positions: dict[Direction, TrackedPosition] = {}
@@ -75,6 +76,7 @@ class Trade:
             is_long=direction == Direction.BULL,
             entry_price=underlying_price,
             instrument_leverage=instrument_leverage,
+            levels=self.levels,
         )
 
     def _tracked_position(self, direction: Direction, underlying_price: float) -> TrackedPosition:
