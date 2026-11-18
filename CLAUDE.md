@@ -34,6 +34,7 @@ Python 3.13 trading bot: caches OHLCV data, turns TA indicators into signal sour
 
 ## Pitfalls
 - Host cron uses global `/usr/bin/python3.13`; deploy does not install dependencies, so after `uv.lock` changes re-export `requirements.txt` and pip-install it on the host (README "Deployment").
+- `src/config/OMX_weighted_model.json` is committed, so every deploy's rsync overwrites the host's weekly refit with the committed copy.
 - Cron starts the live loop once; it runs until shortly after `SETTINGS.TIME.END` (cron does not invoke it every two minutes).
 - [src/print_logs.sh](src/print_logs.sh) assumes the Linux host layout and GNU `date -d`.
 - Logs, `daily_trading_stats_OMX.json`, and `paper_trades_OMX_<source>.json` accumulate under `src/logs/` locally, `logs/` on the host.

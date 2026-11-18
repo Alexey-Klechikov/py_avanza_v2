@@ -111,7 +111,7 @@ The integration tests require valid Avanza credentials in `src/config/.env` and 
 
 ## Deployment
 
-`.github/workflows/deploy.yaml` deploys on pushes to `main`. The workflow rsyncs `src/` into `/home/ubuntu/pyAvanza/`, preserves `data`, `logs`, `config`, and `.venv`, writes `config/.env` from GitHub Secrets, and refreshes the project cron section.
+`.github/workflows/deploy.yaml` deploys on pushes to `main`. The workflow rsyncs `src/` into `/home/ubuntu/pyAvanza/`, preserves `data`, `logs`, `config`, and `.venv`, writes `config/.env` from GitHub Secrets, and refreshes the project cron section. Files committed under `src/config/` still overwrite their host copies: each deploy replaces the host's refitted `config/OMX_weighted_model.json` with the committed one until the next `task_end_of_week.py`.
 
 Cron runs every task with the host's global `/usr/bin/python3.13` (installed next to the system Python, e.g. from the deadsnakes PPA). Dependencies are not installed by the workflow: export them locally with `uv export --no-dev --no-hashes --no-emit-project --frozen -o requirements.txt`, copy the file to the host, and run `sudo python3.13 -m pip install -r requirements.txt` whenever `uv.lock` changes. The workflow fails before updating cron if `/usr/bin/python3.13` is missing.
 
