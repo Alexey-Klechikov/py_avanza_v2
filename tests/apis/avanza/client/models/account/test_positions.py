@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.account.positions import AccountsPositions
+from src.apis.avanza.client.models.account.positions import AccountsPositions
 
 
 class Test_AccountsPositions(TestCase):

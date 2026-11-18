@@ -4,10 +4,10 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from config import SETTINGS
-from services.trading.tracked_position import TrackedPosition
-from tasks.backtest.bars import add_execution_columns
-from tasks.backtest.simulator import BarSimulator
+from src.config import SETTINGS
+from src.services.trading.tracked_position import TrackedPosition
+from src.tasks.backtest.bars import add_execution_columns
+from src.tasks.backtest.simulator import BarSimulator
 
 ENTRY_PRICE = 1000.0
 MIDDAY = datetime(2026, 11, 16, 12, 0)
@@ -108,7 +108,8 @@ class Test_SameDayResolution(TestCase):
             pd.date_range("2026-11-16 09:00", "2026-11-16 17:28", freq="2min"),
         )
         bars = pd.DataFrame(
-            {"Open": ENTRY_PRICE, "High": ENTRY_PRICE, "Low": ENTRY_PRICE, "Close": ENTRY_PRICE}, index=index
+            {"Open": ENTRY_PRICE, "High": ENTRY_PRICE, "Low": ENTRY_PRICE, "Close": ENTRY_PRICE},
+            index=index,
         )
         add_execution_columns(bars)
         trading_hours = (bars.index.time >= SETTINGS.TIME.START) & (bars.index.time < SETTINGS.TIME.END)

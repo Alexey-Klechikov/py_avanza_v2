@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
+from src.apis.avanza.client.models.instrument.certificate import InstrumentCertificate
 
 
 class Test_InstrumentCertificate(TestCase):

@@ -2,9 +2,9 @@ from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest import TestCase
 
-from services.ta.strategies.models.strategy import TradeStats
-from tasks.backtest.scoring import EdgeScorer
-from tasks.backtest.selection import select_daily_strategies, select_training_strategies
+from src.services.ta.strategies.models.strategy import TradeStats
+from src.tasks.backtest.scoring import EdgeScorer
+from src.tasks.backtest.selection import select_daily_strategies, select_training_strategies
 
 AS_OF = date(2026, 11, 17)
 YESTERDAY = AS_OF - timedelta(days=1)

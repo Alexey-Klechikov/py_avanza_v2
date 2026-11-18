@@ -1,7 +1,7 @@
 from datetime import date
 from unittest import TestCase
 
-from apis.yahoo.client.models.history_request import HistoryRequest, Interval, Period
+from src.apis.yahoo.client.models.history_request import HistoryRequest, Interval, Period
 
 
 class Test_HistoryRequest(TestCase):

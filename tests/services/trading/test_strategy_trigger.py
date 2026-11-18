@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest import TestCase
 
-from services.trading.strategy_trigger import SignalPick, StrategyTrigger
+from src.services.trading.strategy_trigger import SignalPick, StrategyTrigger
 
 # The trigger is generic over signals; plain strings keep this test independent of services/ta
 Signal = SimpleNamespace(LONG="LONG", SHORT="SHORT", EXIT="EXIT")

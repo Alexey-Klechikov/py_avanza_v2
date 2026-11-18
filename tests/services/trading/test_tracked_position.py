@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from config import SETTINGS
-from services.trading.tracked_position import TrackedPosition
+from src.config import SETTINGS
+from src.services.trading.tracked_position import TrackedPosition
 
 ENTRY_PRICE = 1000.0
 

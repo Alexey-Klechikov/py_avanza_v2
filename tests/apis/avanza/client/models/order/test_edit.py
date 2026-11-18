@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.order.edit import EditOrderResponse
+from src.apis.avanza.client.models.order.edit import EditOrderResponse
 
 
 class Test_EditOrderResponse(TestCase):

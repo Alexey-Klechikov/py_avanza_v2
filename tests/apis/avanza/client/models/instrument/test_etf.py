@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.instrument.etf import InstrumentETF
+from src.apis.avanza.client.models.instrument.etf import InstrumentETF
 
 
 class TestInstrumentETF(TestCase):

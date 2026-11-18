@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from services.ta.strategies.models.signal import Signal
+from src.services.ta.strategies.models.signal import Signal
 
 
 class Test_SignalFromBar(TestCase):

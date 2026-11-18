@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.instrument.warrant import InstrumentWarrant
+from src.apis.avanza.client.models.instrument.warrant import InstrumentWarrant
 
 
 class Test_InstrumentWarrant(TestCase):

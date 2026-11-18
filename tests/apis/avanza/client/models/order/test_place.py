@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.order.place import PlaceOrderResponse
+from src.apis.avanza.client.models.order.place import PlaceOrderResponse
 
 
 class Test_PlaceOrderResponse(TestCase):

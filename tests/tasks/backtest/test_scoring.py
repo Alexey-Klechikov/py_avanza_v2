@@ -1,8 +1,8 @@
 from datetime import date, timedelta
 from unittest import TestCase
 
-from services.ta.strategies.models.strategy import TradeStats
-from tasks.backtest.scoring import EdgeScorer, TradeHistory, training_rank, wilson_lower_bound
+from src.services.ta.strategies.models.strategy import TradeStats
+from src.tasks.backtest.scoring import EdgeScorer, TradeHistory, training_rank, wilson_lower_bound
 
 AS_OF = date(2026, 11, 17)
 NO_DECAY = float("inf")

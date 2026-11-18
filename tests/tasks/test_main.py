@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from tasks.main import MarketData
+from src.tasks.main import MarketData
 
 
 def _market_data(last_bar_start: str, bars: int = 5) -> MarketData:

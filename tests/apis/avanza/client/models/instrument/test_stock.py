@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apis.avanza.client.models.instrument.stock import InstrumentStock
+from src.apis.avanza.client.models.instrument.stock import InstrumentStock
 
 
 class Test_InstrumentStock(TestCase):

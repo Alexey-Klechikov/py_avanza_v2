@@ -3,16 +3,16 @@ from unittest import TestCase
 import pytest
 from avanza import InstrumentType, Resolution, TimePeriod
 
-from apis.avanza.client.client import get_client
-from apis.avanza.client.models.account.overview import AccountOverview
-from apis.avanza.client.models.account.positions import AccountsPositions
-from apis.avanza.client.models.chart_data import ChartData
-from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
-from apis.avanza.client.models.instrument.index import InstrumentIndex
-from apis.avanza.client.models.instrument.stock import InstrumentStock
-from apis.avanza.client.models.order.list import Orders
-from apis.avanza.client.models.search.filtered_search_result import SearchResult
 from config import SETTINGS
+from src.apis.avanza.client.client import get_client
+from src.apis.avanza.client.models.account.overview import AccountOverview
+from src.apis.avanza.client.models.account.positions import AccountsPositions
+from src.apis.avanza.client.models.chart_data import ChartData
+from src.apis.avanza.client.models.instrument.certificate import InstrumentCertificate
+from src.apis.avanza.client.models.instrument.index import InstrumentIndex
+from src.apis.avanza.client.models.instrument.stock import InstrumentStock
+from src.apis.avanza.client.models.order.list import Orders
+from src.apis.avanza.client.models.search.filtered_search_result import SearchResult
 
 
 @pytest.mark.integration
