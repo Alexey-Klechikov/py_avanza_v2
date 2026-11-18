@@ -1,6 +1,7 @@
 import json
 from datetime import date
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -38,6 +39,23 @@ class WeightedModel(BaseModel):
         weights = pd.Series(self.weights, dtype=float)
 
         return votes.reindex(columns=weights.index, fill_value=0) @ weights + self.intercept
+
+    @property
+    def bull_above(self) -> float:
+        """Scores above this signal BULL."""
+        return self.center + self.entry_threshold
+
+    @property
+    def bear_below(self) -> float:
+        """Scores below this signal BEAR."""
+        return self.center - self.entry_threshold
+
+
+class WeightedReading(NamedTuple):
+    """The model's signal and score (expected underlying move over horizon_bars, bp) on one bar."""
+
+    signal: Signal | None
+    score: float
 
 
 MODEL_PATH = Path(__file__).resolve().parents[2] / "config" / f"{SETTINGS.NAME}_weighted_model.json"
@@ -168,12 +186,12 @@ def weighted_signal_bars(model: WeightedModel, votes: pd.DataFrame, history: pd.
     return bars
 
 
-def weighted_signal(model: WeightedModel, closed_history: pd.DataFrame, daily: pd.DataFrame) -> Signal | None:
-    """The model's signal on the newest bar of `closed_history` (closed 2m bars, WARMUP_DAYS deep)."""
+def weighted_signal(model: WeightedModel, closed_history: pd.DataFrame, daily: pd.DataFrame) -> WeightedReading:
+    """The model's signal and score on the newest bar of `closed_history` (closed 2m bars, WARMUP_DAYS deep)."""
     votes = vote_frame(closed_history, daily)
     last_bar = weighted_signal_bars(model, votes, closed_history)[SIGNAL_COLUMNS].iloc[-1]
 
-    return Signal.from_bar(*last_bar.notna())
+    return WeightedReading(signal=Signal.from_bar(*last_bar.notna()), score=float(model.score(votes).iloc[-1]))
 
 
 def load_model() -> WeightedModel | None:

@@ -69,6 +69,7 @@ class MarketData:
         self.history: pd.DataFrame = pd.DataFrame()
         self.daily: pd.DataFrame = pd.DataFrame()
         self.weighted_model: WeightedModel | None = None
+        self.weighted_score: float | None = None
         self.is_new = False
         self.too_old = False
 
@@ -116,12 +117,24 @@ class MarketData:
 
         if self.daily.empty:
             self.daily = Storage(resolution="1d").read()
-        if self.weighted_model is None:
-            self.weighted_model = load_model()
-        if self.weighted_model is None:
+
+        reading = weighted_signal(self.load_weighted_model(), closed_history, self.daily)
+        self.weighted_score = reading.score
+        log.debug(f"Current score {reading.score:+.2f}")
+        return reading.signal
+
+    def load_weighted_model(self) -> WeightedModel:
+        """The weighted model, read once per run; logs the score range that signals."""
+        if self.weighted_model is not None:
+            return self.weighted_model
+
+        model = load_model()
+        if model is None:
             raise ValueError("No weighted model file: run task_end_of_week.py or development.py to train it")
 
-        return weighted_signal(self.weighted_model, closed_history, self.daily)
+        log.info(f"[BULL] {model.bull_above:+.2f} < score < {model.bear_below:+.2f} [BEAR]")
+        self.weighted_model = model
+        return model
 
     def last_complete_bar_position(self, now: datetime | None = None) -> int:
         """Position of the newest bar that has fully closed by `now`.
@@ -201,7 +214,7 @@ class TradingFlow:
 
         # A time-boxed position runs until its holding time is up (Trade.stop_loss sells it then)
         if SOURCE_LEVELS[_live_source()].hold_bars and portfolio.positions:
-            log.info(f"Signal {signal} ignored: the held position exits on its holding time")
+            log.info(f"Signal {signal}{self._score_note()} ignored: the held position exits on its holding time")
             return FlowAction.DO_NOTHING
 
         portfolio.reload_balance()
@@ -232,10 +245,16 @@ class TradingFlow:
         return signal
 
     def _log_source_signal(self, source: SignalSource, signal: Signal | None, prefix: str) -> None:
-        if signal:
-            log.info(
-                f"{prefix}{source.value} signal: {signal}. Latest price: {round(self.market_data.latest_price, 2)}",
-            )
+        if not signal:
+            return
+
+        score_note = self._score_note() if source == SignalSource.WEIGHTED else ""
+        latest_price = round(self.market_data.latest_price, 2)
+        log.info(f"{prefix}{source.value} signal: {signal}{score_note}. Latest price: {latest_price}")
+
+    def _score_note(self) -> str:
+        score = self.market_data.weighted_score
+        return "" if score is None else f" (score {score:+.2f})"
 
     def wait_for_data(self):
         sleep(120 - ((datetime.now().minute * 60 + datetime.now().second) % 120) + 6)
@@ -267,10 +286,13 @@ def trade() -> None:
             " | DRY_RUN" if DRY_RUN else "",
         ),
     )
-    if live_source == SignalSource.WEIGHTED and load_model() is None:
-        raise ValueError("LIVE_SIGNAL_SOURCE is weighted but there is no weighted model file to trade")
-
     market_data = MarketData()
+    try:
+        market_data.load_weighted_model()
+    except ValueError:
+        if live_source == SignalSource.WEIGHTED:
+            raise
+        log.warning("No weighted model file yet; the weighted paper source stays silent until one is trained")
 
     orders = Orders()
     orders.reload_active()

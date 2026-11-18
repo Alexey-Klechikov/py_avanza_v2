@@ -45,7 +45,7 @@ class Test_PickSignal(TestCase):
                 raise ValueError("no model")
             return source_signals[source.value]
 
-        market_data = MagicMock()
+        market_data = MagicMock(weighted_score=None)
         market_data.source_signal.side_effect = source_signal
         with patch.object(main, "SETTINGS", replace(SETTINGS, LIVE_SIGNAL_SOURCE=live_source)):
             signal = main.TradingFlow(market_data)._pick_signal()
@@ -80,7 +80,7 @@ class Test_TimeBoxedFlow(TestCase):
         from services.ta.strategies.models.signal import Signal
         from tasks.trade import main
 
-        market_data = MagicMock(is_new=True, too_old=False)
+        market_data = MagicMock(is_new=True, too_old=False, weighted_score=4.2)
         market_data.source_signal.return_value = Signal.SHORT
         portfolio = MagicMock(positions=["held"], buying_power=10_000)
         flow = main.TradingFlow(market_data)
@@ -92,3 +92,38 @@ class Test_TimeBoxedFlow(TestCase):
             action = flow.get_action(portfolio, orders=MagicMock())
 
         assert action == main.FlowAction.DO_NOTHING
+
+
+class Test_ScoreLogging(TestCase):
+    def test_range_logged_once_and_score_on_signals(self):
+        from datetime import date
+        from unittest.mock import patch
+
+        from services.ta.strategies.models.signal import Signal
+        from tasks.backtest.model import WeightedModel
+        from tasks.trade import main
+        from tasks.trade.models import SignalSource
+
+        model = WeightedModel(
+            weights={"a": 1.0},
+            intercept=0.0,
+            center=0.5,
+            entry_threshold=13.0,
+            exit_threshold=0.0,
+            horizon_bars=60,
+            alpha=0.1,
+            trained_from=date(2026, 1, 1),
+            trained_to=date(2026, 1, 2),
+        )
+        market_data = main.MarketData()
+        with patch.object(main, "load_model", return_value=model), patch.object(main.log, "info") as info:
+            market_data.load_weighted_model()
+            market_data.load_weighted_model()
+
+            market_data.weighted_score = 14.2
+            market_data.bars = pd.DataFrame({"Close": [100.0]})
+            main.TradingFlow(market_data)._log_source_signal(SignalSource.WEIGHTED, Signal.LONG, prefix="[PAPER] ")
+
+        messages = [call.args[0] for call in info.call_args_list]
+        assert messages[0] == "[BULL] +13.50 < score < -12.50 [BEAR]"
+        assert len(messages) == 2 and "(score +14.20)" in messages[1]

@@ -112,3 +112,20 @@ class Test_ForwardMove(TestCase):
 
         # every exit fills at the 17:16 bar's next open (17:18 open, 104), the first bar at or after 17:15
         assert np.allclose(moves[:4], (104 / bars["Next Open"].to_numpy()[:4] - 1) * 1e4)
+
+
+class Test_WeightedReading(TestCase):
+    def test_thresholds_in_score_units(self):
+        model = _model(center=0.5, entry_threshold=2.0)
+
+        assert (model.bull_above, model.bear_below) == (2.5, -1.5)
+
+    def test_reading_carries_the_last_score(self):
+        index = pd.date_range("2026-11-16 10:00", periods=3, freq="2min")
+        history = pd.DataFrame({"Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 1.0, "Volume": 0}, index=index)
+        votes = pd.DataFrame({"a": [0.0, 0.0, 1.0]}, index=index)  # last score 2 > entry 1
+
+        with patch.object(model_module, "vote_frame", return_value=votes):
+            reading = model_module.weighted_signal(_model(), history, daily=pd.DataFrame())
+
+        assert reading == (Signal.LONG, 2.0)
