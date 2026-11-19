@@ -4,7 +4,7 @@ from config import SETTINGS
 from services.trading.tracked_position import ExitLevels, TrackedPosition
 
 ENTRY_PRICE = 1000.0
-# Price-based exits on, as a source like the fixed rule sets them
+# Price-based exits on (the weighted score turns them off by default)
 TAKE_PROFIT, STOP_LOSS, PULLBACK_TRIGGER = 0.045, 0.03, 0.0225
 LEVELS = ExitLevels(take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, pullback_trigger=PULLBACK_TRIGGER)
 

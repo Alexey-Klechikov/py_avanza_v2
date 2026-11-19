@@ -1,29 +1,35 @@
 from datetime import datetime, time, timedelta
 
+import pandas as pd
 import pandas_market_calendars as mcal
 import pytz
 
+TIMEZONE = "Europe/Stockholm"
+STOP_BEFORE_CLOSE = timedelta(minutes=11)
 
-def market_is_close() -> bool:
-    now = datetime.now(tz=pytz.timezone("Europe/Berlin"))
+
+def _today_nyse_schedule() -> pd.DataFrame:
+    """Today's NYSE session in Stockholm time: one row, or none on a day without a session."""
     today = datetime.today().strftime("%Y-%m-%d")
 
-    sto = mcal.get_calendar("XSTO")
-    schedule = sto.schedule(start_date=today, end_date=today, tz="Europe/Berlin").iloc[0]
-
-    return not (schedule.market_open <= now <= schedule.market_close)
+    return mcal.get_calendar("XNYS").schedule(start_date=today, end_date=today, tz=TIMEZONE)
 
 
-def get_market_close_time() -> time:
-    today = datetime.today().strftime("%Y-%m-%d")
+def is_market_closed() -> bool:
+    schedule = _today_nyse_schedule()
+    if schedule.empty:
+        return True
 
-    sto = mcal.get_calendar("XSTO")
-    try:
-        market_close_time = sto.schedule(start_date=today, end_date=today, tz="Europe/Berlin").iloc[
-            0
-        ].market_close - timedelta(minutes=11)
+    session = schedule.iloc[0]
+    now = datetime.now(tz=pytz.timezone(TIMEZONE))
 
-        return market_close_time.replace(tzinfo=None).time()
+    return not (session.market_open <= now <= session.market_close)
 
-    except IndexError:
+
+def get_trading_end_time() -> time:
+    """STOP_BEFORE_CLOSE before today's NYSE close, as Stockholm wall-clock time; now on a day without a session."""
+    schedule = _today_nyse_schedule()
+    if schedule.empty:
         return datetime.now().time()
+
+    return (schedule.iloc[0].market_close - STOP_BEFORE_CLOSE).replace(tzinfo=None).time()

@@ -4,36 +4,34 @@ import numpy as np
 import pandas as pd
 
 from config import SETTINGS
-from services.ta.operators import get_indicators
-from tasks.backtest.bars import bar_index
-from tasks.coarse_bars import BAR_DURATION, completing_bars, resample_ohlcv
+from services.ta.operators import add_indicators
+from tasks.shared.bars import BAR_DURATION, bar_index
+from tasks.shared.coarse_bars import completing_bars, resample_ohlcv
 
 DAILY_PREFIX = "1d"
 
 
-def _flags(signal_method: Callable | None, records: list[dict]) -> np.ndarray:
+def _signal_flags(signal_method: Callable | None, bar_records: list[dict]) -> np.ndarray:
     if signal_method is None:
-        return np.zeros(len(records), dtype=np.int8)
+        return np.zeros(len(bar_records), dtype=np.int8)
 
-    return np.fromiter((bool(signal_method(record)) for record in records), dtype=np.int8, count=len(records))
+    return np.fromiter((bool(signal_method(record)) for record in bar_records), dtype=np.int8, count=len(bar_records))
 
 
 def _indicator_votes(bars: pd.DataFrame) -> pd.DataFrame:
-    """Per bar of `bars`: "<indicator>:dir" (+1 LONG, -1 SHORT, 0) and "<indicator>:exit" (1 on EXIT)."""
+    """Per bar of `bars`: "<indicator>:dir" (+1 LONG, -1 SHORT, 0)."""
     bars = bars.copy()
     indicators = [
         (f"{category}-{name}", indicator.signal)
-        for category, category_indicators in get_indicators(bars).items()
+        for category, category_indicators in add_indicators(bars).items()
         for name, indicator in category_indicators.items()
     ]
-    records = bars.to_dict("records")
+    bar_records = bars.to_dict("records")
 
     votes: dict[str, np.ndarray] = {}
     for name, signal in indicators:
         if signal.LONG or signal.SHORT:
-            votes[f"{name}:dir"] = _flags(signal.LONG, records) - _flags(signal.SHORT, records)
-        if signal.EXIT and SETTINGS.WEIGHTED_SCORE.USE_EXIT_VOTES:
-            votes[f"{name}:exit"] = _flags(signal.EXIT, records)
+            votes[f"{name}:dir"] = _signal_flags(signal.LONG, bar_records) - _signal_flags(signal.SHORT, bar_records)
 
     return pd.DataFrame(votes, index=bars.index)
 
@@ -45,9 +43,9 @@ def _intraday_votes(history: pd.DataFrame, resolution: str) -> pd.DataFrame:
     if duration == BAR_DURATION:
         return _indicator_votes(history).add_prefix(f"{resolution}:")
 
-    completed = completing_bars(history, duration)
-    votes = _indicator_votes(resample_ohlcv(history, duration)).reindex(completed.index)
-    votes.index = pd.DatetimeIndex(completed.to_numpy())
+    completing_times = completing_bars(history, duration, BAR_DURATION)
+    votes = _indicator_votes(resample_ohlcv(history, duration)).reindex(completing_times.index)
+    votes.index = pd.DatetimeIndex(completing_times.to_numpy())
 
     return votes.reindex(history.index, method="ffill").add_prefix(f"{resolution}:")
 

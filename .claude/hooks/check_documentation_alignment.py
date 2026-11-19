@@ -28,7 +28,7 @@ RULES = (
             "src/apis/avanza/client/client.py",
             "src/config/settings.py",
             "src/services/storage/operators.py",
-            "src/tasks/backtest/model.py",
+            "src/tasks/shared/weighted_model.py",
             "src/task_end_of_day.py",
             "src/task_end_of_week.py",
             "src/task_trade.py",

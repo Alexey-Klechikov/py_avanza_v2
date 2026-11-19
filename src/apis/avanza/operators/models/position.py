@@ -14,8 +14,8 @@ class Quote(BaseModel):
 
 
 class Performance(BaseModel):
-    percent: float
-    value: float
+    percent: float | None
+    value: float | None
 
 
 class Position(BaseModel):

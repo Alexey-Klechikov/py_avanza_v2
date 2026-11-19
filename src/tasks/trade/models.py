@@ -15,10 +15,3 @@ class FlowAction(Enum):
     TRADE = "TRADE"
     DO_NOTHING = "DO_NOTHING"
     EXIT_TRADING = "EXIT_TRADING"
-
-
-class SignalSource(Enum):
-    """Where the live loop's signals come from (SETTINGS.LIVE_SIGNAL_SOURCE); the others are logged as [PAPER]."""
-
-    FIXED_RULE = "fixed_rule"
-    WEIGHTED = "weighted"

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import TestCase
 
 import numpy as np
@@ -6,8 +6,8 @@ import pandas as pd
 
 from config import SETTINGS
 from services.trading.tracked_position import ExitLevels, TrackedPosition
-from tasks.backtest.bars import add_execution_columns, bar_index
 from tasks.backtest.simulator import BarSimulator
+from tasks.shared.bars import add_execution_columns, bar_index
 
 ENTRY_PRICE = 1000.0
 TAKE_PROFIT, STOP_LOSS, PULLBACK_TRIGGER = 0.045, 0.03, 0.0225
@@ -24,7 +24,7 @@ def _stop_loss(position: TrackedPosition) -> float:
     return position.stop_loss_price
 
 
-MIDDAY = datetime(2026, 11, 16, 12, 0)
+MIDDAY = datetime(2026, 11, 16, 18, 0)
 
 
 def _bar(
@@ -34,7 +34,6 @@ def _bar(
     next_open: float = ENTRY_PRICE,
     long: bool = False,
     short: bool = False,
-    exit: bool = False,
     day_end: bool = False,
 ) -> pd.Series:
     return pd.Series(
@@ -47,7 +46,6 @@ def _bar(
             "Day End": day_end,
             "LONG": close if long else np.nan,
             "SHORT": close if short else np.nan,
-            "EXIT": close if exit else np.nan,
         },
     )
 
@@ -67,41 +65,38 @@ class Test_BarSimulator(TestCase):
         assert simulator.step(_bar(long=True, next_open=1001), MIDDAY) == []
         assert simulator.wallet.long is not None and simulator.wallet.long.entry_price == 1001
 
-    def test_no_entry_on_exit_conflict_or_day_end(self):
-        for bar in (_bar(long=True, exit=True), _bar(long=True, day_end=True), _bar(long=True, short=True)):
+    def test_no_entry_on_conflict_or_day_end(self):
+        for bar in (_bar(long=True, day_end=True), _bar(long=True, short=True)):
             simulator = BarSimulator(LEVELS)
             simulator.step(bar, MIDDAY)
 
             assert simulator.wallet.is_empty()
-
-    def test_exit_wins_over_same_bar_long(self):
-        simulator, position = _simulator_holding(is_long=True)
-
-        closed_trades = simulator.step(_bar(long=True, exit=True, next_open=1002), MIDDAY)
-
-        assert [trade.profit for trade in closed_trades] == [position.profit(1002)]
-        assert simulator.wallet.is_empty()
 
     def test_take_profit_fills_inside_bar(self):
         simulator, position = _simulator_holding(is_long=True)
 
         closed_trades = simulator.step(_bar(high=_take_profit(position) + 1), MIDDAY)
 
-        assert [trade.profit for trade in closed_trades] == [position.profit(_take_profit(position))]
-        assert closed_trades[0].capital_return == position.capital_return(_take_profit(position))
+        assert [trade.capital_return for trade in closed_trades] == [position.capital_return(_take_profit(position))]
 
     def test_reverse_closes_opposite_at_next_open(self):
         simulator, short_position = _simulator_holding(is_long=False)
 
         closed_trades = simulator.step(_bar(long=True, next_open=999), MIDDAY)
 
-        assert [trade.profit for trade in closed_trades] == [short_position.profit(999)]
+        assert [trade.capital_return for trade in closed_trades] == [short_position.capital_return(999)]
         assert simulator.wallet.short is None and simulator.wallet.long is not None
 
     def test_trading_end_closes(self):
         simulator, _ = _simulator_holding(is_long=True)
 
         assert len(simulator.step(_bar(), datetime.combine(MIDDAY.date(), SETTINGS.TIME.END))) == 1
+
+    def test_the_bar_closing_at_trading_end_closes(self):
+        simulator, _ = _simulator_holding(is_long=True)
+        closes_at_end = datetime.combine(MIDDAY.date(), SETTINGS.TIME.END) - timedelta(minutes=1)  # 21:44 closes 21:46
+
+        assert len(simulator.step(_bar(), closes_at_end)) == 1
 
 
 class Test_AddExecutionColumns(TestCase):
@@ -118,8 +113,8 @@ class Test_AddExecutionColumns(TestCase):
 class Test_SameDayResolution(TestCase):
     def test_no_position_survives_a_session(self):
         """LONG on every bar of a half day and a full day: whatever opens must close on its own day."""
-        index = pd.date_range("2026-11-13 09:00", "2026-11-13 12:58", freq="2min").append(
-            pd.date_range("2026-11-16 09:00", "2026-11-16 17:28", freq="2min"),
+        index = pd.date_range("2026-11-13 15:30", "2026-11-13 18:58", freq="2min").append(
+            pd.date_range("2026-11-16 15:30", "2026-11-16 21:58", freq="2min"),
         )
         bars = pd.DataFrame(
             {"Open": ENTRY_PRICE, "High": ENTRY_PRICE, "Low": ENTRY_PRICE, "Close": ENTRY_PRICE},
@@ -130,7 +125,6 @@ class Test_SameDayResolution(TestCase):
         trading_hours = (times >= SETTINGS.TIME.START) & (times < SETTINGS.TIME.END)
         bars["LONG"] = np.where(trading_hours, ENTRY_PRICE, np.nan)
         bars["SHORT"] = np.nan
-        bars["EXIT"] = np.nan
 
         simulator = BarSimulator(LEVELS)
         closed_trades = 0

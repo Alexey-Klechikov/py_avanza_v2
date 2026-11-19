@@ -5,8 +5,8 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
-from tasks.backtest import votes as votes_module
-from tasks.backtest.bars import bar_index
+from tasks.shared import votes as votes_module
+from tasks.shared.bars import bar_index
 
 
 def _history() -> pd.DataFrame:
@@ -22,13 +22,13 @@ def _daily() -> pd.DataFrame:
 
 
 # One indicator: LONG while Close > 150 on daily bars, else on intraday bars LONG from Close >= 15
-FAKE_SIGNAL = SimpleNamespace(LONG=lambda row: row["Close"] >= 15, SHORT=lambda row: row["Close"] < 15, EXIT=None)
+FAKE_SIGNAL = SimpleNamespace(LONG=lambda row: row["Close"] >= 15, SHORT=lambda row: row["Close"] < 15)
 
 
 def _votes(history: pd.DataFrame, resolution: str) -> pd.DataFrame:
     with patch.object(
         votes_module,
-        "get_indicators",
+        "add_indicators",
         return_value={"Trend": {"FAKE": SimpleNamespace(signal=FAKE_SIGNAL)}},
     ):
         return votes_module._intraday_votes(history, resolution)
@@ -50,28 +50,13 @@ class Test_Votes(TestCase):
         assert _votes(history, "30min")["30min:Trend-FAKE:dir"].isna().all()
 
     def test_daily_vote_uses_the_previous_session(self):
-        signal = SimpleNamespace(LONG=lambda row: row["Close"] > 150, SHORT=lambda row: row["Close"] <= 150, EXIT=None)
+        signal = SimpleNamespace(LONG=lambda row: row["Close"] > 150, SHORT=lambda row: row["Close"] <= 150)
         with patch.object(
             votes_module,
-            "get_indicators",
+            "add_indicators",
             return_value={"Trend": {"FAKE": SimpleNamespace(signal=signal)}},
         ):
             votes = votes_module._daily_votes(bar_index(_history()), _daily())
 
         # 2026-11-16 uses 2026-11-13 (Close 100 -> SHORT), never its own row (Close 200)
         assert (votes["1d:Trend-FAKE:dir"] == -1).all()
-
-
-class Test_ExitVotes(TestCase):
-    def test_exit_votes_follow_the_setting(self):
-        from dataclasses import replace
-
-        signal = SimpleNamespace(LONG=lambda row: True, SHORT=None, EXIT=lambda row: True)
-        mapping = {"Trend": {"FAKE": SimpleNamespace(signal=signal)}}
-        for use_exit_votes, columns in ((False, ["Trend-FAKE:dir"]), (True, ["Trend-FAKE:dir", "Trend-FAKE:exit"])):
-            weighted = replace(votes_module.SETTINGS.WEIGHTED_SCORE, USE_EXIT_VOTES=use_exit_votes)
-            with (
-                patch.object(votes_module, "get_indicators", return_value=mapping),
-                patch.object(votes_module, "SETTINGS", replace(votes_module.SETTINGS, WEIGHTED_SCORE=weighted)),
-            ):
-                assert list(votes_module._indicator_votes(_history()).columns) == columns

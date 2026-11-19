@@ -11,7 +11,6 @@ SIDES_WITH_OPPOSITE: tuple[tuple[Side, Side], ...] = (("LONG", "SHORT"), ("SHORT
 
 @dataclass(frozen=True)
 class ClosedTrade:
-    profit: float  # underlying points
     capital_return: float  # fraction of the capital in the position
 
 
@@ -33,10 +32,10 @@ class Wallet(BaseModel):
     def is_empty(self) -> bool:
         return self.long is None and self.short is None
 
-    def close(self, side: Side, sell_price: float) -> ClosedTrade:
+    def close(self, side: Side, exit_price: float) -> ClosedTrade:
         position = self.get(side)
         if position is None:
             raise ValueError(f"No {side} position to close")
 
         self.set(side, None)
-        return ClosedTrade(profit=position.profit(sell_price), capital_return=position.capital_return(sell_price))
+        return ClosedTrade(capital_return=position.capital_return(exit_price))

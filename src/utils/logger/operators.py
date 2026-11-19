@@ -17,26 +17,17 @@ def _get_log_file_name(file_prefix: str) -> str:
 
 
 def _create_console_handler(log: Logger, log_levels: tuple) -> None:
-    ch = logging.StreamHandler()
-    ch.addFilter(LevelFilter(log_levels))
-    cf = ColoredFormatter("[%(levelname)s] [%(name)s] - %(message)s")
-    ch.setFormatter(cf)
-    log.addHandler(ch)
+    console_handler = logging.StreamHandler()
+    console_handler.addFilter(LevelFilter(log_levels))
+    console_handler.setFormatter(ColoredFormatter("[%(levelname)s] [%(name)s] - %(message)s"))
+    log.addHandler(console_handler)
 
 
 def _create_file_handler(log: Logger, file_name: str, log_levels: tuple, write_mode: str, datefmt="%H:%M:%S") -> None:
-    fh = logging.FileHandler(file_name, write_mode)
-    fh.addFilter(LevelFilter(log_levels))
-    ff = OneLineFormatter(datefmt=datefmt)
-    fh.setFormatter(ff)
-    log.addHandler(fh)
-
-
-def _remove_handlers(log: Logger, handler_type: type) -> None:
-    handlers_to_remove = [h for h in log.handlers if isinstance(h, handler_type)]
-    for handler in handlers_to_remove:
-        log.removeHandler(handler)
-        handler.close()
+    file_handler = logging.FileHandler(file_name, write_mode)
+    file_handler.addFilter(LevelFilter(log_levels))
+    file_handler.setFormatter(OneLineFormatter(datefmt=datefmt))
+    log.addHandler(file_handler)
 
 
 def set_handlers(file_prefix: str, console_log_levels: tuple = ("DEBUG", "WARNING")) -> None:
@@ -65,18 +56,8 @@ def set_handlers(file_prefix: str, console_log_levels: tuple = ("DEBUG", "WARNIN
     log.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
 
 
-def reset_file_handlers(file_prefix: str):
-    log = logging.getLogger("main")
-    log_file_name = _get_log_file_name(file_prefix)
-
-    _remove_handlers(log, logging.FileHandler)
-
-    _create_file_handler(log, file_name=f"{log_file_name}.log", log_levels=("INFO", "WARNING"), write_mode="a")
-
-    log.warning("#########################################################")
-
-
 def get_logger() -> Logger:
+    """A child of the "main" logger named after the calling module's path under src/ (or the host's pyAvanza/)."""
     caller_frame = inspect.stack()[1]
     root_dir = "/src/" if "/src/" in caller_frame.filename else "pyAvanza/"
     logger_name = caller_frame.filename.split(root_dir)[1].replace(".py", "").replace("/", ".")

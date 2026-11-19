@@ -28,14 +28,12 @@ class Watchlists:
 
             preferred_instrument = max(
                 instruments,
-                key=lambda x: (x.leverage / x.spread) if x.leverage and x.spread else 0,
+                key=lambda orderbook: (
+                    (orderbook.leverage / orderbook.spread) if orderbook.leverage and orderbook.spread else 0
+                ),
             )
-
-            if preferred_instrument:
-                self.preferred_instrument.set(direction=instrument_direction, value=preferred_instrument)
-                log.debug(
-                    f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]",
-                )
+            self.preferred_instrument.set(direction=instrument_direction, value=preferred_instrument)
+            log.debug(f"> Top instrument set: {preferred_instrument.name} [leverage {preferred_instrument.leverage}]")
 
     def _refresh_one(self, watchlist: Watchlist, watchlist_name_composition: WatchlistNameComposition) -> None:
         for orderbook_id in watchlist.orderbook_ids:
@@ -129,7 +127,6 @@ class Watchlists:
             if not InstrumentValidators.price_is_valid(spread=hit.price.spread, last_price=hit.price.last):
                 continue
 
-            # Additional validation for warrants
             if watchlist_name_composition.instrument_type == "WARRANT":
                 instrument_info = get_client().get_instrument_warrant(instrument_id=hit.order_book_id)
                 if not InstrumentValidators.leverage_within_range(leverage=instrument_info.key_indicators.leverage):
@@ -137,8 +134,6 @@ class Watchlists:
 
             log.debug(f"> Add orderbook '{hit.title}' [Spread {hit.price.spread}%. Last price {hit.price.last}]")
             get_client().add_to_watchlist(instrument_id=hit.order_book_id, watchlist_id=watchlist.watchList_id)
-
-    # Public methods
 
     def refresh_all(self) -> None:
         log.debug("Refresh watchlists")

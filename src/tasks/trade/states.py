@@ -1,12 +1,11 @@
-import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from time import sleep
 
-import pandas as pd
 from avanza.constants import OrderType
 
 from apis.avanza.operators.instrument import Instrument
+from apis.avanza.operators.models.position import Position
 from apis.avanza.operators.orders import Orders
 from apis.avanza.operators.portfolio import Portfolio
 from apis.avanza.operators.watchlists import Watchlists
@@ -14,9 +13,6 @@ from config import DRY_RUN, SETTINGS
 from services.trading.tracked_position import ExitLevels, TrackedPosition
 from tasks.trade.models import Direction
 from utils.logger.operators import get_logger
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
-pd.options.mode.chained_assignment = None  # default='warn'
 
 log = get_logger()
 
@@ -40,8 +36,6 @@ class PriceState:
         for key, value in kwargs.items():
             setattr(direction_price, key, value)
 
-        setattr(self, direction.value, direction_price)
-
     def reset(self, direction: Direction) -> None:
         direction_price = getattr(self, direction.value)
         if direction_price.sell or direction_price.take_profit:
@@ -50,12 +44,6 @@ class PriceState:
             log.warning(f"Trade result: {value_buy} -> {value_sell} [{value_sell - value_buy}]")
 
         setattr(self, direction.value, DirectionPrice())
-
-    def set(self, direction: Direction, buy: float, volume: float) -> None:
-        setattr(self, direction.value, DirectionPrice(buy=buy, volume=volume))
-
-    def get(self, direction: Direction) -> DirectionPrice:
-        return getattr(self, direction.value)
 
 
 class Trade:
@@ -90,6 +78,17 @@ class Trade:
         self.tracked_positions.pop(direction, None)
         self.price_state.reset(direction)
 
+    def _replace_orders_with_sell(self, held: Position, price: float | None, caller: str) -> None:
+        self.orders.delete_all(caller)
+        self.orders.place(
+            order_book_id=held.instrument.id,
+            instrument_name=held.instrument.name,
+            order_type=OrderType.SELL,
+            price=price,
+            volume=int(held.volume),
+            caller=caller,
+        )
+
     def sell(self, direction: Direction | None) -> None:
         caller = "sell"
 
@@ -110,15 +109,7 @@ class Trade:
                 sell=acquired_instrument.quote.buy,
             )
 
-            self.orders.delete_all(caller)
-            self.orders.place(
-                order_book_id=acquired_instrument.instrument.id,
-                instrument_name=acquired_instrument.instrument.name,
-                order_type=OrderType.SELL,
-                price=acquired_instrument.quote.buy,
-                volume=int(acquired_instrument.volume),
-                caller=caller,
-            )
+            self._replace_orders_with_sell(acquired_instrument, price=acquired_instrument.quote.buy, caller=caller)
 
     def buy(self, direction: Direction | None, underlying_price: float) -> None:
         caller = "buy"
@@ -190,7 +181,7 @@ class Trade:
             tracked_position = self._tracked_position(direction, underlying_price)
             limit_price = tracked_position.instrument_take_profit_price(acquired_instrument.acquired_price)
             if limit_price is None:
-                break  # no take-profit level: no resting order
+                break
 
             price = round(limit_price, 2)
 
@@ -205,15 +196,7 @@ class Trade:
             if self.orders.active_order and self.orders.active_order.price == price:
                 break
 
-            self.orders.delete_all(caller)
-            self.orders.place(
-                order_book_id=acquired_instrument.instrument.id,
-                instrument_name=acquired_instrument.instrument.name,
-                order_type=OrderType.SELL,
-                price=price,
-                volume=int(acquired_instrument.volume),
-                caller=caller,
-            )
+            self._replace_orders_with_sell(acquired_instrument, price=price, caller=caller)
 
     def stop_loss(self, direction: Direction | None, underlying_price: float, bar_time: datetime) -> None:
         caller = "stop_loss"
@@ -276,13 +259,5 @@ class Trade:
                 sell=price,
             )
 
-            self.orders.delete_all(caller)
-            self.orders.place(
-                order_book_id=acquired_instrument.instrument.id,
-                instrument_name=acquired_instrument.instrument.name,
-                order_type=OrderType.SELL,
-                price=price,
-                volume=int(acquired_instrument.volume),
-                caller=caller,
-            )
+            self._replace_orders_with_sell(acquired_instrument, price=price, caller=caller)
             self.orders.reload_active()

@@ -23,3 +23,9 @@ class Test_HistoryRequest(TestCase):
                 end=date(2022, 1, 31),
                 interval=Interval.ONE_DAY,
             ).model_dump()
+
+
+class Test_IntervalMinutes(TestCase):
+    def test_every_interval_has_a_length_in_minutes(self):
+        assert Interval.TWO_MINUTES.mins == 2 and Interval.ONE_WEEK.mins == 7 * 24 * 60
+        assert all(interval.mins > 0 for interval in Interval)

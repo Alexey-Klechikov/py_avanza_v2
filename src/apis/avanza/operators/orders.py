@@ -20,9 +20,9 @@ class Orders:
         orders = get_client().list_orders().orders
 
         if SETTINGS.ACCOUNT_ID:
-            orders = [i for i in orders if i.account.account_id == SETTINGS.ACCOUNT_ID]
+            orders = [order for order in orders if order.account.account_id == SETTINGS.ACCOUNT_ID]
         if SETTINGS.NAME:
-            orders = [i for i in orders if SETTINGS.NAME in i.orderbook.name]
+            orders = [order for order in orders if SETTINGS.NAME in order.orderbook.name]
 
         return orders
 
@@ -100,9 +100,9 @@ class Orders:
             log.debug("No orders found")
             return None
 
-        active_orders = [i for i in orders if i.state in ("ACTIVE", "ACTIVE_PENDING")]
+        active_orders = [order for order in orders if order.state in ("ACTIVE", "ACTIVE_PENDING")]
         if active_orders:
-            self.active_order = max(active_orders, key=lambda x: x.created)
+            self.active_order = max(active_orders, key=lambda order: order.created)
             log.debug(f"Active orders found [{len(active_orders)} st.]")
 
         for order in orders:

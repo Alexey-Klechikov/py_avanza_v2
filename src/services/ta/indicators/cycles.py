@@ -1,7 +1,7 @@
 import pandas_ta as ta  # pylint: disable=unused-import # noqa: F401
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
-from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.indicator import Indicator, IndicatorSignal
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -19,20 +19,14 @@ class Cycles(IndicatorsCategoryBase):
         Its output is bound signal between -1 and 1 and the maximum length of a detected
         trend is limited by its length input.
         """
+        column = f"EBSW_{length}_{bars}"
 
-        column_name = f"EBSW_{length}_{bars}"
-
-        self.data.ta.ebsw(length=length, bars=bars, append=True)
-        if column_name not in self.data.columns:
+        self.bars.ta.ebsw(length=length, bars=bars, append=True)
+        if column not in self.bars.columns:
             log.debug("Indicator 'Cycles -> EBSW' can not be added.")
             return
 
         self.indicators["EBSW"] = Indicator(
-            signal=Signal(LONG=lambda x: x[column_name] > 0.5, SHORT=lambda x: x[column_name] < -0.5),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylim=[-1.1, 1.1], ylabel="Cycles [EBSW]")],
-                horizontal_lines=[HorizontalLine(y=0.5, color="red"), HorizontalLine(y=-0.5, color="blue")],
-            ),
+            signal=IndicatorSignal(LONG=lambda x: x[column] > 0.5, SHORT=lambda x: x[column] < -0.5),
+            columns=[column],
         )

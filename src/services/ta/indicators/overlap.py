@@ -1,7 +1,7 @@
 import pandas_ta as ta  # pylint: disable=unused-import # noqa: F401
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
-from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.indicator import Indicator, IndicatorSignal
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -18,23 +18,16 @@ class Overlap(IndicatorsCategoryBase):
         Standard Linear Regression. LINREG is a rolling regression of one variable. A
         Standard Linear Regression is between two or more variables.
         """
+        column = f"LINREGr_{length}"
 
-        column_name = f"LINREGr_{length}"
-
-        self.data.ta.linreg(length=length, r=True, append=True)
-
-        if column_name not in self.data.columns:
+        self.bars.ta.linreg(length=length, r=True, append=True)
+        if column not in self.bars.columns:
             log.debug("Indicator 'Overlap -> LINREG' can not be added.")
             return
 
         self.indicators["LINREG"] = Indicator(
-            signal=Signal(LONG=lambda x: x[column_name] > limit, SHORT=lambda x: x[column_name] < -1 * limit),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylabel="Overlap [LINREG]")],
-                horizontal_lines=[HorizontalLine(y=0, color="red")],
-            ),
+            signal=IndicatorSignal(LONG=lambda x: x[column] > limit, SHORT=lambda x: x[column] < -limit),
+            columns=[column],
         )
 
     def add_slope(self, length: int, limit: float) -> None:
@@ -47,23 +40,16 @@ class Overlap(IndicatorsCategoryBase):
         Standard Linear Regression. LINREG is a rolling regression of one variable. A
         Standard Linear Regression is between two or more variables.
         """
+        column = f"LINREGm_{length}"
 
-        column_name = f"LINREGm_{length}"
-
-        self.data.ta.linreg(length=length, slope=True, append=True)
-
-        if column_name not in self.data.columns:
+        self.bars.ta.linreg(length=length, slope=True, append=True)
+        if column not in self.bars.columns:
             log.debug("Indicator 'Overlap -> SLOPE' can not be added.")
             return
 
         self.indicators["SLOPE"] = Indicator(
-            signal=Signal(LONG=lambda x: x[column_name] > limit, SHORT=lambda x: x[column_name] < -1 * limit),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylabel="Overlap [SLOPE]")],
-                horizontal_lines=[HorizontalLine(y=0, color="red")],
-            ),
+            signal=IndicatorSignal(LONG=lambda x: x[column] > limit, SHORT=lambda x: x[column] < -limit),
+            columns=[column],
         )
 
     def add_supertrend(self, length: int, multiplier: float) -> None:
@@ -78,26 +64,18 @@ class Overlap(IndicatorsCategoryBase):
         the concept of Average True Range (ATR) to measure market volatility. The SuperTrend
         Indicator generates buy and sell signals by plotting a line on the price chart.
         """
+        long_column = f"SUPERTl_{length}_{multiplier}"
+        short_column = f"SUPERTs_{length}_{multiplier}"
 
-        column_names = {
-            "SUPERTREND_long": f"SUPERTl_{length}_{multiplier}",
-            "SUPERTREND_short": f"SUPERTs_{length}_{multiplier}",
-        }
-
-        self.data.ta.supertrend(length=length, multiplier=multiplier, append=True)
-
-        if column_names["SUPERTREND_long"] not in self.data.columns:
+        self.bars.ta.supertrend(length=length, multiplier=multiplier, append=True)
+        if long_column not in self.bars.columns:
             log.debug("Indicator 'Overlap -> SUPERTREND' can not be added.")
             return
 
         self.indicators["SUPERTREND"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x["Close"] > x[column_names["SUPERTREND_long"]],
-                SHORT=lambda x: x["Close"] < x[column_names["SUPERTREND_short"]],
+            signal=IndicatorSignal(
+                LONG=lambda x: x["Close"] > x[long_column],
+                SHORT=lambda x: x["Close"] < x[short_column],
             ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.MAIN,
-                list=[Plot(columns=list(column_names.values()), ylabel="Overlap [SUPERTREND]")],
-            ),
+            columns=[long_column, short_column],
         )

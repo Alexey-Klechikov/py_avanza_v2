@@ -9,10 +9,10 @@ from pydantic import BaseModel
 
 from config import SETTINGS
 from services.ta.strategies.models.signal import Signal
-from services.ta.strategies.signals import SIGNAL_COLUMNS, mask_outside_trading_time
+from services.ta.strategies.signals import SIGNAL_COLUMNS
 from services.trading.tracked_position import ExitLevels
-from tasks.backtest.bars import add_execution_columns, bar_index
-from tasks.backtest.votes import vote_frame
+from tasks.shared.bars import add_execution_columns, bar_index, is_at_or_after_trading_end, is_in_trading_window
+from tasks.shared.votes import vote_frame
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -22,14 +22,13 @@ class WeightedModel(BaseModel):
     """Weights of the votes (only the non-zero ones) and the score thresholds, see SETTINGS.WEIGHTED_SCORE.
 
     score = sum(weight * vote) + intercept: the expected underlying move (bp) over horizon_bars. Signals compare
-    score - center against entry_threshold (BULL above, BEAR below its negative) and exit_threshold (EXIT inside).
+    score - center against entry_threshold: BULL above, BEAR below its negative.
     """
 
     weights: dict[str, float]
     intercept: float
     center: float
     entry_threshold: float
-    exit_threshold: float
     horizon_bars: int
     alpha: float
     trained_from: date
@@ -68,19 +67,13 @@ WEIGHTED_LEVELS = ExitLevels(
 )
 
 
-def in_trading_window(index: pd.DatetimeIndex) -> np.ndarray:
-    """Bars that may signal: strictly inside SETTINGS.TIME (mask_outside_trading_time clears both edges)."""
-    times = index.time
-    return (times > SETTINGS.TIME.START) & (times < SETTINGS.TIME.END)
-
-
 def forward_move_bp(bars: pd.DataFrame, horizon_bars: int) -> np.ndarray:
     """Underlying move (bp) from the next open to the fill of an exit `horizon_bars` later, or at the session's exit
-    bar (the first bar at or after SETTINGS.TIME.END, else its last bar) when that comes first."""
+    bar (the first bar closing at or after SETTINGS.TIME.END, else its last bar) when that comes first."""
     times = bar_index(bars)
     day_codes = pd.factorize(times.date)[0]
     positions = np.arange(len(bars))
-    at_or_after_end = np.where(times.time >= SETTINGS.TIME.END, positions, len(bars))
+    at_or_after_end = np.where(is_at_or_after_trading_end(times), positions, len(bars))
     by_day = pd.DataFrame({"end": at_or_after_end, "last": positions}).groupby(day_codes)
     exit_bars = np.minimum(by_day["end"].transform("min").to_numpy(), by_day["last"].transform("max").to_numpy())
     next_open = bars["Next Open"].to_numpy()
@@ -107,32 +100,35 @@ def _lasso(gram: np.ndarray, correlation: np.ndarray, alpha: float, max_sweeps: 
 
 def _choose_alpha(standardized: np.ndarray, target: np.ndarray) -> float:
     """The ALPHAS value whose fit on the earlier part of the data correlates best with the later part."""
-    cut = int(len(target) * (1 - SETTINGS.WEIGHTED_SCORE.VALIDATION_SHARE))
-    fit_part, check_part = standardized[:cut], standardized[cut:]
-    gram = fit_part.T @ fit_part / cut
-    correlation = fit_part.T @ target[:cut] / cut
+    fit_rows = int(len(target) * (1 - SETTINGS.WEIGHTED_SCORE.VALIDATION_SHARE))
+    fit_votes, validation_votes = standardized[:fit_rows], standardized[fit_rows:]
+    gram = fit_votes.T @ fit_votes / fit_rows
+    correlation = fit_votes.T @ target[:fit_rows] / fit_rows
 
-    best_alpha, best_fit = SETTINGS.WEIGHTED_SCORE.ALPHAS[0], -np.inf
+    best_alpha, best_correlation = SETTINGS.WEIGHTED_SCORE.ALPHAS[0], -np.inf
     for alpha in SETTINGS.WEIGHTED_SCORE.ALPHAS:
-        prediction = check_part @ _lasso(gram, correlation, alpha)
-        fit = np.corrcoef(prediction, target[cut:])[0, 1] if prediction.std() > 0 else -np.inf
-        if fit > best_fit:
-            best_alpha, best_fit = alpha, fit
+        prediction = validation_votes @ _lasso(gram, correlation, alpha)
+        validation_correlation = np.corrcoef(prediction, target[fit_rows:])[0, 1] if prediction.std() > 0 else -np.inf
+        if validation_correlation > best_correlation:
+            best_alpha, best_correlation = alpha, validation_correlation
 
     return best_alpha
 
 
-def fit_model(votes: pd.DataFrame, bars: pd.DataFrame, train: np.ndarray) -> WeightedModel:
-    """Fit the weights on the `train` rows of `votes` (2m bars with "Next Open", chronological)."""
+def fit_model(votes: pd.DataFrame, bars: pd.DataFrame, is_train: np.ndarray) -> WeightedModel:
+    """Fit the weights on the `is_train` rows of `votes` inside the trading window (`bars`: 2m bars with
+    "Next Open", chronological)."""
     settings = SETTINGS.WEIGHTED_SCORE
     target = forward_move_bp(bars, settings.HORIZON_BARS)
-    rows = train & in_trading_window(bar_index(bars)) & np.isfinite(target)
+    is_fit_row = is_train & is_in_trading_window(bar_index(bars)) & np.isfinite(target)
+    if not is_fit_row.any():
+        raise ValueError("No training bars: the fit window lies inside the warm-up or before the cached history")
 
-    values = votes.to_numpy(dtype=np.float64)[rows]
-    mean, std = values.mean(0), values.std(0)
-    usable = std > 0
-    standardized = (values[:, usable] - mean[usable]) / std[usable]
-    train_target = target[rows]
+    train_votes = votes.to_numpy(dtype=np.float64)[is_fit_row]
+    vote_mean, vote_sd = train_votes.mean(0), train_votes.std(0)
+    has_variance = vote_sd > 0
+    standardized = (train_votes[:, has_variance] - vote_mean[has_variance]) / vote_sd[has_variance]
+    train_target = target[is_fit_row]
     if settings.TARGET_CLIP_SD:
         limit = settings.TARGET_CLIP_SD * train_target.std()
         train_target = np.clip(train_target, -limit, limit)
@@ -150,16 +146,15 @@ def fit_model(votes: pd.DataFrame, bars: pd.DataFrame, train: np.ndarray) -> Wei
 
     center = float(np.median(train_score))
     entry_threshold = float(np.quantile(np.abs(train_score - center), settings.ENTRY_QUANTILE))
-    raw_weights = weights / std[usable]
-    names = votes.columns[usable]
-    trained_days = bar_index(bars)[rows].date
+    vote_weights = weights / vote_sd[has_variance]
+    vote_names = votes.columns[has_variance]
+    trained_days = bar_index(bars)[is_fit_row].date
 
     return WeightedModel(
-        weights={name: float(weight) for name, weight in zip(names, raw_weights) if weight != 0},
-        intercept=float(target_mean - (mean[usable] / std[usable]) @ weights),
+        weights={name: float(weight) for name, weight in zip(vote_names, vote_weights) if weight != 0},
+        intercept=float(target_mean - (vote_mean[has_variance] / vote_sd[has_variance]) @ weights),
         center=center,
         entry_threshold=entry_threshold,
-        exit_threshold=entry_threshold * settings.EXIT_FRACTION,
         horizon_bars=settings.HORIZON_BARS,
         alpha=alpha,
         trained_from=trained_days[0],
@@ -170,17 +165,16 @@ def fit_model(votes: pd.DataFrame, bars: pd.DataFrame, train: np.ndarray) -> Wei
 def weighted_signal_bars(model: WeightedModel, votes: pd.DataFrame, history: pd.DataFrame) -> pd.DataFrame:
     """2m bars (OHLC, "Next Open", "Day End", SIGNAL_COLUMNS) carrying the model's signals."""
     deviation = model.score(votes) - model.center
-    conditions = {
+    is_signal = {
         "LONG": deviation > model.entry_threshold,
         "SHORT": deviation < -model.entry_threshold,
-        "EXIT": deviation.abs() < model.exit_threshold,
     }
 
     bars = history[["Open", "High", "Low", "Close"]].copy()
+    is_tradable = is_in_trading_window(bar_index(bars))
     for column in SIGNAL_COLUMNS:
-        bars[column] = bars["Close"].where(conditions[column])
+        bars[column] = bars["Close"].where(is_signal[column] & is_tradable)
 
-    mask_outside_trading_time(bars)
     add_execution_columns(bars)
 
     return bars
@@ -217,7 +211,7 @@ def train_weighted_model(history: pd.DataFrame, daily: pd.DataFrame) -> Weighted
     if settings.TRAIN_DAYS:
         first_day = max(first_day, bar_index(history)[-1].normalize() - pd.Timedelta(days=settings.TRAIN_DAYS))
 
-    model = fit_model(votes, bars, train=np.asarray(history.index >= first_day))
+    model = fit_model(votes, bars, is_train=np.asarray(history.index >= first_day))
     save_model(model)
 
     log.warning(

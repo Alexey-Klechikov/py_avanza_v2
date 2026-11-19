@@ -1,7 +1,7 @@
 import pandas_ta as ta  # pylint: disable=unused-import # noqa: F401
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
-from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.indicator import Indicator, IndicatorSignal
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -21,34 +21,20 @@ class Trend(IndicatorsCategoryBase):
         from 0-100 where higher numbers indicate a stronger upward trend, lower values a stronger
         downward trend, and values around the centerline (50) are neutral.
         """
+        tii_column = f"TII_{length_sma}_{length_signal}"
+        signal_column = f"TII_SIGNAL_{length_sma}_{length_signal}"
 
-        column_names = {
-            "TII": f"TII_{length_sma}_{length_signal}",
-            "TII_SIGNAL": f"TII_SIGNAL_{length_sma}_{length_signal}",
-        }
-
-        sma = self.data.ta.sma(length=length_sma)
-        diff = self.data["Close"] - sma
-        pos_count = diff.map(lambda x: 1 if x > 0 else 0).rolling(int(length_sma / 2)).sum()
-        self.data[column_names["TII"]] = 200 * (pos_count) / length_sma
-        self.data[column_names["TII_SIGNAL"]] = self.data.ta.ema(
-            close=self.data[column_names["TII"]],
-            length=length_signal,
-        )
+        is_above_sma = self.bars["Close"] > self.bars.ta.sma(length=length_sma)
+        bars_above_sma = is_above_sma.astype(int).rolling(length_sma // 2).sum()
+        self.bars[tii_column] = 200 * bars_above_sma / length_sma
+        self.bars[signal_column] = self.bars.ta.ema(close=self.bars[tii_column], length=length_signal)
 
         self.indicators["TII"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: (x[column_names["TII"]] - x[column_names["TII_SIGNAL"]] > 2)
-                and (x[column_names["TII_SIGNAL"]] > 50),
-                SHORT=lambda x: (x[column_names["TII_SIGNAL"]] - x[column_names["TII"]] > 2)
-                and (x[column_names["TII_SIGNAL"]] < 50),
+            signal=IndicatorSignal(
+                LONG=lambda x: x[tii_column] - x[signal_column] > 2 and x[signal_column] > 50,
+                SHORT=lambda x: x[signal_column] - x[tii_column] > 2 and x[signal_column] < 50,
             ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=list(column_names.values()), ylabel="Trend [TII]")],
-                horizontal_lines=[HorizontalLine(y=50, color="red")],
-            ),
+            columns=[tii_column, signal_column],
         )
 
     def add_average_directional_movement(self, length: int, lensig: int, mamode: str) -> None:
@@ -68,26 +54,19 @@ class Trend(IndicatorsCategoryBase):
         price direction. When the DI+ is above DI-, the current price momentum is up. When the
         DI- is above DI+, the current price momentum is down.
         """
+        adx_column, minus_di_column, plus_di_column = f"ADX_{length}", f"DMN_{length}", f"DMP_{length}"
 
-        column_names = {"ADX": f"ADX_{length}", "DMN": f"DMN_{length}", "DMP": f"DMP_{length}"}
-
-        self.data.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
-
-        if column_names["ADX"] not in self.data.columns:
+        self.bars.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
+        if adx_column not in self.bars.columns:
             log.debug("Indicator 'Trend -> ADX' can not be added.")
             return
 
         self.indicators["ADX"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_names["ADX"]] > 22 and x[column_names["DMP"]] > x[column_names["DMN"]],
-                SHORT=lambda x: x[column_names["ADX"]] > 22 and x[column_names["DMP"]] < x[column_names["DMN"]],
+            signal=IndicatorSignal(
+                LONG=lambda x: x[adx_column] > 22 and x[plus_di_column] > x[minus_di_column],
+                SHORT=lambda x: x[adx_column] > 22 and x[plus_di_column] < x[minus_di_column],
             ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=list(column_names.values()), ylabel="Trend [ADX]")],
-                horizontal_lines=[HorizontalLine(y=22, color="black")],
-            ),
+            columns=[adx_column, minus_di_column, plus_di_column],
         )
 
     def add_parabolic_stop_and_reverse(self, acceleration: float, maximum: float) -> None:
@@ -103,53 +82,18 @@ class Trend(IndicatorsCategoryBase):
         For example, traders might confirm a PSAR buy signal with an ADX reading above 30 and a bounce for a
         long-term rising trendline.
         """
+        lower_column = f"PSARl_{acceleration}_{maximum}"
+        upper_column = f"PSARs_{acceleration}_{maximum}"
 
-        column_names = {
-            "PSARl": f"PSARl_{acceleration}_{maximum}",  # lower branch
-            "PSARs": f"PSARs_{acceleration}_{maximum}",  # upper branch
-        }
-
-        self.data.ta.psar(af=acceleration, max_af=maximum, append=True)
-        if column_names["PSARl"] not in self.data.columns:
+        self.bars.ta.psar(af=acceleration, max_af=maximum, append=True)
+        if lower_column not in self.bars.columns:
             log.debug("Indicator 'Trend -> PSAR' can not be added.")
             return
 
         self.indicators["PSAR"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x["Close"] > x[column_names["PSARl"]],
-                SHORT=lambda x: x["Close"] < x[column_names["PSARs"]],
+            signal=IndicatorSignal(
+                LONG=lambda x: x["Close"] > x[lower_column],
+                SHORT=lambda x: x["Close"] < x[upper_column],
             ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.MAIN,
-                list=[Plot(columns=list(column_names.values()), ylabel="Trend [PSAR]", type="scatter")],
-            ),
-        )
-
-    def add_choppiness_index(self, length: int, length_atr: int, scalar: float) -> None:
-        """
-        CHOP (Choppiness Index)
-        https://www.tradingview.com/support/solutions/43000501980-choppiness-index-chop/
-
-        defaults: length=14, scalar=100, length_atr=1
-
-        Values closer to 100 implies the underlying is choppier
-        whereas values closer to 0 implies the underlying is trending.
-        """
-
-        column_name = f"CHOP_{length}_{length_atr}_{scalar}"
-
-        self.data.ta.chop(length=length, atr_length=length_atr, scalar=scalar, append=True)
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Trend -> CHOP' can not be added.")
-            return
-
-        self.indicators["CHOP"] = Indicator(
-            signal=Signal(EXIT=lambda x: x[column_name] > 55),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylim=[0, 100], ylabel="Trend [CHOP]")],
-                horizontal_lines=[HorizontalLine(y=50, color="red")],
-            ),
+            columns=[lower_column, upper_column],
         )

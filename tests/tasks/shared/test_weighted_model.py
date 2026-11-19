@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 
 from services.ta.strategies.models.signal import Signal
-from tasks.backtest import model as model_module
-from tasks.backtest.bars import add_execution_columns
-from tasks.backtest.model import WeightedModel, _lasso, fit_model, forward_move_bp, weighted_signal_bars
+from tasks.shared import weighted_model as model_module
+from tasks.shared.bars import add_execution_columns
+from tasks.shared.weighted_model import WeightedModel, _lasso, fit_model, forward_move_bp, weighted_signal_bars
 
 
 def _bars_and_votes(days: int = 40) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -20,7 +20,7 @@ def _bars_and_votes(days: int = 40) -> tuple[pd.DataFrame, pd.DataFrame]:
         [
             ts
             for day in pd.bdate_range("2026-01-05", periods=days)
-            for ts in pd.date_range(day + pd.Timedelta(hours=10), periods=150, freq="2min")
+            for ts in pd.date_range(day + pd.Timedelta(hours=16), periods=150, freq="2min")
         ],
     )
     useful = rng.choice([-1.0, 1.0], len(index))
@@ -49,7 +49,6 @@ def _model(**overrides) -> WeightedModel:
         intercept=0.0,
         center=0.0,
         entry_threshold=1.0,
-        exit_threshold=0.5,
         horizon_bars=1,
         alpha=0.1,
         trained_from=date(2026, 1, 1),
@@ -79,19 +78,19 @@ class Test_WeightedModel(TestCase):
 
         weighted = replace(settings.WEIGHTED_SCORE, HORIZON_BARS=1, ALPHAS=(1.0,))
         with patch.object(model_module, "SETTINGS", replace(settings, WEIGHTED_SCORE=weighted)):
-            model = fit_model(votes, bars, train=np.ones(len(bars), bool))
+            model = fit_model(votes, bars, is_train=np.ones(len(bars), bool))
 
         assert set(model.weights) == {"useful"} and model.weights["useful"] > 0
 
     def test_signals_follow_the_thresholds(self):
-        index = pd.date_range("2026-11-16 10:00", periods=4, freq="2min")
+        index = pd.date_range("2026-11-16 17:00", periods=4, freq="2min")
         history = pd.DataFrame({"Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 1.0}, index=index)
-        votes = pd.DataFrame({"a": [1.0, -1.0, 0.1, 0.4]}, index=index)  # scores 2, -2, 0.2, 0.8
+        votes = pd.DataFrame({"a": [1.0, -1.0, 0.1, 0.4]}, index=index)  # scores 2, -2, 0.2, 0.8; entry 1
 
         bars = weighted_signal_bars(_model(), votes, history)
-        signals = [Signal.from_bar(*row) for row in bars[["LONG", "SHORT", "EXIT"]].notna().to_numpy()]
+        signals = [Signal.from_bar(*row) for row in bars[["LONG", "SHORT"]].notna().to_numpy()]
 
-        assert signals == [Signal.LONG, Signal.SHORT, Signal.EXIT, None]
+        assert signals == [Signal.LONG, Signal.SHORT, None, None]
 
     def test_model_file_round_trip(self):
         with TemporaryDirectory() as directory:
@@ -102,16 +101,26 @@ class Test_WeightedModel(TestCase):
                 assert model_module.load_model() == _model()
 
 
+class Test_FitWithoutTrainingBars(TestCase):
+    def test_raises_a_clear_error(self):
+        bars, votes = _bars_and_votes(days=2)
+        add_execution_columns(bars)
+
+        with self.assertRaisesRegex(ValueError, "No training bars"):
+            fit_model(votes, bars, is_train=np.zeros(len(bars), bool))
+
+
 class Test_ForwardMove(TestCase):
     def test_exit_is_capped_at_the_end_of_trading(self):
-        index = pd.date_range("2026-11-16 17:10", periods=6, freq="2min")  # 17:10 .. 17:20, END is 17:15
+        index = pd.date_range("2026-11-16 21:40", periods=6, freq="2min")  # 21:40 .. 21:50, END is 21:45
         bars = pd.DataFrame({"Open": [100.0, 101, 102, 103, 104, 105], "Close": 0.0}, index=index)
         bars["Next Open"] = bars["Open"].shift(-1).fillna(105.0)
 
         moves = forward_move_bp(bars, horizon_bars=10)
 
-        # every exit fills at the 17:16 bar's next open (17:18 open, 104), the first bar at or after 17:15
-        assert np.allclose(moves[:4], (104 / bars["Next Open"].to_numpy()[:4] - 1) * 1e4)
+        # the 21:44 bar is the first to close at or after END, as the live loop sees it: exits fill at its next
+        # open (21:46 open, 103)
+        assert np.allclose(moves[:3], (103 / bars["Next Open"].to_numpy()[:3] - 1) * 1e4)
 
 
 class Test_WeightedReading(TestCase):
@@ -121,7 +130,7 @@ class Test_WeightedReading(TestCase):
         assert (model.bull_above, model.bear_below) == (2.5, -1.5)
 
     def test_reading_carries_the_last_score(self):
-        index = pd.date_range("2026-11-16 10:00", periods=3, freq="2min")
+        index = pd.date_range("2026-11-16 17:00", periods=3, freq="2min")
         history = pd.DataFrame({"Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 1.0, "Volume": 0}, index=index)
         votes = pd.DataFrame({"a": [0.0, 0.0, 1.0]}, index=index)  # last score 2 > entry 1
 

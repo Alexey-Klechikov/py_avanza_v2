@@ -26,7 +26,7 @@ VERDICT_PREFIX = "CODE_REVIEW_VERDICT:"
 BLOCKING_PREFIX = "BLOCKING:"
 REPORT_PREFIXES = (BLOCKING_PREFIX, "ADVISORY:")
 SKIP_HINT = f"Bypass once with `SKIP={HOOK_ID} git push`."
-EXCLUDED_PATTERNS = ("*.md", "uv.lock", "src/config/OMX_trade_strategies*.json")
+EXCLUDED_PATTERNS = ("*.md", "uv.lock", "src/config/*_weighted_model.json")
 BLOCKED_TOOLS = ("Bash", "Edit", "Write", "NotebookEdit")
 
 PROMPT_TEMPLATE = """\

@@ -1,23 +1,29 @@
 import warnings
-from datetime import date, timedelta
+from datetime import date
 
+import numpy as np
 import pandas as pd
 
-from config import SETTINGS
 from services.storage.operators import Storage
-from services.storage.windows import DataWindow
-from tasks.backtest.model import train_weighted_model
-from tasks.backtest.paper_trade import PaperSession, replay_fixed_rule
+from tasks.backtest.indicator_tuning import IndicatorGrid, tune_indicator
+from tasks.backtest.paper_trade import PaperSession
 from tasks.backtest.weighted_walk_forward import weighted_walk_forward
-from utils.constants import TODAY_MIDNIGHT
+from tasks.shared.bars import bar_index
+from tasks.shared.weighted_model import train_weighted_model
 from utils.logger.operators import get_logger, set_handlers
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 pd.set_option("display.max_rows", None)
+pd.set_option("display.width", 250)
+pd.set_option("display.max_colwidth", 120)
 
 
 set_handlers("development")
 log = get_logger()
+
+# Indicator tuning only sees data before this day; "weighted_holdout" then judges the chosen parameters once on the
+# rest. Re-judging after every tweak turns the holdout into calibration data.
+HOLDOUT_START = date(2025, 11, 19)
 
 
 def _log_sessions(title: str, sessions: dict[date, PaperSession]) -> None:
@@ -32,14 +38,6 @@ def _log_sessions(title: str, sessions: dict[date, PaperSession]) -> None:
         f"{title}: {len(table)} sessions, {table['trades'].sum()} trades, {table['wins'].sum()} profitable, "
         f"capital return {round(100 * table['capital_return'].sum(), 2)}%",
     )
-
-
-def run_fixed_rule_replay(period_days: int):
-    """Replay SETTINGS.FIXED_RULE over the last `period_days` of the cache (no files written)."""
-    window = DataWindow.days_before(TODAY_MIDNIGHT + timedelta(days=1), period_days)
-    log.warning(f"Fixed rule replay: {' | '.join(SETTINGS.FIXED_RULE.STRATEGY)} over {window}")
-
-    _log_sessions("Fixed rule", replay_fixed_rule(window.slice(Storage().read())))
 
 
 def run_weighted_walk_forward(test_sessions: int, refit_sessions: int = 5):
@@ -61,15 +59,59 @@ def run_weighted_walk_forward(test_sessions: int, refit_sessions: int = 5):
     )
 
 
-if __name__ == "__main__":
-    # "weighted_walk_forward" (no files written), "weighted_training" (writes the weighted model file), "fixed_rule"
-    mode = "weighted_walk_forward"
+def run_indicator_tuning(grid: IndicatorGrid, refit_sessions: int = 5):
+    """Score every parameter set of `grid` (plus the current one and the indicator off) by the weighted score's
+    walk-forward on the data before HOLDOUT_START; no files written. Copy the winner into SETTINGS.INDICATORS."""
+    history = Storage().read()
+    calibration = history.loc[history.index < pd.Timestamp(HOLDOUT_START)]
+    log.warning(
+        f"Tuning {grid.category}-{grid.name}: {len(grid.candidates())} candidates on "
+        f"{calibration.index[0].date()} .. {calibration.index[-1].date()}",
+    )
 
-    if mode == "weighted_walk_forward":
+    results = tune_indicator(calibration, Storage(resolution="1d").read(), grid, refit_sessions)
+    table = pd.DataFrame(
+        {
+            "params": [result.label or result.params for result in results],
+            "edge": [round(result.edge, 2) for result in results],
+            "correlation": [round(result.correlation, 4) for result in results],
+            "periods > 0": [f"{result.positive_periods:.0%}" for result in results],
+            "trades": [result.trades for result in results],
+            "net per trade": [f"{100 * result.net_return_per_trade:+.2f}%" for result in results],
+        },
+    )
+    log.warning(
+        "Edge = t-statistic of the out-of-sample score/move correlation per refit period (higher is better; "
+        "differences under ~1 are noise). Net per trade is after SPREAD_DEFAULT.\n" + table.to_string(index=False),
+    )
+
+
+def run_weighted_holdout(refit_sessions: int = 5):
+    """The out-of-sample walk-forward on the sessions from HOLDOUT_START on: run once per chosen parameter set."""
+    session_days = np.unique(bar_index(Storage().read()).date)
+    run_weighted_walk_forward(test_sessions=int((session_days >= HOLDOUT_START).sum()), refit_sessions=refit_sessions)
+
+
+if __name__ == "__main__":
+    # "indicator_tuning" (no files written), "weighted_holdout" (no files written), "weighted_walk_forward"
+    # (no files written), "weighted_training" (writes the weighted model file)
+    mode = "indicator_tuning"
+
+    if mode == "indicator_tuning":
+        # A list is searched, a scalar stays fixed; every combination runs (about 25 s each)
+        run_indicator_tuning(
+            IndicatorGrid(
+                category="Trend",
+                name="ADX",
+                params={"length": [7, 9, 11, 14, 18], "lensig": [10, 14, 20], "mamode": "hma"},
+            ),
+        )
+
+    elif mode == "weighted_holdout":
+        run_weighted_holdout()
+
+    elif mode == "weighted_walk_forward":
         run_weighted_walk_forward(test_sessions=500)
 
     elif mode == "weighted_training":
         train_weighted_model(Storage().read(), Storage(resolution="1d").read())
-
-    elif mode == "fixed_rule":
-        run_fixed_rule_replay(period_days=1000)

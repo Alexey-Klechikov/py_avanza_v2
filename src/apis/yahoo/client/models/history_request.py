@@ -35,20 +35,11 @@ class Period(Enum):
 
     @property
     def days(self) -> int:
-        if self.value.scale == Scale.DAY:
-            return self.value.num
-
-        elif self.value.scale == Scale.WEEK:
-            return self.value.num * 7
-
-        elif self.value.scale == Scale.MONTH:
-            return self.value.num * 30
-
-        elif self.value.scale == Scale.YEAR:
-            return self.value.num * 365
-
-        else:
+        days_per_unit = DAYS_PER_SCALE_UNIT.get(self.value.scale)
+        if days_per_unit is None:
             raise ValueError(f"Unknown scale: {self.value.scale}")
+
+        return self.value.num * days_per_unit
 
 
 class Interval(Enum):
@@ -71,44 +62,34 @@ class Interval(Enum):
 
     @property
     def mins(self) -> int:
-        if self.value.scale == Scale.MINUTE:
-            return self.value.num
-
-        elif self.value.scale == Scale.HOUR:
-            return self.value.num * 60
-
-        elif self.value.scale == Scale.DAY:
-            return self.value.num * 60 * 24
-
-        elif self.value.scale == Scale.MONTH:
-            return self.value.num * 60 * 24 * 30
-
-        else:
+        minutes_per_unit = MINUTES_PER_SCALE_UNIT.get(self.value.scale)
+        if minutes_per_unit is None:
             raise ValueError(f"Unknown scale: {self.value.scale}")
+
+        return self.value.num * minutes_per_unit
 
 
 class HistoryRequest(BaseModel):
-    period: Period | None = Field(default=None)  # Either Use period parameter or use start and end
-    interval: Interval = Interval.ONE_MINUTE  # Default is 1 minute
-    start: date | None = Field(default=None)  # Default is 99 years ago
-    end: date | None = Field(default=None)  # Default is now
-    prepost: bool | None = Field(default=None)  # Include Pre and Post market data in results
-    auto_adjust: bool | None = Field(default=None)  # Adjust all OHLC automatically? Default is True
-    back_adjust: bool | None = Field(default=None)  # Back-adjusted data to mimic true historical prices
-    repair: bool | None = Field(default=None)  # Detect currency unit 100x mixups and attempt repair.
-    keepna: bool | None = Field(default=None)  # Keep NaN rows returned by Yahoo
-    proxy: str | None = Field(default=None)  # Optional. Proxy server URL scheme. Default is None
-    rounding: bool | None = Field(default=None)  # Round values to 2 decimal places
-    timeout: float | None = Field(
-        default=None,
-    )  # If not None stops waiting for a response after given number of seconds
-    raise_errors: bool | None = Field(default=None)  # If True, then raise errors as Exceptions instead of logging
+    period: Period | None = Field(default=None)
+    interval: Interval = Interval.ONE_MINUTE
+    start: date | None = Field(default=None)
+    end: date | None = Field(default=None)
 
     def model_dump(self, **kwargs):
-        request = super().model_dump(exclude_none=True, **kwargs)
-        request = {k: str(v) for k, v in request.items()}
+        request = {key: str(value) for key, value in super().model_dump(exclude_none=True, **kwargs).items()}
 
         if "period" in request and ("start" in request or "end" in request):
             raise ValueError("Either ['period'] or ['start' and 'end'] should be provided, not both.")
 
         return request
+
+
+# Calendar approximations; `Interval.mins` deliberately has no WEEK or YEAR unit.
+DAYS_PER_SCALE_UNIT = {Scale.DAY: 1, Scale.WEEK: 7, Scale.MONTH: 30, Scale.YEAR: 365}
+MINUTES_PER_SCALE_UNIT = {
+    Scale.MINUTE: 1,
+    Scale.HOUR: 60,
+    Scale.DAY: 60 * 24,
+    Scale.WEEK: 60 * 24 * 7,
+    Scale.MONTH: 60 * 24 * 30,
+}

@@ -31,7 +31,7 @@ DOCUMENTATION_EDIT_RULES = (
     "Edit(./**/CLAUDE.md)",
 )
 BLOCKED_TOOLS = ("Bash", "NotebookEdit")
-DIFF_EXCLUDED_PATTERNS = ("uv.lock", "src/config/OMX_trade_strategies*.json")
+DIFF_EXCLUDED_PATTERNS = ("uv.lock", "src/config/*_weighted_model.json")
 
 PROMPT_TEMPLATE = """\
 PRE-PUSH AUTOFIX MODE. Audit the documentation against the commits being pushed in the range \

@@ -5,7 +5,6 @@ ___*
 *.pickle
 .vscode/*
 hold*.json
-*/OMX_weighted_model.json
 analytics*.json
 *.env
 .venv

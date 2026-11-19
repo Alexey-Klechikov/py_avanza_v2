@@ -1,10 +1,10 @@
 import platform
 
-from config.settings import SettingsWatchlist, TradeStrategies
+from config.settings import SettingsWatchlist, TradeSettings
 
 DATA_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
 
 DRY_RUN: bool = platform.system() == "Darwin"
 
-SETTINGS = TradeStrategies()
+SETTINGS = TradeSettings()
 SETTINGS_WATCHLIST = SettingsWatchlist()

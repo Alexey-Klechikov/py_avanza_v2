@@ -3,7 +3,6 @@ import os
 import re
 import time
 from collections.abc import Sequence
-from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
 from json import JSONDecodeError
@@ -19,8 +18,6 @@ from apis.avanza.client.models.account.positions import AccountsPositions
 from apis.avanza.client.models.account.watchlists import Watchlist
 from apis.avanza.client.models.chart_data import ChartData
 from apis.avanza.client.models.instrument.certificate import InstrumentCertificate
-from apis.avanza.client.models.instrument.etf import InstrumentETF
-from apis.avanza.client.models.instrument.fund import InstrumentFund
 from apis.avanza.client.models.instrument.index import InstrumentIndex
 from apis.avanza.client.models.instrument.stock import InstrumentStock
 from apis.avanza.client.models.instrument.warrant import InstrumentWarrant
@@ -32,21 +29,24 @@ from apis.avanza.client.models.order.place import PlaceOrderResponse
 from apis.avanza.client.models.order.transactions import TransactionsDetails
 from apis.avanza.client.models.search.filtered_search_result import SearchResult
 from utils.logger.operators import get_logger
+from utils.retry import backoff_seconds
 
 log = get_logger()
 
 
+# Every retry loop is bounded and backs off exponentially from its base delay up to its cap (utils.retry)
 RETRY_ATTEMPTS = int(os.getenv("AVANZA_RETRY_ATTEMPTS", "10"))
 RETRY_BACKOFF_SECONDS = int(os.getenv("AVANZA_RETRY_BACKOFF_SECONDS", "3"))
+RETRY_BACKOFF_CAP_SECONDS = int(os.getenv("AVANZA_RETRY_BACKOFF_CAP_SECONDS", "30"))
 CHART_DATA_RETRY_ATTEMPTS = int(os.getenv("AVANZA_CHART_DATA_RETRY_ATTEMPTS", "120"))
-CHART_DATA_RETRY_SLEEP_SECONDS = int(os.getenv("AVANZA_CHART_DATA_RETRY_SLEEP_SECONDS", "30"))
-CONNECT_RETRY_ATTEMPTS: int | None = None
+CHART_DATA_RETRY_BACKOFF_SECONDS = int(os.getenv("AVANZA_CHART_DATA_RETRY_BACKOFF_SECONDS", "2"))
+CHART_DATA_RETRY_SLEEP_SECONDS = int(os.getenv("AVANZA_CHART_DATA_RETRY_SLEEP_SECONDS", "30"))  # backoff cap
+CONNECT_RETRY_ATTEMPTS = int(os.getenv("AVANZA_CONNECT_RETRY_ATTEMPTS", "10"))
 CONNECT_RETRY_BACKOFF_SECONDS = int(os.getenv("AVANZA_CONNECT_RETRY_BACKOFF_SECONDS", "2"))
+CONNECT_RETRY_BACKOFF_CAP_SECONDS = int(os.getenv("AVANZA_CONNECT_RETRY_BACKOFF_CAP_SECONDS", "60"))
 
 
-@dataclass
 class Endpoints:
-    # Recently tested
     place_order = "/_api/trading/order-entry/order/new"
     delete_order = "/_api/trading/order-entry/order/delete"
     list_orders = "/_api/trading/trading-orders-and-deals/orders"
@@ -61,43 +61,38 @@ class Endpoints:
     accounts_overview = "/_api/account-performance/overview/total-values"
     transactions_list = "/_api/transactions/list"
     edit_order = "/_api/trading/order-entry/order/modify"
-    # Untested
     instrument_details = "/_api/market-guide/{type}/{id}/details"
-    index_details = "/_api/market-index/{id}/details"
-    # Unused endpoints for now
-    etf = "/_api/market-etf/{id}"
-    etf_details = "/_api/market-etf/{id}/details"
-    fund_references = "/_api/fund-reference/reference/{id}"
-    fund_sustainability = "/_api/fund-reference/sustainability/{id}"
-    fund_portfolio = "/_api/fund-reference/portfolio-data/{id}"
-    fund_trading_terms = "/_api/fund-guide/fund-trading-terms/{id}"
-    market_stocks_filter = "/_api/market-stock-filter/stocks"
 
 
+# Avanza returns an empty body on success for watchlist add/remove; only those exact paths skip retrying.
+EMPTY_RESPONSE_OK_PATH = re.compile(r"/_api/watchlist/watchlist/(add|remove)/[^/]+/[^/]+")
+
+
+# Keep the class name `Avanza`: `self.__call` mangles to `_Avanza__call`, the base class's private request method.
+# Overrides marked `reportIncompatibleMethodOverride` deliberately return this repo's models and take the arguments
+# this repo's orders need, not the library's.
 class Avanza(AvanzaBase):
     def __init__(self, credentials: dict[str, str]):
         super().__init__(credentials)
+        # Deliberate (2025-03 fix): Avanza rejects requests carrying the X-AuthenticationSession header the library
+        # sends. With the token None, requests drops the header and calls authenticate by cookie and security token.
         self._authentication_session = None
 
     def _retry_call(self, method: HttpMethod, path: str, options: dict | list | None = None) -> dict:
-        # Avanza returns an empty body on success for watchlist add/remove; only those exact paths skip retrying.
-        is_empty_response_ok = re.fullmatch(r"/_api/watchlist/watchlist/(add|remove)/[^/]+/[^/]+", path) is not None
+        is_empty_response_ok = EMPTY_RESPONSE_OK_PATH.fullmatch(path) is not None
 
-        for i in range(RETRY_ATTEMPTS):
+        for attempt in range(RETRY_ATTEMPTS):
             try:
-                response = self.__call(method=method, path=path, options=options, return_content=True)
+                response_content = self.__call(method=method, path=path, options=options, return_content=True)
 
-            except HTTPError as e:
-                log.debug(e)
-                time.sleep((i + 1) * RETRY_BACKOFF_SECONDS)
+            except HTTPError as exc:
+                log.debug(exc)
+                time.sleep(backoff_seconds(attempt, RETRY_BACKOFF_SECONDS, RETRY_BACKOFF_CAP_SECONDS))
                 continue
 
-            if response:
-                if isinstance(response, dict):
-                    return response
-
+            if response_content:
                 try:
-                    return json.loads(response, parse_float=float)
+                    return json.loads(response_content, parse_float=float)
                 except JSONDecodeError as exc:
                     log.error(f"Failed to decode JSON response for {method} {path}: {exc}")
                     return {}
@@ -105,10 +100,11 @@ class Avanza(AvanzaBase):
             if is_empty_response_ok:
                 return {}
 
+            time.sleep(backoff_seconds(attempt, RETRY_BACKOFF_SECONDS, RETRY_BACKOFF_CAP_SECONDS))
+
         log.error(f"Failed request after retries: {method} {path} (attempts={RETRY_ATTEMPTS})")
         return {}
 
-    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
     def get_chart_data(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         order_book_id: str,
@@ -119,20 +115,21 @@ class Avanza(AvanzaBase):
         if resolution is not None:
             options["resolution"] = resolution.value.lower()
 
-        response: dict | None = None
-        for _ in range(CHART_DATA_RETRY_ATTEMPTS):
+        for attempt in range(CHART_DATA_RETRY_ATTEMPTS):
             try:
-                response = self.__call(
+                chart_payload = self.__call(
                     method=HttpMethod.GET,
                     path=Endpoints.chart_data.format(order_book_id=order_book_id),
                     options=options,
                 )
 
-                if response:
-                    return ChartData(**response)
+                if chart_payload:
+                    return ChartData(**chart_payload)
 
-            except HTTPError:
-                time.sleep(CHART_DATA_RETRY_SLEEP_SECONDS)
+            except HTTPError as exc:
+                log.debug(exc)
+
+            time.sleep(backoff_seconds(attempt, CHART_DATA_RETRY_BACKOFF_SECONDS, CHART_DATA_RETRY_SLEEP_SECONDS))
 
         log.error(f"Failed to get chart data for {order_book_id}")
         return None
@@ -146,85 +143,59 @@ class Avanza(AvanzaBase):
         if endpoints is None:
             endpoints = [Endpoints.instrument, Endpoints.instrument_details]
 
-        combined_response = {}
+        merged_payload = {}
         for path in endpoints:
-            response = self._retry_call(
+            endpoint_payload = self._retry_call(
                 method=HttpMethod.GET,
                 path=path.format(type=instrument_type.value, id=instrument_id),
             )
+            merged_payload.update(endpoint_payload)
 
-            if response:
-                combined_response.update(response)
-
-        return combined_response
+        return merged_payload
 
     def get_instrument_certificate(self, instrument_id: str) -> InstrumentCertificate:
-        data = self._get_instrument(instrument_type=InstrumentType.CERTIFICATE, instrument_id=instrument_id)
-
-        return InstrumentCertificate(**data)
+        return InstrumentCertificate(
+            **self._get_instrument(instrument_type=InstrumentType.CERTIFICATE, instrument_id=instrument_id),
+        )
 
     def get_instrument_warrant(self, instrument_id: str) -> InstrumentWarrant:
-        data = self._get_instrument(instrument_type=InstrumentType.WARRANT, instrument_id=instrument_id)
-
-        return InstrumentWarrant(**data)
+        return InstrumentWarrant(
+            **self._get_instrument(instrument_type=InstrumentType.WARRANT, instrument_id=instrument_id),
+        )
 
     def get_instrument_stock(self, instrument_id: str) -> InstrumentStock:
-        data = self._get_instrument(instrument_type=InstrumentType.STOCK, instrument_id=instrument_id)
-
-        return InstrumentStock(**data)
+        return InstrumentStock(
+            **self._get_instrument(instrument_type=InstrumentType.STOCK, instrument_id=instrument_id),
+        )
 
     def get_instrument_index(self, instrument_id: str) -> InstrumentIndex:
-        data = self._get_instrument(
-            instrument_type=InstrumentType.INDEX,
-            instrument_id=instrument_id,
-            endpoints=[Endpoints.index],
+        return InstrumentIndex(
+            **self._get_instrument(
+                instrument_type=InstrumentType.INDEX,
+                instrument_id=instrument_id,
+                endpoints=[Endpoints.index],
+            ),
         )
-
-        return InstrumentIndex(**data)
-
-    def get_instrument_etf(self, instrument_id: str) -> InstrumentETF:
-        data = self._get_instrument(
-            instrument_type=InstrumentType.EXCHANGE_TRADED_FUND,
-            instrument_id=instrument_id,
-            endpoints=[Endpoints.etf, Endpoints.etf_details],
-        )
-
-        return InstrumentETF(**data)
-
-    def get_instrument_fund(self, instrument_id: str) -> InstrumentFund:
-        data = self._get_instrument(
-            instrument_type=InstrumentType.FUND,
-            instrument_id=instrument_id,
-            endpoints=[
-                Endpoints.fund_references,
-                Endpoints.fund_sustainability,
-                Endpoints.fund_portfolio,
-                Endpoints.fund_trading_terms,
-            ],
-        )
-
-        return InstrumentFund(**data)
 
     def get_accounts_overview(self, account_url_parameter: str) -> AccountOverview:
-        data = self._retry_call(
+        overview_payload = self._retry_call(
             method=HttpMethod.POST,
             path=Endpoints.accounts_overview,
             options=[account_url_parameter],
         )
 
-        return AccountOverview(**data)
+        return AccountOverview(**overview_payload)
 
-    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
     def get_watchlists(self) -> list[Watchlist]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        data = self._retry_call(method=HttpMethod.GET, path=Endpoints.watchlists)
-        if not isinstance(data, list):
+        watchlists_payload = self._retry_call(method=HttpMethod.GET, path=Endpoints.watchlists)
+        if not isinstance(watchlists_payload, list):
             log.error("Unexpected watchlists response type")
             return []
 
-        return [Watchlist(**i) for i in data]  # type: ignore
+        return [Watchlist(**watchlist) for watchlist in watchlists_payload]  # type: ignore
 
     def filtered_search(self, search_string: str, types: list[InstrumentType | str]) -> SearchResult:
-        data = self._retry_call(
+        search_payload = self._retry_call(
             method=HttpMethod.POST,
             path=Endpoints.filtered_search,
             options={
@@ -234,18 +205,13 @@ class Avanza(AvanzaBase):
             },
         )
 
-        return SearchResult(**data)
+        return SearchResult(**search_payload)
 
-    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
     def get_accounts_positions(self) -> AccountsPositions:  # pyright: ignore[reportIncompatibleMethodOverride]
-        data = self._retry_call(method=HttpMethod.GET, path=Endpoints.accounts_positions)
-
-        return AccountsPositions(**data)
+        return AccountsPositions(**self._retry_call(method=HttpMethod.GET, path=Endpoints.accounts_positions))
 
     def list_orders(self) -> Orders:
-        data = self._retry_call(method=HttpMethod.GET, path=Endpoints.list_orders)
-
-        return Orders(**data)
+        return Orders(**self._retry_call(method=HttpMethod.GET, path=Endpoints.list_orders))
 
     def get_transactions(
         self,
@@ -255,11 +221,11 @@ class Avanza(AvanzaBase):
         max_elements: int | None = 1000,
         account_id: str | None = None,
     ) -> TransactionsDetails:
-        data = self._retry_call(
+        transactions_payload = self._retry_call(
             method=HttpMethod.GET,
             path=Endpoints.transactions_list,
             options={
-                "transactionTypes": ",".join([type.value for type in transaction_details_types]),
+                "transactionTypes": ",".join(details_type.value for details_type in transaction_details_types),
                 "from": transactions_from.isoformat(),
                 "to": transactions_to.isoformat() if transactions_to else None,
                 "maxElements": max_elements,
@@ -267,7 +233,7 @@ class Avanza(AvanzaBase):
             },
         )
 
-        return TransactionsDetails(**data)
+        return TransactionsDetails(**transactions_payload)
 
     def remove_from_watchlist(self, instrument_id: str, watchlist_id: str):
         self._retry_call(
@@ -313,7 +279,6 @@ class Avanza(AvanzaBase):
 
         return parsed_response.order_id
 
-    # Deliberately returns this repo's models / takes the arguments this repo's orders need, not the library's
     def edit_order(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         order_id: str,
@@ -321,8 +286,7 @@ class Avanza(AvanzaBase):
         price: float,
         valid_until: date,
         volume: int,
-        *_,
-    ):
+    ) -> str | None:
         response = self._retry_call(
             method=HttpMethod.POST,
             path=Endpoints.edit_order,
@@ -379,17 +343,15 @@ def get_client() -> Avanza:
         log.error("Missing credentials in .env file")
         raise ValueError("Missing Avanza credentials. Check your .env file.")
 
-    i = 0
-    while True:
+    for attempt in range(CONNECT_RETRY_ATTEMPTS):
         try:
-            client = Avanza(credentials)  # type: ignore
-            return client
+            return Avanza(credentials)  # type: ignore
 
-        except HTTPError as e:
-            log.error(e)
-            i += 1
-
-            if CONNECT_RETRY_ATTEMPTS is not None and i >= CONNECT_RETRY_ATTEMPTS:
+        except HTTPError as exc:
+            log.error(exc)
+            if attempt == CONNECT_RETRY_ATTEMPTS - 1:
                 raise
 
-            time.sleep(i * CONNECT_RETRY_BACKOFF_SECONDS)
+            time.sleep(backoff_seconds(attempt, CONNECT_RETRY_BACKOFF_SECONDS, CONNECT_RETRY_BACKOFF_CAP_SECONDS))
+
+    raise RuntimeError("AVANZA_CONNECT_RETRY_ATTEMPTS must be at least 1")

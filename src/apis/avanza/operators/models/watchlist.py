@@ -28,28 +28,10 @@ class ValidInstruments(BaseModel):
     BEAR: list[Orderbook] = Field(default_factory=list)
 
     def get(self, direction: str) -> list[Orderbook]:
-        if direction == "BULL":
-            return self.BULL
-        elif direction == "BEAR":
-            return self.BEAR
-        else:
-            raise ValueError(f"Unknown direction: {direction}")
-
-    def set(self, direction: str, value: list[Orderbook]) -> None:
-        if direction == "BULL":
-            self.BULL = value
-        elif direction == "BEAR":
-            self.BEAR = value
-        else:
-            raise ValueError(f"Unknown direction: {direction}")
+        return getattr(self, _checked_direction(direction))
 
     def append(self, direction: str, value: Orderbook) -> None:
-        if direction == "BULL":
-            self.BULL.append(value)
-        elif direction == "BEAR":
-            self.BEAR.append(value)
-        else:
-            raise ValueError(f"Unknown direction: {direction}")
+        self.get(direction).append(value)
 
 
 class PreferredInstrument(BaseModel):
@@ -57,20 +39,10 @@ class PreferredInstrument(BaseModel):
     BEAR: Orderbook | None = Field(default=None)
 
     def get(self, direction: str) -> Orderbook | None:
-        if direction == "BULL":
-            return self.BULL
-        elif direction == "BEAR":
-            return self.BEAR
-        else:
-            raise ValueError(f"Unknown direction: {direction}")
+        return getattr(self, _checked_direction(direction))
 
     def set(self, direction: str, value: Orderbook | None) -> None:
-        if direction == "BULL":
-            self.BULL = value
-        elif direction == "BEAR":
-            self.BEAR = value
-        else:
-            raise ValueError(f"Unknown direction: {direction}")
+        setattr(self, _checked_direction(direction), value)
 
 
 @dataclass
@@ -169,3 +141,13 @@ class InstrumentValidators:
 
         log.debug("> Market maker in the order depth level: %s", instrument_info.order_depth.market_maker_level_in_bid)
         return False
+
+
+DIRECTIONS = ("BULL", "BEAR")
+
+
+def _checked_direction(direction: str) -> str:
+    if direction not in DIRECTIONS:
+        raise ValueError(f"Unknown direction: {direction}")
+
+    return direction

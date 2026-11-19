@@ -9,7 +9,7 @@ from services.storage.operators import Storage
 
 def _candles(rows: dict[str, tuple[float, float, float, float]]) -> pd.DataFrame:
     frame = pd.DataFrame.from_dict(rows, orient="index", columns=["Open", "High", "Low", "Close"])
-    frame["Volume"] = 0  # index candles carry no volume
+    frame["Volume"] = 0
     frame.index = pd.to_datetime(frame.index)
     frame.index.name = "Datetime"
     return frame

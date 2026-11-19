@@ -6,6 +6,7 @@ import pandas as pd
 from config import SETTINGS
 from services.trading.tracked_position import ExitLevels, TrackedPosition
 from tasks.backtest.wallet import SIDES_WITH_OPPOSITE, ClosedTrade, Side, Wallet
+from tasks.shared.bars import BAR_DURATION
 
 
 class BarSimulator:
@@ -23,7 +24,7 @@ class BarSimulator:
     def step(self, bar: pd.Series, timestamp: datetime) -> list[ClosedTrade]:
         closed_trades = []
         closed_sides: set[Side] = set()
-        held_at_start = not self.wallet.is_empty()
+        is_held_at_start = not self.wallet.is_empty()
 
         for side, _ in SIDES_WITH_OPPOSITE:
             position = self.wallet.get(side)
@@ -34,7 +35,7 @@ class BarSimulator:
             closed_trades.append(self.wallet.close(side, exit_price))
             closed_sides.add(side)
 
-        if self.levels.hold_bars and held_at_start:
+        if self.levels.hold_bars and is_held_at_start:
             return closed_trades
 
         for side, opposite_side in SIDES_WITH_OPPOSITE:
@@ -60,20 +61,18 @@ class BarSimulator:
         if position.hit_take_profit(bar["High"], bar["Low"]):
             return position.take_profit_fill(bar["Open"])
 
-        if bar["EXIT"] > 0:
-            return bar["Next Open"]
-
         if position.confirm_stop_loss(bar["Close"]) or position.confirm_pullback(bar["Close"]):
             return bar["Next Open"]
 
         if position.confirm_hold_expiry():
             return bar["Next Open"]
 
-        if bar["Day End"] or timestamp.time() >= SETTINGS.TIME.END:
+        # is_at_or_after_trading_end for one bar (building an index per bar would triple the replay time)
+        if bar["Day End"] or (timestamp + BAR_DURATION).time() >= SETTINGS.TIME.END:
             return bar["Next Open"]
 
         return None
 
     @staticmethod
     def _is_entry(bar: pd.Series, side: Side, opposite_side: Side) -> bool:
-        return bar[side] > 0 and np.isnan(bar["EXIT"]) and np.isnan(bar[opposite_side]) and not bar["Day End"]
+        return bar[side] > 0 and np.isnan(bar[opposite_side]) and not bar["Day End"]

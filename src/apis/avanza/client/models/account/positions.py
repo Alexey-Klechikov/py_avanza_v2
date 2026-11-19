@@ -89,4 +89,3 @@ class AccountsPositions(BaseModel):
     with_orderbook: list[WithOrderbookPosition] = Field(alias="withOrderbook")
     without_orderbook: list = Field(alias="withoutOrderbook")
     cash_positions: list[CashPosition] = Field(alias="cashPositions")
-    # with_credit_account: bool | None = Field(alias="withCreditAccount")

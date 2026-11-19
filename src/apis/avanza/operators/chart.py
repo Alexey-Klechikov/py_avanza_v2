@@ -17,14 +17,14 @@ class Chart:
             "Datetime",
         )
         available_period = period
-        if resolution in [Resolution.MINUTE, Resolution.TWO_MINUTES, Resolution.FIVE_MINUTES]:
+        if resolution in (Resolution.MINUTE, Resolution.TWO_MINUTES, Resolution.FIVE_MINUTES):
             available_period = TimePeriod.TODAY
-        elif period != TimePeriod.TODAY and resolution in [Resolution.TEN_MINUTES, Resolution.THIRTY_MINUTES]:
+        elif period != TimePeriod.TODAY and resolution in (Resolution.TEN_MINUTES, Resolution.THIRTY_MINUTES):
             available_period = TimePeriod.ONE_WEEK
-        elif period not in [TimePeriod.TODAY, TimePeriod.ONE_WEEK] and resolution == Resolution.HOUR:
+        elif period not in (TimePeriod.TODAY, TimePeriod.ONE_WEEK) and resolution == Resolution.HOUR:
             available_period = TimePeriod.ONE_MONTH
 
-        if available_period and period != available_period:
+        if period != available_period:
             log.debug(
                 f"Period {period.name} is not available for resolution {resolution.name}. "
                 f"Using {available_period.name} instead.",
@@ -33,10 +33,8 @@ class Chart:
 
         chart_data = get_client().get_chart_data(SETTINGS.AVA, period, resolution)
 
-        if not chart_data:
+        if not chart_data or not chart_data.ohlc:
             log.warning(f"No chart data found for {SETTINGS.AVA}")
             return empty_dataframe
 
-        ohlc_data = [i.model_dump() for i in chart_data.ohlc]
-
-        return empty_dataframe if not chart_data else pd.DataFrame(ohlc_data).set_index("Datetime")
+        return pd.DataFrame([candle.model_dump() for candle in chart_data.ohlc]).set_index("Datetime")

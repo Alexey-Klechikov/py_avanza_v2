@@ -1,7 +1,9 @@
+import numpy as np
+import pandas as pd
 import pandas_ta as ta  # pylint: disable=unused-import # noqa: F401
 
 from services.ta.indicators.models.category_base import IndicatorsCategoryBase
-from services.ta.indicators.models.indicator import HorizontalLine, Indicator, Panel, Plot, Plots, Signal
+from services.ta.indicators.models.indicator import Indicator, IndicatorSignal
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -25,22 +27,18 @@ class Momentum(IndicatorsCategoryBase):
         The STC oscillates between 0 and 100, with values above 50 indicating a bullish trend and values below
         50 indicating a bearish trend.
         """
+        column = f"STC_{tclength}_{fast}_{slow}_{factor}"
 
-        column_name = f"STC_{tclength}_{fast}_{slow}_{factor}"
-
-        self.data.ta.stc(tclength=tclength, fast=fast, slow=slow, factor=factor, append=True)
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Momentum -> STC' can not be added.")
-            return
+        # Computed here: pandas_ta 0.4.71b0 only updates its first stochastic while the MACD window's low is above
+        # 0, so its STC freezes whenever MACD dips negative (and it ignores `tclength`, it reads `tc_length`)
+        close = self.bars["Close"]
+        macd = close.ewm(span=fast, adjust=False).mean() - close.ewm(span=slow, adjust=False).mean()
+        smoothed_macd = _smoothed_stochastic(macd, tclength, factor)
+        self.bars[column] = _smoothed_stochastic(smoothed_macd, tclength, factor)
 
         self.indicators["STC"] = Indicator(
-            signal=Signal(LONG=lambda x: x[column_name] > 50, SHORT=lambda x: x[column_name] < 50),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], color="orange", ylim=[-10, 110], ylabel="Momentum [STC]")],
-                horizontal_lines=[HorizontalLine(y=50, color="red")],
-            ),
+            signal=IndicatorSignal(LONG=lambda x: x[column] > 50, SHORT=lambda x: x[column] < 50),
+            columns=[column],
         )
 
     def add_commodity_channel_index(self, length: int, c: float) -> None:
@@ -56,22 +54,17 @@ class Momentum(IndicatorsCategoryBase):
         a given period of time. Readings above +100 are considered overbought, and readings
         below -100 are considered oversold.
         """
+        column = f"CCI_{length}_{c}"
 
-        column_name = f"CCI_{length}_{c}"
-
-        self.data.ta.cci(length=length, c=c, append=True)
-        if column_name not in self.data.columns:
-            log.debug("Indicator 'Momentum -> CCI' can not be added.")
-            return
+        # Computed here: pandas_ta 0.4.71b0 drops the parentheses, typical - mean / (c * mad), so its CCI sits
+        # far below -100 on any price level
+        typical = (self.bars["High"] + self.bars["Low"] + self.bars["Close"]) / 3
+        mean_deviation = typical.rolling(length).apply(lambda window: np.abs(window - window.mean()).mean(), raw=True)
+        self.bars[column] = (typical - typical.rolling(length).mean()) / (c * mean_deviation)
 
         self.indicators["CCI"] = Indicator(
-            signal=Signal(LONG=lambda x: x[column_name] > 100, SHORT=lambda x: x[column_name] < -100),
-            columns=[column_name],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_name], ylabel="Momentum [CCI]")],
-                horizontal_lines=[HorizontalLine(y=100, color="red"), HorizontalLine(y=-100, color="blue")],
-            ),
+            signal=IndicatorSignal(LONG=lambda x: x[column] > 100, SHORT=lambda x: x[column] < -100),
+            columns=[column],
         )
 
     def add_relative_vigor_index(self, length: int, length_swma: int, length_divergence: int) -> None:
@@ -95,57 +88,25 @@ class Momentum(IndicatorsCategoryBase):
         signal line is a bearish indicator. These crossovers are designed to be leading indicators of
         future price direction.
         """
+        rvgi_column = f"RVGI_{length}_{length_swma}"
+        signal_column = f"RVGIs_{length}_{length_swma}"
+        slope_column = "RVGI_slope"
 
-        column_names = {"RVGI": f"RVGI_{length}_{length_swma}", "RVGIs": f"RVGIs_{length}_{length_swma}"}
-
-        self.data.ta.rvgi(length=length, swma_length=length_swma, append=True)
-        if column_names["RVGI"] not in self.data.columns:
+        self.bars.ta.rvgi(length=length, swma_length=length_swma, append=True)
+        if rvgi_column not in self.bars.columns:
             log.debug("Indicator 'Momentum -> RVGI' can not be added.")
             return
 
-        column_names_slope = {"RVGI": "RVGI_slope", "close": f"Close_slope_{length_divergence}"}
-        self.data[column_names_slope["close"]] = self.data.ta.linreg(length=length_divergence, slope=True)
-        self.data[column_names_slope["RVGI"]] = self.data.ta.linreg(
-            close=column_names["RVGI"],
-            length=length_divergence,
-            slope=True,
-        )
+        close_slope_column = self._add_divergence_slopes(rvgi_column, slope_column, length_divergence)
 
         self.indicators["RVGI"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: all(
-                    [
-                        x[column_names["RVGI"]] > x[column_names["RVGIs"]],
-                        x[column_names["RVGI"]] > 0,
-                        x[column_names["RVGIs"]] > 0,
-                    ],
-                )
-                or all(
-                    [
-                        x[column_names_slope["RVGI"]] > 0,
-                        x[column_names_slope["close"]] < 0,
-                    ],
-                ),
-                SHORT=lambda x: all(
-                    [
-                        x[column_names["RVGI"]] < x[column_names["RVGIs"]],
-                        x[column_names["RVGI"]] < 0,
-                        x[column_names["RVGIs"]] < 0,
-                    ],
-                )
-                or all(
-                    [
-                        x[column_names_slope["RVGI"]] < 0,
-                        x[column_names_slope["close"]] > 0,
-                    ],
-                ),
+            signal=IndicatorSignal(
+                LONG=lambda x: (x[rvgi_column] > x[signal_column] and x[rvgi_column] > 0 and x[signal_column] > 0)
+                or (x[slope_column] > 0 and x[close_slope_column] < 0),
+                SHORT=lambda x: (x[rvgi_column] < x[signal_column] and x[rvgi_column] < 0 and x[signal_column] < 0)
+                or (x[slope_column] < 0 and x[close_slope_column] > 0),
             ),
-            columns=list(column_names.values()) + list(column_names_slope.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=list(column_names.values()), ylabel="Momentum [RVGI]")],
-                horizontal_lines=[HorizontalLine(y=0, color="red")],
-            ),
+            columns=[rvgi_column, signal_column, slope_column, close_slope_column],
         )
 
     def add_macd_dema(self, length_fast: int, length_slow: int) -> None:
@@ -154,35 +115,15 @@ class Momentum(IndicatorsCategoryBase):
 
         This looks like MACD but uses 2 DEMA instead of EMA.
         """
+        fast_column, slow_column, macd_column = f"DEMA_{length_fast}", f"DEMA_{length_slow}", "MACD_DEMA"
 
-        column_names = {
-            "DEMA_fast": f"DEMA_{length_fast}",
-            "DEMA_slow": f"DEMA_{length_slow}",
-            "MACD_DEMA": "MACD_DEMA",
-        }
-
-        self.data.ta.dema(length=length_fast, append=True)
-        self.data.ta.dema(length=length_slow, append=True)
-        self.data[column_names["MACD_DEMA"]] = self.data.apply(
-            lambda x: x[column_names["DEMA_fast"]] - x[column_names["DEMA_slow"]],
-            axis=1,
-        )
-
-        if column_names["MACD_DEMA"] not in self.data.columns:
-            log.debug("Indicator 'Momentum -> MACD_DEMA' can not be added.")
-            return
+        self.bars.ta.dema(length=length_fast, append=True)
+        self.bars.ta.dema(length=length_slow, append=True)
+        self.bars[macd_column] = self.bars[fast_column] - self.bars[slow_column]
 
         self.indicators["MACD_DEMA"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: x[column_names["MACD_DEMA"]] > 0,
-                SHORT=lambda x: x[column_names["MACD_DEMA"]] < 0,
-            ),
-            columns=[column_names["MACD_DEMA"]],
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=[column_names["MACD_DEMA"]], ylabel="Momentum [MACD_DEMA]")],
-                horizontal_lines=[HorizontalLine(y=0, color="red")],
-            ),
+            signal=IndicatorSignal(LONG=lambda x: x[macd_column] > 0, SHORT=lambda x: x[macd_column] < 0),
+            columns=[macd_column],
         )
 
     def add_stochastic_oscillator(self, k: int, d: int, smooth_k: int, mamode: str) -> None:
@@ -197,35 +138,27 @@ class Momentum(IndicatorsCategoryBase):
         Stochastic Oscillator "doesn't follow price, it doesn't follow volume or anything like that.
         It follows the speed or the momentum of price. As a rule, the momentum changes direction before price."
         """
+        k_column, d_column = f"STOCHk_{k}_{d}_{smooth_k}", f"STOCHd_{k}_{d}_{smooth_k}"
 
-        column_names = {"STOCHk": f"STOCHk_{k}_{d}_{smooth_k}", "STOCHd": f"STOCHd_{k}_{d}_{smooth_k}"}
-
-        self.data.ta.stoch(k=k, d=d, smooth_k=smooth_k, mamode=mamode, append=True)
-        if column_names["STOCHk"] not in self.data.columns:
+        self.bars.ta.stoch(k=k, d=d, smooth_k=smooth_k, mamode=mamode, append=True)
+        if k_column not in self.bars.columns:
             log.debug("Indicator 'Momentum -> STOCH' can not be added.")
             return
 
         self.indicators["STOCH"] = Indicator(
-            signal=Signal(
-                LONG=lambda x: all(
-                    [
-                        x[column_names["STOCHk"]] > x[column_names["STOCHd"]],
-                        x[column_names["STOCHk"]] > 70,
-                        x[column_names["STOCHd"]] > 70,
-                    ],
-                ),
-                SHORT=lambda x: all(
-                    [
-                        x[column_names["STOCHk"]] < x[column_names["STOCHd"]],
-                        x[column_names["STOCHk"]] < 30,
-                        x[column_names["STOCHd"]] < 30,
-                    ],
-                ),
+            signal=IndicatorSignal(
+                LONG=lambda x: x[k_column] > x[d_column] and x[k_column] > 70 and x[d_column] > 70,
+                SHORT=lambda x: x[k_column] < x[d_column] and x[k_column] < 30 and x[d_column] < 30,
             ),
-            columns=list(column_names.values()),
-            plots=Plots(
-                panel=Panel.SEPARATE,
-                list=[Plot(columns=list(column_names.values()), ylabel="Momentum [STOCH]")],
-                horizontal_lines=[HorizontalLine(y=70, color="red"), HorizontalLine(y=30, color="blue")],
-            ),
+            columns=[k_column, d_column],
         )
+
+
+def _smoothed_stochastic(series: pd.Series, length: int, factor: float) -> pd.Series:
+    """Stochastic of `series` over `length` bars (0-100, held where the window is flat), smoothed exponentially with
+    weight `factor` on the newest value: one of the two STC stages."""
+    lowest = series.rolling(length, min_periods=1).min()
+    value_range = series.rolling(length, min_periods=1).max() - lowest
+    stochastic = (100 * (series - lowest) / value_range.where(value_range > 0)).ffill().fillna(0)
+
+    return stochastic.ewm(alpha=factor, adjust=False).mean()

@@ -1,65 +1,38 @@
 import copy
 import logging
 
+COLOR_CODE_BY_LEVEL = {"DEBUG": 37, "INFO": 38, "WARNING": 33, "ERROR": 31, "CRITICAL": 41}
+
+
+def _shorten(message: str) -> str:
+    return message.replace("main.", "").replace("Signal.LONG", "🟢 LONG").replace("Signal.SHORT", "🔴 SHORT")
+
 
 class OneLineFormatter(logging.Formatter):
     def __init__(self, fmt="[%(levelname)s] [%(asctime)s] [%(name)s] - %(message)s", datefmt="%H:%M:%S"):
         super().__init__(fmt, datefmt)
-        self.displacements = {
-            0: {"type": "time", "size": 8},
-            1: {"type": "logger", "size": 9},
-            2: {"type": "message", "size": 35},
-        }
+        # Padded widths of the time, logger and message blocks; the message width grows to the widest seen
+        self.block_widths = [8, 9, 35]
 
-    def format(self, record) -> str:
-        s = super().format(record)
-        s = (
-            s.replace("\n", " >>>")
-            .replace("main.", "")
-            .replace("Signal.LONG", "🟢 LONG")
-            .replace("Signal.SHORT", "🔴 SHORT")
-        )
+    def format(self, record: logging.LogRecord) -> str:
+        line = _shorten(super().format(record).replace("\n", " >>>"))
 
-        if s.find("Done"):
-            s = s.split("--")[0]
+        blocks = line.split("]")[:3]
+        for position, block in enumerate(blocks):
+            line = line.replace(f"{block}]", f"{block}]" + " " * (self.block_widths[position] - len(block)))
 
-        for i, block in enumerate(s.split("]")[:3]):
-            s = s.replace(f"{block}]", f"{block}]" + (" " * (self.displacements[i]["size"] - len(block))))
+        if len(blocks) == 3:
+            self.block_widths[2] = max(len(blocks[2]), self.block_widths[2])
 
-            if self.displacements[i]["type"] == "message":
-                self.displacements[i]["size"] = max(len(block), self.displacements[i]["size"])
-
-        return s
+        return line
 
 
 class ColoredFormatter(logging.Formatter):
-    """Logging Formatter to add colors and count warning / errors"""
+    """Colors the level name with its ANSI code."""
 
-    MAPPING = {
-        "DEBUG": 37,  # white
-        "INFO": 38,  # grey
-        "WARNING": 33,  # yellow
-        "ERROR": 31,  # red
-        "CRITICAL": 41,
-    }  # white on red bg
-
-    PREFIX = "\033["
-    SUFFIX = "\033[0m"
-
-    def __init__(self, pattern: str) -> None:
-        logging.Formatter.__init__(self, pattern)
-
-        self.messages_counter = 0
-
-    def format(self, record) -> str:
+    def format(self, record: logging.LogRecord) -> str:
         colored_record = copy.copy(record)
-        levelname = colored_record.levelname
-        colored_levelname = f"{self.PREFIX}{self.MAPPING.get(levelname, 38)}m{levelname}{self.SUFFIX}"
-        colored_record.levelname = colored_levelname
+        color_code = COLOR_CODE_BY_LEVEL.get(record.levelname, 38)
+        colored_record.levelname = f"\033[{color_code}m{record.levelname}\033[0m"
 
-        s = logging.Formatter.format(self, colored_record)
-        s = s.replace("main.", "").replace("Signal.LONG", "🟢 LONG").replace("Signal.SHORT", "🔴 SHORT")
-
-        self.messages_counter += 1
-
-        return s
+        return _shorten(super().format(colored_record))

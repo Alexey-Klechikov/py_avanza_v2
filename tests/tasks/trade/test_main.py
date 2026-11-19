@@ -30,7 +30,7 @@ class Test_LastCompleteBar(TestCase):
 
 
 class Test_PickSignal(TestCase):
-    def _pick(self, live_source: str | None, failing_source: str | None = None):
+    def _pick(self, live_orders: bool, fails: bool = False):
         from dataclasses import replace
         from unittest.mock import MagicMock, patch
 
@@ -38,37 +38,33 @@ class Test_PickSignal(TestCase):
         from services.ta.strategies.models.signal import Signal
         from tasks.trade import main
 
-        source_signals = {"fixed_rule": Signal.SHORT, "weighted": Signal.EXIT}
-
-        def source_signal(source):
-            if source.value == failing_source:
-                raise ValueError("no model")
-            return source_signals[source.value]
-
         market_data = MagicMock(weighted_score=None)
-        market_data.source_signal.side_effect = source_signal
-        with patch.object(main, "SETTINGS", replace(SETTINGS, LIVE_SIGNAL_SOURCE=live_source)):
+        market_data.weighted_signal.side_effect = ValueError("no model") if fails else None
+        market_data.weighted_signal.return_value = Signal.SHORT
+        with patch.object(main, "SETTINGS", replace(SETTINGS, LIVE_ORDERS=live_orders)):
             signal = main.TradingFlow(market_data)._pick_signal()
 
-        called = [call.args[0].value for call in market_data.source_signal.call_args_list]
-        return signal, market_data, called, Signal
+        return signal, market_data, Signal
 
-    def test_no_live_source_trades_nothing_and_logs_every_source(self):
-        signal, _, called, _ = self._pick(None)
+    def test_paper_mode_trades_nothing_but_evaluates_the_signal(self):
+        signal, market_data, _ = self._pick(live_orders=False)
 
         assert signal is None
-        assert sorted(called) == ["fixed_rule", "weighted"]
+        market_data.weighted_signal.assert_called_once()
 
-    def test_weighted_live_source(self):
-        signal, _, called, Signal = self._pick("weighted")
-
-        assert signal == Signal.EXIT
-        assert called == ["fixed_rule", "weighted"]
-
-    def test_paper_failure_does_not_reach_the_live_source(self):
-        signal, _, _, Signal = self._pick("fixed_rule", failing_source="weighted")
+    def test_live_orders_trade_the_weighted_signal(self):
+        signal, _, Signal = self._pick(live_orders=True)
 
         assert signal == Signal.SHORT
+
+    def test_paper_mode_failure_is_only_logged(self):
+        signal, _, _ = self._pick(live_orders=False, fails=True)
+
+        assert signal is None
+
+    def test_live_orders_failure_propagates(self):
+        with self.assertRaises(ValueError):
+            self._pick(live_orders=True, fails=True)
 
 
 class Test_TimeBoxedFlow(TestCase):
@@ -81,13 +77,13 @@ class Test_TimeBoxedFlow(TestCase):
         from tasks.trade import main
 
         market_data = MagicMock(is_new=True, too_old=False, weighted_score=4.2)
-        market_data.source_signal.return_value = Signal.SHORT
+        market_data.weighted_signal.return_value = Signal.SHORT
         portfolio = MagicMock(positions=["held"], buying_power=10_000)
         flow = main.TradingFlow(market_data)
         with (
-            patch.object(main, "SETTINGS", replace(SETTINGS, LIVE_SIGNAL_SOURCE="weighted")),
+            patch.object(main, "SETTINGS", replace(SETTINGS, LIVE_ORDERS=True)),
             patch.object(main, "datetime", MagicMock(now=lambda: datetime(2026, 11, 18, 12, 0))),
-            patch.object(main, "get_market_close_time", return_value=SETTINGS.TIME.END),
+            patch.object(main, "get_trading_end_time", return_value=SETTINGS.TIME.END),
         ):
             action = flow.get_action(portfolio, orders=MagicMock())
 
@@ -100,16 +96,14 @@ class Test_ScoreLogging(TestCase):
         from unittest.mock import patch
 
         from services.ta.strategies.models.signal import Signal
-        from tasks.backtest.model import WeightedModel
+        from tasks.shared.weighted_model import WeightedModel
         from tasks.trade import main
-        from tasks.trade.models import SignalSource
 
         model = WeightedModel(
             weights={"a": 1.0},
             intercept=0.0,
             center=0.5,
             entry_threshold=13.0,
-            exit_threshold=0.0,
             horizon_bars=60,
             alpha=0.1,
             trained_from=date(2026, 1, 1),
@@ -122,8 +116,37 @@ class Test_ScoreLogging(TestCase):
 
             market_data.weighted_score = 14.2
             market_data.bars = pd.DataFrame({"Close": [100.0]})
-            main.TradingFlow(market_data)._log_source_signal(SignalSource.WEIGHTED, Signal.LONG, prefix="[PAPER] ")
+            main.TradingFlow(market_data)._log_signal(Signal.LONG, prefix="[PAPER] ")
 
         messages = [call.args[0] for call in info.call_args_list]
         assert messages[0] == "[BULL] +13.50 < score < -12.50 [BEAR]"
         assert len(messages) == 2 and "(score +14.20)" in messages[1]
+
+
+class Test_StartOfDay(TestCase):
+    def _action(self, held: dict, active_order=None):
+        from unittest.mock import MagicMock, patch
+
+        from config import SETTINGS
+        from tasks.trade import main
+
+        portfolio = MagicMock(positions=list(held.values()), acquired_instrument=held)
+        flow = main.TradingFlow(MagicMock(too_old=False, is_new=False))
+        before_start = datetime.combine(datetime(2026, 11, 18), SETTINGS.TIME.START).replace(minute=0)
+        with (
+            patch.object(main, "datetime", MagicMock(now=lambda: before_start)),
+            patch.object(main, "get_trading_end_time", return_value=SETTINGS.TIME.END),
+        ):
+            action = flow.get_action(portfolio, orders=MagicMock(active_order=active_order))
+
+        return action, flow, main
+
+    def test_adopts_a_position_held_before_the_start(self):
+        action, flow, main = self._action(held={"BEAR": "held"})
+
+        assert action == main.FlowAction.TRADE and flow.direction_buy == main.Direction.BEAR
+
+    def test_waits_while_an_order_is_active(self):
+        action, flow, main = self._action(held={"BULL": "held"}, active_order="order")
+
+        assert action == main.FlowAction.DO_NOTHING and flow.direction_buy is None

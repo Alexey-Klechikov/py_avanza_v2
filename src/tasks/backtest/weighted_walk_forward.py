@@ -5,10 +5,10 @@ import pandas as pd
 from pydantic import BaseModel
 
 from config import SETTINGS
-from tasks.backtest.bars import add_execution_columns, bar_index
-from tasks.backtest.model import WEIGHTED_LEVELS, fit_model, forward_move_bp, in_trading_window, weighted_signal_bars
 from tasks.backtest.paper_trade import PaperSession, replay
-from tasks.backtest.votes import vote_frame
+from tasks.shared.bars import add_execution_columns, bar_index, is_in_trading_window
+from tasks.shared.votes import vote_frame
+from tasks.shared.weighted_model import WEIGHTED_LEVELS, fit_model, forward_move_bp, weighted_signal_bars
 from utils.logger.operators import get_logger
 
 log = get_logger()
@@ -40,27 +40,28 @@ def weighted_walk_forward(
     bar_days = bar_index(history).date
     all_sessions = sorted(set(bar_days))
     test_days = all_sessions[-test_sessions:]
-    warm = history.index[0].normalize() + pd.Timedelta(days=settings.WARMUP_DAYS)
-    is_scored = in_trading_window(bar_index(history)) & np.isfinite(target)
+    warmed_up_start = history.index[0].normalize() + pd.Timedelta(days=settings.WARMUP_DAYS)
+    is_scorable = is_in_trading_window(bar_index(history)) & np.isfinite(target)
 
-    period_bars, correlations, kept_votes = [], [], []
-    for first in range(0, len(test_days), refit_sessions):
-        period = test_days[first : first + refit_sessions]
+    period_signal_bars, correlations, kept_votes = [], [], []
+    for period_offset in range(0, len(test_days), refit_sessions):
+        period = test_days[period_offset : period_offset + refit_sessions]
         period_start = pd.Timestamp(period[0])
-        train_start = period_start - pd.Timedelta(days=settings.TRAIN_DAYS) if settings.TRAIN_DAYS else warm
-        train = np.asarray((history.index >= max(warm, train_start)) & (history.index < period_start))
+        train_start = period_start - pd.Timedelta(days=settings.TRAIN_DAYS) if settings.TRAIN_DAYS else warmed_up_start
+        is_train = np.asarray((history.index >= max(warmed_up_start, train_start)) & (history.index < period_start))
 
-        model = fit_model(votes, bars, train)
-        in_period = np.isin(bar_days, period)
-        period_bars.append(weighted_signal_bars(model, votes[in_period], history[in_period]))
+        model = fit_model(votes, bars, is_train)
+        is_in_period = np.isin(bar_days, period)
+        period_signal_bars.append(weighted_signal_bars(model, votes[is_in_period], history[is_in_period]))
 
-        scored = in_period & is_scored
-        score = model.score(votes[scored]).to_numpy()
-        correlations.append(float(np.corrcoef(score, target[scored])[0, 1]) if score.std() > 0 else 0.0)
+        is_scored = is_in_period & is_scorable
+        score = model.score(votes[is_scored]).to_numpy()
+        is_correlation_defined = score.std() > 0 and target[is_scored].std() > 0
+        correlations.append(float(np.corrcoef(score, target[is_scored])[0, 1]) if is_correlation_defined else 0.0)
         kept_votes.append(len(model.weights))
         log.debug(
             f"Weighted walk-forward {period[0]}: {len(model.weights)} votes, correlation {correlations[-1]:+.3f}",
         )
 
-    sessions = replay(pd.concat(period_bars), set(test_days), WEIGHTED_LEVELS)
+    sessions = replay(pd.concat(period_signal_bars), set(test_days), WEIGHTED_LEVELS)
     return WeightedWalkForward(sessions=sessions, correlations=correlations, kept_votes=kept_votes)

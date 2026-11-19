@@ -7,24 +7,19 @@ log = get_logger()
 
 
 class Instrument:
-    def __init__(self, id: str, type: str):
-        self.id: str = id
-        self.type: str = type
+    def __init__(self, instrument_id: str, instrument_type: str):
+        self.instrument_id = instrument_id
+        self.instrument_type = instrument_type
 
     def _get_info(self) -> InstrumentCertificate | InstrumentWarrant | None:
-        instrument_info = None
+        if self.instrument_type == "CERTIFICATE":
+            return get_client().get_instrument_certificate(self.instrument_id)
 
-        if self.type == "CERTIFICATE":
-            return get_client().get_instrument_certificate(self.id)
+        if self.instrument_type == "WARRANT":
+            return get_client().get_instrument_warrant(self.instrument_id)
 
-        elif self.type == "WARRANT":
-            return get_client().get_instrument_warrant(self.id)
-
-        if not instrument_info:
-            log.error(f"Failed to get price for {self.id}")
-            return
-
-        return instrument_info
+        log.error(f"Failed to get price for {self.instrument_id}")
+        return None
 
     def get_buy_price(self) -> float | None:
         instrument_info = self._get_info()

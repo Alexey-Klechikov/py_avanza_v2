@@ -12,13 +12,13 @@ Make a bounded slice of this repo (see `CLAUDE.md`) measurably simpler, flatter,
 1. **Preserve behavior:** weighted model JSON schema, watchlist naming, dual path layout, `.env` variable names, Avanza/Yahoo payload shapes, `DRY_RUN` semantics, log intent, exception types. Change behavior only when asked, and say so.
 2. **Falsifiable reason first:** name the concrete problem (e.g. "O(n·m) rescan of indicator combinations per candle", "four nesting levels in `_evaluate_signal`", "`_wrap_client` only forwards"). If you can't, report that no refactor is justified and stop.
 3. **One finding at a time:** edit, validate, then the next. Never start a second track while one fails; a failure means behavior, types, or assumptions changed, so repair that slice first.
-4. **Respect layers:** never "simplify" by moving logic across the layer boundaries in `CLAUDE.md`. Move logic only when another layer clearly owns it; otherwise keep it local.
-5. **Stay in scope:** no restyling unrelated code; remove only what your change made dead or what the caller asked for.
+4. **Respect layers and domains:** each `apis/<name>` and `services/<name>` branch imports only itself, `config`, and `utils`; `config`/`utils` import no layer (`CLAUDE.md`, enforced by `tests/test_architecture.py`). Code lives with the domain that owns it (`services/trading` exit rules, `services/storage` caching, `tasks/backtest` simulation, `tasks/trade` live orders) and is named in that domain's terms; move it only when another domain clearly owns it, never just to shorten an import.
+5. **Stay in scope:** no restyling unrelated code; within the slice, remove dead code (see Dead code) and fix style drift against `.claude/rules/pyavanza-python.md`, including comments and names.
 6. **No new abstraction or forwarding layer.** Extract only a cohesive job that flattens the caller; inline helpers that only forward or hide control flow. Skip micro-optimizations that change neither complexity class nor a measured hot path unless they also simplify.
 
 ## Procedure
 1. **Anchor:** open the controlling code (the function that computes or decides the behavior, not the wiring around it) and its rules.
-2. **Diagnose:** list findings by category (complexity, nesting, duplication, dead or forwarding code, style drift, security), each with `file:line` and a one-line reason; drop what you can't justify.
+2. **Diagnose:** list findings by category (logic gaps, structure, complexity, nesting, duplication, dead or forwarding code, comments and names, security), each with `file:line` and a one-line reason; drop what you can't justify. Logic gaps: unreachable or contradictory branches, unhandled cases (empty data, missing session, `None`), inverted or off-by-one conditions, look-ahead in backtests, state that can drift between backtest and live loop. Report a gap that needs a behavior change instead of fixing it. Structure: cross-branch imports, code outside its domain, modules or packages that no longer match what they hold.
 3. **Edit and validate** one finding at a time (see Validation).
 
 ## Dead code

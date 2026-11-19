@@ -48,7 +48,7 @@ package = false
 [project]
 name = "pyAvanza_v2"
 version = "0.1.0"
-description = "Automated OMX trading workflows for Avanza"
+description = "Automated TSLA trading workflows for Avanza"
 authors = [
     {name = "", email = ""},
 ]

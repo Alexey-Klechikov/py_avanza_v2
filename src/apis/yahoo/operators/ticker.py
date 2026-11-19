@@ -8,19 +8,13 @@ from utils.logger.operators import get_logger
 
 log = get_logger()
 
+AVAILABLE_PERIOD_DAYS_BY_INTERVAL_MINUTES = {1: 22, 2: 42, 5: 55}
+CHUNK_DAYS = 5
+
 
 class Ticker:
     def _get_extended_history(self, period: Period, interval: Interval) -> pd.DataFrame:
-        history = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
-
-        available_period_days = period.days
-        if interval.mins == 1:
-            available_period_days = 22
-        elif interval.mins == 2:
-            available_period_days = 42
-        elif interval.mins == 5:
-            available_period_days = 55
-
+        available_period_days = AVAILABLE_PERIOD_DAYS_BY_INTERVAL_MINUTES.get(interval.mins, period.days)
         if period.days > available_period_days:
             log.debug(
                 f"Period {period.days} days is not available for interval {interval.mins} minutes. "
@@ -32,18 +26,14 @@ class Ticker:
             end=date.today() + timedelta(days=1),
         )
 
-        for i in range(0, len(dates), 5):
-            start_date = dates[i]
-            end_date = min(start_date + timedelta(days=5), dates[-1])
+        history_chunks = [pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])]
+        for chunk_start_index in range(0, len(dates), CHUNK_DAYS):
+            chunk_start = dates[chunk_start_index]
+            chunk_end = min(chunk_start + timedelta(days=CHUNK_DAYS), dates[-1])
+            history_chunks.append(Yahoo.get_history(interval=interval, start=chunk_start, end=chunk_end))
 
-            history = pd.concat(
-                [
-                    history,
-                    Yahoo.get_history(interval=interval, start=start_date, end=end_date),
-                ],
-            )
-
-        return history.drop_duplicates().sort_index(axis=0)
+        history = pd.concat(history_chunks)
+        return history[~history.index.duplicated(keep="last")].sort_index()
 
     def get_history(self, period: Period, interval: Interval) -> pd.DataFrame:
         log.debug(f"Fetch chart data [{period} - {interval}]")
