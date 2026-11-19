@@ -100,7 +100,8 @@ class Portfolio:
         self.positions = [
             _to_position(account_position)
             for account_position in get_client().get_accounts_positions().with_orderbook
-            if account_position.account.id == SETTINGS.ACCOUNT_ID and SETTINGS.NAME in account_position.instrument.name
+            if account_position.account.id == SETTINGS.ACCOUNT_ID
+            and SETTINGS.PRODUCT_NAME in account_position.instrument.name
         ]
 
         self._detect_acquired_instruments()

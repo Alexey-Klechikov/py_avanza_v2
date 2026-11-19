@@ -21,8 +21,8 @@ class Orders:
 
         if SETTINGS.ACCOUNT_ID:
             orders = [order for order in orders if order.account.account_id == SETTINGS.ACCOUNT_ID]
-        if SETTINGS.NAME:
-            orders = [order for order in orders if SETTINGS.NAME in order.orderbook.name]
+        if SETTINGS.PRODUCT_NAME:
+            orders = [order for order in orders if SETTINGS.PRODUCT_NAME in order.orderbook.name]
 
         return orders
 

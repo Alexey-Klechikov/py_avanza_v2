@@ -97,13 +97,11 @@ class Watchlists:
 
     def _build_search_string(self, watchlist_name_composition: WatchlistNameComposition) -> str | None:
         if watchlist_name_composition.instrument_type == "CERTIFICATE":
-            return (
-                f"{watchlist_name_composition.direction} {SETTINGS_WATCHLIST.SEARCH_NAME} X{SETTINGS.MULTIPLIER} AVA"
-            )
+            return f"{watchlist_name_composition.direction} {SETTINGS.PRODUCT_NAME} X{SETTINGS.MULTIPLIER} AVA"
 
         elif watchlist_name_composition.instrument_type == "WARRANT":
             prefix = SETTINGS_WATCHLIST.SEARCH_WARRANT_PREFIX[watchlist_name_composition.direction]
-            return f"{prefix} {SETTINGS_WATCHLIST.SEARCH_NAME} AVA"
+            return f"{prefix} {SETTINGS.PRODUCT_NAME} AVA"
 
         return None
 

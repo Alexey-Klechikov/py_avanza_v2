@@ -17,8 +17,6 @@ class SettingsWatchlist:
     MIN_PRICE = 1
     MAX_PRICE = 300
 
-    # Avanza names the products after the company, not the ticker: certificates "BULL TESLA X10 AVA"
-    SEARCH_NAME = "TESLA"
     SEARCH_WARRANT_PREFIX = {"BULL": "L", "BEAR": "S"}
 
 
@@ -86,6 +84,9 @@ class WeightedScore:
 @dataclass(frozen=True)
 class TradeSettings:
     NAME: str = "TSLA"
+    # Avanza names the traded products after the company, not the ticker ("BULL TESLA X10 AVA 3"): watchlist searches,
+    # positions and orders are matched by this
+    PRODUCT_NAME: str = "TESLA"
     ACCOUNT_ID: str = "754762"
 
     DATA_SOURCE: str = "avanza"
@@ -104,6 +105,8 @@ class TradeSettings:
     # True: task_trade places orders on the weighted score's signals. False: its signals are only logged as [PAPER].
     # Either way task_end_of_day replays the session into logs/paper_trades_<NAME>_weighted.json.
     # Switched on 2026-11-19, before the forward paper journal had confirmed the edge (holdout t < 2, see Exits).
+    # config/TSLA_weighted_model.json was refitted on the current INDICATORS then (commit 2a13b81, trained
+    # 2025-11-18..2026-11-18; a refit on 2026-11-19 reproduced its weights exactly).
     LIVE_ORDERS: bool = True
 
     BUDGET: float = 1.0  # share of the account's total value put into one position
