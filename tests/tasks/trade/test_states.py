@@ -7,7 +7,7 @@ from services.trading.tracked_position import ExitLevels
 from tasks.trade import states
 from tasks.trade.models import Direction
 
-HOLD = ExitLevels(take_profit=None, stop_loss=None, pullback_trigger=None, hold_bars=2)
+HOLD = ExitLevels(take_profit=None, stop_loss=None, hold_bars=2)
 
 
 def _trade() -> tuple[states.Trade, MagicMock]:

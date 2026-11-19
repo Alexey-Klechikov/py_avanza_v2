@@ -213,22 +213,19 @@ class Trade:
         # Mark the bar checked only once positions loaded: a connection error must not skip a bar's confirmation
         self.last_exit_check_bar = bar_time
         tracked_position = self._tracked_position(direction, underlying_price)
-        # Same order as the backtest: stop loss, then pullback, then the holding time
+        # Same order as the backtest: stop loss, then the holding time
         exit_reason = None
         if tracked_position.confirm_stop_loss(underlying_price):
             exit_reason = "Stop loss"
-        elif tracked_position.confirm_pullback(underlying_price):
-            exit_reason = "Pullback"
         elif tracked_position.confirm_hold_expiry():
             exit_reason = "Holding time"
 
         if exit_reason is None:
             log.debug(
-                "Underlying {} | stop loss {} ({} confirmations) | pullback confirmations {} | bars held {}/{}".format(
+                "Underlying {} | stop loss {} ({} confirmations) | bars held {}/{}".format(
                     underlying_price,
                     tracked_position.stop_loss_price and round(tracked_position.stop_loss_price, 2),
                     tracked_position.stop_loss_confirmations,
-                    tracked_position.pullback_confirmations,
                     tracked_position.bars_held,
                     tracked_position.hold_bars,
                 ),

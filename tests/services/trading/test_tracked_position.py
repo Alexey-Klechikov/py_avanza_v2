@@ -5,8 +5,8 @@ from services.trading.tracked_position import ExitLevels, TrackedPosition
 
 ENTRY_PRICE = 1000.0
 # Price-based exits on (the weighted score turns them off by default)
-TAKE_PROFIT, STOP_LOSS, PULLBACK_TRIGGER = 0.045, 0.03, 0.0225
-LEVELS = ExitLevels(take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, pullback_trigger=PULLBACK_TRIGGER)
+TAKE_PROFIT, STOP_LOSS = 0.045, 0.03
+LEVELS = ExitLevels(take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS)
 
 
 def _take_profit(position: TrackedPosition) -> float:
@@ -17,11 +17,6 @@ def _take_profit(position: TrackedPosition) -> float:
 def _stop_loss(position: TrackedPosition) -> float:
     assert position.stop_loss_price is not None
     return position.stop_loss_price
-
-
-def _underlying_price_after(move_in_settings_units: float) -> float:
-    """Underlying price after a move expressed like the settings (instrument %, before leverage)."""
-    return ENTRY_PRICE * (1 + move_in_settings_units / SETTINGS.MULTIPLIER)
 
 
 class Test_TrackedPosition(TestCase):
@@ -36,10 +31,7 @@ class Test_TrackedPosition(TestCase):
         for is_long in (True, False):
             position = TrackedPosition.open(is_long=is_long, entry_price=ENTRY_PRICE, levels=LEVELS)
 
-            assert abs(position.capital_return(ENTRY_PRICE) + SETTINGS.SPREAD_DEFAULT) < 1e-12
-            assert (
-                abs(position.profit(ENTRY_PRICE) + SETTINGS.SPREAD_DEFAULT * ENTRY_PRICE / SETTINGS.MULTIPLIER) < 1e-9
-            )
+            assert abs(position.capital_return(ENTRY_PRICE) + SETTINGS.BACKTEST_SPREAD) < 1e-12
 
     def test_spread_is_taken_from_the_sale_proceeds(self):
         for is_long in (True, False):
@@ -47,7 +39,7 @@ class Test_TrackedPosition(TestCase):
             gross = 0.045  # instrument up 4.5% before costs
             sell_price = ENTRY_PRICE * (1 + (1 if is_long else -1) * gross / SETTINGS.MULTIPLIER)
 
-            expected = (1 + gross) * (1 - SETTINGS.SPREAD_DEFAULT) - 1
+            expected = (1 + gross) * (1 - SETTINGS.BACKTEST_SPREAD) - 1
             assert abs(position.capital_return(sell_price) - expected) < 1e-12
 
     def test_take_profit_fills_inside_bar_or_at_gap_open(self):
@@ -83,38 +75,28 @@ class Test_TrackedPosition(TestCase):
         position = TrackedPosition.open(is_long=True, entry_price=ENTRY_PRICE, levels=LEVELS)
         below_stop = _stop_loss(position) - 1
 
-        for _ in range(SETTINGS.STOP_LOSS.CONFIRMATION_COUNT):
+        for _ in range(SETTINGS.EXITS.STOP_LOSS_CONFIRMATIONS):
             assert not position.confirm_stop_loss(below_stop)
 
         assert not position.confirm_stop_loss(ENTRY_PRICE)  # recovery resets the count
-        for _ in range(SETTINGS.STOP_LOSS.CONFIRMATION_COUNT):
+        for _ in range(SETTINGS.EXITS.STOP_LOSS_CONFIRMATIONS):
             assert not position.confirm_stop_loss(below_stop)
         assert position.confirm_stop_loss(below_stop)
 
-    def test_pullback_after_trigger_profit(self):
-        position = TrackedPosition.open(is_long=True, entry_price=ENTRY_PRICE, levels=LEVELS)
-
-        assert not position.confirm_pullback(_underlying_price_after(2 * PULLBACK_TRIGGER))
-        attempts = SETTINGS.PULLBACK.CONFIRMATION_COUNT + 1
-        confirmations = [position.confirm_pullback(ENTRY_PRICE * 0.999) for _ in range(attempts)]
-        assert confirmations[-1] and not any(confirmations[:-1])
-
     def test_custom_levels(self):
-        levels = ExitLevels(take_profit=0.07, stop_loss=0.12, pullback_trigger=0.035)
+        levels = ExitLevels(take_profit=0.07, stop_loss=0.12)
         position = TrackedPosition.open(is_long=False, entry_price=ENTRY_PRICE, levels=levels)
 
         assert _take_profit(position) == ENTRY_PRICE * (1 - 0.07 / SETTINGS.MULTIPLIER)
         assert _stop_loss(position) == ENTRY_PRICE * (1 + 0.12 / SETTINGS.MULTIPLIER)
-        assert position.pullback_trigger == 0.035
 
     def test_time_boxed_position_without_price_levels(self):
-        levels = ExitLevels(take_profit=None, stop_loss=None, pullback_trigger=None, hold_bars=3)
+        levels = ExitLevels(take_profit=None, stop_loss=None, hold_bars=3)
         position = TrackedPosition.open(is_long=True, entry_price=ENTRY_PRICE, levels=levels)
 
         assert not position.hit_take_profit(high=2 * ENTRY_PRICE, low=0)
         assert position.instrument_take_profit_price(10.0) is None
         assert not position.confirm_stop_loss(0.5 * ENTRY_PRICE)
-        assert not position.confirm_pullback(1.5 * ENTRY_PRICE)
         assert [position.confirm_hold_expiry() for _ in range(3)] == [False, False, True]
 
     def test_default_levels_never_exit(self):

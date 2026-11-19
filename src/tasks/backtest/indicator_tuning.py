@@ -30,7 +30,7 @@ class TuningResult(BaseModel):
     `edge` is the unified score: the t-statistic of the score's correlation with the move it predicts, taken per
     refit period (mean / standard error). It measures how reliably the score predicts, independent of entry
     thresholds and costs; differences under ~1 are noise. The trade columns show what the entry threshold makes of
-    it after SETTINGS.SPREAD_DEFAULT.
+    it after SETTINGS.BACKTEST_SPREAD.
     """
 
     label: str

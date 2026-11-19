@@ -10,8 +10,8 @@ from tasks.backtest.simulator import BarSimulator
 from tasks.shared.bars import add_execution_columns, bar_index
 
 ENTRY_PRICE = 1000.0
-TAKE_PROFIT, STOP_LOSS, PULLBACK_TRIGGER = 0.045, 0.03, 0.0225
-LEVELS = ExitLevels(take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS, pullback_trigger=PULLBACK_TRIGGER)
+TAKE_PROFIT, STOP_LOSS = 0.045, 0.03
+LEVELS = ExitLevels(take_profit=TAKE_PROFIT, stop_loss=STOP_LOSS)
 
 
 def _take_profit(position: TrackedPosition) -> float:
@@ -138,7 +138,7 @@ class Test_SameDayResolution(TestCase):
 
 class Test_TimeBoxedPositions(TestCase):
     def test_exit_after_hold_bars_and_no_entries_meanwhile(self):
-        simulator = BarSimulator(ExitLevels(take_profit=None, stop_loss=None, pullback_trigger=None, hold_bars=3))
+        simulator = BarSimulator(ExitLevels(take_profit=None, stop_loss=None, hold_bars=3))
 
         assert simulator.step(_bar(long=True, next_open=1000), MIDDAY) == []  # entry fills at 1000
         assert simulator.step(_bar(short=True, next_open=990), MIDDAY) == []  # held bar 1: opposite signal ignored

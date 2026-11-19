@@ -82,7 +82,7 @@ def run_indicator_tuning(grid: IndicatorGrid, refit_sessions: int = 5):
     )
     log.warning(
         "Edge = t-statistic of the out-of-sample score/move correlation per refit period (higher is better; "
-        "differences under ~1 are noise). Net per trade is after SPREAD_DEFAULT.\n" + table.to_string(index=False),
+        "differences under ~1 are noise). Net per trade is after BACKTEST_SPREAD.\n" + table.to_string(index=False),
     )
 
 

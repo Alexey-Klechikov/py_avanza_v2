@@ -60,9 +60,8 @@ class WeightedReading(NamedTuple):
 MODEL_PATH = Path(__file__).resolve().parents[2] / "config" / f"{SETTINGS.NAME}_weighted_model.json"
 
 WEIGHTED_LEVELS = ExitLevels(
-    take_profit=SETTINGS.WEIGHTED_SCORE.TAKE_PROFIT,
-    stop_loss=SETTINGS.WEIGHTED_SCORE.STOP_LOSS,
-    pullback_trigger=SETTINGS.WEIGHTED_SCORE.PULLBACK_TRIGGER,
+    take_profit=SETTINGS.EXITS.TAKE_PROFIT,
+    stop_loss=SETTINGS.EXITS.STOP_LOSS,
     hold_bars=SETTINGS.WEIGHTED_SCORE.HORIZON_BARS,
 )
 

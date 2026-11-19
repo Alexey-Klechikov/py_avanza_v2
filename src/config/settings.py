@@ -13,6 +13,7 @@ class SettingsWatchlist:
     LEVERAGE_UPPER_MULTIPLIER = 1.15
 
     MIN_SPREAD_PERCENT = 0.1
+    MAX_SPREAD_PERCENT = 0.4
     MIN_PRICE = 1
     MAX_PRICE = 300
 
@@ -20,21 +21,21 @@ class SettingsWatchlist:
 
 
 @dataclass(frozen=True)
-class StopLoss:
-    # Stop and take-profit levels are per signal source (ExitLevels): a move of the instrument at the nominal
-    # MULTIPLIER, set on the underlying at level / MULTIPLIER from entry; the live take-profit order on the instrument
-    # scales that underlying move by the instrument's actual leverage.
-    # The stop loss is confirmed once CONFIRMATION_COUNT + 1 consecutive completed bars close beyond the level.
-    CONFIRMATION_COUNT: int = 3
-
-
-@dataclass(frozen=True)
-class Pullback:
-    # Once the peak profit passes the source's ExitLevels.pullback_trigger, a pullback is confirmed after
-    # CONFIRMATION_COUNT + 1 consecutive closes that lost more than VALUE of that peak (0.4: a 10% peak falling below
-    # 6%) or turned the profit negative.
-    VALUE: float = 0.0
-    CONFIRMATION_COUNT: int = 2
+class Exits:
+    # How a position ends before the day's end, in the backtest and the live loop alike (ExitLevels). Levels are moves
+    # of the instrument at the nominal MULTIPLIER (0.05: 0.5% of TSLA at x10), set on the underlying at
+    # level / MULTIPLIER from the entry; None turns a rule off. The take-profit is a resting order (live: on the
+    # instrument, scaled by its actual leverage). A position is also held at most WEIGHTED_SCORE.HORIZON_BARS
+    # completed bars, the move the score predicts, and new signals are ignored while it is held.
+    # Chosen 2026-11-19: TAKE_PROFIT x STOP_LOSS grid (84 combinations, hold on and off) on calibration data before
+    # the holdout, where no combination was significant alone and a tight stop helped most consistently; three
+    # candidates fixed in advance were then run once on the holdout (2025-11-19..2026-11-18, 251 sessions): hold only
+    # +1.24% net/trade (t 1.4, max drawdown 0.62), stop 5% +1.21% (t 1.7, 0.44), take-profit 15% + stop 5% +1.18%
+    # (t 1.9, 0.44, 156 trades). One year with t < 2: the paper journal decides. A pullback (trailing) exit was
+    # removed 2026-11-19: on calibration data it only cut winners (the earlier and tighter, the worse: t 1.39 -> 0.27).
+    TAKE_PROFIT: float | None = 0.15
+    STOP_LOSS: float | None = 0.05
+    STOP_LOSS_CONFIRMATIONS: int = 3  # the stop fires after this many + 1 consecutive closes beyond its level
 
 
 @dataclass(frozen=True)
@@ -56,9 +57,8 @@ class WeightedScore:
     # A weight per vote is fitted (L1: useless votes get weight 0) to the underlying move over the next
     # HORIZON_BARS 2m bars (exit fill, capped at TIME.END; clipped at TARGET_CLIP_SD standard deviations, 0: off), on
     # the TRAIN_DAYS calendar days before training (0: all cached history). The score is the weighted sum;
-    # BULL above the training ENTRY_QUANTILE of |score - median|, BEAR below its negative. A position is held exactly
-    # HORIZON_BARS completed bars, the move the score predicts, then sold at the next open (or at TIME.END); signals
-    # are ignored meanwhile. TAKE_PROFIT / STOP_LOSS / PULLBACK_TRIGGER of None turn those exits off, as calibrated.
+    # BULL above the training ENTRY_QUANTILE of |score - median|, BEAR below its negative. Positions exit by EXITS
+    # (TradeSettings), held at most HORIZON_BARS completed bars.
     # The model lives in config/<NAME>_weighted_model.json: task_end_of_week refits it, and its weights can be edited
     # by hand between refits.
     # These defaults were calibrated on OMX (2024-11..2026-11). TSLA walk-forward 2026-11-19 with them and volume
@@ -77,9 +77,6 @@ class WeightedScore:
     ALPHAS: tuple[float, ...] = (0.1, 0.3, 1.0, 3.0)
     VALIDATION_SHARE: float = 0.2
     ENTRY_QUANTILE: float = 0.95
-    TAKE_PROFIT: float | None = None
-    STOP_LOSS: float | None = None
-    PULLBACK_TRIGGER: float | None = None
     # Calendar days of 2m history the live loop and the paper replay compute votes on
     WARMUP_DAYS: int = 60
 
@@ -91,25 +88,23 @@ class TradeSettings:
 
     DATA_SOURCE: str = "avanza"
     RESOLUTION: str = "2m"
-    MULTIPLIER: int = 10
-    SPREAD_MAX: float = 0.004  # 0.4%: watchlist ceiling for an instrument's spread
-    # The only trading cost: the spread, paid once per trade on the sale (the instrument is sold this fraction below
-    # its actual price; the buy fills at the actual price). Charged on every backtest trade.
-    SPREAD_DEFAULT: float = 0.002
+    MULTIPLIER: int = 10  # nominal leverage of the traded certificates; watchlists accept it within the tolerance
+    # The only trading cost the backtest charges: the spread, paid once per trade on the sale (the instrument is sold
+    # this fraction below its actual price; the buy fills at the actual price)
+    BACKTEST_SPREAD: float = 0.002
 
     AVA: str = "238449"
     YAHOO: str = "TSLA"
 
-    STOP_LOSS: StopLoss = field(default_factory=StopLoss)
-    PULLBACK: Pullback = field(default_factory=Pullback)
     TIME: Time = field(default_factory=Time)
+    EXITS: Exits = field(default_factory=Exits)
     WEIGHTED_SCORE: WeightedScore = field(default_factory=WeightedScore)
     # True: task_trade places orders on the weighted score's signals. False: its signals are only logged as [PAPER].
     # Either way task_end_of_day replays the session into logs/paper_trades_<NAME>_weighted.json.
     # Off until TSLA's forward paper journal confirms the edge.
     LIVE_ORDERS: bool = False
 
-    BUDGET: float = 1.0
+    BUDGET: float = 1.0  # share of the account's total value put into one position
 
     # Indicators that vote in the weighted score: each needs a LONG/SHORT direction signal
     INDICATORS: dict[str, dict[str, dict[str, int | float | str]]] = field(

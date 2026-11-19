@@ -61,7 +61,7 @@ class BarSimulator:
         if position.hit_take_profit(bar["High"], bar["Low"]):
             return position.take_profit_fill(bar["Open"])
 
-        if position.confirm_stop_loss(bar["Close"]) or position.confirm_pullback(bar["Close"]):
+        if position.confirm_stop_loss(bar["Close"]):
             return bar["Next Open"]
 
         if position.confirm_hold_expiry():

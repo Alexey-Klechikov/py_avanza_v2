@@ -92,7 +92,7 @@ class InstrumentValidators:
 
         return (
             spread > SETTINGS_WATCHLIST.MIN_SPREAD_PERCENT
-            and spread < SETTINGS.SPREAD_MAX * 100
+            and spread < SETTINGS_WATCHLIST.MAX_SPREAD_PERCENT
             and last_price > SETTINGS_WATCHLIST.MIN_PRICE
             and last_price < SETTINGS_WATCHLIST.MAX_PRICE
         )
