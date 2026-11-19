@@ -125,7 +125,7 @@ Cron runs every task with the host's global `/usr/bin/python3.13` (installed nex
 
 The current cron contract starts:
 
-- `task_end_of_day.py` at `22:10` on weekdays
+- `task_end_of_day.py` at `22:45` on weekdays
 - `task_end_of_week.py` at `09:00` on Saturdays
 - `task_trade.py` at `16:13` on weekdays (the trading window is `16:15`-`21:45` Stockholm time)
 - a stats copy job every 10 minutes from `15:00` through `22:59` on weekdays
