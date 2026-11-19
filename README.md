@@ -16,7 +16,7 @@ pyAvanza_v2 is a Python trading bot for Tesla (TSLA) BULL and BEAR certificates 
 - `src/task_trade.py`: live trading entry point.
 - `src/task_end_of_day.py`: history cache and the paper replay of the session.
 - `src/task_end_of_week.py`: weighted-score refit, paper summaries, and balance logging.
-- `src/development.py`: manual helper; `mode` selects indicator tuning (default), the holdout check, the weighted-score walk-forward (all three write no files), or weighted-score training (see Indicator Tuning).
+- `src/development.py`: manual helper; `mode` selects indicator tuning, the holdout check, the weighted-score walk-forward (all three write no files), or weighted-score training (currently the default; writes the model file; see Indicator Tuning).
 - `src/apis/avanza/`: Avanza client, typed models, account and order operators.
 - `src/apis/yahoo/`: Yahoo Finance history wrapper.
 - `src/apis/telegram/`: alert delivery through `telegram-send`.
