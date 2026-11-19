@@ -54,7 +54,7 @@ class _TuningInputs:
     history: pd.DataFrame
     daily: pd.DataFrame
     grid: IndicatorGrid
-    indicators: dict
+    indicators: dict[str, dict[str, dict[str, int | float | str]]]
     test_sessions: int
     refit_sessions: int
 
@@ -119,7 +119,12 @@ def _completed_results(
 
     with ProcessPoolExecutor(min(workers, len(runs)), initializer=_set_worker_inputs, initargs=(inputs,)) as pool:
         futures = [pool.submit(_run_candidate_in_worker, label, params) for label, params in runs]
-        yield from (future.result() for future in as_completed(futures))
+        try:
+            yield from (future.result() for future in as_completed(futures))
+        except BaseException:
+            # Otherwise leaving the pool waits for every queued candidate before the error surfaces
+            pool.shutdown(cancel_futures=True)
+            raise
 
 
 def full_training_sessions(history: pd.DataFrame) -> int:

@@ -83,6 +83,16 @@ def _fit_period_in_worker(period: list[date]) -> _PeriodResult:
     return _fit_period(_worker_frames, period)
 
 
+def _fit_periods_in_pool(frames: _WalkForwardFrames, periods: list[list[date]], workers: int) -> list[_PeriodResult]:
+    with ProcessPoolExecutor(min(workers, len(periods)), initializer=_set_worker_frames, initargs=(frames,)) as pool:
+        try:
+            return list(pool.map(_fit_period_in_worker, periods))
+        except BaseException:
+            # Otherwise leaving the pool waits for every queued period before the error surfaces
+            pool.shutdown(cancel_futures=True)
+            raise
+
+
 def weighted_walk_forward(
     history: pd.DataFrame,
     daily: pd.DataFrame,
@@ -111,14 +121,13 @@ def weighted_walk_forward(
     test_days = sorted(set(bar_days))[-test_sessions:]
     periods = [test_days[offset : offset + refit_sessions] for offset in range(0, len(test_days), refit_sessions)]
     if workers > 1:
-        with ProcessPoolExecutor(
-            min(workers, len(periods)),
-            initializer=_set_worker_frames,
-            initargs=(frames,),
-        ) as pool:
-            period_results = list(pool.map(_fit_period_in_worker, periods))
+        period_results = _fit_periods_in_pool(frames, periods, workers)
     else:
         period_results = [_fit_period(frames, period) for period in periods]
+    for period, result in zip(periods, period_results):
+        log.debug(
+            f"Weighted walk-forward {period[0]}: {result.kept_votes} votes, correlation {result.correlation:+.3f}",
+        )
 
     sessions = replay(pd.concat([result.signal_bars for result in period_results]), set(test_days), WEIGHTED_LEVELS)
     return WeightedWalkForward(

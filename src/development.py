@@ -23,8 +23,9 @@ log = get_logger()
 # Indicator tuning only sees data before this day; "weighted_holdout" then judges the chosen parameters once on the
 # rest. Re-judging after every tweak turns the holdout into calibration data.
 HOLDOUT_START = date(2025, 11, 19)
-# Processes for the tuning candidates and the walk-forward refit periods
-WORKERS = os.cpu_count() or 1
+# Processes for the tuning candidates and the walk-forward refit periods; each holds its own copy of the history
+# and builds vote frames of tens of MB, hence the cap
+WORKERS = min(os.cpu_count() or 1, 8)
 
 
 def _log_sessions(title: str, sessions: dict[date, PaperSession]) -> None:
