@@ -17,6 +17,8 @@ class SettingsWatchlist:
     MIN_PRICE = 1
     MAX_PRICE = 300
 
+    # Avanza names the products after the company, not the ticker: certificates "BULL TESLA X10 AVA"
+    SEARCH_NAME = "TESLA"
     SEARCH_WARRANT_PREFIX = {"BULL": "L", "BEAR": "S"}
 
 
@@ -101,8 +103,8 @@ class TradeSettings:
     WEIGHTED_SCORE: WeightedScore = field(default_factory=WeightedScore)
     # True: task_trade places orders on the weighted score's signals. False: its signals are only logged as [PAPER].
     # Either way task_end_of_day replays the session into logs/paper_trades_<NAME>_weighted.json.
-    # Off until TSLA's forward paper journal confirms the edge.
-    LIVE_ORDERS: bool = False
+    # Switched on 2026-11-19, before the forward paper journal had confirmed the edge (holdout t < 2, see Exits).
+    LIVE_ORDERS: bool = True
 
     BUDGET: float = 1.0  # share of the account's total value put into one position
 
@@ -110,13 +112,13 @@ class TradeSettings:
     INDICATORS: dict[str, dict[str, dict[str, int | float | str]]] = field(
         default_factory=lambda: {
             "Trend": {
-                "ADX": {"length": 11, "lensig": 14, "mamode": "hma"},
+                "ADX": {"length": 7, "lensig": 20, "mamode": "hma"},
                 "TII": {"length_sma": 16, "length_signal": 4},
                 "PSAR": {"acceleration": 0.01, "maximum": 0.2},
             },
             "Overlap": {
-                "LINREG": {"length": 14, "limit": 0.34},
-                "SLOPE": {"length": 18, "limit": 0.1},
+                "LINREG": {"length": 16, "limit": 0.2},
+                "SLOPE": {"length": 8, "limit": 0.1},
                 "SUPERTREND": {"length": 15, "multiplier": 7.0},
             },
             "Momentum": {
@@ -133,8 +135,8 @@ class TradeSettings:
                 "ACCBANDS": {"length": 14, "c": 2, "mamode": "vidya"},
             },
             "Volume": {
-                "PVT": {"drift": 14, "length_sma": 22, "length_divergence": 24},
-                "ADOSC": {"fast": 6, "slow": 10, "length_divergence": 28},
+                "PVT": {"drift": 16, "length_sma": 16, "length_divergence": 24},
+                "ADOSC": {"fast": 4, "slow": 8, "length_divergence": 30},
                 "CMF": {"length": 28, "length_divergence": 32},
                 "KVO": {"fast": 22, "slow": 55, "signal": 10, "mamode": "rma", "length_divergence": 30},
             },

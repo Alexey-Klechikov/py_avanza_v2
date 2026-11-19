@@ -54,9 +54,8 @@ class Trend(IndicatorsCategoryBase):
         price direction. When the DI+ is above DI-, the current price momentum is up. When the
         DI- is above DI+, the current price momentum is down.
         """
-        adx_column, minus_di_column, plus_di_column = f"ADX_{length}", f"DMN_{length}", f"DMP_{length}"
-
-        self.bars.ta.adx(length=length, lensig=lensig, mamode=mamode, append=True)
+        adx_column, minus_di_column, plus_di_column = f"ADX_{lensig}", f"DMN_{length}", f"DMP_{length}"
+        self.bars.ta.adx(length=length, signal_length=lensig, mamode=mamode, append=True)
         if adx_column not in self.bars.columns:
             log.debug("Indicator 'Trend -> ADX' can not be added.")
             return

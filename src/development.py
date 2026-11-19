@@ -1,3 +1,4 @@
+import os
 import warnings
 from datetime import date
 
@@ -17,13 +18,13 @@ pd.set_option("display.max_rows", None)
 pd.set_option("display.width", 250)
 pd.set_option("display.max_colwidth", 120)
 
-
-set_handlers("development")
 log = get_logger()
 
 # Indicator tuning only sees data before this day; "weighted_holdout" then judges the chosen parameters once on the
 # rest. Re-judging after every tweak turns the holdout into calibration data.
 HOLDOUT_START = date(2025, 11, 19)
+# Processes for the tuning candidates and the walk-forward refit periods
+WORKERS = os.cpu_count() or 1
 
 
 def _log_sessions(title: str, sessions: dict[date, PaperSession]) -> None:
@@ -48,6 +49,7 @@ def run_weighted_walk_forward(test_sessions: int, refit_sessions: int = 5):
         Storage(resolution="1d").read(),
         test_sessions=test_sessions,
         refit_sessions=refit_sessions,
+        workers=WORKERS,
     )
     _log_sessions("Weighted walk-forward", walk_forward.sessions)
 
@@ -69,7 +71,7 @@ def run_indicator_tuning(grid: IndicatorGrid, refit_sessions: int = 5):
         f"{calibration.index[0].date()} .. {calibration.index[-1].date()}",
     )
 
-    results = tune_indicator(calibration, Storage(resolution="1d").read(), grid, refit_sessions)
+    results = tune_indicator(calibration, Storage(resolution="1d").read(), grid, refit_sessions, WORKERS)
     table = pd.DataFrame(
         {
             "params": [result.label or result.params for result in results],
@@ -93,17 +95,20 @@ def run_weighted_holdout(refit_sessions: int = 5):
 
 
 if __name__ == "__main__":
+    # Under the guard: worker processes re-import this module and must not reopen (truncate) the log files
+    set_handlers("development")
+
     # "indicator_tuning" (no files written), "weighted_holdout" (no files written), "weighted_walk_forward"
     # (no files written), "weighted_training" (writes the weighted model file)
-    mode = "indicator_tuning"
+    mode = "weighted_training"
 
     if mode == "indicator_tuning":
-        # A list is searched, a scalar stays fixed; every combination runs (about 25 s each)
+        # A list is searched, a scalar stays fixed; every combination runs (about 30 s each, WORKERS at a time)
         run_indicator_tuning(
             IndicatorGrid(
-                category="Trend",
-                name="ADX",
-                params={"length": [7, 9, 11, 14, 18], "lensig": [10, 14, 20], "mamode": "hma"},
+                category="Volume",
+                name="CMF",
+                params={"length": list(range(20, 40, 4)), "length_divergence": list(range(20, 40, 4))},
             ),
         )
 

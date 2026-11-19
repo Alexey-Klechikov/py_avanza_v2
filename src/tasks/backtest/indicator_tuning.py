@@ -1,3 +1,7 @@
+from collections.abc import Iterator
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from copy import deepcopy
+from dataclasses import dataclass
 from itertools import product
 
 import numpy as np
@@ -42,6 +46,23 @@ class TuningResult(BaseModel):
     net_return_per_trade: float  # fraction of position capital
 
 
+@dataclass(frozen=True)
+class _TuningInputs:
+    """What every run of one tuning shares; `indicators` is the parent's SETTINGS.INDICATORS, which a worker process
+    would otherwise re-read from settings.py."""
+
+    history: pd.DataFrame
+    daily: pd.DataFrame
+    grid: IndicatorGrid
+    indicators: dict
+    test_sessions: int
+    refit_sessions: int
+
+
+# A worker process receives the inputs once through the pool initializer, not once per candidate
+_worker_inputs: _TuningInputs | None = None
+
+
 def _tuning_result(label: str, params: dict, walk_forward: WeightedWalkForward) -> TuningResult:
     correlations = np.array(walk_forward.correlations)
     trade_returns = [trade_return for paper in walk_forward.sessions.values() for trade_return in paper.trade_returns]
@@ -58,6 +79,49 @@ def _tuning_result(label: str, params: dict, walk_forward: WeightedWalkForward) 
     )
 
 
+def _set_worker_inputs(inputs: _TuningInputs) -> None:
+    global _worker_inputs
+    _worker_inputs = inputs
+    SETTINGS.INDICATORS.clear()
+    SETTINGS.INDICATORS.update(inputs.indicators)
+
+
+def _run_candidate(inputs: _TuningInputs, label: str, params: dict | None) -> TuningResult:
+    """Walk-forward with `params` for the grid's indicator (None: off); SETTINGS.INDICATORS is restored afterwards."""
+    indicators = SETTINGS.INDICATORS[inputs.grid.category]
+    saved_params = indicators.pop(inputs.grid.name, None)
+    if params:
+        indicators[inputs.grid.name] = params
+    try:
+        walk_forward = weighted_walk_forward(inputs.history, inputs.daily, inputs.test_sessions, inputs.refit_sessions)
+    finally:
+        indicators.pop(inputs.grid.name, None)
+        if saved_params:
+            indicators[inputs.grid.name] = saved_params
+
+    return _tuning_result(label, params or {}, walk_forward)
+
+
+def _run_candidate_in_worker(label: str, params: dict | None) -> TuningResult:
+    assert _worker_inputs is not None, "the pool initializer sets the inputs"
+    return _run_candidate(_worker_inputs, label, params)
+
+
+def _completed_results(
+    inputs: _TuningInputs,
+    runs: list[tuple[str, dict | None]],
+    workers: int,
+) -> Iterator[TuningResult]:
+    """Results of `runs` as they finish: in order without a pool, else from `workers` processes."""
+    if workers <= 1:
+        yield from (_run_candidate(inputs, label, params) for label, params in runs)
+        return
+
+    with ProcessPoolExecutor(min(workers, len(runs)), initializer=_set_worker_inputs, initargs=(inputs,)) as pool:
+        futures = [pool.submit(_run_candidate_in_worker, label, params) for label, params in runs]
+        yield from (future.result() for future in as_completed(futures))
+
+
 def full_training_sessions(history: pd.DataFrame) -> int:
     """Sessions of `history` whose walk-forward fit sees a full WARMUP_DAYS + TRAIN_DAYS before them."""
     settings = SETTINGS.WEIGHTED_SCORE
@@ -72,38 +136,32 @@ def tune_indicator(
     daily: pd.DataFrame,
     grid: IndicatorGrid,
     refit_sessions: int = 5,
+    workers: int = 1,
 ) -> list[TuningResult]:
     """Walk-forward the weighted score over `history` with the current parameters, the indicator off, and each
-    candidate of `grid`; best edge first. SETTINGS.INDICATORS is restored afterwards."""
+    candidate of `grid`, in `workers` processes; best edge first. SETTINGS.INDICATORS is unchanged afterwards."""
     indicators = SETTINGS.INDICATORS.get(grid.category)
     if indicators is None:
         raise ValueError(f"Unknown indicator category {grid.category!r}; known: {sorted(SETTINGS.INDICATORS)}")
     current_params = indicators.get(grid.name)
-    runs = [("current", current_params)] if current_params else []
+    runs: list[tuple[str, dict | None]] = [("current", current_params)] if current_params else []
     runs += [("off", None)] + [("", params) for params in grid.candidates() if params != current_params]
-    test_sessions = full_training_sessions(history)
+    inputs = _TuningInputs(
+        history=history,
+        daily=daily,
+        grid=grid,
+        indicators=deepcopy(SETTINGS.INDICATORS),
+        test_sessions=full_training_sessions(history),
+        refit_sessions=refit_sessions,
+    )
 
     results = []
-    try:
-        for run_number, (label, params) in enumerate(runs, start=1):
-            indicators.pop(grid.name, None)
-            if params:
-                indicators[grid.name] = params
-
-            result = _tuning_result(
-                label,
-                params or {},
-                weighted_walk_forward(history, daily, test_sessions, refit_sessions),
-            )
-            results.append(result)
-            log.info(
-                f"[{run_number}/{len(runs)}] {grid.category}-{grid.name} {label or params}: edge {result.edge:+.2f}, "
-                f"correlation {result.correlation:+.4f}, {result.trades} trades, "
-                f"{100 * result.net_return_per_trade:+.2f}% net per trade",
-            )
-    finally:
-        indicators.pop(grid.name, None)
-        if current_params:
-            indicators[grid.name] = current_params
+    for run_number, result in enumerate(_completed_results(inputs, runs, workers), start=1):
+        results.append(result)
+        log.info(
+            f"[{run_number}/{len(runs)}] {grid.category}-{grid.name} {result.label or result.params}: "
+            f"edge {result.edge:+.2f}, correlation {result.correlation:+.4f}, {result.trades} trades, "
+            f"{100 * result.net_return_per_trade:+.2f}% net per trade",
+        )
 
     return sorted(results, key=lambda result: result.edge, reverse=True)
