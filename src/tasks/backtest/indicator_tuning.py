@@ -75,7 +75,9 @@ def tune_indicator(
 ) -> list[TuningResult]:
     """Walk-forward the weighted score over `history` with the current parameters, the indicator off, and each
     candidate of `grid`; best edge first. SETTINGS.INDICATORS is restored afterwards."""
-    indicators = SETTINGS.INDICATORS.setdefault(grid.category, {})
+    indicators = SETTINGS.INDICATORS.get(grid.category)
+    if indicators is None:
+        raise ValueError(f"Unknown indicator category {grid.category!r}; known: {sorted(SETTINGS.INDICATORS)}")
     current_params = indicators.get(grid.name)
     runs = [("current", current_params)] if current_params else []
     runs += [("off", None)] + [("", params) for params in grid.candidates() if params != current_params]

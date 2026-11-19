@@ -24,10 +24,10 @@ pyAvanza_v2 is a Python trading bot for Tesla (TSLA) BULL and BEAR certificates 
 - `src/services/trading/`: exit rules shared by the backtest and the live loop (`TrackedPosition`, `ExitLevels`).
 - `src/services/storage/`: pickle-backed OHLCV cache.
 - `src/services/calendar/`: NYSE market-hours helpers (times in Stockholm time).
-- `src/tasks/`: the top layer: live signal loop and order execution (`trade/main.py`, `trade/states.py`), code shared by the live loop and the backtest (`shared/`: bars, the weighted score's `votes.py` and `weighted_model.py`), and the backtest engine (`backtest/`). Each `src/apis/*` and `src/services/*` package is isolated and never imports another; only `tasks/`, the `task_*.py` scripts, and `src/development.py` compose them.
+- `src/tasks/`: the top layer: live signal loop and order execution (`trade/main.py`, `trade/states.py`), code shared by the live loop and the backtest (`shared/`: bars, coarse-bar resampling, the weighted score's `votes.py` and `weighted_model.py`), and the backtest engine (`backtest/`). Each `src/apis/*` and `src/services/*` package is isolated and never imports another; only `tasks/`, the `task_*.py` scripts, and `src/development.py` compose them.
 - `tests/`: unit and integration tests, mirroring `src/` (not deployed).
 - `src/config/`: runtime settings and the weighted model (`TSLA_weighted_model.json`).
-- `src/utils/`: logging, shared constants, and coarse-bar resampling.
+- `src/utils/`: logging, shared constants, and retry backoff.
 
 ## Requirements
 

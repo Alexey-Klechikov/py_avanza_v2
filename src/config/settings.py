@@ -41,7 +41,9 @@ class Pullback:
 class Time:
     # The time range during which the trading is active, in Stockholm time (host clock and cached bars): the US
     # session 15:30-22:00 less its first 45 and last 15 minutes. In the weeks the US and European clock changes
-    # differ, the session runs 14:30-21:00 and the NYSE close (services/calendar) ends the day instead.
+    # differ, the session runs 14:30-21:00 and the NYSE close (services/calendar) ends the day instead: the live loop
+    # stops at the close minus 11 minutes (20:49), while the backtest holds to the session's last bar (21:00), so
+    # those ~4 weeks a year replay up to ~11 minutes longer than live (also on early-close days).
     START: time = time(16, 15)
     END: time = time(21, 45)
 

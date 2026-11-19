@@ -27,9 +27,10 @@ def is_market_closed() -> bool:
 
 
 def get_trading_end_time() -> time:
-    """STOP_BEFORE_CLOSE before today's NYSE close, as Stockholm wall-clock time; now on a day without a session."""
+    """STOP_BEFORE_CLOSE before today's NYSE close, as Stockholm wall-clock time. On a day without a session (a US
+    holiday on a cron weekday) it is midnight, so the live loop's first end-of-day check stops trading at once."""
     schedule = _today_nyse_schedule()
     if schedule.empty:
-        return datetime.now().time()
+        return time.min
 
     return (schedule.iloc[0].market_close - STOP_BEFORE_CLOSE).replace(tzinfo=None).time()

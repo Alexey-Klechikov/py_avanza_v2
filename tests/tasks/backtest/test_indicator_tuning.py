@@ -63,3 +63,14 @@ class Test_FullTrainingSessions(TestCase):
         first_full = days[0] + pd.Timedelta(days=settings.WARMUP_DAYS + settings.TRAIN_DAYS)
 
         assert full_training_sessions(history) == int((days >= first_full).sum())
+
+
+class Test_UnknownCategory(TestCase):
+    def test_raises_without_touching_the_settings(self):
+        categories = set(SETTINGS.INDICATORS)
+        grid = IndicatorGrid(category="Unknown", name="X", params={"length": [1]})
+
+        with self.assertRaisesRegex(ValueError, "Unknown indicator category"):
+            tune_indicator(pd.DataFrame(), pd.DataFrame(), grid)
+
+        assert set(SETTINGS.INDICATORS) == categories
