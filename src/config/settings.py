@@ -76,7 +76,12 @@ class WeightedScore:
     # VALIDATION_SHARE of the training data (still before the model's use) is refitted on all of it
     ALPHAS: tuple[float, ...] = (0.1, 0.3, 1.0, 3.0)
     VALIDATION_SHARE: float = 0.2
-    ENTRY_QUANTILE: float = 0.95
+    # Chosen 2026-11-21 (was 0.95): walk-forward over 850 TSLA sessions (2023-07..2026-11-20, refit every 5, live
+    # EXITS) at quantiles 0.75-0.99. Net per trade is flat (~+1%) from the top 25% to the top 5% of scores and worse
+    # beyond, so a stricter threshold only drops trades: 0.85 +0.98%/trade, 1.3 trades/day, t 3.8 (before / from
+    # 2025-11-19: t 3.0 / 2.5), 1 losing quarter of 14; 0.95 +0.87%, 0.6/day, t 2.3 (1.8 / 1.6), 5 losing quarters.
+    # Picked among 8 levels on all data, holdout included, so the paper journal still decides.
+    ENTRY_QUANTILE: float = 0.85
     # Calendar days of 2m history the live loop and the paper replay compute votes on
     WARMUP_DAYS: int = 60
 

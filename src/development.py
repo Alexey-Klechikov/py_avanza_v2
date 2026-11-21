@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     # "indicator_tuning" (no files written), "weighted_holdout" (no files written), "weighted_walk_forward"
     # (no files written), "weighted_training" (writes the weighted model file)
-    mode = "weighted_training"
+    mode = "indicator_tuning"
 
     if mode == "indicator_tuning":
         # A list is searched, a scalar stays fixed; every combination runs (about 30 s each, WORKERS at a time)
