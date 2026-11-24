@@ -63,7 +63,7 @@ class MarketMakerQuote(BaseModel):
 class Quote(BaseModel):
     buy: float | None = Field(default=None)
     sell: float | None = Field(default=None)
-    last: float
+    last: float | None = Field(default=None)  # absent until the instrument's first trade of the day
     highest: float | None = Field(default=None)
     lowest: float | None = Field(default=None)
     change: float

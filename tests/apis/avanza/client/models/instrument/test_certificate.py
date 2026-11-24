@@ -142,3 +142,7 @@ class Test_InstrumentCertificate(TestCase):
         }
 
         assert isinstance(InstrumentCertificate(**mock_certificate), InstrumentCertificate)
+
+        # Avanza stopped sending the underlying's sub type for TSLA certificates (2026-11-24)
+        del mock_certificate["underlying"]["instrumentSubType"]
+        assert InstrumentCertificate(**mock_certificate).underlying.instrument_sub_type is None

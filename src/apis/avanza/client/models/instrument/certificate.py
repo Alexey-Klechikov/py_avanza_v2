@@ -115,7 +115,7 @@ class Underlying(BaseModel):
     orderbook_id: int = Field(alias="orderbookId")
     name: str
     instrument_type: str = Field(alias="instrumentType")
-    instrument_sub_type: str = Field(alias="instrumentSubType")
+    instrument_sub_type: str | None = Field(alias="instrumentSubType", default=None)
     quote: Quote
     listing: Listing
     previous_closing_price: float = Field(alias="previousClosingPrice")

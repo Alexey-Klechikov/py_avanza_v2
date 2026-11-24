@@ -349,3 +349,7 @@ class Test_InstrumentWarrant(TestCase):
         assert market_maker_quote is not None and market_maker_quote.current_buy_price == 203.36
         assert warrant.underlying is not None and warrant.underlying.name == "OMX Stockholm 30"
         assert warrant.sub_category == "OMX Stockholm 30 Index"
+
+        # A warrant without a trade today has no last price
+        del instrument_warrant["quote"]["last"]
+        assert InstrumentWarrant(**instrument_warrant).quote.last is None

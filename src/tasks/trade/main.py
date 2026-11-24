@@ -35,6 +35,10 @@ RETRY_CAP_SECONDS = 60
 
 HISTORY_DAYS = SETTINGS.WEIGHTED_SCORE.WARMUP_DAYS
 
+# Turbo and mini warrant leverage drifts with the underlying (about 1% of TSLA moves an x11 turbo's leverage by 1),
+# so the watchlists filled at the start drop instruments that come into range later; rebuild them while flat
+WATCHLIST_UPDATE_INTERVAL = timedelta(minutes=30)
+
 # What each signal does to the held directions: (directions to sell, direction to buy)
 SIGNAL_ORDERS: dict[Signal, tuple[list[Direction], Direction | None]] = {
     Signal.LONG: ([Direction.BEAR], Direction.BULL),
@@ -297,6 +301,7 @@ def trade() -> None:
 
     watchlists = Watchlists()
     watchlists.update_all()
+    watchlists_updated_at = datetime.now()
 
     transactions = Transactions()
 
@@ -321,6 +326,9 @@ def trade() -> None:
                 break
 
             _carry_out(action, flow, trader, market_data)
+            if not flow.direction_in_stock and datetime.now() - watchlists_updated_at >= WATCHLIST_UPDATE_INTERVAL:
+                watchlists.update_all()
+                watchlists_updated_at = datetime.now()
             flow.wait_for_data()
 
             flow.repeated_exception_count = 0
