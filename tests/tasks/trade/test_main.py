@@ -119,7 +119,7 @@ class Test_ScoreLogging(TestCase):
             main.TradingFlow(market_data)._log_signal(Signal.LONG, prefix="[PAPER] ")
 
         messages = [call.args[0] for call in info.call_args_list]
-        assert messages[0] == "[BULL] +13.50 < score < -12.50 [BEAR]"
+        assert messages[0] == "[BULL] +13.50 < Score < -12.50 [BEAR]"
         assert len(messages) == 2 and "(score +14.20)" in messages[1]
 
 
